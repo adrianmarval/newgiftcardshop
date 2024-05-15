@@ -1,4 +1,7 @@
+"use client";
+import clsx from "clsx";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface Props {
   label: string;
@@ -7,11 +10,15 @@ interface Props {
 }
 
 export const SidebarMenuItem = ({ label, icon, path }: Props) => {
+  const pathName = usePathname();
   return (
-    <li>
+    <li className="rounded-lg">
       <Link
         href={path}
-        className="group flex items-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100"
+        className={clsx(
+          "group flex items-center rounded-lg p-2 text-base font-normal text-gray-900",
+          pathName === path && "bg-turquoise hover:bg-gray-200",
+        )}
       >
         {icon}
         <span className="ml-3">{label}</span>

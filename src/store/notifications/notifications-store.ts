@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { IoCartOutline } from "react-icons/io5";
 
 type NotificationLabel =
   | "System Notification"
@@ -10,7 +9,6 @@ type NotificationLabel =
 interface Notification {
   id: number;
   label: NotificationLabel;
-
   content: string;
   date: Date;
   read: boolean;
