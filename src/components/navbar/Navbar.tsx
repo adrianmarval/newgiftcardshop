@@ -45,11 +45,11 @@ export const Navbar = async () => {
             <span className="mx-3 text-base font-normal">News:</span>
             <div className="marquee-container rounded-3xl">
               <div className="marquee-text flex items-center text-base font-normal capitalize">
-                {news.map((text) => `⚠️Noticia: ${text} `)}
+                {news.map((text) => `⚠️ Noticia: ${text} `)}
               </div>
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="mr-6 flex items-center">
             <NotificationsBadge />
             <ProfileDropdown />
           </div>
