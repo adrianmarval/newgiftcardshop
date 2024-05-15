@@ -1,4 +1,3 @@
-import { Navbar, Sidebar } from "@/components";
 import Link from "next/link";
 
 const page = () => {

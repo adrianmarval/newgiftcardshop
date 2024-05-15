@@ -73,7 +73,7 @@ export const NotificationsBadge = () => {
               ))}
               <Link
                 className="flex items-center justify-center"
-                href={"dashboard/notifications"}
+                href={"/dashboard/notifications"}
               >
                 <button className="mt-3 flex rounded-lg bg-gray-200 px-2 py-1 text-sm font-bold">
                   Ver todas
