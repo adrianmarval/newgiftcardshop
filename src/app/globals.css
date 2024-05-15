@@ -12,8 +12,52 @@ body {
   color: rgb(var(--foreground-rgb));
 }
 
+li:hover,
+button:hover {
+  /* Agrega el color que desees */
+  background-color: #5ce1e6;
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.marquee-text {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marquee 30s linear infinite;
+}
+
+.marquee-container:hover .marquee-text {
+  animation-play-state: paused;
+}
+
+.marquee-container:not(:hover) .marquee-text {
+  animation-play-state: running;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@keyframes scroll-text {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
   }
 }
