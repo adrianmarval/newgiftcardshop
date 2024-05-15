@@ -66,10 +66,11 @@ export const Sidebar = () => {
         <div className="relative flex min-h-0 flex-1 flex-col border-r border-gray-200 bg-white pt-0">
           <div className="mt-8 text-center">
             <Image
-              src="profile.svg"
+              src="/profile.svg"
               alt=""
-              width={150}
-              height={150}
+              width={50}
+              height={50}
+              priority
               className="m-auto h-24 w-24 rounded-full object-cover md:h-36 md:w-36"
             />
             <h5 className="mt-2 block text-xl font-semibold text-gray-600">

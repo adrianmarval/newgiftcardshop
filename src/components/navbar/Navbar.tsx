@@ -5,19 +5,22 @@ import { NavbarButton } from "./NavbarButton";
 import { NotificationsBadge } from "./NotificationsBadge";
 
 const obtenerNoticias = async (): Promise<string[]> => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news`, {
-      next: {
-        revalidate: 60,
-      },
-    });
-    const data: string[] = await res.json();
-    return data;
-  } catch (error) {
-    return [
-      "Bienvenido al mejor mercado de tarjetas de regalo de habla hispana. Aqui podras comprar y vender tarjetas de regalo de tiendas como: Amazon, Apple, Wallmart, Target y mas... y cambiarlas por usdt, btc, eth o cualquier otra criptomoneda, intercambiar tarjetas de regalo nunca fue tan facil y seguro!.",
-    ];
-  }
+  return [
+    "Bienvenido al mejor mercado de tarjetas de regalo de habla hispana. Aqui podras comprar y vender tarjetas de regalo de tiendas como: Amazon, Apple, Wallmart, Target y mas... y cambiarlas por usdt, btc, eth o cualquier otra criptomoneda, intercambiar tarjetas de regalo nunca fue tan facil y seguro!.",
+  ];
+  // try {
+  //   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news`, {
+  //     next: {
+  //       revalidate: 60,
+  //     },
+  //   });
+  //   const data: string[] = await res.json();
+  //   return data;
+  // } catch (error) {
+  //   return [
+  //     "Bienvenido al mejor mercado de tarjetas de regalo de habla hispana. Aqui podras comprar y vender tarjetas de regalo de tiendas como: Amazon, Apple, Wallmart, Target y mas... y cambiarlas por usdt, btc, eth o cualquier otra criptomoneda, intercambiar tarjetas de regalo nunca fue tan facil y seguro!.",
+  //   ];
+  // }
 };
 
 export const Navbar = async () => {
@@ -34,10 +37,11 @@ export const Navbar = async () => {
               className="flex w-64 items-center justify-center text-xl font-bold"
             >
               <Image
-                src={"logo.svg"}
+                src={"/logo.svg"}
                 alt={"Logo de la tienda"}
                 width={92 * 2.5}
                 height={36 * 2.5}
+                priority
               />
             </Link>
           </div>
