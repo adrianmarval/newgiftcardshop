@@ -16,7 +16,7 @@ const DashboardLaout = ({ children }: Props) => {
         ></div>
         <div
           id="main-content"
-          className="relative h-full w-full overflow-y-auto bg-gray-50 lg:ml-64"
+          className="relative h-full w-full overflow-y-auto bg-gray-50 px-4 pt-6 lg:ml-64"
         >
           <main>{children}</main>
           <Footer />

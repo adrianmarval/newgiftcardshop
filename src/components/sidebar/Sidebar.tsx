@@ -1,8 +1,6 @@
 "use client";
-import { useUiStore } from "@/store";
+import Image from "next/image";
 import clsx from "clsx";
-import Link from "next/link";
-import { SidebarMenuItem } from "./SidebarMenuItem";
 import {
   IoDesktopOutline,
   IoGiftOutline,
@@ -10,7 +8,8 @@ import {
   IoListCircleOutline,
   IoWalletOutline,
 } from "react-icons/io5";
-import Image from "next/image";
+import { useUiStore } from "@/store";
+import { SidebarMenuItem } from "./SidebarMenuItem";
 
 const sidebarMenuItems = [
   {
@@ -19,9 +18,9 @@ const sidebarMenuItems = [
     path: "/dashboard",
   },
   {
-    label: "Orders",
+    label: "Buy",
     icon: <IoGiftOutline size={25} />,
-    path: "/dashboard/orders",
+    path: "/dashboard/buy",
   },
   {
     label: "History",
