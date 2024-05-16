@@ -1,7 +1,7 @@
 "use server";
-import { GiftcardOrder } from "../interfaces/giftcard-order";
+import { GiftcardOffer } from "../interfaces/giftcard-offer";
 
-const orders: GiftcardOrder[] = [
+const offers: GiftcardOffer[] = [
   {
     date: new Date(),
     orderId: "Y1Z2A3B4A5",
@@ -204,9 +204,9 @@ const orders: GiftcardOrder[] = [
   },
 ];
 
-export const getOrders = async (): Promise<GiftcardOrder[]> => {
+export const getOffers = async (): Promise<GiftcardOffer[]> => {
   try {
-    return orders;
+    return offers;
   } catch (error) {
     throw error;
   }

@@ -1,2 +1,2 @@
-export { OrdersGrid } from "./OrdersGrid";
-export { OrderCard } from "./OrderCard";
+export { OrdersGrid } from "./OffersGrid";
+export { OrderCard } from "./OfferCard";

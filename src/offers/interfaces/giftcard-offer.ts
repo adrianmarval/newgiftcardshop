@@ -1,4 +1,4 @@
-export interface GiftcardOrder {
+export interface GiftcardOffer {
   date: Date;
   orderId: string;
   username: string;
