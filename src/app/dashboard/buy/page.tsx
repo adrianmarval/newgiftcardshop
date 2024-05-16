@@ -1,10 +1,10 @@
-import { OffersGrid } from "../../../offers/components/OffersGrid";
-import { getOffers } from "@/offers/actions/offers-actions";
+import { OffersGrid } from "@/offers/components";
+import { findOffers } from "@/offers/actions/offers-actions";
 
 const page = async () => {
-  const offers = await getOffers();
+  const offers = await findOffers({});
   return (
-    <div className="flex items-center justify-center px-4 pt-6">
+    <div className="flex flex-col">
       <OffersGrid offers={offers} />
     </div>
   );

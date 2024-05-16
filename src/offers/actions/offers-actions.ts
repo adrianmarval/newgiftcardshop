@@ -4,7 +4,7 @@ import { GiftcardOffer } from "../interfaces/giftcard-offer";
 const offers: GiftcardOffer[] = [
   {
     date: new Date(),
-    orderId: "Y1Z2A3B4A5",
+    offerId: "Y1Z2A3B4A5",
     username: "mark_wilson",
     totalAmount: 185,
     storeName: "amazon",
@@ -19,7 +19,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "X2Y3Z4A5B6",
+    offerId: "X2Y3Z4A5B6",
     username: "jane_doe",
     totalAmount: 120,
     storeName: "apple",
@@ -32,7 +32,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "W3X4Y5Z6C7",
+    offerId: "W3X4Y5Z6C7",
     username: "john_smith",
     totalAmount: 200,
     storeName: "amazon",
@@ -45,7 +45,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "V4W5X6Y7D8",
+    offerId: "V4W5X6Y7D8",
     username: "sarah_lee",
     totalAmount: 75,
     storeName: "amazon",
@@ -59,7 +59,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "U5V6W7X8E9",
+    offerId: "U5V6W7X8E9",
     username: "michael_brown",
     totalAmount: 150,
     storeName: "apple",
@@ -71,7 +71,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "T6U7V8W9F0",
+    offerId: "T6U7V8W9F0",
     username: "emily_taylor",
     totalAmount: 165,
     storeName: "amazon",
@@ -85,7 +85,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "S7T8U9V0G1",
+    offerId: "S7T8U9V0G1",
     username: "david_walker",
     totalAmount: 90,
     storeName: "amazon",
@@ -99,7 +99,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "R8S9T0U1H2",
+    offerId: "R8S9T0U1H2",
     username: "jessica_martin",
     totalAmount: 100,
     storeName: "apple",
@@ -111,7 +111,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "Q9R0S1T2I3",
+    offerId: "Q9R0S1T2I3",
     username: "robert_lee",
     totalAmount: 150,
     storeName: "amazon",
@@ -124,7 +124,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "P0Q1R2S3J4",
+    offerId: "P0Q1R2S3J4",
     username: "emma_brown",
     totalAmount: 75,
     storeName: "amazon",
@@ -138,7 +138,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "O1P2Q3R4K5",
+    offerId: "O1P2Q3R4K5",
     username: "sophia_wilson",
     totalAmount: 125,
     storeName: "apple",
@@ -150,7 +150,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "N2O3P4Q5M6",
+    offerId: "N2O3P4Q5M6",
     username: "william_smith",
     totalAmount: 210,
     storeName: "amazon",
@@ -164,7 +164,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "M3N4O5P6N7",
+    offerId: "M3N4O5P6N7",
     username: "olivia_brown",
     totalAmount: 105,
     storeName: "amazon",
@@ -178,7 +178,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "L4M5N6O7O8",
+    offerId: "L4M5N6O7O8",
     username: "jacob_taylor",
     totalAmount: 150,
     storeName: "apple",
@@ -190,7 +190,7 @@ const offers: GiftcardOffer[] = [
   },
   {
     date: new Date(),
-    orderId: "K5L6M7N8P9",
+    offerId: "K5L6M7N8P9",
     username: "isabella_walker",
     totalAmount: 275,
     storeName: "amazon",
@@ -204,8 +204,31 @@ const offers: GiftcardOffer[] = [
   },
 ];
 
-export const getOffers = async (): Promise<GiftcardOffer[]> => {
+interface FilterOpcions {
+  storeName?: string;
+  countryCode?: string;
+}
+
+export const findOffers = async ({
+  countryCode,
+  storeName,
+}: FilterOpcions): Promise<GiftcardOffer[]> => {
   try {
+    if (storeName && countryCode) {
+      return offers.filter(
+        (offer) =>
+          offer.storeName === storeName && offer.countryCode === countryCode,
+      );
+    }
+
+    if (storeName && !countryCode) {
+      return offers.filter((offer) => offer.storeName === storeName);
+    }
+
+    if (!storeName && countryCode) {
+      return offers.filter((offer) => offer.countryCode === countryCode);
+    }
+
     return offers;
   } catch (error) {
     throw error;

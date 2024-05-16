@@ -10,14 +10,7 @@ const DashboardLaout = ({ children }: Props) => {
       <Navbar />
       <div className="flex overflow-hidden bg-white pt-16">
         <Sidebar />
-        <div
-          className="fixed inset-0 z-10 hidden bg-gray-900 opacity-50"
-          id="sidebarBackdrop"
-        ></div>
-        <div
-          id="main-content"
-          className="relative h-full w-full overflow-y-auto bg-gray-50 px-4 pt-6 lg:ml-64"
-        >
+        <div className="relative h-full w-full overflow-y-auto bg-gray-50 px-4 pt-6 lg:ml-64">
           <main>{children}</main>
           <Footer />
         </div>

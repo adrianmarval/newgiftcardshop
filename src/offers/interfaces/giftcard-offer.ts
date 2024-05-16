@@ -1,6 +1,6 @@
 export interface GiftcardOffer {
   date: Date;
-  orderId: string;
+  offerId: string;
   username: string;
   totalAmount: number;
   storeName: StoreName;

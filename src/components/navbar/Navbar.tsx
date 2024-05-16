@@ -37,7 +37,7 @@ export const Navbar = async () => {
               className="flex w-64 items-center justify-center text-xl font-bold"
             >
               <Image
-                src={"/logo.svg"}
+                src={"/logo.webp"}
                 alt={"Logo de la tienda"}
                 width={92 * 2.5}
                 height={36 * 2.5}

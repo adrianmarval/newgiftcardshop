@@ -40,15 +40,14 @@ const sidebarMenuItems = [
 ];
 
 export const Sidebar = () => {
-  const isSideMenuOpen = useUiStore((state) => state.isSideMenuOpen);
-  const closeMenu = useUiStore((state) => state.closeSideMenu);
+  const { closeSideMenu, isSideMenuOpen } = useUiStore((state) => state);
 
   return (
     <div>
       {/* Blur */}
       {isSideMenuOpen && (
         <div
-          onClick={closeMenu}
+          onClick={closeSideMenu}
           className="fade-in fixed left-0 top-0 z-10 h-screen w-screen backdrop-blur-sm backdrop-filter"
         />
       )}
@@ -65,10 +64,10 @@ export const Sidebar = () => {
         <div className="relative flex min-h-0 flex-1 flex-col border-r border-gray-200 bg-white pt-0">
           <div className="mt-8 text-center">
             <Image
-              src="/profile.svg"
+              src="/profile.webp"
               alt=""
-              width={50}
-              height={50}
+              width={150}
+              height={150}
               priority
               className="m-auto h-24 w-24 rounded-full object-cover md:h-36 md:w-36"
             />
@@ -82,7 +81,11 @@ export const Sidebar = () => {
             <div className="flex-1 space-y-1 divide-y bg-white px-3">
               <ul className="space-y-2 pb-2">
                 {sidebarMenuItems.map((item) => (
-                  <SidebarMenuItem key={item.label} {...item} />
+                  <SidebarMenuItem
+                    key={item.label}
+                    {...item}
+                    closeSideMenu={closeSideMenu}
+                  />
                 ))}
               </ul>
             </div>
