@@ -12,9 +12,21 @@ body {
   color: rgb(var(--foreground-rgb));
 }
 
+/* Color de el scrollball y ancho */
+::-webkit-scrollbar {
+  width: 15px;
+}
+::-webkit-scrollbar-thumb {
+  background: #5ce1e6;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+/* Color turquesa a todos los botones y list items */
 li:hover,
 button:hover {
-  /* Agrega el color que desees */
   background-color: #5ce1e6;
 }
 

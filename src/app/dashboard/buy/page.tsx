@@ -4,7 +4,7 @@ import { findOffers } from "@/offers/actions/offers-actions";
 const page = async () => {
   const offers = await findOffers({});
   return (
-    <div className="flex flex-col">
+    <div className="animate__animated animate__fadeIn flex flex-col">
       <OffersGrid offers={offers} />
     </div>
   );

@@ -204,33 +204,40 @@ const offers: GiftcardOffer[] = [
   },
 ];
 
-interface FilterOpcions {
+interface FilterOptions {
   storeName?: string;
   countryCode?: string;
+  offerId?: string;
 }
 
 export const findOffers = async ({
   countryCode,
   storeName,
-}: FilterOpcions): Promise<GiftcardOffer[]> => {
+  offerId,
+}: FilterOptions): Promise<GiftcardOffer[]> => {
   try {
-    if (storeName && countryCode) {
-      return offers.filter(
-        (offer) =>
-          offer.storeName === storeName && offer.countryCode === countryCode,
+    let filteredOffers = offers;
+
+    if (offerId) {
+      filteredOffers = filteredOffers.filter(
+        (offer) => offer.offerId === offerId,
+      );
+    }
+    if (storeName) {
+      filteredOffers = filteredOffers.filter(
+        (offer) => offer.storeName === storeName,
+      );
+    }
+    if (countryCode) {
+      filteredOffers = filteredOffers.filter(
+        (offer) => offer.countryCode === countryCode,
       );
     }
 
-    if (storeName && !countryCode) {
-      return offers.filter((offer) => offer.storeName === storeName);
-    }
-
-    if (!storeName && countryCode) {
-      return offers.filter((offer) => offer.countryCode === countryCode);
-    }
-
-    return offers;
+    return filteredOffers;
   } catch (error) {
-    throw error;
+    console.error("Error in findOffers Server Action:", error);
+
+    throw new Error("Failed to retrieve gift card offers");
   }
 };
