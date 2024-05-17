@@ -25,7 +25,7 @@ export const OrderFilter = ({ offers }: Props) => {
 
   return (
     <div className="mx-4 mb-4 flex items-center justify-center rounded-lg bg-white p-4 shadow ">
-      <div className="mx-auto  w-1/2 justify-center">
+      <div className="mx-auto w-full justify-center text-xs md:max-w-[550px] lg:text-lg">
         <Select
           instanceId={useId()}
           styles={{

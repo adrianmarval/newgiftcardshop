@@ -39,8 +39,8 @@ export const Navbar = async () => {
               <Image
                 src={"/logo.webp"}
                 alt={"Logo de la tienda"}
-                width={92 * 2.5}
-                height={36 * 2.5}
+                width={3231}
+                height={868}
                 priority
               />
             </Link>
