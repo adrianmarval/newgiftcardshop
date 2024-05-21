@@ -1,9 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { GiftcardOffer } from "../interfaces/giftcard-offer";
-import { redirect } from "next/navigation";
-import { ReactSelectFilter } from "@/types";
-import { MultiValue } from "react-select";
 
 const offers: GiftcardOffer[] = [
   {

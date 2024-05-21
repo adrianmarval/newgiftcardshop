@@ -1,4 +1,4 @@
-import { OffersGrid, ServerFilter } from "@/offers/components";
+import { OffersFilter, OffersGrid, ServerFilter } from "@/offers/components";
 import { findOffers } from "@/offers/actions/offers-actions";
 
 interface Props {
@@ -9,7 +9,8 @@ const page = async ({ searchParams }: Props) => {
 
   return (
     <div>
-      <ServerFilter />
+      <OffersFilter />
+      {/* <OffersFilter /> */}
       <OffersGrid offers={offers} searchParams={searchParams} />
     </div>
   );

@@ -29,7 +29,9 @@ export const OfferCard = ({ offer }: Props) => {
       <div className="mb-2 mt-2 px-1">
         <UserRateAvatar username={username} />
       </div>
-      <Link href={`/dashboard/buy/details?offerId=${offerId}`}>
+      <Link
+        href={`/dashboard/buy/details?countryCode=${countryCode}&storeName=${storeName}&offerId=${offerId}`}
+      >
         <Image
           src={`/${storeName}card.webp`}
           alt={`${storeName}Card`}
@@ -60,7 +62,9 @@ export const OfferCard = ({ offer }: Props) => {
       </div>
 
       <div className="mt-4">
-        <Link href={`/dashboard/buy/details?offerId=${offerId}`}>
+        <Link
+          href={`/dashboard/buy/details?countryCode=${countryCode}&storeName=${storeName}&offerId=${offerId}`}
+        >
           <button
             value={offerId}
             data-variant="flat"
