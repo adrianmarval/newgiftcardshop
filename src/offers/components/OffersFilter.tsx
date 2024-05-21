@@ -1,14 +1,13 @@
 "use client";
 
-import { offersStore } from "@/store/offers/offers-store";
-import { useId } from "react";
-import Select from "react-select";
+import { useCallback, useEffect, useId, useState } from "react";
+import Select, { MultiValue } from "react-select";
 import makeAnimated from "react-select/animated";
-import { GiftcardOffer } from "../interfaces/giftcard-offer";
-import { FilterOption } from "@/types";
+import { ReactSelectFilter } from "@/types";
+import { useRouter } from "next/navigation";
 const animatedComponents = makeAnimated();
 
-const filterOptions: FilterOption[] = [
+const filterOptions: ReactSelectFilter[] = [
   { value: "us", label: "US 🇺🇸", type: "countryCode" },
   { value: "ca", label: "CA 🇨🇦", type: "countryCode" },
   { value: "uk", label: "UK 🇬🇧", type: "countryCode" },
@@ -16,12 +15,42 @@ const filterOptions: FilterOption[] = [
   { value: "apple", label: "Apple", type: "storeName" },
 ];
 
-interface Props {
-  offers: GiftcardOffer[];
-}
+export const OffersFilter = () => {
+  const router = useRouter();
+  const [selectedFilters, setSelectedFilters] = useState<ReactSelectFilter[]>(
+    [],
+  );
 
-export const OrderFilter = ({ offers }: Props) => {
-  const { filterOffers } = offersStore((state) => state);
+  const setFilter = useCallback(
+    (appliedFilters: MultiValue<any>) => {
+      const filters = appliedFilters as ReactSelectFilter[];
+      setSelectedFilters(filters);
+
+      localStorage.setItem("selectedFilters", JSON.stringify(filters));
+
+      if (filters.length > 0) {
+        // Redirigir solo si hay filtros aplicados
+        for (const filter of filters) {
+          if (filter.type) {
+            router.push(`?${filter.type}=${filter.value}`);
+          }
+        }
+      } else {
+        // Si no hay filtros, redirigir a /buy
+        router.push("/dashboard/buy");
+      }
+    },
+    [router],
+  );
+
+  useEffect(() => {
+    const storedFilters = localStorage.getItem("selectedFilters");
+    if (storedFilters) {
+      const parsedFilters = JSON.parse(storedFilters) as ReactSelectFilter[];
+      setSelectedFilters(parsedFilters);
+      setFilter(parsedFilters);
+    }
+  }, [setFilter]);
 
   return (
     <div className="mx-4 mb-4 flex items-center justify-center rounded-lg bg-white p-4 shadow ">
@@ -54,11 +83,10 @@ export const OrderFilter = ({ offers }: Props) => {
           "
           closeMenuOnSelect={true}
           components={animatedComponents}
-          isMulti
           options={filterOptions}
-          onChange={(event) =>
-            filterOffers({ selectedOptions: event, offers: offers })
-          }
+          value={selectedFilters}
+          isMulti
+          onChange={setFilter}
         />
       </div>
     </div>

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.37.1",
     "animate.css": "^4.1.1",
     "clsx": "^2.1.1",
     "install": "^0.13.0",

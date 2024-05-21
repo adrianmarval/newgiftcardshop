@@ -1,5 +1,5 @@
 import { GiftcardOffer } from "@/offers/interfaces/giftcard-offer";
-import { FilterOption } from "@/types";
+import { ReactSelectFilter } from "@/types";
 import { MultiValue } from "react-select";
 import { create } from "zustand";
 
@@ -22,22 +22,23 @@ export const offersStore = create<OffersStore>()((set) => ({
     set((state) => {
       const filteredoffers = offers.filter((offer) => {
         const countryOptions = selectedOptions.filter(
-          (option) => (option as FilterOption).type === "countryCode",
+          (option) => (option as ReactSelectFilter).type === "countryCode",
         );
         const cardNameOptions = selectedOptions.filter(
-          (option) => (option as FilterOption).type === "storeName",
+          (option) => (option as ReactSelectFilter).type === "storeName",
         );
 
         const matchesCountry =
           countryOptions.length === 0 ||
           countryOptions.some(
-            (option) => offer.countryCode === (option as FilterOption).value,
+            (option) =>
+              offer.countryCode === (option as ReactSelectFilter).value,
           );
 
         const matchesCardName =
           cardNameOptions.length === 0 ||
           cardNameOptions.some(
-            (option) => offer.storeName === (option as FilterOption).value,
+            (option) => offer.storeName === (option as ReactSelectFilter).value,
           );
 
         return matchesCountry && matchesCardName;

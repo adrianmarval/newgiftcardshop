@@ -30,6 +30,11 @@ button:hover {
   background-color: #5ce1e6;
 }
 
+.custom-select option:hover {
+  background-color: #f87171; /* color rojo claro */
+  color: #ffffff; /* color blanco */
+}
+
 .marquee-container {
   overflow: hidden;
   white-space: nowrap;

@@ -1,11 +1,16 @@
-import { OffersGrid } from "@/offers/components";
+import { OffersGrid, ServerFilter } from "@/offers/components";
 import { findOffers } from "@/offers/actions/offers-actions";
 
-const page = async () => {
-  const offers = await findOffers({});
+interface Props {
+  searchParams: { countryCode: string; storeName: string };
+}
+const page = async ({ searchParams }: Props) => {
+  const offers = await findOffers();
+
   return (
-    <div className="animate__animated animate__fadeIn flex flex-col">
-      <OffersGrid offers={offers} />
+    <div>
+      <ServerFilter />
+      <OffersGrid offers={offers} searchParams={searchParams} />
     </div>
   );
 };

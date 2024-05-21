@@ -1,5 +1,9 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { GiftcardOffer } from "../interfaces/giftcard-offer";
+import { redirect } from "next/navigation";
+import { ReactSelectFilter } from "@/types";
+import { MultiValue } from "react-select";
 
 const offers: GiftcardOffer[] = [
   {
@@ -204,40 +208,18 @@ const offers: GiftcardOffer[] = [
   },
 ];
 
-interface FilterOptions {
-  storeName?: string;
-  countryCode?: string;
-  offerId?: string;
-}
+export const findOffers = async (): Promise<GiftcardOffer[]> => {
+  // await new Promise((resolve) => setTimeout(resolve, 2000));
 
-export const findOffers = async ({
-  countryCode,
-  storeName,
-  offerId,
-}: FilterOptions): Promise<GiftcardOffer[]> => {
   try {
-    let filteredOffers = offers;
-
-    if (offerId) {
-      filteredOffers = filteredOffers.filter(
-        (offer) => offer.offerId === offerId,
-      );
-    }
-    if (storeName) {
-      filteredOffers = filteredOffers.filter(
-        (offer) => offer.storeName === storeName,
-      );
-    }
-    if (countryCode) {
-      filteredOffers = filteredOffers.filter(
-        (offer) => offer.countryCode === countryCode,
-      );
-    }
-
-    return filteredOffers;
+    return offers;
   } catch (error) {
-    console.error("Error in findOffers Server Action:", error);
+    console.error("Error in findOffers Server Action aaaaaaaaa:", error);
 
-    throw new Error("Failed to retrieve gift card offers");
+    throw new Error("Error al obtener ofertas");
   }
+};
+
+export const updateOffers = async () => {
+  revalidatePath("/dashboard/buy", "page");
 };

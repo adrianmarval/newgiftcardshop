@@ -2,7 +2,6 @@ import Image from "next/image";
 import { GiftcardOffer } from "../interfaces/giftcard-offer";
 import { UserRateAvatar } from "./UserRateAvatar";
 import Link from "next/link";
-import { IoArrowForward } from "react-icons/io5";
 
 interface Props {
   offer: GiftcardOffer;
