@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { GiftcardOffer } from "../interfaces/giftcard-offer";
+import { GiftcardOffer } from "../interfaces/offer-interface";
 import { UserRateAvatar } from "./UserRateAvatar";
 import Link from "next/link";
 

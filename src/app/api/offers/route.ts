@@ -1,6 +1,5 @@
-"use server";
-import { revalidatePath } from "next/cache";
-import { GiftcardOffer } from "../interfaces/offer-interface";
+import { GiftcardOffer } from "@/offers/interfaces/offer-interface";
+import { NextRequest, NextResponse } from "next/server";
 
 const offers: GiftcardOffer[] = [
   {
@@ -205,26 +204,10 @@ const offers: GiftcardOffer[] = [
   },
 ];
 
-export const findOffers = async (): Promise<GiftcardOffer[]> => {
-  // await new Promise((resolve) => setTimeout(resolve, 2000));
-
+export const GET = async (request: NextRequest, response: NextResponse) => {
   try {
-    return offers;
+    return NextResponse.json(offers, { status: 200 });
   } catch (error) {
-    console.error("Error in findOffers Server Action:", error);
-
-    throw new Error("Error al obtener ofertas");
-  }
-};
-
-export const findOffersByBrand = async (
-  brand: string,
-): Promise<GiftcardOffer[]> => {
-  try {
-    return offers.filter((offer) => offer.storeName === brand);
-  } catch (error) {
-    console.error("Error in findOffersByBrand Server Action:", error);
-
-    throw new Error("Error al obtener ofertas");
+    return NextResponse.json([]);
   }
 };

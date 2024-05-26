@@ -28,18 +28,14 @@ body {
 li:hover,
 button:hover {
   background-color: #5ce1e6;
-  --tw-scale-x: 1.05;
-  --tw-scale-y: 1.05;
+  --tw-scale-x: 1.01;
+  --tw-scale-y: 1.01;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y))
     rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y))
     scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
-.custom-select option:hover {
-  background-color: #f87171; /* color rojo claro */
-  color: #ffffff; /* color blanco */
-}
-
+/* Estilos para las noticias del navbar */
 .marquee-container {
   overflow: hidden;
   white-space: nowrap;

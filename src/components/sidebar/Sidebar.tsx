@@ -3,9 +3,9 @@ import Image from "next/image";
 import clsx from "clsx";
 import {
   IoDesktopOutline,
-  IoGiftOutline,
   IoHelpCircleOutline,
   IoListCircleOutline,
+  IoStorefrontOutline,
   IoWalletOutline,
 } from "react-icons/io5";
 import { useUiStore } from "@/store";
@@ -18,9 +18,9 @@ const sidebarMenuItems = [
     path: "/dashboard",
   },
   {
-    label: "Buy",
-    icon: <IoGiftOutline size={25} />,
-    path: "/dashboard/buy",
+    label: "Shop",
+    icon: <IoStorefrontOutline size={25} />,
+    path: "/dashboard/shop/giftcards",
   },
   {
     label: "History",

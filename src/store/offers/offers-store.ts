@@ -1,12 +1,16 @@
 import { create } from "zustand";
-import { ReactSelectFilter } from "@/types";
+import { GiftcardOffer } from "@/offers/interfaces/offer-interface";
 
 interface FiltersState {
-  offersFilters: ReactSelectFilter[];
-  setOffersFilters: (filters: ReactSelectFilter[]) => void;
+  offers: GiftcardOffer[];
+  isLoading: boolean;
+  setOffers: (offers: GiftcardOffer[]) => void;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
 export const offersStore = create<FiltersState>((set) => ({
-  offersFilters: [],
-  setOffersFilters: (offersFilters) => set({ offersFilters }),
+  offers: [],
+  isLoading: false,
+  setOffers: (offers) => set({ offers }),
+  setIsLoading: (isLoading) => set({ isLoading }),
 }));
