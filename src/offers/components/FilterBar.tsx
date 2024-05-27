@@ -1,6 +1,7 @@
 "use client";
 import {
   IoCheckmarkCircleOutline,
+  IoFilterCircleOutline,
   IoOptionsOutline,
   IoTrashOutline,
 } from "react-icons/io5";
@@ -8,6 +9,7 @@ import {
 import clsx from "clsx";
 import { filterOptions } from "@/offers/interfaces/filterTypes";
 import { useFilterOffers } from "@/hooks/useOfferFilter";
+import { useEffect, useState } from "react";
 
 export const FilterBar = () => {
   const {
@@ -19,14 +21,31 @@ export const FilterBar = () => {
     handleFilterChange,
   } = useFilterOffers();
 
+  const [showFilterIndicator, setShowFilterIndicator] = useState(false);
+
+  useEffect(() => {
+    setShowFilterIndicator(activeFilters.length > 0);
+  }, [activeFilters]);
+
   return (
     <>
-      <div onClick={toggleFilterIsOpen} className="mx-4 mb-4">
-        <button className="w-full rounded-lg bg-white p-4 shadow">
+      <div
+        onClick={toggleFilterIsOpen}
+        className="relative mx-4 mb-4 flex justify-center"
+      >
+        <button className="relative w-full rounded-lg bg-white p-4 shadow">
+          {" "}
+          {/* Posicionamiento relativo para el badge */}
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Filter</h2>
             <IoOptionsOutline size={25} />
           </div>
+          {/* Badge condicional */}
+          {showFilterIndicator && (
+            <div className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
+              <span className="text-xs">{activeFilters.length}</span>
+            </div>
+          )}
         </button>
       </div>
 

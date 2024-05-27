@@ -5,13 +5,15 @@ import { SortDropdown } from "./SortDropdown";
 import { IoFilterOutline, IoRefreshOutline } from "react-icons/io5";
 import { Spinner } from "@/components";
 import { useGiftcardsOffers } from "@/hooks/useGiftcardsOffers";
+import { useFilterOffers } from "@/hooks/useOfferFilter";
 
 export const OffersGrid = () => {
   const { offers, isLoading, getOffers } = useGiftcardsOffers();
+  const { activeFilters } = useFilterOffers();
   const [sortOption, setSortOption] = useState("recent"); // Estado para el ordenamiento
 
   useEffect(() => {
-    getOffers();
+    getOffers(activeFilters);
   }, []);
 
   const sortedOffers = offers.sort((a, b) => {
@@ -24,7 +26,7 @@ export const OffersGrid = () => {
     <div className="mx-4 mb-6 rounded-lg bg-white px-4 py-2 shadow">
       <div className="mb-4 flex items-center justify-between text-sm">
         <button
-          onClick={getOffers}
+          onClick={() => getOffers(activeFilters)}
           className="mb-1 flex items-center justify-center rounded-lg p-1 text-lg"
         >
           <IoRefreshOutline size={20} />

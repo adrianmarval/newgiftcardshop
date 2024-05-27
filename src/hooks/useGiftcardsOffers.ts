@@ -6,21 +6,7 @@ export const useGiftcardsOffers = () => {
     (state) => state,
   );
 
-  const getOffers = async () => {
-    try {
-      setIsLoading(true);
-      const offers: GiftcardOffer[] = await fetch("/api/offers").then((res) =>
-        res.json(),
-      );
-      setOffers(offers);
-      setIsLoading(false);
-    } catch (error) {
-      setOffers([]);
-      throw error;
-    }
-  };
-
-  const filterOffers = async (filters: { value: string; type: string }[]) => {
+  const getOffers = async (filters: { value: string; type: string }[]) => {
     try {
       setIsLoading(true);
       const offers: GiftcardOffer[] = await fetch("/api/offers").then((res) =>
@@ -62,6 +48,5 @@ export const useGiftcardsOffers = () => {
     offers,
     isLoading,
     getOffers,
-    filterOffers,
   };
 };

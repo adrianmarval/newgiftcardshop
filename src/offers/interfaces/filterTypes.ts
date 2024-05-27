@@ -1,6 +1,7 @@
 export interface FilterOption {
   value: string;
-  label: string;
+  type: string;
+  label?: string;
 }
 
 export const filterOptions = [
