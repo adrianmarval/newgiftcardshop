@@ -6,19 +6,19 @@ export interface FilterOption {
 
 export const filterOptions = [
   {
-    type: "brand",
+    type: 'brand',
     options: [
-      { value: "amazon", label: "Amazon" },
-      { value: "apple", label: "Apple" },
+      { value: 'amazon', label: 'Amazon' },
+      { value: 'apple', label: 'Apple' },
       // ... more brands
     ],
   },
   {
-    type: "country",
+    type: 'country',
     options: [
-      { value: "us", label: "United States (US)" },
-      { value: "ca", label: "Canada (CA)" },
-      { value: "uk", label: "United Kingdom (UK)" },
+      { value: 'us', label: 'United States (US)' },
+      { value: 'ca', label: 'Canada (CA)' },
+      { value: 'uk', label: 'United Kingdom (UK)' },
       // ... more countries
     ],
   },

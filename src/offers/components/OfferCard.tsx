@@ -1,45 +1,28 @@
-import Image from "next/image";
-import { GiftcardOffer } from "../interfaces/offer-interface";
-import { UserRateAvatar } from "./UserRateAvatar";
-import Link from "next/link";
+import Image from 'next/image';
+import { GiftcardOffer } from '../interfaces/offer-interface';
+import { UserRateAvatar } from './UserRateAvatar';
+import Link from 'next/link';
 
 interface Props {
   offer: GiftcardOffer;
 }
 
 const flags = {
-  us: "🇺🇸",
-  ca: "🇨🇦",
-  uk: "🇬🇧",
+  us: '🇺🇸',
+  ca: '🇨🇦',
+  uk: '🇬🇧',
 };
 
 export const OfferCard = ({ offer }: Props) => {
-  const {
-    storeName,
-    countryCode,
-    totalAmount,
-    currency,
-    availableCards,
-    offerId,
-    username,
-  } = offer;
+  const { storeName, countryCode, totalAmount, currency, availableCards, offerId, username } = offer;
 
   return (
     <article className="rounded-lg bg-white shadow-md hover:scale-[102%]">
       <div className="mb-2 mt-2 px-1">
         <UserRateAvatar username={username} />
       </div>
-      <Link
-        href={`/dashboard/shop/giftcards/details?countryCode=${countryCode}&storeName=${storeName}&offerId=${offerId}`}
-      >
-        <Image
-          src={`/${storeName}card.webp`}
-          alt={`${storeName}Card`}
-          className="rounded-t-lg"
-          width={1428}
-          height={959}
-          priority
-        />
+      <Link href={`/dashboard/shop/giftcards/details?countryCode=${countryCode}&storeName=${storeName}&offerId=${offerId}`}>
+        <Image src={`/${storeName}card.webp`} alt={`${storeName}Card`} className="rounded-t-lg" width={1428} height={959} priority />
       </Link>
 
       <div className="flex items-center p-1 text-xs font-black md:text-sm">
@@ -62,9 +45,7 @@ export const OfferCard = ({ offer }: Props) => {
       </div>
 
       <div className="mt-4">
-        <Link
-          href={`/dashboard/shop/giftcards/details?countryCode=${countryCode}&storeName=${storeName}&offerId=${offerId}`}
-        >
+        <Link href={`/dashboard/shop/giftcards/details?countryCode=${countryCode}&storeName=${storeName}&offerId=${offerId}`}>
           <button
             value={offerId}
             data-variant="flat"

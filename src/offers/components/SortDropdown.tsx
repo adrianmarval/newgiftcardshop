@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 interface Props {
   onSortChange: (sortOption: string) => void;
 }
 
 export const SortDropdown = ({ onSortChange }: Props) => {
-  const [selectedSort, setSelectedSort] = useState("recent"); // Default: Más reciente
+  const [selectedSort, setSelectedSort] = useState('recent'); // Default: Más reciente
 
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const sortOption = event.target.value;

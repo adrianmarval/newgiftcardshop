@@ -1,5 +1,5 @@
-import { useFilterStore } from "@/store";
-import { useGiftcardsOffers } from "./useGiftcardsOffers";
+import { useFilterStore } from '@/store';
+import { useGiftcardsOffers } from './useGiftcardsOffers';
 
 export const useFilterOffers = () => {
   const {

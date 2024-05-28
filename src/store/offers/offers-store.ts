@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { GiftcardOffer } from "@/offers/interfaces/offer-interface";
+import { create } from 'zustand';
+import { GiftcardOffer } from '@/offers/interfaces/offer-interface';
 
 interface FiltersState {
   offers: GiftcardOffer[];

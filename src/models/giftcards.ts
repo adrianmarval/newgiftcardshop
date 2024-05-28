@@ -1,4 +1,4 @@
-import { Schema, model, models } from "mongoose";
+import { Schema, model, models } from 'mongoose';
 // import bcrypt from "bcrypt";
 
 const giftCardSchema = new Schema({
@@ -10,7 +10,7 @@ const giftCardSchema = new Schema({
   },
   store: {
     type: String,
-    enum: ["Amazon", "Apple", "Walmart"],
+    enum: ['Amazon', 'Apple', 'Walmart'],
     required: true,
   },
   amount: {
@@ -19,21 +19,21 @@ const giftCardSchema = new Schema({
   },
   currency: {
     type: String,
-    enum: ["USD", "EUR", "Otra"],
+    enum: ['USD', 'EUR', 'Otra'],
     required: true,
   },
   status: {
     type: String,
-    enum: ["Disponible", "En venta", "Vendida", "Canjeada", "Disputada"],
-    default: "Disponible",
+    enum: ['Disponible', 'En venta', 'Vendida', 'Canjeada', 'Disputada'],
+    default: 'Disponible',
   },
   seller: {
     type: Schema.Types.ObjectId,
-    ref: "User",
+    ref: 'User',
   },
   buyer: {
     type: Schema.Types.ObjectId,
-    ref: "User",
+    ref: 'User',
   },
   listingPrice: {
     type: Number,
@@ -71,11 +71,11 @@ const giftCardSchema = new Schema({
   },
 });
 
-giftCardSchema.pre("save", function (next) {
+giftCardSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });
 
-const Giftcard = models.Giftcard || model("Giftcard", giftCardSchema);
+const Giftcard = models.Giftcard || model('Giftcard', giftCardSchema);
 
 export default Giftcard;

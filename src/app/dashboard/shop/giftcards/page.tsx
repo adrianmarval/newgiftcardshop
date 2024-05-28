@@ -1,4 +1,4 @@
-import { OffersGrid, FilterBar } from "@/offers/components";
+import { OffersGrid, FilterBar } from '@/offers/components';
 
 const page = async () => {
   return (

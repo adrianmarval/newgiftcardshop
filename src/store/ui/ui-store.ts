@@ -1,9 +1,8 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface State {
   isSideMenuOpen: boolean;
   profileDropDownOpen: boolean;
-
   openSideMenu: () => void;
   closeSideMenu: () => void;
   toggleProfileDropDown: () => void;
@@ -15,6 +14,5 @@ export const useUiStore = create<State>()((set) => ({
   closeSideMenu: () => set({ isSideMenuOpen: false }),
 
   profileDropDownOpen: false,
-  toggleProfileDropDown: () =>
-    set((state) => ({ profileDropDownOpen: !state.profileDropDownOpen })),
+  toggleProfileDropDown: () => set((state) => ({ profileDropDownOpen: !state.profileDropDownOpen })),
 }));

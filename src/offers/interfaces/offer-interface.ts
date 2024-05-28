@@ -15,8 +15,8 @@ export interface AvailableCard {
   units: number;
 }
 
-export type CountryCode = "ca" | "uk" | "us";
+export type CountryCode = 'ca' | 'uk' | 'us';
 
-export type Currency = "CAD" | "GBP" | "USD";
+export type Currency = 'CAD' | 'GBP' | 'USD';
 
-export type StoreName = "amazon" | "apple";
+export type StoreName = 'amazon' | 'apple';

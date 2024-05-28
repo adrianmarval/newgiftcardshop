@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useUiStore } from "@/store";
-import { IoMenuOutline } from "react-icons/io5";
+import { useUiStore } from '@/store';
+import { IoMenuOutline } from 'react-icons/io5';
 
 export const NavbarButton = () => {
   const isSideMenuOpen = useUiStore((state) => state.isSideMenuOpen);

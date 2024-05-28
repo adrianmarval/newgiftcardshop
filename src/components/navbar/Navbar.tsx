@@ -1,12 +1,12 @@
-import Image from "next/image";
-import Link from "next/link";
-import { ProfileDropdown } from "./ProfileDropDown";
-import { NavbarButton } from "./NavbarButton";
-import { NotificationsBadge } from "./NotificationsBadge";
+import Image from 'next/image';
+import Link from 'next/link';
+import { ProfileDropdown } from './ProfileDropDown';
+import { NavbarButton } from './NavbarButton';
+import { NotificationsBadge } from './NotificationsBadge';
 
 const obtenerNoticias = async (): Promise<string[]> => {
   return [
-    "Bienvenido al mejor mercado de tarjetas de regalo de habla hispana. Aqui podras comprar y vender tarjetas de regalo de tiendas como: Amazon, Apple, Wallmart, Target y mas... y cambiarlas por usdt, btc, eth o cualquier otra criptomoneda, intercambiar tarjetas de regalo nunca fue tan facil y seguro!.",
+    'Bienvenido al mejor mercado de tarjetas de regalo de habla hispana. Aqui podras comprar y vender tarjetas de regalo de tiendas como: Amazon, Apple, Wallmart, Target y mas... y cambiarlas por usdt, btc, eth o cualquier otra criptomoneda, intercambiar tarjetas de regalo nunca fue tan facil y seguro!.',
   ];
   // try {
   //   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news`, {
@@ -32,17 +32,8 @@ export const Navbar = async () => {
         <div className="flex items-center justify-between p-1">
           <div className="flex items-center justify-center">
             <NavbarButton />
-            <Link
-              href="/"
-              className="flex w-64 items-center justify-center text-xl font-bold"
-            >
-              <Image
-                src={"/logo.webp"}
-                alt={"Logo de la tienda"}
-                width={3231}
-                height={868}
-                priority
-              />
+            <Link href="/" className="flex w-64 items-center justify-center text-xl font-bold">
+              <Image src={'/logo.webp'} alt={'Logo de la tienda'} width={3231} height={868} priority />
             </Link>
           </div>
           <div className="relative mr-5 hidden w-full items-center overflow-hidden md:flex">

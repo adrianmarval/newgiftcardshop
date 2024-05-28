@@ -1,5 +1,5 @@
-import { FilterOption } from "@/offers/interfaces/filterTypes";
-import { create } from "zustand";
+import { FilterOption } from '@/offers/interfaces/filterTypes';
+import { create } from 'zustand';
 
 interface FilterState {
   activeFilters: FilterOption[];
@@ -19,16 +19,11 @@ export const useFilterStore = create<FilterState>((set) => ({
   filterIsOpen: false,
   setActiveFilters: (filters) => set({ activeFilters: filters }),
   setSelectedFilters: (newFilters) => set({ selectedFilters: newFilters }),
-  toggleFilterIsOpen: () =>
-    set((state) => ({ filterIsOpen: !state.filterIsOpen })),
+  toggleFilterIsOpen: () => set((state) => ({ filterIsOpen: !state.filterIsOpen })),
   handleFilterChange: (label, value, type) => {
     set((state) => ({
-      activeFilters: state.activeFilters.some(
-        (filter) => filter.value === value && filter.type === type,
-      )
-        ? state.activeFilters.filter(
-            (filter) => !(filter.value === value && filter.type === type),
-          )
+      activeFilters: state.activeFilters.some((filter) => filter.value === value && filter.type === type)
+        ? state.activeFilters.filter((filter) => !(filter.value === value && filter.type === type))
         : [...state.activeFilters, { value, type, label }],
     }));
   },

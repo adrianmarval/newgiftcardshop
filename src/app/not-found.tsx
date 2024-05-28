@@ -1,6 +1,6 @@
-import { Footer, Navbar, Sidebar } from "@/components";
+import { Footer, Navbar, Sidebar } from '@/components';
 
-import Link from "next/link";
+import Link from 'next/link';
 
 export default function NotFound() {
   return (
@@ -13,12 +13,8 @@ export default function NotFound() {
             <div className="animate__animated animate__fadeIn flex items-center justify-center px-4 text-6xl">
               <div className="w-full text-slate-900">
                 <div className="flex h-[700px] w-full flex-col items-center justify-center rounded-2xl bg-white">
-                  <h1 className="text-9xl font-extrabold tracking-widest text-slate-600">
-                    404
-                  </h1>
-                  <div className="absolute mb-5 rotate-12 rounded bg-turquoise px-4 text-lg text-slate-600">
-                    Pagina no encontrada
-                  </div>
+                  <h1 className="text-9xl font-extrabold tracking-widest text-slate-600">404</h1>
+                  <div className="absolute mb-5 rotate-12 rounded bg-turquoise px-4 text-lg text-slate-600">Pagina no encontrada</div>
                   <Link href="/dashboard">
                     <button className="rounded-lg bg-turquoise p-2 text-lg font-semibold text-slate-600 hover:scale-110 hover:shadow-lg">
                       Ir al inicio
