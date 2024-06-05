@@ -2,8 +2,10 @@
 import Image from 'next/image';
 import clsx from 'clsx';
 import {
+  IoCardOutline,
   IoCashOutline,
   IoDesktopOutline,
+  IoGiftOutline,
   IoHelpCircleOutline,
   IoListCircleOutline,
   IoStorefrontOutline,
@@ -21,7 +23,19 @@ const sidebarMenuItems = [
   {
     label: 'Shop',
     icon: <IoStorefrontOutline size={25} />,
-    path: '/dashboard/shop/giftcards',
+    path: '/dashboard/shop',
+    subItems: [
+      {
+        label: 'Giftcards',
+        icon: <IoGiftOutline size={20} />,
+        path: '/dashboard/shop/giftcards',
+      },
+      {
+        label: 'Crypto',
+        icon: <IoCardOutline size={20} />,
+        path: '/dashboard/shop/cryptocurrencies',
+      },
+    ],
   },
   {
     label: 'Sell',

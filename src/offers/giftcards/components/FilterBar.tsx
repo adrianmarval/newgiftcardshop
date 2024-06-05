@@ -1,12 +1,46 @@
 'use client';
-import { IoCheckmarkCircleOutline, IoOptionsOutline, IoTrashOutline } from 'react-icons/io5';
 
-import clsx from 'clsx';
-import { filterOptions } from '@/offers/interfaces/filterTypes';
-import { useFilterOffers } from '@/hooks/useOfferFilter';
 import { useEffect, useState } from 'react';
+import clsx from 'clsx';
+import { IoCheckmarkCircleOutline, IoOptionsOutline, IoTrashOutline } from 'react-icons/io5';
+import { useFilterOffers } from '@/hooks/useOfferFilter';
+import { shopCategories } from '@/types';
 
-export const FilterBar = () => {
+const filterOptions = {
+  giftcards: [
+    {
+      type: 'brand',
+      options: [
+        { value: 'amazon', label: 'Amazon' },
+        { value: 'apple', label: 'Apple' },
+      ],
+    },
+    {
+      type: 'country',
+      options: [
+        { value: 'us', label: 'United States (US)' },
+        { value: 'ca', label: 'Canada (CA)' },
+        { value: 'uk', label: 'United Kingdom (UK)' },
+      ],
+    },
+  ],
+  cryptocurrencies: [
+    {
+      type: 'country',
+      options: [
+        { value: 'us', label: 'United States' },
+        { value: 'ca', label: 'Canada' },
+        { value: 'uk', label: 'United Kingdom' },
+      ],
+    },
+  ],
+};
+
+interface Props {
+  category: shopCategories;
+}
+
+export const FilterBar = ({ category }: Props) => {
   const { activeFilters, filterIsOpen, toggleFilterIsOpen, handleApplyFilter, handleClearFilters, handleFilterChange } = useFilterOffers();
 
   const [showFilterIndicator, setShowFilterIndicator] = useState(false);
@@ -40,7 +74,7 @@ export const FilterBar = () => {
         )}
       >
         <h3 className="mb-4 mt-20 text-xl font-semibold text-gray-900">Opciones de Filtro</h3>
-        {filterOptions.map((option) => (
+        {filterOptions[category].map((option) => (
           <div key={option.type} className="filter-dropdown">
             <h3 className="text-sm font-semibold">{option.type}</h3>
             <ul>

@@ -5,7 +5,7 @@ interface Props {
 }
 
 export const SortDropdown = ({ onSortChange }: Props) => {
-  const [selectedSort, setSelectedSort] = useState('recent'); // Default: Más reciente
+  const [selectedSort, setSelectedSort] = useState('recent');
 
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const sortOption = event.target.value;

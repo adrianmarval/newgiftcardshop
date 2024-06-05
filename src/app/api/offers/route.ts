@@ -1,4 +1,4 @@
-import { GiftcardOffer } from '@/offers/interfaces/offer-interface';
+import { GiftcardOffer } from '@/offers/giftcards/interfaces/offer-interface';
 import { NextRequest, NextResponse } from 'next/server';
 
 const offers: GiftcardOffer[] = [

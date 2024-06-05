@@ -1,4 +1,5 @@
-import { FilterOption } from '@/offers/interfaces/filterTypes';
+
+import { FilterOption } from '@/types';
 import { create } from 'zustand';
 
 interface FilterState {
