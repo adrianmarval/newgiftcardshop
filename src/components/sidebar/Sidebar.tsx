@@ -28,12 +28,12 @@ const sidebarMenuItems = [
       {
         label: 'Giftcards',
         icon: <IoGiftOutline size={20} />,
-        path: '/dashboard/shop/giftcards',
+        path: '/dashboard/shop/giftcard',
       },
       {
         label: 'Crypto',
         icon: <IoCardOutline size={20} />,
-        path: '/dashboard/shop/cryptocurrencies',
+        path: '/dashboard/shop/crypto',
       },
     ],
   },

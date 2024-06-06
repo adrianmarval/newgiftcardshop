@@ -1,54 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { IoCheckmarkCircleOutline, IoOptionsOutline, IoTrashOutline } from 'react-icons/io5';
-import { useFilterOffers } from '@/hooks/useOfferFilter';
-import { shopCategories } from '@/types';
 import { usePathname } from 'next/navigation';
+import { shopCategories } from '@/types';
+import { useFilter } from '@/hooks/useNewOfferFilter';
+import { filterOptions } from '../interfaces/filterTypes';
 
-const filterOptions = {
-  giftcard: [
-    {
-      type: 'brand',
-      options: [
-        { value: 'amazon', label: 'Amazon' },
-        { value: 'apple', label: 'Apple' },
-      ],
-    },
-    {
-      type: 'country',
-      options: [
-        { value: 'us', label: 'United States (US)' },
-        { value: 'ca', label: 'Canada (CA)' },
-        { value: 'uk', label: 'United Kingdom (UK)' },
-      ],
-    },
-  ],
-  crypto: [
-    {
-      type: 'country',
-      options: [
-        { value: 'us', label: 'United States' },
-        { value: 'ca', label: 'Canada' },
-        { value: 'uk', label: 'United Kingdom' },
-      ],
-    },
-  ],
-};
-
-export const FilterBar = () => {
-  const { activeFilters, filterIsOpen, toggleFilterIsOpen, handleApplyFilter, handleClearFilters, handleFilterChange } = useFilterOffers();
-
-  const [showFilterIndicator, setShowFilterIndicator] = useState(false);
-
+export const NewFilterBar = () => {
   const pathName = usePathname();
+  const category = pathName.split('/')[3] as shopCategories;
 
-  const category: shopCategories = pathName.split('/')[3] as shopCategories;
-
-  useEffect(() => {
-    setShowFilterIndicator(activeFilters.length > 0);
-  }, [activeFilters]);
+  const { activeFilters, handleApplyFilter, handleFilterChange, handleClearFilters, toggleFilterIsOpen, filterIsOpen } =
+    useFilter(category);
 
   return (
     <>
@@ -58,7 +22,7 @@ export const FilterBar = () => {
             <h2 className="text-lg font-semibold text-gray-900">Filter</h2>
             <IoOptionsOutline size={25} />
           </div>
-          {showFilterIndicator && (
+          {activeFilters.length > 0 && (
             <div className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
               <span className="text-xs">{activeFilters.length}</span>
             </div>
@@ -80,14 +44,14 @@ export const FilterBar = () => {
             <h3 className="text-sm font-semibold">{option.type}</h3>
             <ul>
               {option.options.map((opcion) => (
-                <li className=" flex items-center rounded-lg px-2" key={opcion.value}>
+                <li className="flex items-center rounded-lg px-2" key={opcion.value}>
                   <input
                     type="checkbox"
                     id={opcion.value}
                     checked={activeFilters.some((filter) => filter.value === opcion.value && filter.type === option.type)}
-                    onChange={() => handleFilterChange(opcion.label, opcion.value, option.type)}
+                    onChange={() => handleFilterChange({ label: opcion.label, value: opcion.value, type: option.type })}
                   />
-                  <label htmlFor={opcion.value} className="mx-1  h-full w-full cursor-pointer py-2">
+                  <label htmlFor={opcion.value} className="mx-1 h-full w-full cursor-pointer py-2">
                     {opcion.label}
                   </label>
                 </li>

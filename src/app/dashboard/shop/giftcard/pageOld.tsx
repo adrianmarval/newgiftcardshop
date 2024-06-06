@@ -1,16 +1,10 @@
 import { OffersGrid, FilterBar } from '@/offers/giftcards/components';
 import { shopCategories } from '@/types';
 
-interface Props {
-  params: { category: shopCategories };
-}
-
-const page = async ({ params }: Props) => {
-  const { category } = params;
-
+const page = async () => {
   return (
     <div>
-      <FilterBar category={category} />
+      <FilterBar />
       <OffersGrid />
     </div>
   );

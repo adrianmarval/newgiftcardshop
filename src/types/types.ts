@@ -1,1 +1,1 @@
-export type shopCategories = 'cryptocurrencies' | 'giftcards';
+export type shopCategories = 'crypto' | 'giftcard';

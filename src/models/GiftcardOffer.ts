@@ -12,7 +12,7 @@ const AvailableCardSchema = new Schema<AvailableCard>(
 );
 
 // Esquema para GiftcardOffer
-const GiftcardOfferSchema = new Schema<GiftcardOffer>({
+const GiftcardOfferSchema = new Schema({
   date: { type: Date, required: true },
   offerId: { type: String, required: true, unique: true },
   seller: { type: Schema.Types.ObjectId, ref: 'User', required: true },

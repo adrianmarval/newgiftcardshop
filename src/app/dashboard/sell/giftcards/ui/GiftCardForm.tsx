@@ -1,4 +1,5 @@
-import { addGiftcard } from '@/offers/giftcards/actions/giftcards-actions';
+import { addGiftcard } from "@/actions/giftcard/add-giftcard";
+
 
 export const GiftCardForm = async () => {
   return (

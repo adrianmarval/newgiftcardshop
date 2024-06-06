@@ -30,11 +30,6 @@ const giftcardSchema: Schema = new Schema({
     enum: ['available', 'on sale', 'sold', 'redeemed', 'disputed'],
     required: true,
   },
-  // owner: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: 'User',
-  //   required: true,
-  // },
   origin: {
     type: String,
     enum: ['surveys', 'offers', 'studies'],
