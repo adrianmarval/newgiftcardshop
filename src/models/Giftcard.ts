@@ -6,7 +6,7 @@ const giftcardSchema: Schema = new Schema({
     required: true,
     unique: true,
   },
-  store: {
+  brand: {
     type: String,
     enum: ['amazon', 'apple', 'wallmart'],
     required: true,

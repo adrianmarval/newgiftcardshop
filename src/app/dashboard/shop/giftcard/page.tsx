@@ -1,29 +1,27 @@
 import { getGiftcardOffers } from '@/actions/offer/get-giftcards-offers';
-import { NewFilterBar } from '@/offers/giftcards/components';
 import { GiftcardGrid } from './ui/GiftcardGrid';
+import { FilterBar } from '@/components/filter';
+import { ParamsFilters } from '@/interfaces/filter-interface';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface Props {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: ParamsFilters;
 }
 
 const page = async ({ searchParams }: Props) => {
-  console.log('construido');
-  const filters: { [key: string]: string[] | undefined } = Object.fromEntries(
-    Object.entries(searchParams).map(([key, value]) => [
-      key,
-      Array.isArray(value) ? value.filter((v): v is string => v !== undefined) : value !== undefined ? [value] : undefined,
-    ]),
+  // Formatea searchParams para poder pasarlo a la funcion getGiftcardOffers en el formato que espera
+  const giftCardFilters = Object.fromEntries(
+    Object.entries(searchParams).map(([category, value]) => [category, Array.isArray(value) ? value : [value].filter(Boolean)]),
   );
 
-  const offers = await getGiftcardOffers(filters);
+  const giftCardOffers = await getGiftcardOffers(giftCardFilters as { [category: string]: string[] });
 
   return (
     <div>
-      <NewFilterBar />
-      <GiftcardGrid offers={offers} />
+      <FilterBar />
+      <GiftcardGrid offers={giftCardOffers} />
     </div>
   );
 };

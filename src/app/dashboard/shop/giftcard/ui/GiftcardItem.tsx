@@ -1,6 +1,9 @@
+import { NavigationHandler, UserRateAvatar } from '@/components/common';
+import { GiftcardOffer } from '@/interfaces/giftcard-interface';
+import { headers } from 'next/headers';
+
 import Image from 'next/image';
-import { GiftcardOffer } from '../interfaces/offer-interface';
-import { UserRateAvatar } from './UserRateAvatar';
+
 import Link from 'next/link';
 
 interface Props {
@@ -13,20 +16,23 @@ const flags = {
   uk: '🇬🇧',
 };
 
-export const OfferCard = ({ offer }: Props) => {
-  const { storeName, countryCode, totalAmount, currency, availableCards, offerId, username } = offer;
+export const GiftcardItem = ({ offer }: Props) => {
+  const { brand, country, totalAmount, currency, availableCards, offerId, seller } = offer;
+  const currentPath: string | null = headers().get('x-current-path');
 
   return (
     <article className="rounded-lg bg-white shadow-md hover:scale-[102%]">
       <div className="mb-2 mt-2 px-1">
-        <UserRateAvatar username={username} />
+        <UserRateAvatar username={seller} />
       </div>
-      <Link href={`/dashboard/shop/giftcards/details?countryCode=${countryCode}&storeName=${storeName}&offerId=${offerId}`}>
-        <Image src={`/${storeName}card.webp`} alt={`${storeName}Card`} className="rounded-t-lg" width={1428} height={959} priority />
+      <Link
+        href={`/dashboard/shop/giftcard/details?country=${country}&brand=${brand}&offerId=${offerId}&previousPath=${encodeURIComponent(currentPath || '/')}`}
+      >
+        <Image src={`/${brand}card.webp`} alt={`${brand}Card`} className="rounded-t-lg" width={1428} height={959} priority />
       </Link>
 
       <div className="flex items-center p-1 text-xs font-black md:text-sm">
-        <p className="tetx-2xl mr-1">{flags[countryCode]}</p>
+        <p className="tetx-2xl mr-1">{flags[country]}</p>
         <p>
           Total Amount: {totalAmount} {currency}
         </p>
@@ -45,7 +51,9 @@ export const OfferCard = ({ offer }: Props) => {
       </div>
 
       <div className="mt-4">
-        <Link href={`/dashboard/shop/giftcards/details?countryCode=${countryCode}&storeName=${storeName}&offerId=${offerId}`}>
+        <Link
+          href={`/dashboard/shop/giftcard/details?country=${country}&brand=${brand}&offerId=${offerId}&previousPath=${encodeURIComponent(currentPath || '/')}`}
+        >
           <button
             value={offerId}
             data-variant="flat"
@@ -56,6 +64,7 @@ export const OfferCard = ({ offer }: Props) => {
           </button>
         </Link>
       </div>
+      <NavigationHandler />
     </article>
   );
 };

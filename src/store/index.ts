@@ -1,4 +1,3 @@
-export * from './ui/ui-store';
-export * from './notifications/notifications-store';
-export * from './offers/filter-store';
-export * from './offers/offers-store';
+export * from './ui-store';
+export * from './notifications-store';
+export * from './filter-store';

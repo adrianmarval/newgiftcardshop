@@ -1,4 +1,6 @@
-import { Footer, Navbar, Sidebar } from '@/components';
+import { Footer } from '@/components/footer';
+import { Navbar } from '@/components/navbar';
+import { Sidebar } from '@/components/sidebar';
 
 import Link from 'next/link';
 

@@ -1,6 +1,6 @@
-import { OfferCard } from '@/offers/giftcards/components';
-import { GiftcardOffer } from '@/offers/giftcards/interfaces/offer-interface';
+import { GiftcardOffer } from '@/interfaces/giftcard-interface';
 import { IoFilterOutline, IoRefreshOutline } from 'react-icons/io5';
+import { GiftcardItem } from './GiftcardItem';
 
 interface Props {
   offers: GiftcardOffer[];
@@ -20,12 +20,14 @@ export const GiftcardGrid = ({ offers }: Props) => {
         </div>
       </div>
       {offers.length === 0 && (
-        <h1 className="flex items-center justify-center py-20 text-2xl">{`No se encontraron ofertas disponibles`}</h1>
+        <h1 className="flex items-center justify-center py-20 text-sm font-extrabold tracking-widest text-slate-600 sm:text-2xl">
+          No se encontraron ofertas disponibles
+        </h1>
       )}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
         {offers.map((offer) => (
-          <OfferCard key={offer.offerId} offer={offer} />
+          <GiftcardItem key={offer.offerId} offer={offer} />
         ))}
       </div>
     </div>

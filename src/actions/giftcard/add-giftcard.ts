@@ -1,11 +1,5 @@
 'use server';
 
-const CURRENCY_MAPPING: Record<string, string> = {
-  us: 'USD',
-  ca: 'CAD',
-  uk: 'GBP',
-};
-
 export const addGiftcard = async (formData: FormData) => {
   try {
     const store = formData.get('store');

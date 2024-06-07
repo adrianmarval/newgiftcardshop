@@ -1,17 +1,12 @@
+
+import { FilterOption } from '@/interfaces/filter-interface';
 import { create } from 'zustand';
 
-interface Filter {
-  type: string;
-  value: string;
-  label: string;
-}
-
 interface FilterStore {
-  activeFilters: Filter[];
+  activeFilters: FilterOption[];
   filterIsOpen: boolean;
-  setActiveFilters: (filters: Filter[]) => void;
-  addFilter: (filter: Filter) => void;
-  removeFilter: (filter: Filter) => void;
+  addFilter: (filter: FilterOption) => void;
+  removeFilter: (filter: FilterOption) => void;
   clearFilters: () => void;
   toggleFilterIsOpen: () => void;
 }
@@ -19,7 +14,6 @@ interface FilterStore {
 export const useFilterStore = create<FilterStore>((set) => ({
   activeFilters: [],
   filterIsOpen: false,
-  setActiveFilters: (filters) => set({ activeFilters: filters }),
   addFilter: (filter) =>
     set((state) => ({
       activeFilters: [...state.activeFilters, filter],
