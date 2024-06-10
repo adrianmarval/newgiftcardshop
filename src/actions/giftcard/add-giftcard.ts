@@ -1,16 +1,32 @@
 'use server';
 
-export const addGiftcard = async (formData: FormData) => {
-  try {
-    const store = formData.get('store');
-    const country = formData.get('country');
-    const origin = formData.get('origin');
-    const amount = formData.get('amount');
-    const claimCode = formData.get('claimCode');
+import { z } from 'zod';
+import { connectDb } from '@/libs/mongodb';
+import { addGiftcardFormSchema } from '@/validations';
+import Giftcard from '@/models/Giftcard';
+import { revalidatePath } from 'next/cache';
 
-    console.log({ store, country, origin, amount, claimCode });
+// Explicit Type for the giftcard Input
+export const addGiftcard = async (giftcard: unknown) => {
+  try {
+    await connectDb();
+
+    // Validation (No need for safeParse if the type is already enforced)
+    const result = addGiftcardFormSchema.parse(giftcard);
+
+    const newGiftcard = new Giftcard(result); // result is now type-safe
+    await newGiftcard.save();
+    revalidatePath('/dashboard/sell/giftcards');
+    return { error: null, successMessage: 'Tarjeta de regalo agregada' };
   } catch (error) {
-    console.log(error);
-    throw new Error('No se pudo agregar la tarjeta de regalo');
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.issues.map((issue) => `${issue.path[0]}: ${issue.message}`).join(', ');
+      return { error: errorMessage, successMessage: null };
+    } else if (error instanceof Error && error.name === 'MongoServerError' && (error as any).code === 11000) {
+      return { error: 'Error: la tarjeta de regalo ya se encuentra registrada', successMessage: null };
+    } else {
+      console.error(error);
+      return { error: 'Ocurrió un problema al agregar esta tarjeta de regalo', successMessage: null };
+    }
   }
 };

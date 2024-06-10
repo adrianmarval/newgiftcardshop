@@ -1,6 +1,7 @@
 import { GiftcardOffer } from '@/interfaces/giftcard-interface';
 import { IoFilterOutline, IoRefreshOutline } from 'react-icons/io5';
 import { GiftcardItem } from './GiftcardItem';
+import { UpdateOffersButton } from './UpdateOffersButton';
 
 interface Props {
   offers: GiftcardOffer[];
@@ -10,11 +11,7 @@ export const GiftcardGrid = ({ offers }: Props) => {
   return (
     <div className="mx-4 mb-6 rounded-lg bg-white px-4 py-2 shadow">
       <div className="mb-4 flex items-center justify-between text-sm">
-        <button className="mb-1 flex items-center justify-center rounded-lg p-1 text-lg">
-          <IoRefreshOutline size={20} />
-          Actualizar
-        </button>
-
+        <UpdateOffersButton />
         <div className="flex items-center">
           <IoFilterOutline size={20} className="mr-2" />
         </div>

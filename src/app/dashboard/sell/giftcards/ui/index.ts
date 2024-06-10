@@ -1,2 +1,2 @@
-export { GiftCardForm } from './GiftCardForm';
+export { AddGiftCardForm } from './AddGiftCardForm';
 export { GiftCardItem } from './GiftCardItem';

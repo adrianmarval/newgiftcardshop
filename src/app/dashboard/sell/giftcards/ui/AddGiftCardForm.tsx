@@ -1,18 +1,55 @@
-import { addGiftcard } from "@/actions/giftcard/add-giftcard";
+'use client';
+import { addGiftcard } from '@/actions/giftcard/add-giftcard';
+import { Brand, Country, Giftcard, Origin } from '@/interfaces/giftcard-interface';
+import { addGiftcardFormSchema } from '@/validations';
+import toast from 'react-hot-toast';
 
+interface Props {
+  addOptimisticGiftcard: (action: Giftcard) => void;
+}
 
-export const GiftCardForm = async () => {
+export const AddGiftCardForm = ({ addOptimisticGiftcard }: Props) => {
+  const handleAddGiftcard = async (formData: FormData) => {
+    const newGiftcard = {
+      _id: crypto.randomUUID(),
+      brand: formData.get('brand') as Brand,
+      country: formData.get('country') as Country,
+      origin: formData.get('origin') as Origin,
+      amount: formData.get('amount') as string,
+      claimCode: formData.get('claimCode') as string,
+    };
+
+    // Validar los datos del formulario con Zod
+    const result = addGiftcardFormSchema.safeParse(newGiftcard);
+
+    if (!result.success) {
+      let errorMessage = '';
+
+      result.error.issues.forEach((issue) => {
+        errorMessage = errorMessage + issue.path[0] + ': ' + issue.message + '. ';
+      });
+      toast.error(errorMessage);
+      return;
+    }
+
+    addOptimisticGiftcard(result.data);
+
+    const { error, successMessage } = await addGiftcard(result.data);
+
+    error ? toast.error(error, { className: 'text-xl' }) : toast.success(successMessage, { className: 'text-xl' });
+  };
+
   return (
-    <form action={addGiftcard}>
+    <form action={handleAddGiftcard}>
       <fieldset className="mb-4">
-        <legend className="block text-sm font-medium leading-3 text-gray-900">Tienda</legend>
+        <legend className="block text-sm font-medium leading-3 text-gray-900">Que quieres vender?</legend>
         <div className="mt-2 flex space-x-4 py-1.5">
           <label className="flex cursor-pointer items-center">
-            <input name="store" id="amazon" type="radio" value="amazon" className="h-4 w-4 border-gray-300" />
+            <input name="brand" id="amazon" type="radio" value="amazon" className="h-4 w-4 cursor-pointer border-gray-300" />
             <span className="ml-2 block text-sm font-medium text-gray-700">Amazon</span>
           </label>
           <label className="flex cursor-pointer items-center">
-            <input name="store" id="apple" type="radio" value="apple" className="h-4 w-4 border-gray-300" />
+            <input name="brand" id="apple" type="radio" value="apple" className="h-4 w-4 cursor-pointer border-gray-300" />
             <span className="ml-2 block text-sm font-medium text-gray-700">Apple</span>
           </label>
         </div>
@@ -42,9 +79,9 @@ export const GiftCardForm = async () => {
           id="origin"
           className="mt-2 block w-full rounded-md border-0 bg-white py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 sm:text-sm sm:leading-6"
         >
-          <option value="survey">Encuestas</option>
-          <option value="study">Estudios</option>
-          <option value="other">Otro</option>
+          <option value="surveys">Encuestas</option>
+          <option value="studies">Estudios</option>
+          <option value="offers">Offers</option>
         </select>
       </div>
 

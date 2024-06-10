@@ -1,23 +1,12 @@
-import { GiftCardForm, GiftCardItem } from './ui';
+import { getGiftcards } from '@/actions/giftcard/get-giftcards';
+import { GiftcardsTodo } from './ui/GiftcardsTodo';
 
+const page = async () => {
+  const giftcards = await getGiftcards();
 
-const page = () => {
   return (
     <div className="animate__animated animate__fadeIn rounded-xl bg-white p-4">
-      <h1 className="flex w-full items-center justify-center text-xl font-bold">Agregar tarjeta de regalo</h1>
-      <div className="mt-6 flex flex-col items-center justify-center gap-6 md:flex-row md:items-start 2xl:justify-start">
-        <div className="w-96 rounded-lg border p-4 shadow md:h-[500px]">
-          <h1 className="mb-6 text-xl font-bold">Nueva tarjeta de regalo</h1>
-          <GiftCardForm />
-        </div>
-
-        <div className="w-full overflow-auto rounded-xl p-4 md:h-[500px] md:px-12">
-          <GiftCardItem />
-          <GiftCardItem />
-          <GiftCardItem />
-          <GiftCardItem />
-        </div>
-      </div>
+      <GiftcardsTodo giftcards={giftcards} />
 
       <div className="mx-auto mt-4 h-fit rounded-xl border bg-white px-7 py-2 shadow-xl">
         <h2 className="text-2xl">Resumen</h2>

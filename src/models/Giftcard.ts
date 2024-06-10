@@ -20,15 +20,10 @@ const giftcardSchema: Schema = new Schema({
     type: Number,
     required: true,
   },
-  currency: {
-    type: String,
-    enum: ['usd', 'gbp', 'cad'],
-    required: true,
-  },
   status: {
     type: String,
     enum: ['available', 'on sale', 'sold', 'redeemed', 'disputed'],
-    required: true,
+    default: 'available',
   },
   origin: {
     type: String,
