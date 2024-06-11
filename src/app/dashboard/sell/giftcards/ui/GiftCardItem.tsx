@@ -7,9 +7,10 @@ import { IoTrashOutline, IoChevronDownOutline } from 'react-icons/io5';
 
 interface Props {
   giftcard: Giftcard;
+  handleDeleteGiftcard: (id: string) => void;
 }
 
-export const GiftCardItem = ({ giftcard }: Props) => {
+export const GiftCardItem = ({ giftcard, handleDeleteGiftcard }: Props) => {
   const [expanded, setExpanded] = useState(false);
 
   const { amount, brand, _id } = giftcard;
@@ -18,8 +19,6 @@ export const GiftCardItem = ({ giftcard }: Props) => {
     id: i + 1,
     code: `${brand.toUpperCase().slice(0, 3)}${Math.random().toString(36).slice(2, 8)}`,
   }));
-
-  const handleRemove = (id: string) => deleteGiftcard(id);
 
   return (
     <div className="relative mb-5 cursor-pointer items-center text-sm">
@@ -35,7 +34,7 @@ export const GiftCardItem = ({ giftcard }: Props) => {
                 Cantidad: <span className="font-semibold">{amount} </span>
               </p>
               <IoChevronDownOutline className={`-m-1.5 transition-transform ${expanded ? 'rotate-180' : ''}`} size={20} />
-              <p onClick={() => handleRemove(_id)} className="ml-2 cursor-pointer rounded-lg underline hover:scale-105">
+              <p onClick={() => handleDeleteGiftcard(_id)} className="ml-2 cursor-pointer rounded-lg underline hover:scale-105">
                 Remover
               </p>
             </div>

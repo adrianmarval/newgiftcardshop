@@ -1,15 +1,14 @@
 'use client';
-import { addGiftcard } from '@/actions/giftcard/add-giftcard';
 import { Brand, Country, Giftcard, Origin } from '@/interfaces/giftcard-interface';
 import { addGiftcardFormSchema } from '@/validations';
 import toast from 'react-hot-toast';
 
 interface Props {
-  addOptimisticGiftcard: (action: Giftcard) => void;
+  handleAddGiftcad: (newGiftcard: Giftcard) => void;
 }
 
-export const AddGiftCardForm = ({ addOptimisticGiftcard }: Props) => {
-  const handleAddGiftcard = async (formData: FormData) => {
+export const AddGiftCardForm = ({ handleAddGiftcad }: Props) => {
+  const handleSubmit = async (formData: FormData) => {
     const newGiftcard = {
       _id: crypto.randomUUID(),
       brand: formData.get('brand') as Brand,
@@ -19,7 +18,6 @@ export const AddGiftCardForm = ({ addOptimisticGiftcard }: Props) => {
       claimCode: formData.get('claimCode') as string,
     };
 
-    // Validar los datos del formulario con Zod
     const result = addGiftcardFormSchema.safeParse(newGiftcard);
 
     if (!result.success) {
@@ -32,15 +30,11 @@ export const AddGiftCardForm = ({ addOptimisticGiftcard }: Props) => {
       return;
     }
 
-    addOptimisticGiftcard(result.data);
-
-    const { error, successMessage } = await addGiftcard(result.data);
-
-    error ? toast.error(error, { className: 'text-xl' }) : toast.success(successMessage, { className: 'text-xl' });
+    handleAddGiftcad(result.data);
   };
 
   return (
-    <form action={handleAddGiftcard}>
+    <form action={handleSubmit}>
       <fieldset className="mb-4">
         <legend className="block text-sm font-medium leading-3 text-gray-900">Que quieres vender?</legend>
         <div className="mt-2 flex space-x-4 py-1.5">
