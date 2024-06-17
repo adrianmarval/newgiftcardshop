@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const addGiftcardFormSchema = z.object({
-  _id: z.string(),
+  id: z.string().optional(),
   brand: z.enum(['amazon', 'apple', 'wallmart']),
   country: z.enum(['us', 'uk', 'ca']),
   origin: z.enum(['surveys', 'offers', 'studies']),
@@ -13,4 +13,5 @@ export const addGiftcardFormSchema = z.object({
     })
     .transform((val) => val.toString()),
   claimCode: z.string().min(1, 'El código de canje es requerido'),
+  status: z.enum(['paused', 'published', 'in escrow', 'sold', 'disputed']),
 });

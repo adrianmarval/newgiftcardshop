@@ -3,7 +3,7 @@ import Link from 'next/link';
 export const Footer = () => {
   return (
     <div>
-      <footer className="mx-4 my-6 rounded-lg bg-white p-4 shadow md:flex md:items-center md:justify-between md:p-6 xl:p-8">
+      <footer className="my-6 rounded-lg bg-white p-4 shadow md:flex md:items-center md:justify-between md:p-6 xl:p-8">
         <ul className="mb-6 flex flex-wrap items-center md:mb-0">
           <li>
             <Link href="#" className="mr-4 text-sm font-normal text-gray-500 hover:underline md:mr-6">

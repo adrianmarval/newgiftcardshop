@@ -9,7 +9,7 @@ interface Props {
 
 export const GiftcardGrid = ({ offers }: Props) => {
   return (
-    <div className="mx-4 mb-6 rounded-lg bg-white px-4 py-2 shadow">
+    <div className="mb-6 rounded-lg bg-white px-2 py-2 shadow">
       <div className="mb-4 flex items-center justify-between text-sm">
         <UpdateOffersButton />
         <div className="flex items-center">
@@ -21,10 +21,9 @@ export const GiftcardGrid = ({ offers }: Props) => {
           No se encontraron ofertas disponibles
         </h1>
       )}
-
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
         {offers.map((offer) => (
-          <GiftcardItem key={offer.offerId} offer={offer} />
+          <GiftcardItem key={offer._id} offer={offer} />
         ))}
       </div>
     </div>

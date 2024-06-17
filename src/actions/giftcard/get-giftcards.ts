@@ -8,7 +8,7 @@ export const getGiftcards = async (): Promise<GiftcardInterface[]> => {
   try {
     await connectDb();
     const giftcards: GiftcardInterface[] = await Giftcard.find({}).lean();
-    return giftcards;
+    return giftcards.map((giftcard) => ({ ...giftcard, _id: giftcard._id!.toString() }));
   } catch (error) {
     console.log(error);
     return [];

@@ -13,9 +13,9 @@ export interface FiltersOptions {
   [category: string]: Filter[] | undefined;
 }
 
-export type ParamsFilters = {
-  category?: string;
-  values?: string | string[];
+export type GiftcardParamsFilters = {
+  country?: string | string[];
+  brand?: string | string[];
 };
 
 export const filterOptions: FiltersOptions = {

@@ -24,8 +24,7 @@ body {
   background: #ffffff;
 }
 
-/* Color turquesa a todos los botones y list items */
-li:hover,
+/* Color turquesa a todos los botones */
 button:hover {
   background-color: #5ce1e6;
   --tw-scale-x: 1.01;

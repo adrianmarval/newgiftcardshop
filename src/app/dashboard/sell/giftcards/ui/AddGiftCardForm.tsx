@@ -1,5 +1,5 @@
 'use client';
-import { Brand, Country, Giftcard, Origin } from '@/interfaces/giftcard-interface';
+import { Brand, Country, Giftcard, Origin, Status } from '@/interfaces/giftcard-interface';
 import { addGiftcardFormSchema } from '@/validations';
 import toast from 'react-hot-toast';
 
@@ -16,6 +16,7 @@ export const AddGiftCardForm = ({ handleAddGiftcad }: Props) => {
       origin: formData.get('origin') as Origin,
       amount: formData.get('amount') as string,
       claimCode: formData.get('claimCode') as string,
+      status: 'paused' as Status,
     };
 
     const result = addGiftcardFormSchema.safeParse(newGiftcard);
@@ -23,9 +24,10 @@ export const AddGiftCardForm = ({ handleAddGiftcad }: Props) => {
     if (!result.success) {
       let errorMessage = '';
 
-      result.error.issues.forEach((issue) => {
-        errorMessage = errorMessage + issue.path[0] + ': ' + issue.message + '. ';
-      });
+      result.error.issues.forEach(
+        (issue) => (errorMessage = `${errorMessage} ${issue.path[0].toString().toUpperCase()}: ${issue.message}.\n`),
+      );
+
       toast.error(errorMessage);
       return;
     }
@@ -81,7 +83,7 @@ export const AddGiftCardForm = ({ handleAddGiftcad }: Props) => {
 
       <div className="mb-4">
         <label htmlFor="claimCode" className="block text-sm font-medium leading-3 text-gray-900">
-          Monto
+          Monto de la tarjeta
         </label>
         <input
           type="number"
@@ -108,6 +110,7 @@ export const AddGiftCardForm = ({ handleAddGiftcad }: Props) => {
       <button type="submit" className="font-extraLigth rounded-lg bg-black px-4 py-2 text-xs text-white ">
         Agregar tarjeta
       </button>
+      <p className="mt-2 text-xs font-light">Comision del servicio: 5% sobre el precio de venta</p>
     </form>
   );
 };

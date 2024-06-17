@@ -15,7 +15,7 @@ export const FilterBar = () => {
 
   return (
     <>
-      <div onClick={toggleFilterIsOpen} className="relative mx-4 mb-4 flex justify-center">
+      <div onClick={toggleFilterIsOpen} className="relative mb-4 flex justify-center">
         <button className="relative w-full rounded-lg bg-white p-4 shadow">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Filter</h2>

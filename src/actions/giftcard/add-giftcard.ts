@@ -10,23 +10,20 @@ import { revalidatePath } from 'next/cache';
 export const addGiftcard = async (giftcard: unknown) => {
   try {
     await connectDb();
-
-    // Validation (No need for safeParse if the type is already enforced)
     const result = addGiftcardFormSchema.parse(giftcard);
-
-    const newGiftcard = new Giftcard(result); // result is now type-safe
+    const newGiftcard = new Giftcard(result);
     await newGiftcard.save();
     revalidatePath('/dashboard/sell/giftcards');
-    return { error: null, successMessage: 'Tarjeta de regalo agregada' };
+    return { error: null };
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessage = error.issues.map((issue) => `${issue.path[0]}: ${issue.message}`).join(', ');
-      return { error: errorMessage, successMessage: null };
+      return { error: errorMessage };
     } else if (error instanceof Error && error.name === 'MongoServerError' && (error as any).code === 11000) {
-      return { error: 'Error: la tarjeta de regalo ya se encuentra registrada', successMessage: null };
+      return { error: 'Error: la tarjeta de regalo ya se encuentra registrada' };
     } else {
       console.error(error);
-      return { error: 'Ocurrió un problema al agregar esta tarjeta de regalo', successMessage: null };
+      return { error: 'Ocurrió un problema al agregar esta tarjeta de regalo' };
     }
   }
 };

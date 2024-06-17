@@ -1,10 +1,11 @@
 export interface Giftcard {
-  _id: string;
+  _id?: string;
   brand: Brand;
   country: Country;
   origin: Origin;
   amount: string;
   claimCode: string;
+  status: Status;
 }
 
 export interface AvailableCard {
@@ -14,14 +15,15 @@ export interface AvailableCard {
 }
 
 export interface GiftcardOffer {
+  _id: string;
   date: Date;
-  offerId: string;
   seller: string;
-  totalAmount: number;
+  amount: number;
   brand: Brand;
   country: Country;
   currency: Currency;
-  availableCards: AvailableCard[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type Categories = 'country' | 'brand';
@@ -33,3 +35,5 @@ export type Country = 'ca' | 'uk' | 'us';
 export type Currency = 'cad' | 'gbp' | 'usd';
 
 export type Origin = 'surveys' | 'offers' | 'studies';
+
+export type Status = 'paused' | 'published' | 'in escrow' | 'sold' | 'disputed';

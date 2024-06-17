@@ -27,5 +27,6 @@ export const connectDb = async (): Promise<void> => {
     } else {
       console.log(new Date(), 'An unknown error occurred while connecting to MongoDB');
     }
+    throw new Error('Ocurrio un problema al conectar la base de datos');
   }
 };
