@@ -8,15 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { AlertCircle, Check, X } from "lucide-react";
 import { Suspense } from "react";
 
-function ResetPasswordFormContent() {
+function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
@@ -27,6 +23,10 @@ function ResetPasswordFormContent() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const portalPath = portal === "buy" ? "" : `/${portal}`;
+  const authPath = `${portalPath}/auth`;
+
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
     uppercase: false,
@@ -35,7 +35,7 @@ function ResetPasswordFormContent() {
     special: false,
   });
 
-  const handleOtpVerify = async (e: React.SubmitEvent) => {
+  const handleOtpVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -125,7 +125,7 @@ function ResetPasswordFormContent() {
         return;
       }
 
-      router.push("/auth/login?reset=success");
+      router.push(`${authPath}/login?reset=success`);
     } catch (err) {
       setError("An error occurred. Please try again.");
       console.error(err);
@@ -134,34 +134,20 @@ function ResetPasswordFormContent() {
     }
   };
 
-  const PasswordCheckItem = ({
-    valid,
-    label,
-  }: {
-    valid: boolean;
-    label: string;
-  }) => (
+  const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
     <div className="flex items-center gap-2 text-sm">
-      {valid ? (
-        <Check className="h-4 w-4 text-green-600" />
-      ) : (
-        <X className="h-4 w-4 text-muted-foreground" />
-      )}
-      <span className={valid ? "text-green-600" : "text-muted-foreground"}>
-        {label}
-      </span>
+      {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-muted-foreground" />}
+      <span className={valid ? "text-primary font-medium" : "text-muted-foreground"}>{label}</span>
     </div>
   );
 
   return (
-    <Card className="w-full max-w-md mx-auto p-8">
+    <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Reset Password</h1>
-          <p className="text-muted-foreground">
-            {stage === "otp"
-              ? "Enter the verification code sent to your email"
-              : "Create a new password for your account"}
+          <p className="text-muted-foreground text-sm">
+            {stage === "otp" ? "Enter the verification code sent to your email" : "Create a new password for your account"}
           </p>
         </div>
 
@@ -174,27 +160,21 @@ function ResetPasswordFormContent() {
 
         {stage === "otp" ? (
           <form onSubmit={handleOtpVerify} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Enter verification code
-              </label>
+            <div className="space-y-4">
+              <Label className="text-xs uppercase tracking-wider font-semibold opacity-70">Enter verification code</Label>
               <InputOTP value={otp} onChange={setOtp} maxLength={6}>
                 <InputOTPGroup className="flex justify-center gap-2">
-                  <InputOTPSlot index={0} className="h-12 w-12" />
-                  <InputOTPSlot index={1} className="h-12 w-12" />
-                  <InputOTPSlot index={2} className="h-12 w-12" />
-                  <InputOTPSlot index={3} className="h-12 w-12" />
-                  <InputOTPSlot index={4} className="h-12 w-12" />
-                  <InputOTPSlot index={5} className="h-12 w-12" />
+                  <InputOTPSlot index={0} className="h-12 w-12 bg-muted/50 border-none" />
+                  <InputOTPSlot index={1} className="h-12 w-12 bg-muted/50 border-none" />
+                  <InputOTPSlot index={2} className="h-12 w-12 bg-muted/50 border-none" />
+                  <InputOTPSlot index={3} className="h-12 w-12 bg-muted/50 border-none" />
+                  <InputOTPSlot index={4} className="h-12 w-12 bg-muted/50 border-none" />
+                  <InputOTPSlot index={5} className="h-12 w-12 bg-muted/50 border-none" />
                 </InputOTPGroup>
               </InputOTP>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || otp.length !== 6}
-            >
+            <Button type="submit" className="w-full h-11 font-semibold" disabled={loading || otp.length !== 6}>
               {loading ? (
                 <>
                   <Spinner className="h-4 w-4 mr-2" />
@@ -208,7 +188,9 @@ function ResetPasswordFormContent() {
         ) : (
           <form onSubmit={handlePasswordReset} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword" className="text-xs uppercase tracking-wider font-semibold opacity-70">
+                New Password
+              </Label>
               <Input
                 id="newPassword"
                 type="password"
@@ -217,34 +199,24 @@ function ResetPasswordFormContent() {
                 onChange={handlePasswordChange}
                 required
                 disabled={loading}
+                className="bg-muted/50 border-none h-11"
               />
-              <div className="space-y-2 mt-2 p-3 bg-muted rounded-md">
-                <p className="text-xs font-medium">Password requirements:</p>
-                <PasswordCheckItem
-                  valid={passwordChecks.length}
-                  label="At least 8 characters"
-                />
-                <PasswordCheckItem
-                  valid={passwordChecks.uppercase}
-                  label="Uppercase letter"
-                />
-                <PasswordCheckItem
-                  valid={passwordChecks.lowercase}
-                  label="Lowercase letter"
-                />
-                <PasswordCheckItem
-                  valid={passwordChecks.number}
-                  label="Number"
-                />
-                <PasswordCheckItem
-                  valid={passwordChecks.special}
-                  label="Special character"
-                />
+              <div className="space-y-2 mt-2 p-3 bg-muted/30 rounded-lg">
+                <p className="text-xs font-semibold uppercase opacity-60">Requirements:</p>
+                <div className="grid grid-cols-1 gap-1">
+                  <PasswordCheckItem valid={passwordChecks.length} label="At least 8 characters" />
+                  <PasswordCheckItem valid={passwordChecks.uppercase} label="Uppercase letter" />
+                  <PasswordCheckItem valid={passwordChecks.lowercase} label="Lowercase letter" />
+                  <PasswordCheckItem valid={passwordChecks.number} label="Number" />
+                  <PasswordCheckItem valid={passwordChecks.special} label="Special character" />
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-xs uppercase tracking-wider font-semibold opacity-70">
+                Confirm Password
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -253,17 +225,14 @@ function ResetPasswordFormContent() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="bg-muted/50 border-none h-11"
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full"
-              disabled={
-                loading ||
-                newPassword !== confirmPassword ||
-                !Object.values(passwordChecks).every(Boolean)
-              }
+              className="w-full h-11 font-semibold"
+              disabled={loading || newPassword !== confirmPassword || !Object.values(passwordChecks).every(Boolean)}
             >
               {loading ? (
                 <>
@@ -281,10 +250,10 @@ function ResetPasswordFormContent() {
   );
 }
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ResetPasswordFormContent />
+      <ResetPasswordFormContent portal={portal} />
     </Suspense>
   );
 }

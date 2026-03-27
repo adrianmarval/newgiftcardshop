@@ -11,14 +11,17 @@ import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, CheckCircle } from "lucide-react";
 
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const portalPath = portal === "buy" ? "" : `/${portal}`;
+  const authPath = `${portalPath}/auth`;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess(false);
@@ -33,6 +36,7 @@ export function ForgotPasswordForm() {
         body: JSON.stringify({
           email,
           action: "request-otp",
+          portal, // Include portal in request if needed
         }),
       });
 
@@ -45,7 +49,7 @@ export function ForgotPasswordForm() {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push(`/auth/reset-password?email=${encodeURIComponent(email)}`);
+        router.push(`${authPath}/reset-password?email=${encodeURIComponent(email)}`);
       }, 2000);
     } catch (err) {
       setError("An error occurred. Please try again.");
@@ -56,13 +60,11 @@ export function ForgotPasswordForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto p-8">
+    <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Forgot Password</h1>
-          <p className="text-muted-foreground">
-            Enter your email to receive password recovery instructions
-          </p>
+          <p className="text-muted-foreground text-sm">Enter your email to receive password recovery instructions</p>
         </div>
 
         {error && (
@@ -73,7 +75,7 @@ export function ForgotPasswordForm() {
         )}
 
         {success && (
-          <Alert className="border-green-600 bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-50">
+          <Alert className="border-primary/50 bg-primary/5 text-primary">
             <CheckCircle className="h-4 w-4" />
             <span>Recovery code sent! Redirecting...</span>
           </Alert>
@@ -81,7 +83,9 @@ export function ForgotPasswordForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email" className="text-xs uppercase tracking-wider font-semibold opacity-70">
+              Email Address
+            </Label>
             <Input
               id="email"
               type="email"
@@ -90,14 +94,11 @@ export function ForgotPasswordForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading || success}
+              className="bg-muted/50 border-none h-11"
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading || success}
-          >
+          <Button type="submit" className="w-full h-11 font-semibold" disabled={loading || success}>
             {loading ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
@@ -111,10 +112,7 @@ export function ForgotPasswordForm() {
 
         <p className="text-sm text-muted-foreground text-center">
           Remember your password?{" "}
-          <Link
-            href="/auth/login"
-            className="text-primary hover:underline font-medium"
-          >
+          <Link href={`${authPath}/login`} className="text-primary hover:underline font-semibold">
             Sign in
           </Link>
         </p>

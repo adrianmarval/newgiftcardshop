@@ -6,15 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { AlertCircle } from "lucide-react";
 import { Suspense } from "react";
 
-function Verify2FAFormContent() {
+function Verify2FAFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
@@ -23,7 +19,10 @@ function Verify2FAFormContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleVerify = async (e: React.SubmitEvent) => {
+  const portalPath = portal === "buy" ? "" : `/${portal}`;
+  const dashboardPath = `${portalPath}/dashboard`;
+
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -43,6 +42,7 @@ function Verify2FAFormContent() {
         body: JSON.stringify({
           email,
           code,
+          portal,
           type: "two-factor",
         }),
       });
@@ -54,7 +54,7 @@ function Verify2FAFormContent() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(dashboardPath);
     } catch (err) {
       setError("An error occurred. Please try again.");
       console.error(err);
@@ -64,13 +64,13 @@ function Verify2FAFormContent() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto p-8">
+    <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Two-Factor Authentication</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Enter the verification code sent to <br />
-            <span className="font-medium">{email}</span>
+            <span className="font-semibold text-primary">{email}</span>
           </p>
         </div>
 
@@ -82,25 +82,21 @@ function Verify2FAFormContent() {
         )}
 
         <form onSubmit={handleVerify} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Enter 6-digit code</label>
+          <div className="space-y-4">
+            <label className="text-xs uppercase tracking-wider font-semibold opacity-70">Enter 6-digit code</label>
             <InputOTP value={code} onChange={setCode} maxLength={6}>
               <InputOTPGroup className="flex justify-center gap-2">
-                <InputOTPSlot index={0} className="h-12 w-12" />
-                <InputOTPSlot index={1} className="h-12 w-12" />
-                <InputOTPSlot index={2} className="h-12 w-12" />
-                <InputOTPSlot index={3} className="h-12 w-12" />
-                <InputOTPSlot index={4} className="h-12 w-12" />
-                <InputOTPSlot index={5} className="h-12 w-12" />
+                <InputOTPSlot index={0} className="h-12 w-12 bg-muted/50 border-none" />
+                <InputOTPSlot index={1} className="h-12 w-12 bg-muted/50 border-none" />
+                <InputOTPSlot index={2} className="h-12 w-12 bg-muted/50 border-none" />
+                <InputOTPSlot index={3} className="h-12 w-12 bg-muted/50 border-none" />
+                <InputOTPSlot index={4} className="h-12 w-12 bg-muted/50 border-none" />
+                <InputOTPSlot index={5} className="h-12 w-12 bg-muted/50 border-none" />
               </InputOTPGroup>
             </InputOTP>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading || code.length !== 6}
-          >
+          <Button type="submit" className="w-full h-11 font-semibold" disabled={loading || code.length !== 6}>
             {loading ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
@@ -116,10 +112,10 @@ function Verify2FAFormContent() {
   );
 }
 
-export function Verify2FAForm() {
+export function Verify2FAForm({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Verify2FAFormContent />
+      <Verify2FAFormContent portal={portal} />
     </Suspense>
   );
 }
