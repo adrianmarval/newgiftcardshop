@@ -4,7 +4,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export const logout = async () => {
+export const logout = async (formData: FormData) => {
+  const portal = (formData.get("portal") as string) || "buy";
   await auth.api.signOut({ headers: await headers() });
-  redirect("/auth/login");
+  redirect(`/${portal}/auth/login`);
 };

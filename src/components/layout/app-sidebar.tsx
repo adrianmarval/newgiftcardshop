@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  IconChartBar,
-  IconDashboard,
-  IconFolder,
-  IconListDetails,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconChartBar, IconDashboard, IconFolder, IconListDetails, IconUsers } from "@tabler/icons-react";
 
 import {
   Sidebar,
@@ -57,10 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
               <Link className="flex items-center" href="#">
                 <span className="text-3xl font-semibold">GiftcardShop</span>
               </Link>
@@ -75,10 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title} className="h-20">
-                  <SidebarMenuButton
-                    className="cursor-pointer h-full"
-                    tooltip={item.title}
-                  >
+                  <SidebarMenuButton className="cursor-pointer h-full" tooltip={item.title}>
                     {item.icon && <item.icon />}
                     <span className="text-3xl">{item.title}</span>
                   </SidebarMenuButton>

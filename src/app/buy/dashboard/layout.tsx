@@ -1,9 +1,12 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/layout/";
-import { AppHeader } from "@/components/layout/";
+import { BuyerSidebar } from "@/components/layout/buyer-sidebar";
+import { AppHeader } from "@/components/layout/app-header";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { requireRoles } from "@/lib/get-session";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function BuyerDashboardLayout({ children }: { children: React.ReactNode }) {
+  await requireRoles(["BUYER", "ADMIN"], "/buy/auth/login");
+
   return (
     <SidebarProvider
       style={
@@ -14,7 +17,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
     >
       <TooltipProvider>
-        <AppSidebar variant="sidebar" />
+        <BuyerSidebar variant="sidebar" />
         <SidebarInset>
           <AppHeader />
           {children}
