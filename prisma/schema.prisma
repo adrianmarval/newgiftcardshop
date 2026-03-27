@@ -1,0 +1,280 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --------------------------------------
+// Modelos de Usuario y Autenticación
+// --------------------------------------
+
+model User {
+  id            String  @id @default(cuid())
+  name          String
+  email         String  @unique
+  emailVerified Boolean @default(false)
+  image         String?
+  role          Role[]  @default([BUYER])
+
+  // Perfil de Trading (Tasas de cambio con precisión)
+  buyRate    Decimal? @db.Decimal(10, 4) // 4 decimales para tasas más precisas
+  sellerRate Decimal? @db.Decimal(10, 4)
+
+  // Relaciones
+  sessions        Session[]
+  accounts        Account[]
+  giftcards       Giftcard[]
+  orders          Order[]
+  paymentMethod   PaymentMethod?
+  giftcardBatches GiftcardBatch[]
+
+  // Metadatos
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// --------------------------------------
+// Modelos de Negocio (Giftcards & Orders)
+// --------------------------------------
+
+model Giftcard {
+  id        String         @id @default(cuid())
+  brand     GiftCardBrand
+  claimCode String         @unique
+  pinCode   String?
+  amount    Decimal        @db.Decimal(10, 2) // Valor nominal
+  price     Decimal        @db.Decimal(10, 2) // Precio de venta
+  isClaimed Boolean        @default(false)
+  status    GiftcardStatus @default(UNUSED)
+
+  // Relaciones
+  ownerId String?
+  owner   User?   @relation(fields: [ownerId], references: [id])
+
+  countryId String?
+  country   Country? @relation(fields: [countryId], references: [id])
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  batchId String?
+  batch   GiftcardBatch? @relation(fields: [batchId], references: [id])
+
+  @@map("giftcard")
+}
+
+model Country {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  code      String     @unique
+  giftcards Giftcard[]
+
+  @@map("country")
+}
+
+model Order {
+  id     String      @id @default(cuid())
+  total  Decimal     @db.Decimal(10, 2)
+  status OrderStatus
+
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  giftcards Giftcard[]
+  payments  Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order")
+}
+
+model GiftcardBatch {
+  id String @id @default(cuid())
+
+  // Relaciones
+  user      User?      @relation(fields: [userId], references: [id])
+  userId    String?
+  giftcards Giftcard[]
+  payments  Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("giftcard_batch")
+}
+
+model Payment {
+  id              String          @id @default(cuid())
+  amount          Decimal         @db.Decimal(10, 2)
+  balanceAfter    Decimal         @default(0) @db.Decimal(10, 2)
+  status          PaymentStatus
+  transactionType TransactionType
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  batchId String?
+  batch   GiftcardBatch? @relation(fields: [batchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payment")
+}
+
+model PaymentMethod {
+  id      String            @id @default(cuid())
+  coin    SupportedCoins
+  address String
+  network SupportedNetworks
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payment_method")
+}
+
+// --------------------------------------
+// Enums
+// --------------------------------------
+
+enum Role {
+  ADMIN
+  SELLER
+  BUYER
+}
+
+enum GiftCardBrand {
+  AMAZON
+  EBAY
+  WALMART
+  TARGET
+  BEST_BUY
+  HOME_DEPOT
+  LOWES
+  MACY_S
+  KOHLS
+  STEAM
+  PLAYSTATION_NETWORK
+  XBOX
+  NINTENDO_ESHOP
+  ROBLOX
+  RAZER_GOLD
+  APPLE_ITUNES
+  GOOGL_PLAY
+  NETFLIX
+  HULU
+  SPOTIFY
+  STARBUCKS
+  CHIPOTLE
+  DOMINOS
+  UBER_EATS
+  DOORDASH
+  CHEESECAKE_FACTORY
+  NIKE
+  ADIDAS
+  SEPHORA
+  VANILLA_VISA
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum GiftcardStatus {
+  USED
+  UNUSED
+  ALREADY_USED
+  INVALID
+  DEACTIVATED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+}
+
+enum SupportedNetworks {
+  BSC
+  TRX
+  MATIC
+  AVAXC
+  PLASMA
+}
+
+enum SupportedCoins {
+  USDT
+}
