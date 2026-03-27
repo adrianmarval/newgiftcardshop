@@ -1,6 +1,5 @@
 "use client";
 import { FaMoon, FaSun } from "react-icons/fa";
-
 import { Button } from "./button";
 import { useTheme } from "next-themes";
 

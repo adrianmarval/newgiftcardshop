@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💳 New GiftCard Shop
 
-## Getting Started
+Una plataforma moderna y robusta para la compra y venta de Gift Cards, construida con las últimas tecnologías del ecosistema de React y Next.js.
 
-First, run the development server:
+---
+
+## 🚀 Tecnologías Principales
+
+El proyecto utiliza un stack de vanguardia para garantizar rendimiento, escalabilidad y una excelente experiencia de desarrollador:
+
+- **Framework:** [Next.js 15/16](https://nextjs.org/) (App Router)
+- **Lenguaje:** [TypeScript](https://www.typescriptlang.org/)
+- **Base de Datos:** [PostgreSQL](https://www.postgresql.org/)
+- **ORM:** [Prisma](https://www.prisma.io/)
+- **Autenticación:** [Better Auth](https://better-auth.com/)
+- **Estilos:** [Tailwind CSS v4](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
+- **Iconos:** [Lucide React](https://lucide.dev/) & [Tabler Icons](https://tabler-icons.io/)
+- **Validación:** [Zod](https://zod.dev/)
+
+---
+
+## 🛠️ Requisitos Previos
+
+Antes de comenzar, asegúrate de tener instalado:
+
+- [Node.js](https://nodejs.org/) (Versión 20 o superior recomendada)
+- [Docker](https://www.docker.com/) y [Docker Compose](https://docs.docker.com/compose/) (Para la base de datos local)
+- [npm](https://www.npmjs.com/) o tu gestor de paquetes preferido
+
+---
+
+## 📦 Instalación y Configuración
+
+Sigue estos pasos para levantar el entorno de desarrollo desde cero:
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/tu-usuario/newgiftcardshop.git
+cd newgiftcardshop
+```
+
+### 2. Instalar dependencias
+```bash
+npm install
+```
+> **Nota:** El script `postinstall` ejecutará automáticamente `prisma generate` para generar el cliente de base de datos en `src/generated/prisma`.
+
+### 3. Configurar variables de entorno
+Copia el archivo de ejemplo y ajusta los valores según sea necesario:
+```bash
+cp .env.example .env
+```
+Asegúrate de que tu `DATABASE_URL` coincida con la configuración de Docker (ver paso siguiente).
+
+### 4. Levantar la Base de Datos (Docker)
+Este proyecto incluye un archivo `docker-compose.yml` para facilitar el despliegue de PostgreSQL de forma local.
+```bash
+docker compose up -d
+```
+*   **Host:** `localhost`
+*   **Puerto:** `5444` (mapeado al 5432 interno)
+*   **Usuario:** `username`
+*   **Password:** `password`
+*   **DB Name:** `default_database`
+
+Tu `DATABASE_URL` en el `.env` debería verse así:
+```env
+DATABASE_URL="postgresql://username:password@localhost:5444/default_database?schema=public"
+```
+
+### 5. Sincronizar el Schema de Prisma
+Una vez que la base de datos esté corriendo, aplica el esquema:
+```bash
+npx prisma db push
+```
+
+### 6. (Opcional) Cargar datos de prueba (Seed)
+Si deseas poblar la base de datos con usuarios y países iniciales:
+```bash
+npx prisma db seed
+```
+
+---
+
+## 💻 Ejecución en Desarrollo
+
+Para iniciar el servidor de desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📂 Estructura del Proyecto
 
-## Learn More
+*   `src/app`: Rutas y lógica de la aplicación (Next.js App Router).
+*   `src/components`: Componentes de UI reutilizables.
+*   `src/actions`: Server Actions para lógica de negocio.
+*   `src/lib`: Utilidades, configuraciones de Prisma y clientes compartidos.
+*   `prisma/`: Definición del esquema de la base de datos y scripts de seed.
+*   `public/`: Assets estáticos.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📜 Scripts Disponibles
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Comando | Descripción |
+| :--- | :--- |
+| `npm run dev` | Inicia el servidor de desarrollo. |
+| `npm run build` | Compila la aplicación para producción. |
+| `npm run start` | Inicia la aplicación compilada. |
+| `npm run lint` | Ejecuta el linter para encontrar errores de código. |
+| `npx prisma studio` | Abre una interfaz web para explorar la base de datos. |
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🤝 Contribución
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Haz un Fork del proyecto.
+2. Crea una nueva rama (`git checkout -b feature/nueva-funcionalidad`).
+3. Realiza tus cambios y haz commit (`git commit -m 'Añade nueva funcionalidad'`).
+4. Sube los cambios (`git push origin feature/nueva-funcionalidad`).
+5. Abre un Pull Request.
+
+---
+
+Desarrollado con ❤️ para la comunidad de Gift Cards.
