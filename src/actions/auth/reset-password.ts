@@ -14,10 +14,7 @@ const ResetPasswordData = z
       .regex(/[A-Z]/, "Password must contain an uppercase letter")
       .regex(/[a-z]/, "Password must contain a lowercase letter")
       .regex(/[0-9]/, "Password must contain a number")
-      .regex(
-        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
-        "Password must contain a special character",
-      ),
+      .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "Password must contain a special character"),
     confirmPassword: z.string(),
     portal: z.enum(["sell", "buy", "admin"]),
   })
@@ -26,10 +23,7 @@ const ResetPasswordData = z
     path: ["confirmPassword"],
   });
 
-export const resetPassword = async (
-  prevState: unknown,
-  formData: FormData,
-) => {
+export const resetPassword = async (prevState: unknown, formData: FormData) => {
   const result = ResetPasswordData.safeParse({
     token: formData.get("token"),
     newPassword: formData.get("newPassword"),

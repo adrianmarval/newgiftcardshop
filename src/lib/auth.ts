@@ -9,6 +9,7 @@ import { VerifyEmailTemplate } from "@/emails/verify-email";
 import { ResetPasswordTemplate } from "@/emails/reset-password";
 
 export const auth = betterAuth({
+  appName: "Solmaira", // Added appName
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -16,9 +17,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      const html = await render(
-        ResetPasswordTemplate({ url, userName: user.name }),
-      );
+      const html = await render(ResetPasswordTemplate({ url, userName: user.name }));
       await resend.emails.send({
         from: EMAIL_FROM,
         to: user.email,
@@ -34,9 +33,7 @@ export const auth = betterAuth({
       // Extract the token from the URL for display as code
       const token = new URL(url).searchParams.get("token") || "";
       const code = token.slice(0, 6).toUpperCase();
-      const html = await render(
-        VerifyEmailTemplate({ code, userName: user.name }),
-      );
+      const html = await render(VerifyEmailTemplate({ code, userName: user.name }));
       await resend.emails.send({
         from: EMAIL_FROM,
         to: user.email,
@@ -54,5 +51,11 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins: [nextCookies(), twoFactor()],
+  plugins: [
+    twoFactor({
+      issuer: "Solmaira", // Added issuer
+      skipVerificationOnEnable: true,
+    }),
+    nextCookies(),
+  ],
 });

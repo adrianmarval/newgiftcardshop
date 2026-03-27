@@ -37,31 +37,41 @@ export const login = async (prevState: unknown, formData: FormData) => {
   const callbackURL = dashboardMap[portal];
   const requiredRole = roleMap[portal];
 
+  // 1. Declarar una variable para almacenar la ruta de destino
+  let redirectPath: string | null = null;
+
   try {
-    const response = await auth.api.signInEmail({
+    const response = (await auth.api.signInEmail({
       body: { email, password, callbackURL },
       headers: await headers(),
-    }) as any;
+    })) as any;
 
-    // Handle 2FA redirect
+    console.log(response);
+
+    // 2. Asignar la ruta de 2FA si es necesario (sin hacer el redirect aún)
     if (response.twoFactorRedirect) {
-      redirect(`/${portal}/auth/verify-2fa`);
-    }
+      redirectPath = `/${portal}/auth/verify-2fa`;
+    } else {
+      // Verificar si el usuario tiene el rol requerido (solo si no va a 2FA)
+      const user = response.user as typeof response.user & {
+        role?: string[];
+      };
 
-    // Verify user has the required role
-    const user = response.user as typeof response.user & {
-      role?: string[];
-    };
+      if (!user.role?.includes(requiredRole)) {
+        await auth.api.signOut({ headers: await headers() });
+        return `Your account does not have ${requiredRole.toLowerCase()} access`;
+      }
 
-    if (!user.role?.includes(requiredRole)) {
-      // Sign them out since they don't have access to this portal
-      await auth.api.signOut({ headers: await headers() });
-      return `Your account does not have ${requiredRole.toLowerCase()} access`;
+      // Si todo sale bien, asignamos la ruta del dashboard
+      redirectPath = callbackURL;
     }
   } catch (error) {
     console.error("Login error:", error);
     return "Invalid email or password";
   }
 
-  redirect(callbackURL);
+  // 3. Ejecutar la redirección FUERA del try/catch
+  if (redirectPath) {
+    redirect(redirectPath);
+  }
 };
