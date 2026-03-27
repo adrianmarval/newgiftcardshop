@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { IconDashboard, IconSearch, IconShoppingCart, IconWallet, IconSettings } from "@tabler/icons-react";
+import { IconDashboard, IconSearch, IconShoppingCart, IconWallet, IconSettings, IconUser } from "@tabler/icons-react";
 import Form from "next/form";
 
 import {
@@ -25,6 +25,7 @@ const navItems = [
   { title: "Browse Cards", url: "/buy/dashboard/browse", icon: IconSearch },
   { title: "My Orders", url: "/buy/dashboard/orders", icon: IconShoppingCart },
   { title: "Wallet", url: "/buy/dashboard/wallet", icon: IconWallet },
+  { title: "Profile", url: "/buy/dashboard/profile", icon: IconUser },
   { title: "Settings", url: "/buy/dashboard/settings", icon: IconSettings },
 ];
 

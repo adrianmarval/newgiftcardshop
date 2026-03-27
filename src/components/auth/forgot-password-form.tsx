@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,105 +9,68 @@ import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { forgotPassword } from "@/actions";
+import Form from "next/form";
+
+type ForgotPasswordState = { error?: string; success?: boolean; email?: string } | null;
 
 export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [state, formAction, isPending] = useActionState<ForgotPasswordState, FormData>(forgotPassword, null);
 
-  const portalPath = portal === "buy" ? "" : `/${portal}`;
+  const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
   const authPath = `${portalPath}/auth`;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess(false);
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/password-recovery", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          action: "request-otp",
-          portal, // Include portal in request if needed
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Failed to process request");
-        return;
-      }
-
-      setSuccess(true);
-      setTimeout(() => {
-        router.push(`${authPath}/reset-password?email=${encodeURIComponent(email)}`);
-      }, 2000);
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Forgot Password</h1>
-          <p className="text-muted-foreground text-sm">Enter your email to receive password recovery instructions</p>
+          <p className="text-muted-foreground text-sm">Enter your email to receive a password reset link</p>
         </div>
 
-        {error && (
+        {state?.error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <span>{error}</span>
+            <span>{state.error}</span>
           </Alert>
         )}
 
-        {success && (
+        {state?.success && (
           <Alert className="border-primary/50 bg-primary/5 text-primary">
             <CheckCircle className="h-4 w-4" />
-            <span>Recovery code sent! Redirecting...</span>
+            <span>If an account exists with that email, a reset link has been sent. Check your inbox.</span>
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <Form action={formAction} className="space-y-4">
+          <input type="hidden" name="portal" value={portal} />
+
           <div className="space-y-2">
             <Label htmlFor="email" className="text-xs uppercase tracking-wider font-semibold opacity-70">
               Email Address
             </Label>
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={loading || success}
+              disabled={isPending || state?.success}
               className="bg-muted/50 border-none h-11"
             />
           </div>
 
-          <Button type="submit" className="w-full h-11 font-semibold" disabled={loading || success}>
-            {loading ? (
+          <Button type="submit" className="w-full h-11 font-semibold" disabled={isPending || state?.success}>
+            {isPending ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
                 Sending...
               </>
             ) : (
-              "Send Recovery Code"
+              "Send Reset Link"
             )}
           </Button>
-        </form>
+        </Form>
 
         <p className="text-sm text-muted-foreground text-center">
           Remember your password?{" "}

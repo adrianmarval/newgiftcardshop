@@ -1,76 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { AlertCircle } from "lucide-react";
-import { Suspense } from "react";
+import { AlertCircle, ShieldCheck } from "lucide-react";
+import { verify2FA } from "@/actions";
+import Form from "next/form";
+import { Suspense, useState } from "react";
 
 function Verify2FAFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
-
   const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const portalPath = portal === "buy" ? "" : `/${portal}`;
-  const dashboardPath = `${portalPath}/dashboard`;
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (code.length !== 6) {
-      setError("Please enter a 6-digit code");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          code,
-          portal,
-          type: "two-factor",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Verification failed");
-        return;
-      }
-
-      router.push(dashboardPath);
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [error, formAction, isPending] = useActionState(verify2FA, null);
 
   return (
     <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
-        <div className="space-y-2">
+        <div className="space-y-2 text-center">
+          <ShieldCheck className="h-12 w-12 text-primary mx-auto" />
           <h1 className="text-2xl font-bold">Two-Factor Authentication</h1>
           <p className="text-muted-foreground text-sm">
-            Enter the verification code sent to <br />
-            <span className="font-semibold text-primary">{email}</span>
+            Enter the verification code from your authenticator app
           </p>
         </div>
 
@@ -81,7 +36,10 @@ function Verify2FAFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "
           </Alert>
         )}
 
-        <form onSubmit={handleVerify} className="space-y-6">
+        <Form action={formAction} className="space-y-6">
+          <input type="hidden" name="portal" value={portal} />
+          <input type="hidden" name="code" value={code} />
+
           <div className="space-y-4">
             <label className="text-xs uppercase tracking-wider font-semibold opacity-70">Enter 6-digit code</label>
             <InputOTP value={code} onChange={setCode} maxLength={6}>
@@ -96,8 +54,8 @@ function Verify2FAFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "
             </InputOTP>
           </div>
 
-          <Button type="submit" className="w-full h-11 font-semibold" disabled={loading || code.length !== 6}>
-            {loading ? (
+          <Button type="submit" className="w-full h-11 font-semibold" disabled={isPending || code.length !== 6}>
+            {isPending ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
                 Verifying...
@@ -106,7 +64,7 @@ function Verify2FAFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "
               "Verify Code"
             )}
           </Button>
-        </form>
+        </Form>
       </div>
     </Card>
   );

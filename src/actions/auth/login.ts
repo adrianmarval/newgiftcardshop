@@ -41,7 +41,12 @@ export const login = async (prevState: unknown, formData: FormData) => {
     const response = await auth.api.signInEmail({
       body: { email, password, callbackURL },
       headers: await headers(),
-    });
+    }) as any;
+
+    // Handle 2FA redirect
+    if (response.twoFactorRedirect) {
+      redirect(`/${portal}/auth/verify-2fa`);
+    }
 
     // Verify user has the required role
     const user = response.user as typeof response.user & {
