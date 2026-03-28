@@ -25,8 +25,8 @@ model User {
   role          Role[]  @default([BUYER])
 
   // Perfil de Trading (Tasas de cambio con precisión)
-  buyRate    Decimal? @db.Decimal(10, 4) // 4 decimales para tasas más precisas
-  sellerRate Decimal? @db.Decimal(10, 4)
+  buyRate  Decimal? @db.Decimal(10, 4) // 4 decimales para tasas más precisas
+  sellRate Decimal? @db.Decimal(10, 4)
 
   // Relaciones
   sessions        Session[]
@@ -37,8 +37,8 @@ model User {
   giftcardBatches GiftcardBatch[]
 
   twoFactor        TwoFactor?
-  twoFactorEnabled Boolean @default(false)
-  
+  twoFactorEnabled Boolean    @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
