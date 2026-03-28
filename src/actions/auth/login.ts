@@ -46,8 +46,6 @@ export const login = async (prevState: unknown, formData: FormData) => {
       headers: await headers(),
     })) as any;
 
-    console.log(response);
-
     // 2. Asignar la ruta de 2FA si es necesario (sin hacer el redirect aún)
     if (response.twoFactorRedirect) {
       redirectPath = `/${portal}/auth/verify-2fa`;
