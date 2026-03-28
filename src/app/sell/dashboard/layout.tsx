@@ -11,7 +11,7 @@ export default async function SellerDashboardLayout({ children }: { children: Re
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "calc(var(--spacing) * 70)",
+          "--sidebar-width": "calc(var(--spacing) * 55)",
           "--header-height": "calc(var(--spacing) * 12)",
         } as React.CSSProperties
       }

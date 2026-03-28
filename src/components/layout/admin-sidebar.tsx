@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { IconDashboard, IconUsers, IconShoppingCart, IconCreditCard, IconChartBar, IconCash, IconSettings, IconUser } from "@tabler/icons-react";
+import {
+  IconDashboard,
+  IconUsers,
+  IconShoppingCart,
+  IconCreditCard,
+  IconChartBar,
+  IconCash,
+  IconSettings,
+  IconUser,
+} from "@tabler/icons-react";
 import Form from "next/form";
 
 import {
@@ -39,23 +48,23 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
               <Link className="flex items-center" href="/admin/dashboard">
-                <span className="text-3xl font-semibold">Solmaira Admin</span>
+                <span className="text-xl font-bold px-2">Solmaira Admin</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="mt-14">
-        <SidebarGroup className="space-y-6">
-          <SidebarGroupLabel className="text-4xl">Management</SidebarGroupLabel>
-          <SidebarGroupContent className="flex flex-col gap-2">
+      <SidebarContent className="mt-4">
+        <SidebarGroup className="space-y-4">
+          <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider px-2">Management</SidebarGroupLabel>
+          <SidebarGroupContent className="flex flex-col gap-1">
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="h-16">
-                  <SidebarMenuButton asChild className="cursor-pointer h-full" tooltip={item.title}>
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="cursor-pointer h-12" tooltip={item.title}>
                     <Link href={item.url}>
-                      {item.icon && <item.icon />}
-                      <span className="text-3xl">{item.title}</span>
+                      {item.icon && <item.icon size={20} />}
+                      <span className="text-lg font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

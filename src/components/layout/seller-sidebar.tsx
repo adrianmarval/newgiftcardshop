@@ -23,7 +23,7 @@ import Link from "next/link";
 const navItems = [
   { title: "Dashboard", url: "/sell/dashboard", icon: IconDashboard },
   { title: "My Gift Cards", url: "/sell/dashboard/cards", icon: IconCreditCard },
-  { title: "Upload Cards", url: "/sell/dashboard/upload", icon: IconUpload },
+  { title: "Sell Gift Cards", url: "/sell/dashboard/batch", icon: IconUpload },
   { title: "Orders", url: "/sell/dashboard/orders", icon: IconShoppingCart },
   { title: "Payment Method", url: "/sell/dashboard/payment", icon: IconWallet },
   { title: "Profile", url: "/sell/dashboard/profile", icon: IconUser },
@@ -38,23 +38,23 @@ export function SellerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
               <Link className="flex items-center" href="/sell/dashboard">
-                <span className="text-3xl font-semibold">Solmaira Sell</span>
+                <span className="text-xl font-bold px-2">Solmaira Sell</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="mt-14">
-        <SidebarGroup className="space-y-6">
-          <SidebarGroupLabel className="text-4xl">Menu</SidebarGroupLabel>
-          <SidebarGroupContent className="flex flex-col gap-2">
+      <SidebarContent className="mt-4">
+        <SidebarGroup className="space-y-4">
+          <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider px-2">Menu</SidebarGroupLabel>
+          <SidebarGroupContent className="flex flex-col gap-1">
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="h-16">
-                  <SidebarMenuButton asChild className="cursor-pointer h-full" tooltip={item.title}>
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="cursor-pointer h-12" tooltip={item.title}>
                     <Link href={item.url}>
-                      {item.icon && <item.icon />}
-                      <span className="text-3xl">{item.title}</span>
+                      {item.icon && <item.icon size={20} />}
+                      <span className="text-lg font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
