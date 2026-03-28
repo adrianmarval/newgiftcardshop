@@ -19,7 +19,7 @@ export default async function BuyerDashboardLayout({ children }: { children: Rea
       <TooltipProvider>
         <BuyerSidebar variant="sidebar" />
         <SidebarInset>
-          <AppHeader />
+          {/* <AppHeader /> */}
           {children}
         </SidebarInset>
       </TooltipProvider>

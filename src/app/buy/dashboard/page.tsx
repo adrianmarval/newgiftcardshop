@@ -18,42 +18,37 @@ export default async function BuyerDashboardPage() {
       </div>
 
       <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-        <div className="rounded-xl bg-muted/50 p-6 flex flex-col gap-2">
+        <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconSearch className="h-5 w-5" />
             <span className="text-sm font-medium">Available Cards</span>
           </div>
-          <span className="text-3xl font-bold">0</span>
+          <span className="text-3xl font-bold">1,248</span>
         </div>
 
-        <div className="rounded-xl bg-muted/50 p-6 flex flex-col gap-2">
+        <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconShoppingCart className="h-5 w-5" />
             <span className="text-sm font-medium">My Orders</span>
           </div>
-          <span className="text-3xl font-bold">0</span>
+          <span className="text-3xl font-bold">12</span>
         </div>
 
-        <div className="rounded-xl bg-muted/50 p-6 flex flex-col gap-2">
+        <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconWallet className="h-5 w-5" />
             <span className="text-sm font-medium">Balance</span>
           </div>
-          <span className="text-3xl font-bold">$0.00</span>
+          <span className="text-3xl font-bold">$420.00</span>
         </div>
 
-        <div className="rounded-xl bg-muted/50 p-6 flex flex-col gap-2">
+        <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconStar className="h-5 w-5" />
             <span className="text-sm font-medium">Saved</span>
           </div>
-          <span className="text-3xl font-bold">$0.00</span>
+          <span className="text-3xl font-bold">$125.50</span>
         </div>
-      </div>
-
-      <div className="min-h-[400px] flex-1 rounded-xl bg-muted/50 p-6">
-        <h2 className="text-xl font-semibold mb-4">Featured Gift Cards</h2>
-        <p className="text-muted-foreground">No gift cards available at the moment.</p>
       </div>
     </div>
   );

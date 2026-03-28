@@ -22,7 +22,7 @@ import Link from "next/link";
 
 const navItems = [
   { title: "Dashboard", url: "/buy/dashboard", icon: IconDashboard },
-  { title: "Browse Cards", url: "/buy/dashboard/browse", icon: IconSearch },
+  { title: "Browse Cards", url: "/buy/dashboard/browse-cards", icon: IconSearch },
   { title: "My Orders", url: "/buy/dashboard/orders", icon: IconShoppingCart },
   { title: "Wallet", url: "/buy/dashboard/wallet", icon: IconWallet },
   { title: "Profile", url: "/buy/dashboard/profile", icon: IconUser },
@@ -65,7 +65,7 @@ export function BuyerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       <SidebarFooter>
         <Form action={logout}>
           <input type="hidden" name="portal" value="buy" />
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="destructive" className="w-full justify-start">
             Sign Out
           </Button>
         </Form>

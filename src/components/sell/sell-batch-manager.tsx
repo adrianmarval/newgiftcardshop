@@ -23,10 +23,10 @@ export function SellBatchManager() {
 
   const handlePublish = async () => {
     setIsPublishing(true);
-    
+
     // Simulating API call - In the next phase we will replace this with a Server Action
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
+
     setIsPublishing(false);
     setShowSuccessDialog(true);
   };
@@ -39,14 +39,10 @@ export function SellBatchManager() {
   const totalCards = giftcards.length;
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-6 px-0 md:px-0 py-2 md:py-0">
+    <div className="w-full space-y-4 md:space-y-6 px-0 md:px-0 py-2 md:py-0">
       {/* Header & Progress combined */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 bg-card/40 px-3 py-4 md:p-6 rounded-none md:rounded-xl border-y md:border border-border backdrop-blur-sm">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="text-2xl md:text-3xl font-bold mb-0.5 md:mb-1">Sell Gift Cards</h1>
           <p className="text-muted-foreground text-xs md:text-sm">Create a new batch of gift cards to sell.</p>
         </motion.div>
@@ -70,8 +66,8 @@ export function SellBatchManager() {
                         s === step
                           ? "bg-primary border-primary/50 text-white shadow-lg shadow-primary/30"
                           : s < step
-                          ? "bg-primary/20 border-primary/50 text-primary"
-                          : "bg-muted/50 border-border text-muted-foreground/50"
+                            ? "bg-primary/20 border-primary/50 text-primary"
+                            : "bg-muted/50 border-border text-muted-foreground/50"
                       }
                     `}
                     animate={{ scale: s === step ? 1.05 : 1 }}
@@ -79,11 +75,13 @@ export function SellBatchManager() {
                     {s < step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : s}
                   </motion.div>
                   {/* Tooltip-like label - Hidden on XS mobile */}
-                  <span className={`
+                  <span
+                    className={`
                     absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] md:text-[10px] uppercase tracking-wider font-bold whitespace-nowrap
                     hidden sm:block
                     ${s === step ? "text-primary" : "text-muted-foreground/70"}
-                  `}>
+                  `}
+                  >
                     {s === 1 ? "Brand" : s === 2 ? "Details" : "Review"}
                   </span>
                 </div>
@@ -159,10 +157,7 @@ export function SellBatchManager() {
               Your batch with {totalCards} gift card{totalCards !== 1 ? "s" : ""} has been submitted for verification.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogAction 
-            onClick={handleFinishSuccess}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4 h-11"
-          >
+          <AlertDialogAction onClick={handleFinishSuccess} className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4 h-11">
             Back to Dashboard
           </AlertDialogAction>
         </AlertDialogContent>

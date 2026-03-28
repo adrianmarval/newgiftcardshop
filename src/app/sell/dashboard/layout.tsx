@@ -19,7 +19,7 @@ export default async function SellerDashboardLayout({ children }: { children: Re
       <TooltipProvider>
         <SellerSidebar variant="sidebar" />
         <SidebarInset>
-          <AppHeader />
+          {/* <AppHeader /> */}
           {children}
         </SidebarInset>
       </TooltipProvider>

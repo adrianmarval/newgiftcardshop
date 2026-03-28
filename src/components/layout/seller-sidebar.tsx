@@ -66,7 +66,7 @@ export function SellerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
       <SidebarFooter>
         <Form action={logout}>
           <input type="hidden" name="portal" value="sell" />
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="destructive" className="w-full justify-start">
             Sign Out
           </Button>
         </Form>
