@@ -1,14 +1,15 @@
 import { getSession } from "@/lib/get-session";
 import { IconUsers, IconCreditCard, IconCurrencyDollar, IconAlertTriangle } from "@tabler/icons-react";
-import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard | Solmaira Cards",
+  description: "Platform overview, user management, and analytics for Solmaira Cards",
+};
 
 export default async function AdminDashboardPage() {
   const session = await getSession();
   const user = session?.user;
-
-  if (!user) {
-    return redirect("/admin/auth/login");
-  }
 
   return (
     <div>

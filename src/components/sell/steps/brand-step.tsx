@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Check, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useSellFlow } from "@/hooks/use-sell-flow";
-import { getActiveBrands, getActiveCountries } from "@/actions/giftcard-actions";
 import Image from "next/image";
 
 interface Brand {
@@ -26,23 +25,15 @@ interface Country {
   code: string;
 }
 
-export function BrandStep() {
+interface BrandStepProps {
+  brands: Brand[];
+  countries: Country[];
+}
+
+export function BrandStep({ brands, countries }: BrandStepProps) {
   const { selectedBrand, setSelectedBrand, selectedCountry, setSelectedCountry, setStep } = useSellFlow();
 
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchBrand, setSearchBrand] = useState("");
-
-  useEffect(() => {
-    async function fetchData() {
-      const [fetchedBrands, fetchedCountries] = await Promise.all([getActiveBrands(), getActiveCountries()]);
-      setBrands(fetchedBrands as Brand[]);
-      setCountries(fetchedCountries as Country[]);
-      setLoading(false);
-    }
-    fetchData();
-  }, []);
 
   const filteredBrands = brands.filter(
     (brand) => brand.name.toLowerCase().includes(searchBrand.toLowerCase()) || brand.slug.toLowerCase().includes(searchBrand.toLowerCase()),
@@ -65,9 +56,9 @@ export function BrandStep() {
             <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider mb-1 block">
               Country
             </Label>
-            <Select value={selectedCountry} onValueChange={setSelectedCountry} disabled={loading}>
+            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
               <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-sm">
-                <SelectValue placeholder={loading ? "Loading..." : "Select country..."} />
+                <SelectValue placeholder="Select country..." />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border text-popover-foreground">
                 {countries.map((country) => (

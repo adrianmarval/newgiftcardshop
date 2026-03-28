@@ -1,45 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useSellFlow } from "@/hooks/use-sell-flow";
-import { getBrandById, getCountryById } from "@/actions/giftcard-actions";
-
-interface Brand {
-  id: string;
-  name: string;
-  icon: string;
-}
-
-interface Country {
-  id: string;
-  name: string;
-  code: string;
-}
 
 interface ReviewStepProps {
   onPublish: () => void;
   isPublishing?: boolean;
+  brandName: string;
+  countryName: string;
 }
 
-export function ReviewStep({ onPublish, isPublishing }: ReviewStepProps) {
-  const { giftcards, selectedBrand, selectedCountry, setStep } = useSellFlow();
-  
-  const [selectedBrandObj, setSelectedBrandObj] = useState<Brand | null>(null);
-  const [selectedCountryObj, setSelectedCountryObj] = useState<Country | null>(null);
-
-  useEffect(() => {
-    if (selectedBrand) {
-      getBrandById(selectedBrand).then((data) => setSelectedBrandObj(data as Brand));
-    }
-    if (selectedCountry) {
-      getCountryById(selectedCountry).then((data) => setSelectedCountryObj(data as Country));
-    }
-  }, [selectedBrand, selectedCountry]);
+export function ReviewStep({ onPublish, isPublishing, brandName, countryName }: ReviewStepProps) {
+  const { giftcards, setStep } = useSellFlow();
 
   const totalCards = giftcards.length;
   const totalAmount = giftcards.reduce((sum, card) => sum + (parseFloat(card.amount) || 0), 0);
@@ -61,7 +37,11 @@ export function ReviewStep({ onPublish, isPublishing }: ReviewStepProps) {
           <div className="bg-muted/50 border border-border rounded-xl p-3 md:p-4 space-y-3">
             <div className="flex justify-between items-center text-xs md:text-sm">
               <span className="text-muted-foreground">Brand</span>
-              <span className="font-bold text-foreground">{selectedBrandObj?.name}</span>
+              <span className="font-bold text-foreground">{brandName}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs md:text-sm">
+              <span className="text-muted-foreground">Country</span>
+              <span className="font-bold text-foreground">{countryName}</span>
             </div>
             <div className="flex justify-between items-center text-xs md:text-sm">
               <span className="text-muted-foreground">Total Cards</span>

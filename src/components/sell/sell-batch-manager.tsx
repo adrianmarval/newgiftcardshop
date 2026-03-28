@@ -16,8 +16,27 @@ import { BrandStep } from "./steps/brand-step";
 import { DetailsStep } from "./steps/details-step";
 import { ReviewStep } from "./steps/review-step";
 
-export function SellBatchManager() {
-  const { step, resetForm, giftcards } = useSellFlow();
+interface Brand {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  image: string | null;
+}
+
+interface Country {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface SellBatchManagerProps {
+  brands: Brand[];
+  countries: Country[];
+}
+
+export function SellBatchManager({ brands, countries }: SellBatchManagerProps) {
+  const { step, resetForm, giftcards, selectedBrand } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -37,6 +56,10 @@ export function SellBatchManager() {
   };
 
   const totalCards = giftcards.length;
+
+  // Build a brand map for review step to get names without refetching
+  const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
+  const countryMap = Object.fromEntries(countries.map((c) => [c.id, c.name]));
 
   return (
     <div className="w-full space-y-4 md:space-y-6 px-0 md:px-0 py-2 md:py-0">
@@ -109,7 +132,7 @@ export function SellBatchManager() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <BrandStep />
+            <BrandStep brands={brands} countries={countries} />
           </motion.div>
         )}
 
@@ -133,7 +156,12 @@ export function SellBatchManager() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <ReviewStep onPublish={handlePublish} isPublishing={isPublishing} />
+            <ReviewStep
+              onPublish={handlePublish}
+              isPublishing={isPublishing}
+              brandName={brandMap[selectedBrand] || ""}
+              countryName={countryMap[useSellFlow.getState().selectedCountry] || ""}
+            />
           </motion.div>
         )}
       </AnimatePresence>

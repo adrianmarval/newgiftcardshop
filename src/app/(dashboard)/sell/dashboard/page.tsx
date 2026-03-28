@@ -1,19 +1,20 @@
 import { getSession } from "@/lib/get-session";
 import { IconCreditCard, IconShoppingCart, IconCurrencyDollar, IconClock } from "@tabler/icons-react";
-import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Seller Dashboard | Solmaira Cards",
+  description: "Manage your gift cards and track your sales on Solmaira",
+};
 
 export default async function SellerDashboardPage() {
   const session = await getSession();
   const user = session?.user;
 
-  if (!user) {
-    return redirect("/sell/auth/login");
-  }
-
   return (
     <div>
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold">Welcome back, {user.name}</h1>
+        <h1 className="text-3xl font-bold">Welcome back{user?.name ? `, ${user.name}` : ""}</h1>
         <p className="text-muted-foreground">Manage your gift cards and track your sales</p>
       </div>
 

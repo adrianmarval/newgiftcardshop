@@ -1,19 +1,20 @@
 import { getSession } from "@/lib/get-session";
 import { IconSearch, IconShoppingCart, IconWallet, IconStar } from "@tabler/icons-react";
-import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Buyer Dashboard | Solmaira Cards",
+  description: "Browse and buy discounted gift cards on Solmaira",
+};
 
 export default async function BuyerDashboardPage() {
   const session = await getSession();
   const user = session?.user;
 
-  if (!user) {
-    return redirect("/buy/auth/login");
-  }
-
   return (
     <div>
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold">Welcome, {user.name}</h1>
+        <h1 className="text-3xl font-bold">Welcome{user?.name ? `, ${user.name}` : ""}</h1>
         <p className="text-muted-foreground">Browse and buy discounted gift cards</p>
       </div>
 
