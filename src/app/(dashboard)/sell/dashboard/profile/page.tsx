@@ -16,16 +16,14 @@ export default async function SellerProfilePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
-      <ProfileForm
-        user={{
-          name: session.user.name,
-          email: session.user.email,
-          image: session.user.image,
-          twoFactorEnabled: !!session.user.twoFactorEnabled,
-        }}
-        portal="sell"
-      />
-    </div>
+    <ProfileForm
+      user={{
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+        twoFactorEnabled: !!session.user.twoFactorEnabled,
+      }}
+      portal="sell"
+    />
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { GiftCardBrand } from "@/generated/prisma/enums";
+
 
 export interface GiftCardItem {
   id: string;
@@ -12,13 +12,13 @@ export interface GiftCardItem {
 
 interface SellFlowState {
   step: number;
-  selectedBrand: GiftCardBrand | "";
+  selectedBrand: string;
   selectedCountry: string;
   giftcards: GiftCardItem[];
   
   // Actions
   setStep: (step: number) => void;
-  setSelectedBrand: (brand: GiftCardBrand | "") => void;
+  setSelectedBrand: (brand: string) => void;
   setSelectedCountry: (country: string) => void;
   setGiftcards: (giftcards: GiftCardItem[]) => void;
   

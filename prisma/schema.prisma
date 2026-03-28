@@ -103,7 +103,8 @@ model Verification {
 
 model Giftcard {
   id        String         @id @default(cuid())
-  brand     GiftCardBrand
+  brandId   String
+  brand     Brand          @relation(fields: [brandId], references: [id])
   claimCode String         @unique
   pinCode   String?
   amount    Decimal        @db.Decimal(10, 2) // Valor nominal
@@ -127,11 +128,31 @@ model Giftcard {
   @@map("giftcard")
 }
 
+model Brand {
+  id        String     @id @default(cuid())
+  slug      String     @unique
+  name      String
+  icon      String     // Emoji
+  image     String?    // Logo path
+  isActive  Boolean    @default(true)
+  giftcards Giftcard[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("brand")
+}
+
 model Country {
   id        String     @id @default(cuid())
   name      String     @unique
   code      String     @unique
+  currency  String?
+  isActive  Boolean    @default(true)
   giftcards Giftcard[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("country")
 }
@@ -211,38 +232,7 @@ enum Role {
   BUYER
 }
 
-enum GiftCardBrand {
-  AMAZON
-  EBAY
-  WALMART
-  TARGET
-  BEST_BUY
-  HOME_DEPOT
-  LOWES
-  MACY_S
-  KOHLS
-  STEAM
-  PLAYSTATION_NETWORK
-  XBOX
-  NINTENDO_ESHOP
-  ROBLOX
-  RAZER_GOLD
-  APPLE_ITUNES
-  GOOGL_PLAY
-  NETFLIX
-  HULU
-  SPOTIFY
-  STARBUCKS
-  CHIPOTLE
-  DOMINOS
-  UBER_EATS
-  DOORDASH
-  CHEESECAKE_FACTORY
-  NIKE
-  ADIDAS
-  SEPHORA
-  VANILLA_VISA
-}
+
 
 enum OrderStatus {
   PENDING

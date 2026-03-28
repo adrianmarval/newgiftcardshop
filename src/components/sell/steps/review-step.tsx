@@ -1,13 +1,25 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Check, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useSellFlow } from "@/hooks/use-sell-flow";
-import { BRANDS, COUNTRIES } from "@/lib/constants/giftcards";
+import { getBrandById, getCountryById } from "@/actions/giftcard-actions";
+
+interface Brand {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+interface Country {
+  id: string;
+  name: string;
+  code: string;
+}
 
 interface ReviewStepProps {
   onPublish: () => void;
@@ -16,9 +28,19 @@ interface ReviewStepProps {
 
 export function ReviewStep({ onPublish, isPublishing }: ReviewStepProps) {
   const { giftcards, selectedBrand, selectedCountry, setStep } = useSellFlow();
+  
+  const [selectedBrandObj, setSelectedBrandObj] = useState<Brand | null>(null);
+  const [selectedCountryObj, setSelectedCountryObj] = useState<Country | null>(null);
 
-  const selectedBrandObj = BRANDS.find((b) => b.id === selectedBrand);
-  const selectedCountryObj = COUNTRIES.find((c) => c.id === selectedCountry);
+  useEffect(() => {
+    if (selectedBrand) {
+      getBrandById(selectedBrand).then((data) => setSelectedBrandObj(data as Brand));
+    }
+    if (selectedCountry) {
+      getCountryById(selectedCountry).then((data) => setSelectedCountryObj(data as Country));
+    }
+  }, [selectedBrand, selectedCountry]);
+
   const totalCards = giftcards.length;
   const totalAmount = giftcards.reduce((sum, card) => sum + (parseFloat(card.amount) || 0), 0);
   

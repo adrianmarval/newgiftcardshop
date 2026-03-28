@@ -1,11 +1,11 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { SellerSidebar } from "@/components/layout/seller-sidebar";
+import { AdminSidebar } from "@/components/layout/admin-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { requireRoles } from "@/lib/get-session";
 
-export default async function SellerDashboardLayout({ children }: { children: React.ReactNode }) {
-  await requireRoles(["SELLER", "ADMIN"], "/sell/auth/login");
+export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+  await requireRoles(["ADMIN"], "/admin/auth/login");
 
   return (
     <SidebarProvider
@@ -17,10 +17,10 @@ export default async function SellerDashboardLayout({ children }: { children: Re
       }
     >
       <TooltipProvider>
-        <SellerSidebar variant="sidebar" />
+        <AdminSidebar variant="sidebar" />
         <SidebarInset>
-          {/* <AppHeader /> */}
-          {children}
+          <AppHeader />
+          <div className="flex-1 space-y-4 p-0 md:p-8 pt-4 md:pt-6">{children}</div>
         </SidebarInset>
       </TooltipProvider>
     </SidebarProvider>

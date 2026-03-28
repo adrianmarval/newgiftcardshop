@@ -1,12 +1,21 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trash2, ChevronRight, Info } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { BRANDS } from "@/lib/constants/giftcards";
+import { getBrandById } from "@/actions/giftcard-actions";
+import Image from "next/image";
+
+interface Brand {
+  id: string;
+  name: string;
+  icon: string;
+  image: string | null;
+}
 
 export function ResultsStep() {
   const { 
@@ -17,7 +26,14 @@ export function ResultsStep() {
     targetAmount
   } = useBuyFlow();
 
-  const brandData = BRANDS.find(b => b.id === selectedBrand);
+  const [brandData, setBrandData] = useState<Brand | null>(null);
+
+  useEffect(() => {
+    if (selectedBrand) {
+      getBrandById(selectedBrand).then((data) => setBrandData(data as Brand));
+    }
+  }, [selectedBrand]);
+
   const totalAmount = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
 
   return (
@@ -92,8 +108,17 @@ export function ResultsStep() {
             >
               <div className="flex items-start justify-between relative z-10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center text-xl shadow-sm">
-                    {brandData?.icon}
+                  <div className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center text-xl shadow-sm relative overflow-hidden">
+                    {brandData?.image ? (
+                      <Image
+                        src={brandData.image}
+                        alt={brandData.name}
+                        fill
+                        className="p-1 object-contain"
+                      />
+                    ) : (
+                      brandData?.icon
+                    )}
                   </div>
                   <div>
                     <div className="text-lg font-black text-foreground">${card.amount}</div>

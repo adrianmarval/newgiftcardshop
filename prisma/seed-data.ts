@@ -4,6 +4,7 @@ import { hashPassword } from "better-auth/crypto";
 interface SeedData {
   userData: Prisma.UserCreateInput[];
   countryData: Prisma.CountryCreateInput[];
+  brandData: Prisma.BrandCreateInput[];
 }
 
 export const seedData: SeedData = {
@@ -46,21 +47,21 @@ export const seedData: SeedData = {
             giftcards: {
               create: [
                 {
-                  brand: "AMAZON",
+                  brand: { connect: { id: "amazon" } },
                   claimCode: "AMZ-BATCH1-001",
                   amount: 100.0,
                   price: 95.0,
                   status: "UNUSED",
                 },
                 {
-                  brand: "AMAZON",
+                  brand: { connect: { id: "amazon" } },
                   claimCode: "AMZ-BATCH1-002",
                   amount: 50.0,
                   price: 47.5,
                   status: "UNUSED",
                 },
                 {
-                  brand: "AMAZON",
+                  brand: { connect: { id: "amazon" } },
                   claimCode: "AMZ-BATCH1-003",
                   amount: 25.0,
                   price: 23.75,
@@ -73,21 +74,21 @@ export const seedData: SeedData = {
             giftcards: {
               create: [
                 {
-                  brand: "APPLE_ITUNES",
+                  brand: { connect: { id: "apple" } },
                   claimCode: "APL-BATCH2-001",
                   amount: 100.0,
                   price: 90.0,
                   status: "UNUSED",
                 },
                 {
-                  brand: "APPLE_ITUNES",
+                  brand: { connect: { id: "apple" } },
                   claimCode: "APL-BATCH2-002",
                   amount: 100.0,
                   price: 90.0,
                   status: "UNUSED",
                 },
                 {
-                  brand: "APPLE_ITUNES",
+                  brand: { connect: { id: "apple" } },
                   claimCode: "APL-BATCH2-003",
                   amount: 50.0,
                   price: 45.0,
@@ -100,21 +101,21 @@ export const seedData: SeedData = {
             giftcards: {
               create: [
                 {
-                  brand: "RAZER_GOLD",
+                  brand: { connect: { id: "google-play" } },
                   claimCode: "RZR-BATCH3-001",
                   amount: 50.0,
                   price: 48.0,
                   status: "UNUSED",
                 },
                 {
-                  brand: "RAZER_GOLD",
+                  brand: { connect: { id: "google-play" } },
                   claimCode: "RZR-BATCH3-002",
                   amount: 20.0,
                   price: 19.2,
                   status: "UNUSED",
                 },
                 {
-                  brand: "RAZER_GOLD",
+                  brand: { connect: { id: "google-play" } },
                   claimCode: "RZR-BATCH3-003",
                   amount: 10.0,
                   price: 9.6,
@@ -158,5 +159,19 @@ export const seedData: SeedData = {
     { code: "US", name: "United States" },
     { code: "CA", name: "Canada" },
     { code: "GB", name: "United Kingdom" },
+  ],
+  brandData: [
+    { id: "amazon", slug: "amazon", name: "Amazon", icon: "📦", image: "/images/amazonlogo.svg" },
+    { id: "apple", slug: "apple", name: "Apple", icon: "🍎", image: "/images/applelogo.svg" },
+    { id: "best-buy", slug: "best-buy", name: "Best Buy", icon: "🏷️", image: "/images/bestbuylogo.svg" },
+    { id: "gamestop", slug: "gamestop", name: "GameStop", icon: "🎮", image: "/images/gamestoplogo.svg" },
+    { id: "google-play", slug: "google-play", name: "Google Play", icon: "🎯", image: "/images/googleplaylogo.svg" },
+    { id: "home-depot", slug: "home-depot", name: "Home Depot", icon: "🛠️", image: "/images/homedepotlogo.svg" },
+    { id: "macys", slug: "macys", name: "Macy's", icon: "🏬", image: "/images/macyslogo.svg" },
+    { id: "nike", slug: "nike", name: "Nike", icon: "✔️", image: "/images/nikelogo.svg" },
+    { id: "sephora", slug: "sephora", name: "Sephora", icon: "✨", image: "/images/sephoralogo.svg" },
+    { id: "starbucks", slug: "starbucks", name: "Starbucks", icon: "☕", image: "/images/starbuckslogo.svg" },
+    { id: "target", slug: "target", name: "Target", icon: "🎯", image: "/images/targetlogo.svg" },
+    { id: "walmart", slug: "walmart", name: "Walmart", icon: "🛒", image: "/images/walmartlogo.svg" },
   ],
 };

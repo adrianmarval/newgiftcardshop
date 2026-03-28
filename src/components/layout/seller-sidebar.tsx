@@ -23,7 +23,7 @@ import Link from "next/link";
 const navItems = [
   { title: "Dashboard", url: "/sell/dashboard", icon: IconDashboard },
   { title: "My Gift Cards", url: "/sell/dashboard/cards", icon: IconCreditCard },
-  { title: "Sell Gift Cards", url: "/sell/dashboard/batch", icon: IconUpload },
+  { title: "Sell Gift Cards", url: "/sell/dashboard/sell-cards", icon: IconUpload },
   { title: "Orders", url: "/sell/dashboard/orders", icon: IconShoppingCart },
   { title: "Payment Method", url: "/sell/dashboard/payment", icon: IconWallet },
   { title: "Profile", url: "/sell/dashboard/profile", icon: IconUser },

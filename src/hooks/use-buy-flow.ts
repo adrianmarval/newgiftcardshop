@@ -1,13 +1,13 @@
 "use client";
 
 import { create } from "zustand";
-import { GiftCardBrand } from "@/generated/prisma/enums";
+
 
 export type BuyGiftcardStatus = "UNUSED" | "INVALID" | "ALREADY_USED" | "WRONG_AMOUNT" | "DEACTIVATED";
 
 export interface BuyGiftcardItem {
   id: string;
-  brand: GiftCardBrand;
+  brand: string;
   amount: number;
   claimCode: string;
   pinCode?: string;
@@ -17,7 +17,7 @@ export interface BuyGiftcardItem {
 
 interface BuyFlowState {
   step: number;
-  selectedBrand: GiftCardBrand | "";
+  selectedBrand: string;
   selectedCountry: string;
   targetAmount: string;
   foundGiftcards: BuyGiftcardItem[];
@@ -25,7 +25,7 @@ interface BuyFlowState {
   
   // Actions
   setStep: (step: number) => void;
-  setSelectedBrand: (brand: GiftCardBrand | "") => void;
+  setSelectedBrand: (brand: string) => void;
   setSelectedCountry: (country: string) => void;
   setTargetAmount: (amount: string) => void;
   setFoundGiftcards: (cards: BuyGiftcardItem[]) => void;
