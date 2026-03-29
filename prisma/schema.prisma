@@ -102,15 +102,15 @@ model Verification {
 // --------------------------------------
 
 model Giftcard {
-  id        String         @id @default(cuid())
-  brandId   String
-  brand     Brand          @relation(fields: [brandId], references: [id])
-  claimCode String         @unique
-  pinCode   String?
-  amount    Decimal        @db.Decimal(10, 2) // Valor nominal
-  price     Decimal        @db.Decimal(10, 2) // Precio de venta
-  isClaimed Boolean        @default(false)
-  status    GiftcardStatus @default(UNUSED)
+  id          String         @id @default(cuid())
+  brandId     String
+  brand       Brand          @relation(fields: [brandId], references: [id])
+  claimCode   String         @unique
+  pinCode     String?
+  amount      Decimal        @db.Decimal(10, 2) // Valor nominal
+  price       Decimal        @db.Decimal(10, 2) // Precio de venta
+  isConfirmed Boolean        @default(false)
+  status      GiftcardStatus @default(UNUSED)
 
   // Relaciones
   ownerId String?
@@ -132,8 +132,8 @@ model Brand {
   id        String     @id @default(cuid())
   slug      String     @unique
   name      String
-  icon      String     // Emoji
-  image     String?    // Logo path
+  icon      String // Emoji
+  image     String? // Logo path
   isActive  Boolean    @default(true)
   giftcards Giftcard[]
 
@@ -231,8 +231,6 @@ enum Role {
   SELLER
   BUYER
 }
-
-
 
 enum OrderStatus {
   PENDING
