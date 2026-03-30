@@ -10,7 +10,6 @@ import {
   IconCash,
   IconSettings,
   IconUser,
-  IconAlertTriangle,
 } from "@tabler/icons-react";
 import Form from "next/form";
 
@@ -35,7 +34,6 @@ const navItems = [
   { title: "Users", url: "/admin/dashboard/users", icon: IconUsers },
   { title: "All Orders", url: "/admin/dashboard/orders", icon: IconShoppingCart },
   { title: "Gift Cards", url: "/admin/dashboard/cards", icon: IconCreditCard },
-  { title: "Disputes", url: "/admin/dashboard/disputes", icon: IconAlertTriangle },
   { title: "Analytics", url: "/admin/dashboard/analytics", icon: IconChartBar },
   { title: "Payments", url: "/admin/dashboard/payments", icon: IconCash },
   { title: "Profile", url: "/admin/dashboard/profile", icon: IconUser },

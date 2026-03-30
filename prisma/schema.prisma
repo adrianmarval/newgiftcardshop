@@ -113,8 +113,6 @@ model Giftcard {
   isConfirmed Boolean        @default(false)
   status      GiftcardStatus @default(UNUSED)
 
-  // Monto reportado por el buyer al usar la tarjeta
-  reportedAmount Decimal? @db.Decimal(10, 2)
 
   // Relaciones
   ownerId String?
@@ -169,14 +167,6 @@ model Order {
   total  Decimal     @db.Decimal(10, 2)
   status OrderStatus
 
-  // Dispute - para manejar discrepancias de monto
-  confirmedTotal      Decimal?       @db.Decimal(10, 2) // Monto que el buyer confirmó/pagó
-  disputeStatus       DisputeStatus  @default(NONE)     // Estado de la disputa
-  disputeType         DisputeType?                          // OVERPAID / UNDERPAID
-  disputeReason       String?                               // Descripción del problema
-  disputeDifference   Decimal?      @db.Decimal(10, 2) // Diferencia entre confirmado y real
-  disputeResolvedAt   DateTime?                               // Fecha de resolución
-  disputeNotes        String?                               // Notas de resolución
 
   userId    String
   user      User       @relation(fields: [userId], references: [id])
@@ -254,18 +244,6 @@ enum OrderStatus {
   CANCELLED
 }
 
-enum DisputeStatus {
-  NONE
-  PENDING
-  ACCEPTED
-  REJECTED
-  RESOLVED
-}
-
-enum DisputeType {
-  OVERPAID  // El buyer pagó de más
-  UNDERPAID // El buyer pagó de menos
-}
 
 enum GiftcardStatus {
   USED

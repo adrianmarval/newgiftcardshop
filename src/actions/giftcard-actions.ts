@@ -149,51 +149,6 @@ export async function createOrder(giftcardIds: string[]) {
 }
 
 /**
- * Confirma el monto final de una orden después de que el buyer verifica las tarjetas
- * Guarda el monto confirmado por el buyer
- */
-export async function confirmOrderTotal(orderId: string, confirmedTotal: number) {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session || !session.user) {
-      throw new Error("Unauthorized");
-    }
-
-    // Verificar que la orden pertenece al buyer
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      select: { userId: true },
-    });
-
-    if (!order || order.userId !== session.user.id) {
-      throw new Error("Not authorized to confirm this order");
-    }
-
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        confirmedTotal: new Prisma.Decimal(confirmedTotal),
-      },
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error confirming order total:", error);
-    return { success: false, error: "Failed to confirm order total" };
-  }
-}
-
-/**
- * @deprecated Use confirmOrderTotal instead
- */
-export async function updateOrderTotal(orderId: string, total: number) {
-  return confirmOrderTotal(orderId, total);
-}
-
-/**
  * Completa una orden después de que el buyer confirma el pago
  * Marca la orden como COMPLETED y actualiza el estado de las tarjetas
  */
@@ -230,7 +185,7 @@ export async function completeOrder(orderId: string, paymentMethod: string, tran
     // Crear registro de pago
     await prisma.payment.create({
       data: {
-        amount: order.confirmedTotal || order.total,
+        amount: order.total,
         balanceAfter: 0,
         status: "COMPLETED",
         transactionType: "DEBIT",
@@ -257,10 +212,10 @@ export async function completeOrder(orderId: string, paymentMethod: string, tran
       });
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       orderId,
-      message: "Order completed successfully"
+      message: "Order completed successfully",
     };
   } catch (error) {
     console.error("Error completing order:", error);
@@ -305,11 +260,9 @@ export async function getBuyerOrders() {
     return orders.map((order) => ({
       ...order,
       total: Number(order.total),
-      confirmedTotal: order.confirmedTotal ? Number(order.confirmedTotal) : null,
       giftcards: order.giftcards.map((card) => ({
         ...card,
         amount: Number(card.amount),
-        reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
         price: Number(card.price),
       })),
       payments: order.payments.map((p) => ({

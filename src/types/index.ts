@@ -3,7 +3,7 @@
 // Import from "@/types" to access all shared project types.
 //
 // Example:
-//   import type { Brand, Country, DisputeItem, BuyGiftcardStatus } from "@/types";
+//   import type { Brand, Country, BuyGiftcardStatus } from "@/types";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type {
@@ -15,14 +15,6 @@ export type {
   Payment,
   Batch,
   ParsedGiftCard,
-  DisputeStatus,
-  DisputeType,
-  Dispute,
-  DisputeDetails,
-  DisputeGiftcard,
-  DisputeUser,
-  CardDiscrepancy,
-  OrderWithDispute,
 } from "./domain";
 
 export type {

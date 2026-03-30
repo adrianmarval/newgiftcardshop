@@ -5,8 +5,7 @@ import { Check, AlertCircle, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getUserBuyRate, confirmOrderTotal } from "@/actions/giftcard-actions";
-import { reportCardAmounts } from "@/actions/dispute-actions";
+import { getUserBuyRate } from "@/actions/giftcard-actions";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -28,50 +27,8 @@ export function ConfirmUsageStep() {
   const totalAmount = rawTotal * (buyRate / 100);
 
   const handleConfirmUsage = async () => {
-    if (!orderId) {
-      setStep(5);
-      return;
-    }
-
-    setIsUpdating(true);
-    try {
-      // 1. Save the reported amounts for ALL cards with issues (including invalid ones)
-      const cardsWithReports = foundGiftcards
-        .filter((card) => card.status !== "UNUSED")
-        .map((card) => {
-          // For invalid/used/deactivated cards, the amount is 0
-          if (card.status === "INVALID" || card.status === "ALREADY_USED" || card.status === "DEACTIVATED") {
-            return {
-              cardId: card.id,
-              reportedAmount: 0, // Value is 0 because card is invalid
-            };
-          }
-          // For wrong amount cards, use the reported amount
-          return {
-            cardId: card.id,
-            reportedAmount: card.reportedAmount ?? 0,
-          };
-        });
-
-      if (cardsWithReports.length > 0) {
-        await reportCardAmounts(orderId, cardsWithReports);
-      }
-
-      // 2. Then confirm the total
-      const result = await confirmOrderTotal(orderId, totalAmount);
-      if (result.success) {
-        setStep(5);
-      } else {
-        console.error("Failed to update order total:", result.error);
-        // Fallback or show error
-        setStep(5);
-      }
-    } catch (error) {
-      console.error("Error updating order total:", error);
-      setStep(5);
-    } finally {
-      setIsUpdating(false);
-    }
+    //TODO implementar esto
+    window.alert("not implemented");
   };
 
   const reportedCards = foundGiftcards.filter((c) => c.status !== "UNUSED");

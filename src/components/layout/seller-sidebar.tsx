@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { IconDashboard, IconCreditCard, IconUpload, IconShoppingCart, IconWallet, IconSettings, IconUser, IconAlertTriangle } from "@tabler/icons-react";
+import {
+  IconDashboard,
+  IconCreditCard,
+  IconUpload,
+  IconShoppingCart,
+  IconWallet,
+  IconSettings,
+  IconUser,
+  IconAlertTriangle,
+} from "@tabler/icons-react";
 import Form from "next/form";
 
 import {
@@ -25,7 +34,6 @@ const navItems = [
   { title: "My Gift Cards", url: "/sell/dashboard/cards", icon: IconCreditCard },
   { title: "Sell Gift Cards", url: "/sell/dashboard/sell-cards", icon: IconUpload },
   { title: "Orders", url: "/sell/dashboard/orders", icon: IconShoppingCart },
-  { title: "Disputes", url: "/sell/dashboard/disputes", icon: IconAlertTriangle },
   { title: "Payment Method", url: "/sell/dashboard/payment", icon: IconWallet },
   { title: "Profile", url: "/sell/dashboard/profile", icon: IconUser },
   { title: "Settings", url: "/sell/dashboard/settings", icon: IconSettings },

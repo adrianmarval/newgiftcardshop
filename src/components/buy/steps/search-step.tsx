@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getActiveBrands, getActiveCountries } from "@/actions/giftcard-actions";
+import { getActiveBrands, getActiveCountries, searchGiftcards } from "@/actions";
 import Image from "next/image";
 import type { Brand, Country } from "@/types";
 
