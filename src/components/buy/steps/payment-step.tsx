@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clipboard, Check, Wallet, Info, ArrowLeft, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
+import { getUserBuyRate } from "@/actions/giftcard-actions";
 
 export function PaymentStep() {
   const { foundGiftcards, setStep } = useBuyFlow();
@@ -15,12 +16,19 @@ export function PaymentStep() {
   const [orderId, setOrderId] = useState("");
   const [isNotifying, setIsNotifying] = useState(false);
   const [notified, setNotified] = useState(false);
+  const [buyRate, setBuyRate] = useState(100);
 
-  const totalAmount = foundGiftcards.reduce((sum, card) => {
+  useEffect(() => {
+    getUserBuyRate().then(setBuyRate);
+  }, []);
+
+  const rawTotal = foundGiftcards.reduce((sum, card) => {
     if (card.status === "UNUSED") return sum + card.amount;
     if (card.status === "WRONG_AMOUNT") return sum + (card.reportedAmount ?? 0);
     return sum;
   }, 0);
+
+  const totalAmount = rawTotal * (buyRate / 100);
 
   const handleNotify = async () => {
     if (!orderId) return;

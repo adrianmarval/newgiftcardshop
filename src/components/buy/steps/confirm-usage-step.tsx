@@ -5,15 +5,50 @@ import { Check, AlertCircle, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
+import { getUserBuyRate, updateOrderTotal } from "@/actions/giftcard-actions";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 export function ConfirmUsageStep() {
-  const { foundGiftcards, setStep } = useBuyFlow();
+  const { foundGiftcards, setStep, orderId } = useBuyFlow();
+  const [buyRate, setBuyRate] = useState(100);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const totalAmount = foundGiftcards.reduce((sum, card) => {
+  useEffect(() => {
+    getUserBuyRate().then(setBuyRate);
+  }, []);
+
+  const rawTotal = foundGiftcards.reduce((sum, card) => {
     if (card.status === "UNUSED") return sum + card.amount;
     if (card.status === "WRONG_AMOUNT") return sum + (card.reportedAmount ?? 0);
     return sum;
   }, 0);
+
+  const totalAmount = rawTotal * (buyRate / 100);
+
+  const handleConfirmUsage = async () => {
+    if (!orderId) {
+      setStep(5);
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const result = await updateOrderTotal(orderId, totalAmount);
+      if (result.success) {
+        setStep(5);
+      } else {
+        console.error("Failed to update order total:", result.error);
+        // Fallback or show error
+        setStep(5);
+      }
+    } catch (error) {
+      console.error("Error updating order total:", error);
+      setStep(5);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const reportedCards = foundGiftcards.filter((c) => c.status !== "UNUSED");
 
@@ -64,14 +99,26 @@ export function ConfirmUsageStep() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-          <Button variant="ghost" onClick={() => setStep(3)} className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted">
+          <Button
+            variant="ghost"
+            onClick={() => setStep(3)}
+            className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted"
+            disabled={isUpdating}
+          >
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Review
           </Button>
           <Button
-            onClick={() => setStep(5)}
+            onClick={handleConfirmUsage}
+            disabled={isUpdating}
             className="flex-2 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-xl shadow-primary/30 text-base"
           >
-            Confirm & Proceed to Payment
+            {isUpdating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating...
+              </>
+            ) : (
+              "Confirm & Proceed to Payment"
+            )}
           </Button>
         </div>
       </Card>

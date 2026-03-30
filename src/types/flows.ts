@@ -27,6 +27,7 @@ export interface BuyGiftcardItem {
   id: string;
   brand: string;
   amount: number;
+  price: number;
   claimCode: string;
   pinCode?: string;
   status: BuyGiftcardStatus;

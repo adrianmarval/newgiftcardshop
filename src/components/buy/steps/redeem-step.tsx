@@ -10,13 +10,20 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
+import { getUserBuyRate } from "@/actions/giftcard-actions";
 import type { BuyGiftcardStatus } from "@/types";
+import { useEffect } from "react";
 
 export function RedeemStep() {
   const { foundGiftcards, reportIssue, setStep } = useBuyFlow();
 
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [correctedAmount, setCorrectedAmount] = useState<string>("");
+  const [buyRate, setBuyRate] = useState(100);
+
+  useEffect(() => {
+    getUserBuyRate().then(setBuyRate);
+  }, []);
 
   const handleReport = (id: string, status: BuyGiftcardStatus) => {
     if (status === "WRONG_AMOUNT") {
@@ -35,12 +42,14 @@ export function RedeemStep() {
     setCorrectedAmount("");
   };
 
-  // Calculate totals based on status
-  const totalAmount = foundGiftcards.reduce((sum, card) => {
+  // Calculate totals based on status and apply buyRate
+  const rawTotal = foundGiftcards.reduce((sum, card) => {
     if (card.status === "UNUSED") return sum + card.amount;
     if (card.status === "WRONG_AMOUNT") return sum + (card.reportedAmount ?? 0);
     return sum; // INVALID, USED, DEACTIVATED = 0
   }, 0);
+
+  const totalAmount = rawTotal * (buyRate / 100);
 
   const reportedCount = foundGiftcards.filter((c) => c.status !== "UNUSED").length;
 

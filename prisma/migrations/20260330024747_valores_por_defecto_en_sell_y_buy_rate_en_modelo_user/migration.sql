@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "user" ALTER COLUMN "buyRate" SET DEFAULT 82.0,
+ALTER COLUMN "sellRate" SET DEFAULT 75.0;

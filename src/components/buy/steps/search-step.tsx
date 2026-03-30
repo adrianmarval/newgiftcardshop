@@ -163,7 +163,7 @@ export function SearchStep() {
             >
               <div className="dark:bg-white relative w-full h-full mb-1 md:mb-2 transition-transform group-hover:scale-110 duration-300 flex items-center justify-center">
                 {brand.image ? (
-                  <Image src={brand.image} alt={brand.name} fill className="object-cover rounded-lg" />
+                  <Image src={brand.image} alt={brand.name} fill className="object-cover rounded-lg" loading="eager" />
                 ) : (
                   <span className="text-2xl md:text-5xl">{brand.icon}</span>
                 )}

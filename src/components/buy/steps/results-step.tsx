@@ -1,28 +1,63 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Trash2, ChevronRight, Info } from "lucide-react";
+import { Trash2, ChevronRight, Info, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getBrandById } from "@/actions/giftcard-actions";
+import { getBrandById, createOrder, getUserBuyRate } from "@/actions/giftcard-actions";
 import Image from "next/image";
 import type { Brand } from "@/types";
 
 export function ResultsStep() {
-  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount } = useBuyFlow();
+  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount, setOrderId } = useBuyFlow();
 
   const [brandData, setBrandData] = useState<Brand | null>(null);
+  const [buyRate, setBuyRate] = useState<number>(1.0);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     if (selectedBrand) {
       getBrandById(selectedBrand).then((data) => setBrandData(data as Brand));
     }
+    getUserBuyRate().then(setBuyRate);
   }, [selectedBrand]);
 
-  const totalAmount = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
+  const rawTotal = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
+  const discountedTotal = rawTotal * (buyRate / 100);
+
+  const handlePlaceOrder = async () => {
+    setIsConfirming(true);
+    try {
+      const cardIds = foundGiftcards.map((c) => c.id);
+      const result = await createOrder(cardIds);
+
+      if (result.success && result.orderId) {
+        setOrderId(result.orderId);
+        setStep(3);
+      } else {
+        // Handle error (maybe show a toast)
+        console.error("Failed to create order:", result.error);
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+    } finally {
+      setIsConfirming(false);
+      setShowConfirmDialog(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-full items-start">
@@ -46,8 +81,10 @@ export function ResultsStep() {
             <div className="flex justify-between items-center text-xs md:text-sm pt-2 border-t border-border">
               <span className="text-muted-foreground">Total to Pay</span>
               <div className="text-right">
-                <span className="text-xl font-black text-primary">${totalAmount.toFixed(2)}</span>
-                <p className="text-[10px] text-muted-foreground leading-none mt-1">Order value</p>
+                <span className="text-xl font-black text-primary">${discountedTotal.toFixed(2)}</span>
+                <p className="text-[10px] text-muted-foreground leading-none mt-1">
+                  {buyRate < 100 ? `With ${(100 - buyRate).toFixed(0)}% discount` : "Order value"}
+                </p>
               </div>
             </div>
           </div>
@@ -69,11 +106,11 @@ export function ResultsStep() {
             Adjust
           </Button>
           <Button
-            onClick={() => setStep(3)}
+            onClick={() => setShowConfirmDialog(true)}
             disabled={foundGiftcards.length === 0}
             className="flex-2 bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 font-bold shadow-lg shadow-primary/20"
           >
-            Confirm Selection <ChevronRight className="w-4 h-4 ml-1" />
+            Place Order <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </Card>
@@ -98,7 +135,7 @@ export function ResultsStep() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center text-xl shadow-sm relative overflow-hidden">
                     {brandData?.image ? (
-                      <Image src={brandData.image} alt={brandData.name} fill className="p-1 object-contain" />
+                      <Image src={brandData.image} alt={brandData.name} fill className="p-1 object-contain" loading="eager" />
                     ) : (
                       brandData?.icon
                     )}
@@ -141,6 +178,39 @@ export function ResultsStep() {
           )}
         </div>
       </Card>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Place Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The process cannot be reversed because the codes will be revealed. Once revealed, they are considered yours and you must apply
+              and pay for them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isConfirming}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handlePlaceOrder();
+              }}
+              disabled={isConfirming}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+            >
+              {isConfirming ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Placing Order...
+                </>
+              ) : (
+                "Confirm & Revel Codes"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
