@@ -11,20 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { getActiveBrands, getActiveCountries } from "@/actions/giftcard-actions";
 import Image from "next/image";
+import type { Brand, Country } from "@/types";
 
-interface Brand {
-  id: string;
-  slug: string;
-  name: string;
-  icon: string;
-  image: string | null;
-}
-
-interface Country {
-  id: string;
-  name: string;
-  code: string;
-}
 
 export function SearchStep() {
   const {

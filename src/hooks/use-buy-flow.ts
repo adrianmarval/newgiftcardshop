@@ -1,19 +1,9 @@
 "use client";
 
 import { create } from "zustand";
+import type { BuyGiftcardStatus, BuyGiftcardItem } from "@/types";
 
 
-export type BuyGiftcardStatus = "UNUSED" | "INVALID" | "ALREADY_USED" | "WRONG_AMOUNT" | "DEACTIVATED";
-
-export interface BuyGiftcardItem {
-  id: string;
-  brand: string;
-  amount: number;
-  claimCode: string;
-  pinCode?: string;
-  status: BuyGiftcardStatus;
-  reportedAmount?: number;
-}
 
 interface BuyFlowState {
   step: number;

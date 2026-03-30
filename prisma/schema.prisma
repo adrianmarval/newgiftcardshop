@@ -109,6 +109,7 @@ model Giftcard {
   pinCode     String?
   amount      Decimal        @db.Decimal(10, 2) // Valor nominal
   price       Decimal        @db.Decimal(10, 2) // Precio de venta
+  inStock     Boolean        @default(true)
   isConfirmed Boolean        @default(false)
   status      GiftcardStatus @default(UNUSED)
 
@@ -124,6 +125,9 @@ model Giftcard {
 
   batchId String?
   batch   GiftcardBatch? @relation(fields: [batchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("giftcard")
 }

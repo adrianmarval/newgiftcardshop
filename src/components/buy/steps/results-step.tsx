@@ -9,13 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { getBrandById } from "@/actions/giftcard-actions";
 import Image from "next/image";
+import type { Brand } from "@/types";
 
-interface Brand {
-  id: string;
-  name: string;
-  icon: string;
-  image: string | null;
-}
 
 export function ResultsStep() {
   const { 

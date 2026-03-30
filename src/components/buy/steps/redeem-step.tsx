@@ -2,26 +2,18 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clipboard, AlertTriangle, ChevronRight, Check, X, Info, Edit3 } from "lucide-react";
+import { Clipboard, AlertTriangle, ChevronRight, X, Info } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useBuyFlow, BuyGiftcardStatus } from "@/hooks/use-buy-flow";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useBuyFlow } from "@/hooks/use-buy-flow";
+import type { BuyGiftcardStatus } from "@/types";
 
 export function RedeemStep() {
-  const { 
-    foundGiftcards, 
-    reportIssue,
-    setStep 
-  } = useBuyFlow();
+  const { foundGiftcards, reportIssue, setStep } = useBuyFlow();
 
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [correctedAmount, setCorrectedAmount] = useState<string>("");
@@ -50,7 +42,7 @@ export function RedeemStep() {
     return sum; // INVALID, USED, DEACTIVATED = 0
   }, 0);
 
-  const reportedCount = foundGiftcards.filter(c => c.status !== "UNUSED").length;
+  const reportedCount = foundGiftcards.filter((c) => c.status !== "UNUSED").length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-full items-start">
@@ -65,9 +57,11 @@ export function RedeemStep() {
           <div className="bg-muted/50 border border-border rounded-xl p-3 md:p-4 space-y-3">
             <div className="flex justify-between items-center text-xs md:text-sm">
               <span className="text-muted-foreground">Active Cards</span>
-              <span className="font-bold">{foundGiftcards.length - reportedCount} / {foundGiftcards.length}</span>
+              <span className="font-bold">
+                {foundGiftcards.length - reportedCount} / {foundGiftcards.length}
+              </span>
             </div>
-            
+
             <div className="flex justify-between items-center text-xs md:text-sm pt-2 border-t border-border">
               <span className="text-muted-foreground">Adjusted Total</span>
               <div className="text-right">
@@ -81,7 +75,8 @@ export function RedeemStep() {
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex gap-3 items-start">
               <AlertTriangle className="w-4 h-4 text-destructive mt-0.5" />
               <p className="text-[10px] md:text-xs text-destructive/80 leading-relaxed font-medium">
-                You have reported issues with {reportedCount} card{reportedCount !== 1 ? "s" : ""}. The total has been automatically adjusted.
+                You have reported issues with {reportedCount} card{reportedCount !== 1 ? "s" : ""}. The total has been automatically
+                adjusted.
               </p>
             </div>
           )}
@@ -101,9 +96,7 @@ export function RedeemStep() {
           >
             I have verified all cards <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
-          <p className="text-[9px] text-muted-foreground text-center italic">
-            Make sure all reports are correct before proceeding.
-          </p>
+          <p className="text-[9px] text-muted-foreground text-center italic">Make sure all reports are correct before proceeding.</p>
         </div>
       </Card>
 
@@ -130,16 +123,20 @@ export function RedeemStep() {
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="flex items-center gap-4">
-                    <div className={`
+                    <div
+                      className={`
                       w-10 h-10 rounded-lg flex items-center justify-center text-xs font-black
                       ${card.status === "UNUSED" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}
-                    `}>
+                    `}
+                    >
                       #{idx + 1}
                     </div>
-                    
+
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <span className={`text-lg font-black ${card.status === "UNUSED" ? "text-foreground" : "text-muted-foreground line-through"}`}>
+                        <span
+                          className={`text-lg font-black ${card.status === "UNUSED" ? "text-foreground" : "text-muted-foreground line-through"}`}
+                        >
                           ${card.amount}
                         </span>
                         {card.status !== "UNUSED" && (
@@ -152,7 +149,12 @@ export function RedeemStep() {
                       <div className="flex items-center gap-3 mt-1">
                         <div className="flex items-center gap-1.5 font-mono text-xs md:text-sm font-bold bg-muted/50 px-2 py-1 rounded border border-border group">
                           {card.claimCode}
-                          <Button size="icon" variant="ghost" className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" onClick={() => navigator.clipboard.writeText(card.claimCode)}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => navigator.clipboard.writeText(card.claimCode)}
+                          >
                             <Clipboard className="w-3 h-3" />
                           </Button>
                         </div>
@@ -164,19 +166,43 @@ export function RedeemStep() {
                     {card.status === "UNUSED" ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="text-[10px] h-8 border-destructive/30 text-destructive/80 hover:bg-destructive/10">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-[10px] h-8 border-destructive/30 text-destructive/80 hover:bg-destructive/10"
+                          >
                             Report issue
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-popover border-border">
-                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => handleReport(card.id, "INVALID")}>Invalid code</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => handleReport(card.id, "ALREADY_USED")}>Already used</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => handleReport(card.id, "DEACTIVATED")}>Deactivated</DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            onClick={() => handleReport(card.id, "INVALID")}
+                          >
+                            Invalid code
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            onClick={() => handleReport(card.id, "ALREADY_USED")}
+                          >
+                            Already used
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            onClick={() => handleReport(card.id, "DEACTIVATED")}
+                          >
+                            Deactivated
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleReport(card.id, "WRONG_AMOUNT")}>Wrong amount</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Button variant="ghost" size="sm" className="text-[10px] h-8 text-muted-foreground hover:bg-muted" onClick={() => reportIssue(card.id, "UNUSED")}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[10px] h-8 text-muted-foreground hover:bg-muted"
+                        onClick={() => reportIssue(card.id, "UNUSED")}
+                      >
                         Undo report
                       </Button>
                     )}
@@ -185,7 +211,7 @@ export function RedeemStep() {
 
                 {/* Inline form for WRONG_AMOUNT */}
                 {activeReportId === card.id && (
-                  <motion.div 
+                  <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     className="mt-3 pt-3 border-t border-border flex items-center gap-3 overflow-hidden"
@@ -200,7 +226,11 @@ export function RedeemStep() {
                         className="pl-5 h-8 text-xs bg-muted/50 border-border"
                       />
                     </div>
-                    <Button size="sm" className="h-8 bg-primary text-primary-foreground text-xs" onClick={() => submitCorrectedAmount(card.id)}>
+                    <Button
+                      size="sm"
+                      className="h-8 bg-primary text-primary-foreground text-xs"
+                      onClick={() => submitCorrectedAmount(card.id)}
+                    >
                       Update
                     </Button>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setActiveReportId(null)}>

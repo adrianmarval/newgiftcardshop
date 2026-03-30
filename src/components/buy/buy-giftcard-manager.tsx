@@ -19,16 +19,13 @@ import { ConfirmUsageStep } from "./steps/confirm-usage-step";
 import { PaymentStep } from "./steps/payment-step";
 
 export function BuyGiftcardManager() {
-  const { step, resetForm, foundGiftcards } = useBuyFlow();
+  const { step, resetForm } = useBuyFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFinishSuccess = () => {
     setShowSuccessDialog(false);
     resetForm();
   };
-
-  const totalCards = foundGiftcards.length;
 
   return (
     <div className="w-full space-y-4 md:space-y-6 px-0 md:px-0 py-2 md:py-0">

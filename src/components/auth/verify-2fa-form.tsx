@@ -12,10 +12,8 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import type { Verify2FAFormProps } from "@/types";
 
-interface Verify2FAFormProps {
-  portal: "buy" | "sell" | "admin";
-}
 
 const dashboardMap = {
   sell: "/sell/dashboard",

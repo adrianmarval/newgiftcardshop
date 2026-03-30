@@ -8,24 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
-import { AlertCircle, CheckCircle, User, Lock, ShieldCheck, QrCode, Copy, Check, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle, User, Lock, ShieldCheck, Copy, RefreshCw } from "lucide-react";
 import { updateProfile } from "@/actions";
 import Form from "next/form";
 import { authClient } from "@/lib/auth-client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
+import type { ProfileState, ProfileFormProps } from "@/types";
 
-type ProfileState = { error?: string; success?: boolean } | null;
-
-interface ProfileFormProps {
-  user: {
-    name: string;
-    email: string;
-    image?: string | null;
-    twoFactorEnabled: boolean;
-  };
-  portal: "admin" | "buy" | "sell";
-}
 
 export function ProfileForm({ user, portal }: ProfileFormProps) {
   const [state, formAction, isPending] = useActionState<ProfileState, FormData>(updateProfile, null);
@@ -164,14 +154,6 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
           </p>
         </motion.div>
       </div>
-      {/* <div className="space-y-1.5 md:space-y-2">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-foreground bg-clip-text">
-          Profile Settings
-        </h1>
-        <p className="text-muted-foreground text-sm md:text-base font-medium">
-          Manage your {portalLabels[portal].toLowerCase()} account settings and security preferences.
-        </p>
-      </div> */}
 
       {state?.error && (
         <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive animate-in bounce-in duration-300">

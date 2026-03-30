@@ -1,14 +1,9 @@
 "use client";
 
 import { create } from "zustand";
+import type { GiftCardItem } from "@/types";
 
 
-export interface GiftCardItem {
-  id: string;
-  amount: string;
-  claimCode: string;
-  pinCode?: string;
-}
 
 interface SellFlowState {
   step: number;

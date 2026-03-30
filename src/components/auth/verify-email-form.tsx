@@ -10,10 +10,10 @@ import { AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { verifyEmail, resendVerification } from "@/actions";
 import Form from "next/form";
 import { Suspense } from "react";
+import type { ResendState, Portal } from "@/types";
 
-type ResendState = { error?: string; success?: boolean } | null;
 
-function VerifyEmailFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
+function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
   const email = searchParams.get("email") || "";
@@ -113,7 +113,7 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: "admin" | "buy" |
   );
 }
 
-export function VerifyEmailForm({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
+export function VerifyEmailForm({ portal = "buy" }: { portal?: Portal }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <VerifyEmailFormContent portal={portal} />
