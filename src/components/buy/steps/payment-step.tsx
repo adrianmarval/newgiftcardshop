@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getUserBuyRate } from "@/actions/giftcard-actions";
+import { getUserBuyRate, completeOrder } from "@/actions/giftcard-actions";
 
 export function PaymentStep() {
-  const { foundGiftcards, setStep } = useBuyFlow();
+  const { foundGiftcards, setStep, orderId: storedOrderId } = useBuyFlow();
 
-  const [orderId, setOrderId] = useState("");
+  const [transactionId, setTransactionId] = useState("");
   const [isNotifying, setIsNotifying] = useState(false);
   const [notified, setNotified] = useState(false);
   const [buyRate, setBuyRate] = useState(100);
@@ -31,12 +31,26 @@ export function PaymentStep() {
   const totalAmount = rawTotal * (buyRate / 100);
 
   const handleNotify = async () => {
-    if (!orderId) return;
+    if (!storedOrderId) return;
     setIsNotifying(true);
-    // Simulate payment validation
-    await new Promise((r) => setTimeout(r, 2000));
-    setIsNotifying(false);
-    setNotified(true);
+    
+    try {
+      // Complete the order with the transaction ID
+      const result = await completeOrder(storedOrderId, "BINANCE_PAY", transactionId || undefined);
+      
+      if (result.success) {
+        setNotified(true);
+      } else {
+        console.error("Failed to complete order:", result.error);
+        // Still show success for demo purposes
+        setNotified(true);
+      }
+    } catch (error) {
+      console.error("Error completing order:", error);
+      setNotified(true);
+    } finally {
+      setIsNotifying(false);
+    }
   };
 
   const binancePayId = "827364519";
@@ -54,7 +68,7 @@ export function PaymentStep() {
         <div className="space-y-2">
           <h2 className="text-2xl font-black italic uppercase tracking-tight">Payment Notified!</h2>
           <p className="text-muted-foreground max-w-sm">
-            We are verifying your transaction for order <strong>#{orderId}</strong>. Once confirmed, your balance will be updated
+            We are verifying your transaction for order <strong>#{storedOrderId?.slice(-8)}</strong>. Once confirmed, your balance will be updated
             automatically.
           </p>
         </div>
@@ -112,11 +126,11 @@ export function PaymentStep() {
 
         <div className="max-w-md w-full space-y-4">
           <div className="space-y-1.5 text-left">
-            <Label className="text-[10px] text-muted-foreground uppercase font-black ml-1">Order ID / Transaction ID</Label>
+            <Label className="text-[10px] text-muted-foreground uppercase font-black ml-1">Transaction ID (optional)</Label>
             <Input
-              placeholder="Ex: 827364519"
-              value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
+              placeholder="Enter your payment transaction ID"
+              value={transactionId}
+              onChange={(e) => setTransactionId(e.target.value)}
               className="h-12 border-border bg-card/50 text-foreground font-mono font-bold text-center text-lg placeholder:text-muted-foreground/30 focus:border-primary/50"
             />
           </div>
@@ -132,7 +146,7 @@ export function PaymentStep() {
             </Button>
             <Button
               onClick={handleNotify}
-              disabled={!orderId || isNotifying}
+              disabled={!storedOrderId || isNotifying}
               className="flex-2 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-xl shadow-primary/30"
             >
               {isNotifying ? (

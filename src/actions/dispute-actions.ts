@@ -389,17 +389,22 @@ export async function reportCardAmounts(
       throw new Error("Not authorized to report on this order");
     }
 
-    // Actualizar los montos reportados de cada tarjeta
+    // Actualizar los montos reportados y estados de cada tarjeta
     for (const report of cardReports) {
       await prisma.giftcard.update({
         where: { id: report.cardId },
         data: {
           reportedAmount: report.reportedAmount,
+          // Si el monto reportado es 0 o es inválido, marcar como usada/inválida
+          ...(report.reportedAmount === 0 && { status: "INVALID" }),
         },
       });
     }
 
-    // Recalcular el total real basado en los montos reportados
+    // Recalcular el total real basado en:
+    // - Tarjetas con reportedAmount: usar ese monto
+    // - Tarjetasmarked as INVALID/ALREADY_USED/DEACTIVATED: valor 0
+    // - Otras tarjetas: monto original
     const updatedOrder = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -412,7 +417,16 @@ export async function reportCardAmounts(
     }
 
     const realTotal = updatedOrder.giftcards.reduce((sum, card) => {
-      return sum + (card.reportedAmount?.toNumber() || card.amount.toNumber());
+      // Si la tarjeta fue marcada como inválida, no cuenta
+      if (card.status === "INVALID" || card.status === "ALREADY_USED" || card.status === "DEACTIVATED") {
+        return sum;
+      }
+      // Si hay un reportedAmount, usarlo
+      if (card.reportedAmount !== null) {
+        return sum + card.reportedAmount.toNumber();
+      }
+      // Usar el monto original
+      return sum + card.amount.toNumber();
     }, 0);
 
     const confirmedTotal = order.confirmedTotal?.toNumber() || 0;
@@ -536,5 +550,274 @@ export async function checkOrderDiscrepancies(orderId: string) {
       success: false, 
       error: error instanceof Error ? error.message : "Failed to check discrepancies" 
     };
+  }
+}
+
+/**
+ * El seller responde a una disputa (acepta o rechaza)
+ * @param orderId - ID de la orden
+ * @param response - ACCEPT o REJECT
+  * @param evidence - Evidencia o motivo del rechazo (opcional)
+  */
+export async function sellerResponseToDispute(
+  orderId: string,
+  response: "ACCEPT" | "REJECT",
+  evidence?: string
+) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      throw new Error("Unauthorized");
+    }
+
+    // Obtener los batches del seller
+    const sellerBatches = await prisma.giftcardBatch.findMany({
+      where: {
+        userId: session.user.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const batchIds = sellerBatches.map((b) => b.id);
+
+    // Construir condición: buscar por batchId O por ownerId
+    const giftcardCondition = batchIds.length > 0
+      ? {
+          OR: [
+            { batchId: { in: batchIds } },
+            { ownerId: session.user.id },
+          ],
+        }
+      : { ownerId: session.user.id };
+
+    // Verificar que el usuario es seller y tiene tarjetas en esta orden
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        giftcards: {
+          where: giftcardCondition,
+        },
+      },
+    });
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    if (order.giftcards.length === 0) {
+      throw new Error("You don't have any cards in this order");
+    }
+
+    if (order.disputeStatus !== "PENDING") {
+      throw new Error("Dispute is not in pending status");
+    }
+
+    // Actualizar la disputa según la respuesta del seller
+    const updateData: any = {
+      disputeNotes: response === "ACCEPT" 
+        ? `Seller accepted the dispute. ${evidence || ""}`
+        : `Seller rejected the dispute. Reason: ${evidence || "No reason provided"}`,
+    };
+
+    // Si el seller acepta, la disputapasa a ACCEPTED (o podría pasar a RESOLVED directamente)
+    // Si rechaza, queda PENDING para que el admin resuelva
+    if (response === "ACCEPT") {
+      updateData.disputeStatus = DisputeStatus.ACCEPTED;
+      updateData.disputeResolvedAt = new Date();
+    }
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: updateData,
+    });
+
+    return {
+      success: true,
+      orderId,
+      response,
+      message: response === "ACCEPT" 
+        ? "Dispute accepted. The system will process the refund."
+        : "Dispute rejected. An admin will review the case.",
+    };
+  } catch (error) {
+    console.error("Error responding to dispute:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to respond to dispute",
+    };
+  }
+}
+
+/**
+ * Obtiene las disputas para el seller (órdenes que tienen sus tarjetas)
+ */
+export async function getSellerDisputes() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      throw new Error("Unauthorized");
+    }
+
+    // Obtener IDs de órdenes que tienen tarjetas del seller (a través del batch)
+    const sellerBatches = await prisma.giftcardBatch.findMany({
+      where: {
+        userId: session.user.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const batchIds = sellerBatches.map((b) => b.id);
+
+    // Construir condición de búsqueda: buscar por batchId O por ownerId
+    // Esto cubre ambos casos: si las tarjetas tienen batch o tienen owner directo
+    const giftcardCondition = batchIds.length > 0
+      ? {
+          OR: [
+            { batchId: { in: batchIds } },
+            { ownerId: session.user.id },
+          ],
+        }
+      : { ownerId: session.user.id };
+
+    // Buscar tarjetas que pertenezcan a estos batches y tengan orden
+    const sellerGiftcards = await prisma.giftcard.findMany({
+      where: {
+        batchId: {
+          in: batchIds,
+        },
+        orderId: {
+          not: null,
+        },
+      },
+      select: {
+        orderId: true,
+      },
+    });
+
+    const orderIds = [...new Set(sellerGiftcards.map((g) => g.orderId).filter(Boolean))] as string[];
+
+    // Construir condición para filtrar las tarjetas del seller
+    const sellerGiftcardCondition = batchIds.length > 0
+      ? {
+          OR: [
+            { batchId: { in: batchIds } },
+            { ownerId: session.user.id },
+          ],
+        }
+      : { ownerId: session.user.id };
+
+    const orders = await prisma.order.findMany({
+      where: {
+        id: { in: orderIds },
+        disputeStatus: {
+          not: DisputeStatus.NONE,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        giftcards: {
+          where: sellerGiftcardCondition,
+          include: {
+            brand: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    return orders.map((order) => ({
+      ...order,
+      total: Number(order.total),
+      confirmedTotal: order.confirmedTotal ? Number(order.confirmedTotal) : null,
+      disputeDifference: order.disputeDifference ? Number(order.disputeDifference) : null,
+      disputeResolvedAt: order.disputeResolvedAt?.toISOString() || null,
+      giftcards: order.giftcards.map((card) => ({
+        ...card,
+        amount: Number(card.amount),
+        reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+      })),
+    }));
+  } catch (error) {
+    console.error("Error fetching seller disputes:", error);
+    return [];
+  }
+}
+
+/**
+ * Obtiene todas las disputas (para admin ver completo)
+ */
+export async function getAllDisputes() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      throw new Error("Unauthorized");
+    }
+
+    const isAdmin = session.user.role?.includes("ADMIN");
+    if (!isAdmin) {
+      throw new Error("Only admin can view all disputes");
+    }
+
+    const orders = await prisma.order.findMany({
+      where: {
+        disputeStatus: {
+          not: DisputeStatus.NONE,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        giftcards: {
+          include: {
+            brand: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    return orders.map((order) => ({
+      ...order,
+      total: Number(order.total),
+      confirmedTotal: order.confirmedTotal ? Number(order.confirmedTotal) : null,
+      disputeDifference: order.disputeDifference ? Number(order.disputeDifference) : null,
+      disputeResolvedAt: order.disputeResolvedAt?.toISOString() || null,
+      giftcards: order.giftcards.map((card) => ({
+        ...card,
+        amount: Number(card.amount),
+        reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+      })),
+    }));
+  } catch (error) {
+    console.error("Error fetching all disputes:", error);
+    return [];
   }
 }

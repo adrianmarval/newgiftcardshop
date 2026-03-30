@@ -192,3 +192,134 @@ export async function confirmOrderTotal(orderId: string, confirmedTotal: number)
 export async function updateOrderTotal(orderId: string, total: number) {
   return confirmOrderTotal(orderId, total);
 }
+
+/**
+ * Completa una orden después de que el buyer confirma el pago
+ * Marca la orden como COMPLETED y actualiza el estado de las tarjetas
+ */
+export async function completeOrder(orderId: string, paymentMethod: string, transactionId?: string) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      throw new Error("Unauthorized");
+    }
+
+    // Verificar que la orden existe y pertenece al buyer
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        giftcards: true,
+      },
+    });
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    if (order.userId !== session.user.id) {
+      throw new Error("Not authorized to complete this order");
+    }
+
+    if (order.status === "COMPLETED") {
+      throw new Error("Order is already completed");
+    }
+
+    // Crear registro de pago
+    await prisma.payment.create({
+      data: {
+        amount: order.confirmedTotal || order.total,
+        balanceAfter: 0,
+        status: "COMPLETED",
+        transactionType: "DEBIT",
+        orderId: orderId,
+      },
+    });
+
+    // Actualizar estado de la orden a COMPLETED
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: "COMPLETED",
+      },
+    });
+
+    // Actualizar estado de las giftcards a USED
+    for (const card of order.giftcards) {
+      await prisma.giftcard.update({
+        where: { id: card.id },
+        data: {
+          status: "USED",
+          isConfirmed: true,
+        },
+      });
+    }
+
+    return { 
+      success: true, 
+      orderId,
+      message: "Order completed successfully"
+    };
+  } catch (error) {
+    console.error("Error completing order:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to complete order" };
+  }
+}
+
+/**
+ * Obtiene las órdenes del buyer con sus estados
+ */
+export async function getBuyerOrders() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      throw new Error("Unauthorized");
+    }
+
+    const orders = await prisma.order.findMany({
+      where: {
+        userId: session.user.id,
+      },
+      include: {
+        giftcards: {
+          include: {
+            brand: true,
+          },
+        },
+        payments: {
+          where: {
+            status: "COMPLETED",
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return orders.map((order) => ({
+      ...order,
+      total: Number(order.total),
+      confirmedTotal: order.confirmedTotal ? Number(order.confirmedTotal) : null,
+      giftcards: order.giftcards.map((card) => ({
+        ...card,
+        amount: Number(card.amount),
+        reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+        price: Number(card.price),
+      })),
+      payments: order.payments.map((p) => ({
+        ...p,
+        amount: Number(p.amount),
+        balanceAfter: Number(p.balanceAfter),
+      })),
+    }));
+  } catch (error) {
+    console.error("Error fetching buyer orders:", error);
+    return [];
+  }
+}

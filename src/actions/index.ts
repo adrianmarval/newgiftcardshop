@@ -7,7 +7,7 @@ export { verifyEmail } from "./auth/verify-email";
 export { resendVerification } from "./auth/resend-verification";
 export { verify2FA } from "./auth/verify-2fa";
 export { updateProfile } from "./auth/update-profile";
-export { getActiveBrands, searchGiftcards, createOrder, updateOrderTotal, confirmOrderTotal } from "./giftcard-actions";
+export { getActiveBrands, searchGiftcards, createOrder, updateOrderTotal, confirmOrderTotal, completeOrder, getBuyerOrders } from "./giftcard-actions";
 export { 
   createDispute, 
   resolveDispute, 
@@ -16,4 +16,7 @@ export {
   cancelDispute,
   reportCardAmounts,
   checkOrderDiscrepancies,
+  sellerResponseToDispute,
+  getSellerDisputes,
+  getAllDisputes,
 } from "./dispute-actions";
