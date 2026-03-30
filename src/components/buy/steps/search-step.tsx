@@ -6,13 +6,21 @@ import { Search, ChevronRight, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getActiveBrands, getActiveCountries } from "@/actions/giftcard-actions";
+import {
+  getActiveBrands,
+  getActiveCountries,
+} from "@/actions/giftcard-actions";
 import Image from "next/image";
 import type { Brand, Country } from "@/types";
-
 
 export function SearchStep() {
   const {
@@ -34,7 +42,10 @@ export function SearchStep() {
 
   useEffect(() => {
     async function fetchData() {
-      const [fetchedBrands, fetchedCountries] = await Promise.all([getActiveBrands(), getActiveCountries()]);
+      const [fetchedBrands, fetchedCountries] = await Promise.all([
+        getActiveBrands(),
+        getActiveCountries(),
+      ]);
       setBrands(fetchedBrands as Brand[]);
       setCountries(fetchedCountries as Country[]);
       setLoading(false);
@@ -43,7 +54,9 @@ export function SearchStep() {
   }, []);
 
   const filteredBrands = brands.filter(
-    (brand) => brand.name.toLowerCase().includes(searchBrand.toLowerCase()) || brand.slug.toLowerCase().includes(searchBrand.toLowerCase()),
+    (brand) =>
+      brand.name.toLowerCase().includes(searchBrand.toLowerCase()) ||
+      brand.slug.toLowerCase().includes(searchBrand.toLowerCase()),
   );
 
   const handleSearch = async () => {
@@ -56,8 +69,20 @@ export function SearchStep() {
     // Mock found cards
     const amount = parseFloat(targetAmount);
     const mockCards = [
-      { id: "1", brand: selectedBrand, amount: Math.floor(amount * 0.4), claimCode: "XXXX-XXXX-XXXX-XXXX", status: "UNUSED" as const },
-      { id: "2", brand: selectedBrand, amount: Math.floor(amount * 0.4), claimCode: "YYYY-YYYY-YYYY-YYYY", status: "UNUSED" as const },
+      {
+        id: "1",
+        brand: selectedBrand,
+        amount: Math.floor(amount * 0.4),
+        claimCode: "XXXX-XXXX-XXXX-XXXX",
+        status: "UNUSED" as const,
+      },
+      {
+        id: "2",
+        brand: selectedBrand,
+        amount: Math.floor(amount * 0.4),
+        claimCode: "YYYY-YYYY-YYYY-YYYY",
+        status: "UNUSED" as const,
+      },
       {
         id: "3",
         brand: selectedBrand,
@@ -72,15 +97,23 @@ export function SearchStep() {
     setStep(2);
   };
 
-  const isValid = selectedBrand && selectedCountry && targetAmount && parseFloat(targetAmount) > 0;
+  const isValid =
+    selectedBrand &&
+    selectedCountry &&
+    targetAmount &&
+    parseFloat(targetAmount) > 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-full items-start">
       {/* Left Column: Filters */}
       <Card className="md:col-span-4 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 space-y-4 md:space-y-6 flex flex-col h-auto md:h-full sticky top-0 z-20">
         <div>
-          <h2 className="text-lg md:text-xl font-bold mb-1 md:mb-2">Configuration</h2>
-          <p className="text-muted-foreground text-xs md:text-sm">What are you looking for?</p>
+          <h2 className="text-lg md:text-xl font-bold mb-1 md:mb-2">
+            Configuration
+          </h2>
+          <p className="text-muted-foreground text-xs md:text-sm">
+            What are you looking for?
+          </p>
         </div>
 
         <div className="space-y-4">
@@ -88,9 +121,15 @@ export function SearchStep() {
             <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider mb-1 block">
               Country
             </Label>
-            <Select value={selectedCountry} onValueChange={setSelectedCountry} disabled={loading}>
+            <Select
+              value={selectedCountry}
+              onValueChange={setSelectedCountry}
+              disabled={loading}
+            >
               <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-sm">
-                <SelectValue placeholder={loading ? "Loading..." : "Select country..."} />
+                <SelectValue
+                  placeholder={loading ? "Loading..." : "Select country..."}
+                />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border text-popover-foreground">
                 {countries.map((country) => (
@@ -107,7 +146,9 @@ export function SearchStep() {
               Target Total Amount
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 md:top-3 text-muted-foreground/50 text-sm">$</span>
+              <span className="absolute left-3 top-2.5 md:top-3 text-muted-foreground/50 text-sm">
+                $
+              </span>
               <Input
                 type="number"
                 placeholder="Ex: 500"
@@ -147,13 +188,17 @@ export function SearchStep() {
       </Card>
 
       {/* Right Column: Brand Grid */}
-      <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 flex flex-col min-h-[400px] md:min-h-[500px]">
+      <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-3 md:mb-4">
-          <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">Available Brands</Label>
-          <span className="text-[10px] text-muted-foreground/50">{filteredBrands.length} items</span>
+          <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">
+            Available Brands
+          </Label>
+          <span className="text-[10px] text-muted-foreground/50">
+            {filteredBrands.length} items
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 overflow-y-auto pr-1 md:pr-2 custom-scrollbar flex-1 max-h-[500px] md:max-h-[600px]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 overflow-y-auto pr-1 md:pr-2 custom-scrollbar flex-1 max-h-125 md:max-h-150">
           {filteredBrands.map((brand, idx) => (
             <motion.button
               key={brand.id}
@@ -174,12 +219,19 @@ export function SearchStep() {
             >
               <div className="dark:bg-white relative w-full h-full mb-1 md:mb-2 transition-transform group-hover:scale-110 duration-300 flex items-center justify-center">
                 {brand.image ? (
-                  <Image src={brand.image} alt={brand.name} fill className="object-cover rounded-lg" />
+                  <Image
+                    src={brand.image}
+                    alt={brand.name}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
                 ) : (
                   <span className="text-2xl md:text-5xl">{brand.icon}</span>
                 )}
               </div>
-              <div className="text-[10px] md:text-sm font-bold text-center tracking-tight truncate w-full px-1">{brand.name}</div>
+              <div className="text-[10px] md:text-sm font-bold text-center tracking-tight truncate w-full px-1">
+                {brand.name}
+              </div>
 
               {selectedBrand === brand.id && (
                 <div className="absolute top-1 right-1 md:top-2 md:right-2 bg-primary rounded-full p-0.5 md:p-1 shadow-lg">

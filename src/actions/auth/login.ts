@@ -44,16 +44,26 @@ export const login = async (prevState: unknown, formData: FormData) => {
     const response = (await auth.api.signInEmail({
       body: { email, password, callbackURL },
       headers: await headers(),
-    })) as any;
+    })) as {
+      twoFactorRedirect?: boolean;
+      user?: {
+        id: string;
+        email: string;
+        emailVerified: boolean;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        image?: string | null;
+        role?: string[];
+      };
+    };
 
     // 2. Asignar la ruta de 2FA si es necesario (sin hacer el redirect aún)
     if (response.twoFactorRedirect) {
       redirectPath = `/${portal}/auth/verify-2fa`;
-    } else {
+    } else if (response.user) {
       // Verificar si el usuario tiene el rol requerido (solo si no va a 2FA)
-      const user = response.user as typeof response.user & {
-        role?: string[];
-      };
+      const user = response.user;
 
       if (!user.role?.includes(requiredRole)) {
         await auth.api.signOut({ headers: await headers() });

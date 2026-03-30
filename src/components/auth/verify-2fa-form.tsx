@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import type { Verify2FAFormProps } from "@/types";
 
-
 const dashboardMap = {
   sell: "/sell/dashboard",
   buy: "/buy/dashboard",
@@ -140,7 +139,7 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
                   <Laptop className="h-3.5 w-3.5" />
                   Trust this device
                 </Label>
-                <p className="text-xs text-muted-foreground">Don't ask for a code again on this browser for 30 days.</p>
+                <p className="text-xs text-muted-foreground">Don&apos;t ask for a code again on this browser for 30 days.</p>
               </div>
             </div>
           )}

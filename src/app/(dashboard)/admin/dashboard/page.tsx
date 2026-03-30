@@ -1,4 +1,3 @@
-import { getSession } from "@/lib/get-session";
 import { IconUsers, IconCreditCard, IconCurrencyDollar, IconAlertTriangle } from "@tabler/icons-react";
 import { Metadata } from "next";
 
@@ -8,9 +7,6 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  const session = await getSession();
-  const user = session?.user;
-
   return (
     <div>
       <div className="space-y-1">
@@ -52,7 +48,7 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="min-h-[400px] flex-1 rounded-xl bg-muted/50 p-6">
+      <div className="min-h-100 flex-1 rounded-xl bg-muted/50 p-6">
         <h2 className="text-xl font-semibold mb-4">Platform Activity</h2>
         <p className="text-muted-foreground">No recent activity.</p>
       </div>

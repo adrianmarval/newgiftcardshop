@@ -75,8 +75,8 @@ export function RedeemStep() {
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex gap-3 items-start">
               <AlertTriangle className="w-4 h-4 text-destructive mt-0.5" />
               <p className="text-[10px] md:text-xs text-destructive/80 leading-relaxed font-medium">
-                You have reported issues with {reportedCount} card{reportedCount !== 1 ? "s" : ""}. The total has been automatically
-                adjusted.
+                You have reported issues with {reportedCount} card
+                {reportedCount !== 1 ? "s" : ""}. The total has been automatically adjusted.
               </p>
             </div>
           )}
@@ -101,7 +101,7 @@ export function RedeemStep() {
       </Card>
 
       {/* Right Column: Cards Reveal & Reporting */}
-      <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-[400px] md:min-h-[500px]">
+      <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-4">
           <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">Revealed Codes</Label>
           <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export function RedeemStep() {
                     animate={{ height: "auto", opacity: 1 }}
                     className="mt-3 pt-3 border-t border-border flex items-center gap-3 overflow-hidden"
                   >
-                    <div className="relative flex-1 max-w-[150px]">
+                    <div className="relative flex-1 max-w-37.5">
                       <span className="absolute left-2 top-1.5 text-muted-foreground/50 text-xs">$</span>
                       <Input
                         type="number"

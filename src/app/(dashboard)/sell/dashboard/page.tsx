@@ -52,7 +52,7 @@ export default async function SellerDashboardPage() {
         </div>
       </div>
 
-      <div className="min-h-[400px] flex-1 rounded-xl bg-muted/50 p-6">
+      <div className="min-h-100 flex-1 rounded-xl bg-muted/50 p-6">
         <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
         <p className="text-muted-foreground">No recent activity yet.</p>
       </div>

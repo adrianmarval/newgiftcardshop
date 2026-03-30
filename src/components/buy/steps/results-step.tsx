@@ -11,15 +11,8 @@ import { getBrandById } from "@/actions/giftcard-actions";
 import Image from "next/image";
 import type { Brand } from "@/types";
 
-
 export function ResultsStep() {
-  const { 
-    foundGiftcards, 
-    removeGiftcard, 
-    setStep,
-    selectedBrand,
-    targetAmount
-  } = useBuyFlow();
+  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount } = useBuyFlow();
 
   const [brandData, setBrandData] = useState<Brand | null>(null);
 
@@ -86,7 +79,7 @@ export function ResultsStep() {
       </Card>
 
       {/* Right Column: Cards List */}
-      <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-[400px] md:min-h-[500px]">
+      <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-4">
           <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">Proposed Bundle</Label>
           <span className="text-[10px] text-muted-foreground/50">{foundGiftcards.length} items</span>
@@ -105,12 +98,7 @@ export function ResultsStep() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center text-xl shadow-sm relative overflow-hidden">
                     {brandData?.image ? (
-                      <Image
-                        src={brandData.image}
-                        alt={brandData.name}
-                        fill
-                        className="p-1 object-contain"
-                      />
+                      <Image src={brandData.image} alt={brandData.name} fill className="p-1 object-contain" />
                     ) : (
                       brandData?.icon
                     )}
@@ -122,7 +110,7 @@ export function ResultsStep() {
                     </div>
                   </div>
                 </div>
-                
+
                 <Button
                   size="icon"
                   variant="ghost"
@@ -136,19 +124,17 @@ export function ResultsStep() {
               <div className="absolute top-0 right-0 w-12 h-12 bg-primary/5 rounded-full -mr-6 -mt-6 transition-transform group-hover:scale-150 duration-500" />
             </motion.div>
           ))}
-          
+
           {foundGiftcards.length === 0 && (
             <div className="col-span-full flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-2xl bg-muted/20 text-center">
               <div className="p-4 bg-muted rounded-full mb-4">
                 <Trash2 className="w-8 h-8 text-muted-foreground/50" />
               </div>
               <h3 className="font-bold mb-1">Bundle is empty</h3>
-              <p className="text-muted-foreground text-sm max-w-xs mx-auto">Go back to search or adjust your criteria to find more cards.</p>
-              <Button 
-                variant="outline" 
-                onClick={() => setStep(1)} 
-                className="mt-6 border-primary/50 text-primary hover:bg-primary/10"
-              >
+              <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                Go back to search or adjust your criteria to find more cards.
+              </p>
+              <Button variant="outline" onClick={() => setStep(1)} className="mt-6 border-primary/50 text-primary hover:bg-primary/10">
                 Return to Search
               </Button>
             </div>

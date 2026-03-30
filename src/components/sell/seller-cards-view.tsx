@@ -280,7 +280,12 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                         </div>
                         <div className="text-[10px] text-muted-foreground font-bold font-mono">
                           {new Date(batch.createdAt).toLocaleDateString()} AT{" "}
-                          {new Date(batch.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).toUpperCase()}
+                          {new Date(batch.createdAt)
+                            .toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                            .toUpperCase()}
                         </div>
                       </div>
                     </div>
@@ -464,7 +469,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
 
       {/* 4. Details Dialog */}
       <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
-        <DialogContent className="bg-card border-border sm:max-w-[425px] rounded-3xl">
+        <DialogContent className="bg-card border-border sm:max-w-106.25 rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black italic tracking-tighter uppercase">Card Details</DialogTitle>
           </DialogHeader>
@@ -554,7 +559,7 @@ function CodeDisplay({ code }: { code: string }) {
           <TooltipTrigger asChild>
             <code
               onClick={copy}
-              className="text-[11px] font-mono bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60 cursor-pointer hover:bg-muted transition-colors font-bold tracking-tight text-foreground truncate max-w-[140px]"
+              className="text-[11px] font-mono bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60 cursor-pointer hover:bg-muted transition-colors font-bold tracking-tight text-foreground truncate max-w-35"
             >
               {code.slice(0, 4)}••••{code.slice(-4)}
             </code>

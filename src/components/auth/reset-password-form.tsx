@@ -14,6 +14,13 @@ import { AlertCircle, Check, X } from "lucide-react";
 import { resetPassword } from "@/actions";
 import Form from "next/form";
 
+const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
+  <div className="flex items-center gap-2 text-sm">
+    {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-muted-foreground" />}
+    <span className={valid ? "text-primary font-medium" : "text-muted-foreground"}>{label}</span>
+  </div>
+);
+
 function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
@@ -44,13 +51,6 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
   };
 
   const allValid = Object.values(passwordChecks).every(Boolean);
-
-  const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
-    <div className="flex items-center gap-2 text-sm">
-      {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-muted-foreground" />}
-      <span className={valid ? "text-primary font-medium" : "text-muted-foreground"}>{label}</span>
-    </div>
-  );
 
   if (!token) {
     return (

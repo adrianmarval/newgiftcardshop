@@ -1,18 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, AlertCircle, ChevronRight, ArrowLeft } from "lucide-react";
+import { Check, AlertCircle, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 
 export function ConfirmUsageStep() {
-  const { 
-    foundGiftcards, 
-    setStep 
-  } = useBuyFlow();
+  const { foundGiftcards, setStep } = useBuyFlow();
 
   const totalAmount = foundGiftcards.reduce((sum, card) => {
     if (card.status === "UNUSED") return sum + card.amount;
@@ -20,7 +15,7 @@ export function ConfirmUsageStep() {
     return sum;
   }, 0);
 
-  const reportedCards = foundGiftcards.filter(c => c.status !== "UNUSED");
+  const reportedCards = foundGiftcards.filter((c) => c.status !== "UNUSED");
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-full items-start">
@@ -34,11 +29,11 @@ export function ConfirmUsageStep() {
           >
             <Check className="w-10 h-10 text-primary" />
           </motion.div>
-          
+
           <h2 className="text-2xl md:text-3xl font-black tracking-tight italic">FINAL CONFIRMATION</h2>
           <p className="text-muted-foreground text-sm md:text-base">
-            You are about to confirm that you have used all cards correctly. 
-            Once confirmed, you will proceed to payment and <strong>reporting will be disabled</strong>.
+            You are about to confirm that you have used all cards correctly. Once confirmed, you will proceed to payment and{" "}
+            <strong>reporting will be disabled</strong>.
           </p>
         </div>
 
@@ -49,9 +44,7 @@ export function ConfirmUsageStep() {
           </div>
           <div className="p-4 bg-muted/50 border border-border rounded-2xl">
             <div className="text-[10px] text-muted-foreground uppercase font-black mb-1">Reported Issues</div>
-            <div className={`text-2xl font-black ${reportedCards.length > 0 ? "text-destructive" : ""}`}>
-              {reportedCards.length}
-            </div>
+            <div className={`text-2xl font-black ${reportedCards.length > 0 ? "text-destructive" : ""}`}>{reportedCards.length}</div>
           </div>
           <div className="p-4 bg-primary/10 border border-primary/20 rounded-2xl">
             <div className="text-[10px] text-primary uppercase font-black mb-1">Final Amount Due</div>
@@ -64,17 +57,14 @@ export function ConfirmUsageStep() {
           <div className="space-y-1">
             <p className="text-xs font-bold text-destructive uppercase">Important Disclaimer</p>
             <p className="text-[11px] text-destructive/80 leading-relaxed italic">
-              Confirmation is irreversible. Ensure you have redemption screenshots or video evidence for all cards, especially those reported as having issues.
+              Confirmation is irreversible. Ensure you have redemption screenshots or video evidence for all cards, especially those
+              reported as having issues.
             </p>
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-          <Button
-            variant="ghost"
-            onClick={() => setStep(3)}
-            className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted"
-          >
+          <Button variant="ghost" onClick={() => setStep(3)} className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Review
           </Button>
           <Button

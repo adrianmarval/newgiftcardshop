@@ -22,6 +22,8 @@ export function BuyGiftcardManager() {
   const { step, resetForm } = useBuyFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
+  const [orderId] = useState(() => Math.random().toString(36).substring(7).toUpperCase());
+
   const handleFinishSuccess = () => {
     setShowSuccessDialog(false);
     resetForm();
@@ -81,7 +83,7 @@ export function BuyGiftcardManager() {
       </div>
 
       {/* Steps Content */}
-      <div className="min-h-[500px] md:min-h-[600px] relative">
+      <div className="min-h-125 md:min-h-150 relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -116,8 +118,7 @@ export function BuyGiftcardManager() {
             </motion.div>
             <AlertDialogTitle className="text-center text-2xl">Purchase Notified!</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground text-center text-lg">
-              We have received your payment check for Order #{Math.random().toString(36).substring(7).toUpperCase()}. Your balance will be
-              updated soon.
+              We have received your payment check for Order #{orderId}. Your balance will be updated soon.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogAction onClick={handleFinishSuccess} className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4 h-11">

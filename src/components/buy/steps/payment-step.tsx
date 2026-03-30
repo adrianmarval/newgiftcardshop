@@ -1,20 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Clipboard, Check, Wallet, Info, ArrowLeft, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 
 export function PaymentStep() {
-  const { 
-    foundGiftcards, 
-    setStep 
-  } = useBuyFlow();
+  const { foundGiftcards, setStep } = useBuyFlow();
 
   const [orderId, setOrderId] = useState("");
   const [isNotifying, setIsNotifying] = useState(false);
@@ -30,7 +26,7 @@ export function PaymentStep() {
     if (!orderId) return;
     setIsNotifying(true);
     // Simulate payment validation
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
     setIsNotifying(false);
     setNotified(true);
   };
@@ -50,12 +46,12 @@ export function PaymentStep() {
         <div className="space-y-2">
           <h2 className="text-2xl font-black italic uppercase tracking-tight">Payment Notified!</h2>
           <p className="text-muted-foreground max-w-sm">
-            We are verifying your transaction for order <strong>#{orderId}</strong>. 
-            Once confirmed, your balance will be updated automatically.
+            We are verifying your transaction for order <strong>#{orderId}</strong>. Once confirmed, your balance will be updated
+            automatically.
           </p>
         </div>
-        <Button 
-          onClick={() => window.location.href = "/buy/dashboard"}
+        <Button
+          onClick={() => (window.location.href = "/buy/dashboard")}
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12 px-8"
         >
           Back to Dashboard
@@ -92,7 +88,12 @@ export function PaymentStep() {
             <Label className="text-[10px] text-muted-foreground uppercase font-black">Binance Pay ID</Label>
             <div className="flex items-center gap-2 bg-card border border-border p-3 rounded-xl justify-center font-mono text-xl font-bold">
               {binancePayId}
-              <Button size="icon" variant="ghost" className="h-6 w-6 text-primary hover:bg-primary/10" onClick={() => navigator.clipboard.writeText(binancePayId)}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 text-primary hover:bg-primary/10"
+                onClick={() => navigator.clipboard.writeText(binancePayId)}
+              >
                 <Clipboard className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -113,14 +114,14 @@ export function PaymentStep() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-             <Button
-                variant="ghost"
-                onClick={() => setStep(4)}
-                className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted"
-                disabled={isNotifying}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back
-              </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setStep(4)}
+              className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted"
+              disabled={isNotifying}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back
+            </Button>
             <Button
               onClick={handleNotify}
               disabled={!orderId || isNotifying}
@@ -140,7 +141,8 @@ export function PaymentStep() {
         <div className="max-w-md w-full p-4 bg-primary/5 border border-primary/20 rounded-xl flex gap-3 text-left">
           <Info className="w-5 h-5 text-primary mt-0.5" />
           <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-            Once you notify the payment, our system will automatically pair the transaction with your order using the ID provided. Verification usually takes 1-5 minutes.
+            Once you notify the payment, our system will automatically pair the transaction with your order using the ID provided.
+            Verification usually takes 1-5 minutes.
           </p>
         </div>
       </Card>

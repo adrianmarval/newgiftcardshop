@@ -16,7 +16,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { QRCodeSVG } from "qrcode.react";
 import type { ProfileState, ProfileFormProps } from "@/types";
 
-
 export function ProfileForm({ user, portal }: ProfileFormProps) {
   const [state, formAction, isPending] = useActionState<ProfileState, FormData>(updateProfile, null);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
@@ -61,6 +60,7 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
         setPassword(""); // Clear password after success
       }
     } catch (err) {
+      console.log(err);
       setTwoFactorError("An unexpected error occurred");
     } finally {
       setIs2FAPending(false);
@@ -78,7 +78,8 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
         setTwoFactorError(error.message || "Invalid code");
       } else {
         setIs2FAEnabled(true);
-        const codes = (data as any)?.backupCodes;
+        const responseData = data as { backupCodes?: string[] } | null;
+        const codes = responseData?.backupCodes;
         if (codes) {
           setBackupCodes(codes);
         }
@@ -86,6 +87,7 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
         setTotpCode("");
       }
     } catch (err) {
+      console.log(err);
       setTwoFactorError("An unexpected error occurred");
     } finally {
       setIs2FAPending(false);
@@ -111,6 +113,7 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
         setPassword("");
       }
     } catch (err) {
+      console.log(err);
       setTwoFactorError("An unexpected error occurred");
     } finally {
       setIs2FAPending(false);
@@ -137,6 +140,7 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
         setPassword("");
       }
     } catch (err) {
+      console.log(err);
       setTwoFactorError("An unexpected error occurred");
     } finally {
       setIs2FAPending(false);
@@ -434,7 +438,7 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
             <DialogTitle>
               {showBackupCodes ? "Backup Codes" : !twoStepEnable ? "Set up Two-Factor Authentication" : "Scan QR Code"}
@@ -583,7 +587,7 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
             <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
             <DialogDescription>Are you sure you want to disable 2FA? This will make your account less secure.</DialogDescription>

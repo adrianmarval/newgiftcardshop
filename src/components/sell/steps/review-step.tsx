@@ -17,11 +17,11 @@ interface ReviewStepProps {
 export function ReviewStep({ onPublish, isPublishing, brandName, countryName }: ReviewStepProps) {
   const { giftcards, setStep } = useSellFlow();
 
-  const totalCards = giftcards.length;
+  // const totalCards = giftcards.length;
   const totalAmount = giftcards.reduce((sum, card) => sum + (parseFloat(card.amount) || 0), 0);
-  
+
   // Rate placeholder - in a real app, this would come from the user's sellRate
-  const rate = 0.85; 
+  const rate = 0.85;
   const totalToReceive = totalAmount * rate;
 
   return (
@@ -58,11 +58,11 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName }: 
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 md:p-4 space-y-2">
             <div className="flex justify-between items-center text-[10px] md:text-xs">
               <span className="text-muted-foreground uppercase tracking-wider font-semibold">Estimated Payment</span>
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0">{(rate * 100).toFixed(0)}% Rate</Badge>
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0">
+                {(rate * 100).toFixed(0)}% Rate
+              </Badge>
             </div>
-            <div className="text-2xl md:text-3xl font-black text-primary">
-              ${totalToReceive.toFixed(2)}
-            </div>
+            <div className="text-2xl md:text-3xl font-black text-primary">${totalToReceive.toFixed(2)}</div>
             <p className="text-[10px] text-muted-foreground italic">Payment will be processed once cards are verified.</p>
           </div>
         </div>
@@ -90,11 +90,13 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName }: 
       </Card>
 
       {/* Right Column: Cards Preview */}
-      <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-[400px] md:min-h-[500px]">
+      <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">Verification Items</Label>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">{giftcards.length} Total</Badge>
+            <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
+              {giftcards.length} Total
+            </Badge>
           </div>
         </div>
 
@@ -116,7 +118,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName }: 
                 </div>
                 <Badge className="bg-primary/20 text-primary hover:bg-primary/20 border-none text-[9px] px-1.5 h-4">Pending</Badge>
               </div>
-              
+
               <div className="space-y-1 mt-3">
                 <div className="flex justify-between text-[10px]">
                   <span className="text-muted-foreground uppercase tracking-tighter">Code</span>

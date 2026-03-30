@@ -18,7 +18,8 @@ export default async function SellerCardsPage() {
 
   // Double check roles if needed, though layout usually handles this.
   // But for this specific dashboard, we want to be sure.
-  const userRoles = (session.user as any).role || [];
+  const user = session.user as typeof session.user & { role?: string[] };
+  const userRoles = user.role || [];
   if (!userRoles.includes("SELLER")) {
     redirect("/sell/dashboard");
   }
