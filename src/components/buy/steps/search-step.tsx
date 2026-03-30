@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getActiveBrands, getActiveCountries } from "@/actions/giftcard-actions";
+import { getActiveBrands, getActiveCountries, searchGiftcards } from "@/actions/giftcard-actions";
 import Image from "next/image";
 import type { Brand, Country } from "@/types";
 
@@ -54,31 +54,9 @@ export function SearchStep() {
 
     // Mock found cards
     const amount = parseFloat(targetAmount);
-    const mockCards = [
-      {
-        id: "1",
-        brand: selectedBrand,
-        amount: Math.floor(amount * 0.4),
-        claimCode: "XXXX-XXXX-XXXX-XXXX",
-        status: "UNUSED" as const,
-      },
-      {
-        id: "2",
-        brand: selectedBrand,
-        amount: Math.floor(amount * 0.4),
-        claimCode: "YYYY-YYYY-YYYY-YYYY",
-        status: "UNUSED" as const,
-      },
-      {
-        id: "3",
-        brand: selectedBrand,
-        amount: amount - Math.floor(amount * 0.8),
-        claimCode: "ZZZZ-ZZZZ-ZZZZ-ZZZZ",
-        status: "UNUSED" as const,
-      },
-    ].filter((c) => c.amount > 0);
+    const cards = await searchGiftcards(selectedBrand, selectedCountry, amount);
 
-    setFoundGiftcards(mockCards);
+    setFoundGiftcards(cards);
     setIsSearching(false);
     setStep(2);
   };

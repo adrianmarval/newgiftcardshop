@@ -7,3 +7,4 @@ export { verifyEmail } from "./auth/verify-email";
 export { resendVerification } from "./auth/resend-verification";
 export { verify2FA } from "./auth/verify-2fa";
 export { updateProfile } from "./auth/update-profile";
+export { getActiveBrands, searchGiftcards } from "./giftcard-actions";

@@ -1,6 +1,8 @@
 "use server";
 
+import { findGiftcardCombination } from "@/lib/browse-giftcards";
 import prisma from "@/lib/prisma";
+import { BuyGiftcardItem } from "@/types";
 
 export async function getActiveBrands() {
   try {
@@ -49,5 +51,30 @@ export async function getCountryById(id: string) {
   } catch (error) {
     console.error("Error fetching country by id:", error);
     return null;
+  }
+}
+
+export async function searchGiftcards(brandId: string, countryId: string, amount: number): Promise<BuyGiftcardItem[]> {
+  try {
+    const giftcards = await prisma.giftcard.findMany({
+      where: {
+        brandId,
+        countryId,
+        inStock: true,
+        status: "UNUSED",
+      },
+    });
+
+    const selectedGiftcards = await findGiftcardCombination(giftcards, amount);
+    return selectedGiftcards.selectedCards.map((card) => ({
+      id: card.id,
+      brand: card.brandId,
+      amount: card.amount.toNumber(),
+      claimCode: card.claimCode,
+      status: "UNUSED",
+    }));
+  } catch (error) {
+    console.error("Error fetching giftcards:", error);
+    return [];
   }
 }
