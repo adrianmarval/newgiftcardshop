@@ -5,7 +5,7 @@ import { Check, AlertCircle, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getUserBuyRate, updateOrderTotal } from "@/actions/giftcard-actions";
+import { getUserBuyRate, confirmOrderTotal } from "@/actions/giftcard-actions";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -34,7 +34,7 @@ export function ConfirmUsageStep() {
 
     setIsUpdating(true);
     try {
-      const result = await updateOrderTotal(orderId, totalAmount);
+      const result = await confirmOrderTotal(orderId, totalAmount);
       if (result.success) {
         setStep(5);
       } else {

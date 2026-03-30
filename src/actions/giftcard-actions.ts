@@ -148,7 +148,11 @@ export async function createOrder(giftcardIds: string[]) {
   }
 }
 
-export async function updateOrderTotal(orderId: string, total: number) {
+/**
+ * Confirma el monto final de una orden después de que el buyer verifica las tarjetas
+ * Guarda el monto confirmado por el buyer
+ */
+export async function confirmOrderTotal(orderId: string, confirmedTotal: number) {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -158,16 +162,33 @@ export async function updateOrderTotal(orderId: string, total: number) {
       throw new Error("Unauthorized");
     }
 
+    // Verificar que la orden pertenece al buyer
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { userId: true },
+    });
+
+    if (!order || order.userId !== session.user.id) {
+      throw new Error("Not authorized to confirm this order");
+    }
+
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        total: new Prisma.Decimal(total),
+        confirmedTotal: new Prisma.Decimal(confirmedTotal),
       },
     });
 
     return { success: true };
   } catch (error) {
-    console.error("Error updating order total:", error);
-    return { success: false, error: "Failed to update order total" };
+    console.error("Error confirming order total:", error);
+    return { success: false, error: "Failed to confirm order total" };
   }
+}
+
+/**
+ * @deprecated Use confirmOrderTotal instead
+ */
+export async function updateOrderTotal(orderId: string, total: number) {
+  return confirmOrderTotal(orderId, total);
 }

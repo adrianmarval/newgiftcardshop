@@ -41,10 +41,95 @@ export interface Giftcard {
   /** May contain any GiftcardStatus value or a raw string from older data. */
   status: GiftcardStatus | string;
   isConfirmed: boolean;
+  /** Amount reported by the buyer when using/redeeming the card */
+  reportedAmount?: number | null;
   orderId: string | null;
   batchId?: string | null;
   brand: Pick<Brand, "name" | "icon" | "image">;
   country: Pick<Country, "name" | "code"> | null;
+}
+
+// ── Order Dispute ──────────────────────────────────────────────────────────
+
+/** String-literal mirror of the Prisma DisputeStatus enum */
+export type DisputeStatus = "NONE" | "PENDING" | "ACCEPTED" | "REJECTED" | "RESOLVED";
+
+/** String-literal mirror of the Prisma DisputeType enum */
+export type DisputeType = "OVERPAID" | "UNDERPAID";
+
+/**
+ * Lightweight giftcard info for dispute context
+ */
+export interface DisputeGiftcard {
+  id: string;
+  amount: number;
+  reportedAmount: number | null;
+  brand: {
+    name: string;
+    icon: string;
+  };
+}
+
+/**
+ * User info for dispute context
+ */
+export interface DisputeUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+/**
+ * Full dispute data returned from server actions (for Buyer/Seller views)
+ */
+export interface Dispute {
+  id: string;
+  total: number;
+  confirmedTotal: number | null;
+  disputeStatus: DisputeStatus;
+  disputeType: DisputeType | null;
+  disputeReason: string | null;
+  disputeDifference: number | null;
+  disputeResolvedAt: string | Date | null;
+  disputeNotes: string | null;
+  giftcards: DisputeGiftcard[];
+  user?: DisputeUser;
+}
+
+/**
+ * Extended dispute details for Admin (includes order status)
+ */
+export interface DisputeDetails extends Dispute {
+  status: string;
+}
+
+/**
+ * Card discrepancy for preview
+ */
+export interface CardDiscrepancy {
+  cardId: string;
+  originalAmount: number;
+  reportedAmount: number | null;
+  hasDiscrepancy: boolean;
+  difference: number;
+}
+
+/**
+ * Represents an order with dispute data for amount discrepancies
+ */
+export interface OrderWithDispute {
+  id: string;
+  total: number;
+  status: string;
+  confirmedTotal?: number | null;
+  disputeStatus: DisputeStatus;
+  disputeType?: DisputeType | null;
+  disputeReason?: string | null;
+  disputeDifference?: number | null;
+  disputeResolvedAt?: string | null;
+  disputeNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ── Payments ─────────────────────────────────────────────────────────────────
