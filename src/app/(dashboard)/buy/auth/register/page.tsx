@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { BuyerRegisterForm } from "@/components/auth/buyer-register-form";
+import { RegisterForm } from "@/components/auth/register-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,7 +10,13 @@ export const metadata: Metadata = {
 export default function BuyerRegisterPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <BuyerRegisterForm />
+      <RegisterForm
+        portal="buyer"
+        redirectTo="/buy"
+        loginUrl="/buy/auth/login"
+        title="Create Account"
+        subtitle="Sign up to start buying gift cards at great prices"
+      />
     </Suspense>
   );
 }

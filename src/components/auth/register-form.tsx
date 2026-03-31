@@ -12,6 +12,14 @@ import { AlertCircle, Check, X } from "lucide-react";
 import { register } from "@/actions";
 import Form from "next/form";
 
+interface RegisterFormProps {
+  portal: "buyer" | "seller";
+  redirectTo: string;
+  loginUrl: string;
+  title: string;
+  subtitle: string;
+}
+
 function PasswordCheckItem({ valid, label }: { valid: boolean; label: string }) {
   return (
     <div className="flex items-center gap-2 text-sm">
@@ -21,7 +29,7 @@ function PasswordCheckItem({ valid, label }: { valid: boolean; label: string }) 
   );
 }
 
-export function BuyerRegisterForm() {
+export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterFormProps) {
   const [error, formAction, isPending] = useActionState(register, null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,12 +45,16 @@ export function BuyerRegisterForm() {
   const passwordValid = Object.values(checks).every(Boolean);
   const passwordsMatch = password === confirmPassword;
 
+  const portalValue = portal === "buyer" ? "buy" : "sell";
+  const submitLabel = portal === "buyer" ? "Create Account" : "Create Seller Account";
+  const signInText = portal === "buyer" ? "Already have an account?" : "Already have a seller account?";
+
   return (
     <Card className="w-full max-w-md mx-auto p-8">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Create Account</h1>
-          <p className="text-muted-foreground">Sign up to start buying gift cards at great prices</p>
+          <h1 className="text-2xl font-bold">{title}</h1>
+          <p className="text-muted-foreground">{subtitle}</p>
         </div>
 
         {error && (
@@ -53,7 +65,7 @@ export function BuyerRegisterForm() {
         )}
 
         <Form action={formAction} className="space-y-4">
-          <input type="hidden" name="portal" value="buy" />
+          <input type="hidden" name="portal" value={portalValue} />
 
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
@@ -108,14 +120,14 @@ export function BuyerRegisterForm() {
                 Creating account...
               </>
             ) : (
-              "Create Account"
+              submitLabel
             )}
           </Button>
         </Form>
 
         <p className="text-sm text-muted-foreground text-center">
-          Already have an account?{" "}
-          <Link href="/buy/auth/login" className="text-primary hover:underline font-medium">
+          {signInText}{" "}
+          <Link href={loginUrl} className="text-primary hover:underline font-medium">
             Sign in
           </Link>
         </p>

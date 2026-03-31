@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getUserBuyRate, reportGiftcardIssue, undoGiftcardIssue } from "@/actions/giftcard-actions";
+import { getUserBuyRate } from "@/actions/order-actions";
+import { reportGiftcardIssue, undoGiftcardIssue } from "@/actions/giftcard-actions";
 import type { BuyGiftcardStatus } from "@/types";
 
 export function RedeemStep() {
@@ -29,7 +30,7 @@ export function RedeemStep() {
   const setLoading = (id: string, loading: boolean) => {
     setLoadingIds((prev) => {
       const next = new Set(prev);
-      loading ? next.add(id) : next.delete(id);
+      if (loading) { next.add(id); } else { next.delete(id); }
       return next;
     });
   };

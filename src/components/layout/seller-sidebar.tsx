@@ -9,25 +9,9 @@ import {
   IconWallet,
   IconSettings,
   IconUser,
-  IconAlertTriangle,
 } from "@tabler/icons-react";
-import Form from "next/form";
-
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { logout } from "@/actions";
-import Link from "next/link";
+import { Sidebar } from "@/components/ui/sidebar";
+import { PortalSidebar } from "./app-sidebar";
 
 const navItems = [
   { title: "Dashboard", url: "/sell/dashboard", icon: IconDashboard },
@@ -41,45 +25,13 @@ const navItems = [
 
 export function SellerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
-              <Link className="flex items-center" href="/sell/dashboard">
-                <span className="text-xl font-bold px-2">Solmaira Sell</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent className="mt-4">
-        <SidebarGroup className="space-y-4">
-          <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider px-2">Menu</SidebarGroupLabel>
-          <SidebarGroupContent className="flex flex-col gap-1">
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="cursor-pointer h-12" tooltip={item.title}>
-                    <Link href={item.url}>
-                      {item.icon && <item.icon size={20} />}
-                      <span className="text-lg font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        <Form action={logout}>
-          <input type="hidden" name="portal" value="sell" />
-          <Button variant="destructive" className="w-full justify-start">
-            Sign Out
-          </Button>
-        </Form>
-      </SidebarFooter>
-    </Sidebar>
+    <PortalSidebar
+      navItems={navItems}
+      brandLabel="Solmaira Sell"
+      brandHref="/sell/dashboard"
+      portal="sell"
+      logoutVariant="destructive"
+      {...props}
+    />
   );
 }

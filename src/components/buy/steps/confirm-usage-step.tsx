@@ -6,7 +6,7 @@ import { Check, AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getUserBuyRate, confirmOrderUsage } from "@/actions/giftcard-actions";
+import { getUserBuyRate, confirmOrderUsage } from "@/actions/order-actions";
 
 export function ConfirmUsageStep() {
   const { foundGiftcards, setStep, orderId, setAdjustedTotal } = useBuyFlow();

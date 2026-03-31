@@ -16,7 +16,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getBrandById, createOrder, getUserBuyRate, getOrderCards } from "@/actions/giftcard-actions";
+import { getBrandById } from "@/actions/brand-actions";
+import { createOrder, getUserBuyRate } from "@/actions/order-actions";
+import { getOrderCards } from "@/actions/giftcard-actions";
 import Image from "next/image";
 import type { Brand } from "@/types";
 

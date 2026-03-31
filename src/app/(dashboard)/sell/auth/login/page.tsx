@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { SellerLoginForm } from "@/components/auth/seller-login-form";
+import { LoginForm } from "@/components/auth/login-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,7 +10,15 @@ export const metadata: Metadata = {
 export default function SellerLoginPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <SellerLoginForm />
+      <LoginForm
+        portal="seller"
+        title="Seller Sign In"
+        subtitle="Access your seller dashboard to manage gift cards"
+        forgotPasswordUrl="/sell/auth/forgot-password"
+        registerUrl="/sell/auth/register"
+        registerPrompt="Don't have a seller account?"
+        registerLinkText="Create one"
+      />
     </Suspense>
   );
 }

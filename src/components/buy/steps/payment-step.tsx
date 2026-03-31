@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { completeOrder, getPlatformSetting } from "@/actions/giftcard-actions";
+import { completeOrder } from "@/actions/order-actions";
+import { getPlatformSetting } from "@/actions/platform-actions";
 
 export function PaymentStep() {
   const { setStep, orderId: storedOrderId, adjustedTotal } = useBuyFlow();

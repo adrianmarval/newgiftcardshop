@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
-import { ProfileForm } from "@/components/dashboard/profile-form";
+import { ProfileForm } from "@/components/auth/profile/profile-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

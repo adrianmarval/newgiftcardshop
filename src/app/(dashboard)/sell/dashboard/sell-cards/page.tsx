@@ -1,5 +1,6 @@
 import { SellBatchManager } from "@/components/sell/sell-batch-manager";
-import { getActiveBrands, getActiveCountries } from "@/actions/giftcard-actions";
+import { getActiveBrands } from "@/actions/brand-actions";
+import { getActiveCountries } from "@/actions/country-actions";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

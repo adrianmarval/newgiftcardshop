@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { IconChartBar, IconDashboard, IconFolder, IconListDetails, IconUsers } from "@tabler/icons-react";
+import Form from "next/form";
 
 import {
   Sidebar,
@@ -15,60 +15,63 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { logout } from "@/actions";
 import Link from "next/link";
 
-const navItems = [
-  {
-    title: "Dashboard",
-    url: "#",
-    icon: IconDashboard,
-  },
-  {
-    title: "Lifecycle",
-    url: "#",
-    icon: IconListDetails,
-  },
-  {
-    title: "Analytics",
-    url: "#",
-    icon: IconChartBar,
-  },
-  {
-    title: "Projects",
-    url: "#",
-    icon: IconFolder,
-  },
-  {
-    title: "Team",
-    url: "#",
-    icon: IconUsers,
-  },
-];
+export type NavItemIcon = React.ComponentType<{ size?: number | string; className?: string }>;
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export interface NavItem {
+  title: string;
+  url: string;
+  icon: NavItemIcon;
+}
+
+export interface PortalSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  navItems: NavItem[];
+  brandLabel: string;
+  brandHref: string;
+  groupLabel?: string;
+  portal: string;
+  logoutVariant?: "destructive" | "ghost" | "default" | "outline" | "secondary" | "link";
+}
+
+export function PortalSidebar({
+  navItems,
+  brandLabel,
+  brandHref,
+  groupLabel = "Menu",
+  portal,
+  logoutVariant = "destructive",
+  ...props
+}: PortalSidebarProps) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
-              <Link className="flex items-center" href="#">
-                <span className="text-3xl font-semibold">GiftcardShop</span>
+              <Link className="flex items-center" href={brandHref}>
+                <span className="text-xl font-bold px-2">{brandLabel}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="mt-30">
-        <SidebarGroup className="space-y-10">
-          <SidebarGroupLabel className="text-4xl">Menu</SidebarGroupLabel>
-          <SidebarGroupContent className="flex flex-col gap-2">
+      <SidebarContent className="mt-4">
+        <SidebarGroup className="space-y-4">
+          <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider px-2">
+            {groupLabel}
+          </SidebarGroupLabel>
+          <SidebarGroupContent className="flex flex-col gap-1">
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="h-20">
-                  <SidebarMenuButton className="cursor-pointer h-full" tooltip={item.title}>
-                    {item.icon && <item.icon />}
-                    <span className="text-3xl">{item.title}</span>
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="cursor-pointer h-12" tooltip={item.title}>
+                    <Link href={item.url}>
+                      {item.icon && <item.icon size={20} />}
+                      <span className="text-lg font-medium">{item.title}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -76,7 +79,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>Footer Here</SidebarFooter>
+      <SidebarFooter>
+        <Form action={logout}>
+          <input type="hidden" name="portal" value={portal} />
+          <Button variant={logoutVariant} className="w-full justify-start">
+            Sign Out
+          </Button>
+        </Form>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AdminLoginForm } from "@/components/auth/admin-login-form";
+import { LoginForm } from "@/components/auth/login-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,7 +10,13 @@ export const metadata: Metadata = {
 export default function AdminLoginPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <AdminLoginForm />
+      <LoginForm
+        portal="admin"
+        title="Admin Portal"
+        subtitle="Restricted access — administrators only"
+        forgotPasswordUrl="/admin/auth/forgot-password"
+        emailPlaceholder="admin@solmaira.com"
+      />
     </Suspense>
   );
 }
