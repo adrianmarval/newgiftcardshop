@@ -12,7 +12,9 @@ interface BuyFlowState {
   targetAmount: string;
   foundGiftcards: BuyGiftcardItem[];
   orderId: string | null;
-  
+  /** Set after confirmOrderUsage succeeds — the server-calculated adjusted total. */
+  adjustedTotal: number | null;
+
   // Actions
   setStep: (step: number) => void;
   setSelectedBrand: (brand: string) => void;
@@ -20,7 +22,8 @@ interface BuyFlowState {
   setTargetAmount: (amount: string) => void;
   setFoundGiftcards: (cards: BuyGiftcardItem[]) => void;
   setOrderId: (id: string | null) => void;
-  
+  setAdjustedTotal: (total: number | null) => void;
+
   removeGiftcard: (id: string) => void;
   reportIssue: (id: string, status: BuyGiftcardStatus, correctedAmount?: number) => void;
   resetForm: () => void;
@@ -33,6 +36,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   targetAmount: "",
   foundGiftcards: [],
   orderId: null,
+  adjustedTotal: null,
 
   setStep: (step) => set({ step }),
   setSelectedBrand: (brand) => set({ selectedBrand: brand }),
@@ -40,17 +44,18 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   setTargetAmount: (amount) => set({ targetAmount: amount }),
   setFoundGiftcards: (cards) => set({ foundGiftcards: cards }),
   setOrderId: (id) => set({ orderId: id }),
+  setAdjustedTotal: (total) => set({ adjustedTotal: total }),
 
   removeGiftcard: (id) => set((state) => ({
-    foundGiftcards: state.foundGiftcards.filter(g => g.id !== id)
+    foundGiftcards: state.foundGiftcards.filter(g => g.id !== id),
   })),
 
   reportIssue: (id, status, correctedAmount) => set((state) => ({
-    foundGiftcards: state.foundGiftcards.map(g => 
-      g.id === id 
-        ? { ...g, status, reportedAmount: status === "WRONG_AMOUNT" ? correctedAmount : undefined } 
+    foundGiftcards: state.foundGiftcards.map(g =>
+      g.id === id
+        ? { ...g, status, reportedAmount: status === "WRONG_AMOUNT" ? correctedAmount : undefined }
         : g
-    )
+    ),
   })),
 
   resetForm: () => set({
@@ -60,5 +65,6 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
     targetAmount: "",
     foundGiftcards: [],
     orderId: null,
-  })
+    adjustedTotal: null,
+  }),
 }));

@@ -28,11 +28,14 @@ export interface BuyGiftcardItem {
   brand: string;
   amount: number;
   price: number;
-  claimCode: string;
+  /** Only populated after the order is created and codes are revealed (step 3). */
+  claimCode?: string;
   pinCode?: string;
   status: BuyGiftcardStatus;
   /** Only present when status is "WRONG_AMOUNT". */
   reportedAmount?: number;
+  /** ownerId of the giftcard — used for issue tracking. */
+  sellerId?: string;
 }
 
 // ── Sell Flow ─────────────────────────────────────────────────────────────────

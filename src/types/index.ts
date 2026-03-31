@@ -15,6 +15,8 @@ export type {
   Payment,
   Batch,
   ParsedGiftCard,
+  GiftcardIssue,
+  PlatformSetting,
 } from "./domain";
 
 export type {

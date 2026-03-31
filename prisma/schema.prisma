@@ -35,6 +35,7 @@ model User {
   orders          Order[]
   paymentMethod   PaymentMethod?
   giftcardBatches GiftcardBatch[]
+  reportedIssues  GiftcardIssue[]
 
   twoFactor        TwoFactor?
   twoFactorEnabled Boolean    @default(false)
@@ -113,6 +114,8 @@ model Giftcard {
   isConfirmed Boolean        @default(false)
   status      GiftcardStatus @default(UNUSED)
 
+  // Monto reportado por el buyer (solo cuando status = WRONG_AMOUNT o redimida con diferencia)
+  reportedAmount Decimal? @db.Decimal(10, 2)
 
   // Relaciones
   ownerId String?
@@ -126,6 +129,8 @@ model Giftcard {
 
   batchId String?
   batch   GiftcardBatch? @relation(fields: [batchId], references: [id])
+
+  issues GiftcardIssue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -163,15 +168,16 @@ model Country {
 }
 
 model Order {
-  id     String      @id @default(cuid())
-  total  Decimal     @db.Decimal(10, 2)
-  status OrderStatus
-
+  id            String      @id @default(cuid())
+  total         Decimal     @db.Decimal(10, 2) // Total original al crear la orden
+  adjustedTotal Decimal?    @db.Decimal(10, 2) // Total recalculado post-redeem (con issues)
+  status        OrderStatus
 
   userId    String
   user      User       @relation(fields: [userId], references: [id])
   giftcards Giftcard[]
   payments  Payment[]
+  issues    GiftcardIssue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -228,6 +234,47 @@ model PaymentMethod {
   @@map("payment_method")
 }
 
+model GiftcardIssue {
+  id        String            @id @default(cuid())
+  issueType GiftcardIssueType
+
+  // Monto reportado por el buyer (solo para WRONG_AMOUNT)
+  reportedAmount Decimal? @db.Decimal(10, 2)
+
+  // Prueba opcional (screenshot del balance/error)
+  proofImageUrl String?
+
+  // Relaciones
+  giftcardId String
+  giftcard   Giftcard @relation(fields: [giftcardId], references: [id])
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  // Buyer que reportó el issue
+  reportedById String
+  reportedBy   User   @relation(fields: [reportedById], references: [id])
+
+  // Seller dueño de la tarjeta (para auditoría y filtrado)
+  sellerId String?
+
+  createdAt DateTime @default(now())
+
+  @@map("giftcard_issue")
+}
+
+model PlatformSettings {
+  id          String @id @default(cuid())
+  key         String @unique
+  value       String
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
 // --------------------------------------
 // Enums
 // --------------------------------------
@@ -240,6 +287,7 @@ enum Role {
 
 enum OrderStatus {
   PENDING
+  AWAITING_PAYMENT
   COMPLETED
   CANCELLED
 }
@@ -251,6 +299,14 @@ enum GiftcardStatus {
   ALREADY_USED
   INVALID
   DEACTIVATED
+  WRONG_AMOUNT
+}
+
+enum GiftcardIssueType {
+  INVALID
+  ALREADY_USED
+  DEACTIVATED
+  WRONG_AMOUNT
 }
 
 enum PaymentStatus {

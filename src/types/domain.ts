@@ -26,7 +26,7 @@ export interface Country {
 // ── Gift Cards ───────────────────────────────────────────────────────────────
 
 /** String-literal mirror of the Prisma GiftcardStatus enum — safe for client components. */
-export type GiftcardStatus = "USED" | "UNUSED" | "ALREADY_USED" | "INVALID" | "DEACTIVATED";
+export type GiftcardStatus = "USED" | "UNUSED" | "ALREADY_USED" | "INVALID" | "DEACTIVATED" | "WRONG_AMOUNT";
 
 /**
  * A gift card as returned from server actions that include brand/country
@@ -82,4 +82,32 @@ export interface Batch {
 export interface ParsedGiftCard {
   amount: string;
   claimCode: string;
+}
+
+// ── Gift Card Issues ──────────────────────────────────────────────────────────
+
+/**
+ * A buyer-reported issue on a gift card within an order.
+ * Created via reportGiftcardIssue() and stored in GiftcardIssue.
+ */
+export interface GiftcardIssue {
+  id: string;
+  issueType: "INVALID" | "ALREADY_USED" | "DEACTIVATED" | "WRONG_AMOUNT";
+  reportedAmount?: number | null;
+  proofImageUrl?: string | null;
+  giftcardId: string;
+  orderId: string;
+  reportedById: string;
+  sellerId?: string | null;
+  createdAt: string;
+}
+
+// ── Platform Settings ─────────────────────────────────────────────────────────
+
+/** A key/value platform configuration entry managed by admins. */
+export interface PlatformSetting {
+  id: string;
+  key: string;
+  value: string;
+  description?: string | null;
 }

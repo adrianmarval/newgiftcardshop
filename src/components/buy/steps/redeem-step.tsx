@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clipboard, AlertTriangle, ChevronRight, X, Info } from "lucide-react";
+import { Clipboard, AlertTriangle, ChevronRight, X, Info, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -10,43 +10,98 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getUserBuyRate } from "@/actions/giftcard-actions";
+import { getUserBuyRate, reportGiftcardIssue, undoGiftcardIssue } from "@/actions/giftcard-actions";
 import type { BuyGiftcardStatus } from "@/types";
-import { useEffect } from "react";
 
 export function RedeemStep() {
-  const { foundGiftcards, reportIssue, setStep } = useBuyFlow();
+  const { foundGiftcards, reportIssue, setStep, orderId } = useBuyFlow();
 
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [correctedAmount, setCorrectedAmount] = useState<string>("");
   const [buyRate, setBuyRate] = useState(100);
+  // Track which card IDs are currently loading a server call
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     getUserBuyRate().then(setBuyRate);
   }, []);
 
-  const handleReport = (id: string, status: BuyGiftcardStatus) => {
+  const setLoading = (id: string, loading: boolean) => {
+    setLoadingIds((prev) => {
+      const next = new Set(prev);
+      loading ? next.add(id) : next.delete(id);
+      return next;
+    });
+  };
+
+  const handleReport = async (id: string, status: BuyGiftcardStatus) => {
     if (status === "WRONG_AMOUNT") {
       setActiveReportId(id);
       return;
     }
+
+    // Optimistic local update
     reportIssue(id, status);
+
+    if (!orderId) return;
+    setLoading(id, true);
+    try {
+      await reportGiftcardIssue({ giftcardId: id, orderId, issueType: status });
+    } catch (error) {
+      console.error("Error persisting giftcard issue:", error);
+      // Roll back local state on failure
+      reportIssue(id, "UNUSED");
+    } finally {
+      setLoading(id, false);
+    }
   };
 
-  const submitCorrectedAmount = (id: string) => {
+  const submitCorrectedAmount = async (id: string) => {
     const val = parseFloat(correctedAmount);
-    if (!isNaN(val)) {
-      reportIssue(id, "WRONG_AMOUNT", val);
+    if (isNaN(val)) {
+      setActiveReportId(null);
+      setCorrectedAmount("");
+      return;
     }
+
+    // Optimistic local update
+    reportIssue(id, "WRONG_AMOUNT", val);
     setActiveReportId(null);
     setCorrectedAmount("");
+
+    if (!orderId) return;
+    setLoading(id, true);
+    try {
+      await reportGiftcardIssue({ giftcardId: id, orderId, issueType: "WRONG_AMOUNT", reportedAmount: val });
+    } catch (error) {
+      console.error("Error persisting wrong amount report:", error);
+      // Roll back on failure
+      reportIssue(id, "UNUSED");
+    } finally {
+      setLoading(id, false);
+    }
+  };
+
+  const handleUndoReport = async (id: string) => {
+    // Optimistic local update
+    reportIssue(id, "UNUSED");
+
+    if (!orderId) return;
+    setLoading(id, true);
+    try {
+      await undoGiftcardIssue(id, orderId);
+    } catch (error) {
+      console.error("Error undoing giftcard issue:", error);
+    } finally {
+      setLoading(id, false);
+    }
   };
 
   // Calculate totals based on status and apply buyRate
   const rawTotal = foundGiftcards.reduce((sum, card) => {
     if (card.status === "UNUSED") return sum + card.amount;
     if (card.status === "WRONG_AMOUNT") return sum + (card.reportedAmount ?? 0);
-    return sum; // INVALID, USED, DEACTIVATED = 0
+    return sum; // INVALID, ALREADY_USED, DEACTIVATED = 0
   }, 0);
 
   const totalAmount = rawTotal * (buyRate / 100);
@@ -156,23 +211,29 @@ export function RedeemStep() {
                         )}
                       </div>
                       <div className="flex items-center gap-3 mt-1">
-                        <div className="flex items-center gap-1.5 font-mono text-xs md:text-sm font-bold bg-muted/50 px-2 py-1 rounded border border-border group">
-                          {card.claimCode}
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors"
-                            onClick={() => navigator.clipboard.writeText(card.claimCode)}
-                          >
-                            <Clipboard className="w-3 h-3" />
-                          </Button>
-                        </div>
+                        {card.claimCode ? (
+                          <div className="flex items-center gap-1.5 font-mono text-xs md:text-sm font-bold bg-muted/50 px-2 py-1 rounded border border-border group">
+                            {card.claimCode}
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors"
+                              onClick={() => navigator.clipboard.writeText(card.claimCode!)}
+                            >
+                              <Clipboard className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="font-mono text-xs text-muted-foreground/50">CODE UNAVAILABLE</span>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 self-end md:self-center">
-                    {card.status === "UNUSED" ? (
+                    {loadingIds.has(card.id) ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    ) : card.status === "UNUSED" ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -210,7 +271,7 @@ export function RedeemStep() {
                         variant="ghost"
                         size="sm"
                         className="text-[10px] h-8 text-muted-foreground hover:bg-muted"
-                        onClick={() => reportIssue(card.id, "UNUSED")}
+                        onClick={() => handleUndoReport(card.id)}
                       >
                         Undo report
                       </Button>

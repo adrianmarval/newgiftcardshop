@@ -49,10 +49,6 @@ export function SearchStep() {
     if (!selectedBrand || !targetAmount) return;
 
     setIsSearching(true);
-    // Simulate searching for cards totaling the amount
-    await new Promise((r) => setTimeout(r, 1500));
-
-    // Mock found cards
     const amount = parseFloat(targetAmount);
     const cards = await searchGiftcards(selectedBrand, selectedCountry, amount);
 

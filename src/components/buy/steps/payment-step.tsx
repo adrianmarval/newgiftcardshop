@@ -8,52 +8,43 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getUserBuyRate, completeOrder } from "@/actions/giftcard-actions";
+import { completeOrder, getPlatformSetting } from "@/actions/giftcard-actions";
 
 export function PaymentStep() {
-  const { foundGiftcards, setStep, orderId: storedOrderId } = useBuyFlow();
+  const { setStep, orderId: storedOrderId, adjustedTotal } = useBuyFlow();
 
   const [transactionId, setTransactionId] = useState("");
   const [isNotifying, setIsNotifying] = useState(false);
   const [notified, setNotified] = useState(false);
-  const [buyRate, setBuyRate] = useState(100);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [binancePayId, setBinancePayId] = useState<string>("—");
 
   useEffect(() => {
-    getUserBuyRate().then(setBuyRate);
+    getPlatformSetting("binance_pay_id").then((value) => {
+      if (value) setBinancePayId(value);
+    });
   }, []);
-
-  const rawTotal = foundGiftcards.reduce((sum, card) => {
-    if (card.status === "UNUSED") return sum + card.amount;
-    if (card.status === "WRONG_AMOUNT") return sum + (card.reportedAmount ?? 0);
-    return sum;
-  }, 0);
-
-  const totalAmount = rawTotal * (buyRate / 100);
 
   const handleNotify = async () => {
     if (!storedOrderId) return;
     setIsNotifying(true);
-    
+    setErrorMessage(null);
+
     try {
-      // Complete the order with the transaction ID
       const result = await completeOrder(storedOrderId, "BINANCE_PAY", transactionId || undefined);
-      
+
       if (result.success) {
         setNotified(true);
       } else {
-        console.error("Failed to complete order:", result.error);
-        // Still show success for demo purposes
-        setNotified(true);
+        setErrorMessage(result.error ?? "Failed to complete order. Please try again.");
       }
     } catch (error) {
       console.error("Error completing order:", error);
-      setNotified(true);
+      setErrorMessage("An unexpected error occurred. Please try again.");
     } finally {
       setIsNotifying(false);
     }
   };
-
-  const binancePayId = "827364519";
 
   if (notified) {
     return (
@@ -68,8 +59,8 @@ export function PaymentStep() {
         <div className="space-y-2">
           <h2 className="text-2xl font-black italic uppercase tracking-tight">Payment Notified!</h2>
           <p className="text-muted-foreground max-w-sm">
-            We are verifying your transaction for order <strong>#{storedOrderId?.slice(-8)}</strong>. Once confirmed, your balance will be updated
-            automatically.
+            We have received your payment notification for order <strong>#{storedOrderId?.slice(-8)}</strong>. The order has been marked as
+            completed.
           </p>
         </div>
         <Button
@@ -84,7 +75,7 @@ export function PaymentStep() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-full items-start">
-      {/* Left Column: Payment Details */}
+      {/* Full-width Payment Panel */}
       <Card className="md:col-span-12 border-border bg-card/50 backdrop-blur-sm p-4 md:p-8 space-y-6 md:space-y-8 flex flex-col items-center text-center">
         <div className="max-w-2xl space-y-4">
           <motion.div
@@ -103,21 +94,25 @@ export function PaymentStep() {
         <div className="w-full max-w-md bg-muted/50 border border-border rounded-2xl p-6 md:p-8 space-y-6 relative overflow-hidden group">
           <div className="space-y-1 relative z-10">
             <div className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Total to Pay</div>
-            <div className="text-4xl md:text-5xl font-black text-primary">${totalAmount.toFixed(2)}</div>
+            <div className="text-4xl md:text-5xl font-black text-primary">
+              ${adjustedTotal != null ? adjustedTotal.toFixed(2) : "—"}
+            </div>
           </div>
 
           <div className="space-y-2 relative z-10">
             <Label className="text-[10px] text-muted-foreground uppercase font-black">Binance Pay ID</Label>
             <div className="flex items-center gap-2 bg-card border border-border p-3 rounded-xl justify-center font-mono text-xl font-bold">
               {binancePayId}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 text-primary hover:bg-primary/10"
-                onClick={() => navigator.clipboard.writeText(binancePayId)}
-              >
-                <Clipboard className="w-3.5 h-3.5" />
-              </Button>
+              {binancePayId !== "—" && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-primary hover:bg-primary/10"
+                  onClick={() => navigator.clipboard.writeText(binancePayId)}
+                >
+                  <Clipboard className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -134,6 +129,10 @@ export function PaymentStep() {
               className="h-12 border-border bg-card/50 text-foreground font-mono font-bold text-center text-lg placeholder:text-muted-foreground/30 focus:border-primary/50"
             />
           </div>
+
+          {errorMessage && (
+            <p className="text-sm text-destructive font-medium text-center">{errorMessage}</p>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
@@ -163,8 +162,8 @@ export function PaymentStep() {
         <div className="max-w-md w-full p-4 bg-primary/5 border border-primary/20 rounded-xl flex gap-3 text-left">
           <Info className="w-5 h-5 text-primary mt-0.5" />
           <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-            Once you notify the payment, our system will automatically pair the transaction with your order using the ID provided.
-            Verification usually takes 1-5 minutes.
+            Once you notify the payment, our system will pair the transaction with your order using the ID provided. Verification usually
+            takes 1-5 minutes.
           </p>
         </div>
       </Card>

@@ -15,6 +15,13 @@ export {
   searchGiftcards,
   getUserBuyRate,
   createOrder,
+  getOrderCards,
+  reportGiftcardIssue,
+  undoGiftcardIssue,
+  confirmOrderUsage,
   completeOrder,
+  cancelOrder,
   getBuyerOrders,
+  getPlatformSetting,
+  setPlatformSetting,
 } from "./giftcard-actions";

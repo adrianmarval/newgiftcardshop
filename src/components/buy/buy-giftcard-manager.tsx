@@ -1,16 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { SearchStep } from "./steps/search-step";
 import { ResultsStep } from "./steps/results-step";
@@ -19,15 +10,7 @@ import { ConfirmUsageStep } from "./steps/confirm-usage-step";
 import { PaymentStep } from "./steps/payment-step";
 
 export function BuyGiftcardManager() {
-  const { step, resetForm } = useBuyFlow();
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-
-  const [orderId] = useState(() => Math.random().toString(36).substring(7).toUpperCase());
-
-  const handleFinishSuccess = () => {
-    setShowSuccessDialog(false);
-    resetForm();
-  };
+  const { step } = useBuyFlow();
 
   return (
     <div className="w-full space-y-4 md:space-y-6 px-0 md:px-0 py-2 md:py-0">
@@ -101,31 +84,6 @@ export function BuyGiftcardManager() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* Success Dialog */}
-      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="mx-auto mb-4"
-            >
-              <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
-                <Check className="w-10 h-10 text-primary" />
-              </div>
-            </motion.div>
-            <AlertDialogTitle className="text-center text-2xl">Purchase Notified!</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground text-center text-lg">
-              We have received your payment check for Order #{orderId}. Your balance will be updated soon.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogAction onClick={handleFinishSuccess} className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4 h-11">
-            Back to Dashboard
-          </AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

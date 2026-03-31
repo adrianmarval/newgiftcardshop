@@ -16,12 +16,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getBrandById, createOrder, getUserBuyRate } from "@/actions/giftcard-actions";
+import { getBrandById, createOrder, getUserBuyRate, getOrderCards } from "@/actions/giftcard-actions";
 import Image from "next/image";
 import type { Brand } from "@/types";
 
 export function ResultsStep() {
-  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount, setOrderId } = useBuyFlow();
+  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount, setOrderId, setFoundGiftcards } = useBuyFlow();
 
   const [brandData, setBrandData] = useState<Brand | null>(null);
   const [buyRate, setBuyRate] = useState<number>(1.0);
@@ -46,9 +46,15 @@ export function ResultsStep() {
 
       if (result.success && result.orderId) {
         setOrderId(result.orderId);
+
+        // Fetch cards WITH claimCodes now that the order is locked in
+        const cardsWithCodes = await getOrderCards(result.orderId);
+        if (cardsWithCodes.length > 0) {
+          setFoundGiftcards(cardsWithCodes);
+        }
+
         setStep(3);
       } else {
-        // Handle error (maybe show a toast)
         console.error("Failed to create order:", result.error);
       }
     } catch (error) {

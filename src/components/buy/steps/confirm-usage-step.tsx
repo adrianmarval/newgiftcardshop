@@ -1,18 +1,18 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, AlertCircle, ArrowLeft } from "lucide-react";
+import { Check, AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
-import { getUserBuyRate } from "@/actions/giftcard-actions";
-import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { getUserBuyRate, confirmOrderUsage } from "@/actions/giftcard-actions";
 
 export function ConfirmUsageStep() {
-  const { foundGiftcards, setStep, orderId } = useBuyFlow();
+  const { foundGiftcards, setStep, orderId, setAdjustedTotal } = useBuyFlow();
   const [buyRate, setBuyRate] = useState(100);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     getUserBuyRate().then(setBuyRate);
@@ -27,15 +27,33 @@ export function ConfirmUsageStep() {
   const totalAmount = rawTotal * (buyRate / 100);
 
   const handleConfirmUsage = async () => {
-    //TODO implementar esto
-    window.alert("not implemented");
+    if (!orderId) return;
+
+    setIsUpdating(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await confirmOrderUsage(orderId);
+
+      if (result.success && result.adjustedTotal != null) {
+        setAdjustedTotal(result.adjustedTotal);
+        setStep(5);
+      } else {
+        setErrorMessage(result.error ?? "Confirmation failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error confirming order usage:", error);
+      setErrorMessage("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const reportedCards = foundGiftcards.filter((c) => c.status !== "UNUSED");
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-full items-start">
-      {/* Left Column: Confirmation Actions */}
+      {/* Full-width Confirmation Panel */}
       <Card className="md:col-span-12 border-border bg-card/50 backdrop-blur-sm p-4 md:p-8 space-y-6 md:space-y-8 flex flex-col items-center text-center">
         <div className="max-w-2xl space-y-4">
           <motion.div
@@ -79,6 +97,10 @@ export function ConfirmUsageStep() {
           </div>
         </div>
 
+        {errorMessage && (
+          <p className="text-sm text-destructive font-medium">{errorMessage}</p>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
           <Button
             variant="ghost"
@@ -90,12 +112,12 @@ export function ConfirmUsageStep() {
           </Button>
           <Button
             onClick={handleConfirmUsage}
-            disabled={isUpdating}
+            disabled={isUpdating || !orderId}
             className="flex-2 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-xl shadow-primary/30 text-base"
           >
             {isUpdating ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Confirming...
               </>
             ) : (
               "Confirm & Proceed to Payment"
