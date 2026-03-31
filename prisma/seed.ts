@@ -18,6 +18,7 @@ export async function main() {
   // Limpiar base de datos (ordenado para evitar errores de claves foráneas)
 
   await prisma.payment.deleteMany();
+  await prisma.giftcardIssue.deleteMany();
   await prisma.giftcard.deleteMany();
   await prisma.order.deleteMany();
   await prisma.giftcardBatch.deleteMany();

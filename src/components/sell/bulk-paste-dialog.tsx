@@ -36,12 +36,12 @@ export function BulkPasteDialog({ open, onOpenChange, onImport }: BulkPasteDialo
 
     // Try multiple patterns if needed, for now sticking to the common one
     const matches = [...text.matchAll(AMAZON_PATTERN)];
-    
+
     if (matches.length > 0) {
       matches.forEach((match, idx) => {
         const code = match[1]?.trim();
         const amount = match[2]?.trim();
-        
+
         if (code && amount) {
           cards.push({ claimCode: code, amount });
         } else {
@@ -92,7 +92,7 @@ ZZZZ-ZZZZ-ZZZZ 75.50`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-card border-border">
+      <DialogContent className="min-w-md max-w-2xl md:min-w-xl bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">Import Gift Cards (Bulk Paste)</DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -100,10 +100,10 @@ ZZZZ-ZZZZ-ZZZZ 75.50`;
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           {/* Instructions Card */}
           <Card className="bg-card border-border p-4">
-            <div className="space-y-3">
+            <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Code className="w-5 h-5 text-primary" />
                 <h3 className="font-semibold text-foreground">Expected Format</h3>
@@ -115,12 +115,7 @@ XXXX-XXXX-XXXX 50.00
 YYYY-YYYY-YYYY 100.00
 ZZZZ-ZZZZ-ZZZZ 75.50`}
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCopyExample}
-                className="border-border text-foreground hover:bg-muted mt-2"
-              >
+              <Button size="sm" variant="outline" onClick={handleCopyExample} className="border-border text-foreground hover:bg-muted mt-2">
                 <Copy className="w-4 h-4 mr-2" /> Copy Example
               </Button>
             </div>
@@ -133,24 +128,18 @@ ZZZZ-ZZZZ-ZZZZ 75.50`}
               placeholder={"XXXX-XXXX-XXXX 50.00\nYYYY-YYYY-YYYY 100.00\nZZZZ-ZZZZ-ZZZZ 75.50"}
               value={pasteContent}
               onChange={(e) => setPasteContent(e.target.value)}
-              className="bg-card border-border text-foreground placeholder:text-muted-foreground font-mono text-sm min-h-32 resize-none"
+              className="max-h-24 bg-card border-border text-foreground placeholder:text-muted-foreground font-mono text-sm min-h-32 resize-none"
             />
           </div>
 
           {/* Errors */}
           <AnimatePresence>
             {errors.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <Alert className="bg-destructive/10 border-destructive text-destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription className="ml-2">
-                    {errors.length === 1
-                      ? errors[0]
-                      : `${errors.length} errors found during parsing`}
+                    {errors.length === 1 ? errors[0] : `${errors.length} errors found during parsing`}
                   </AlertDescription>
                 </Alert>
               </motion.div>
@@ -176,7 +165,7 @@ ZZZZ-ZZZZ-ZZZZ 75.50`}
                   </Badge>
                 </div>
 
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <div className="space-y-1 max-h-48 overflow-y-auto">
                   {parsedCards.map((card, idx) => (
                     <motion.div
                       key={idx}
@@ -200,12 +189,8 @@ ZZZZ-ZZZZ-ZZZZ 75.50`}
           </AnimatePresence>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="border-border text-foreground hover:bg-muted flex-1"
-            >
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="border-border text-foreground hover:bg-muted flex-1">
               Cancel
             </Button>
             <Button

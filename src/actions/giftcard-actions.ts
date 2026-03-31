@@ -6,6 +6,7 @@ import { BuyGiftcardItem } from "@/types";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { Prisma } from "@/generated/prisma/client";
+import { decrypt } from "@/lib/encryption";
 
 /**
  * Searches available gift cards matching the criteria.
@@ -27,7 +28,6 @@ export async function searchGiftcards(brandId: string, countryId: string, amount
       id: card.id,
       brand: card.brandId,
       amount: card.amount.toNumber(),
-      price: card.price ? card.price.toNumber() : card.amount.toNumber(),
       // claimCode intentionally omitted — revealed only after order creation
       status: "UNUSED",
     }));
@@ -68,17 +68,34 @@ export async function getOrderCards(orderId: string): Promise<BuyGiftcardItem[]>
       throw new Error("Not authorized to view this order");
     }
 
-    return order.giftcards.map((card) => ({
-      id: card.id,
-      brand: card.brandId,
-      amount: card.amount.toNumber(),
-      price: card.price ? card.price.toNumber() : card.amount.toNumber(),
-      claimCode: card.claimCode,
-      pinCode: card.pinCode ?? undefined,
-      status: (card.status as BuyGiftcardItem["status"]) ?? "UNUSED",
-      reportedAmount: card.reportedAmount ? card.reportedAmount.toNumber() : undefined,
-      sellerId: card.ownerId ?? undefined,
-    }));
+    return order.giftcards.map((card) => {
+      let claimCode: string;
+      try {
+        claimCode = decrypt(card.claimCode);
+      } catch {
+        claimCode = card.claimCode;
+      }
+
+      let pinCode: string | undefined;
+      if (card.pinCode) {
+        try {
+          pinCode = decrypt(card.pinCode);
+        } catch {
+          pinCode = card.pinCode;
+        }
+      }
+
+      return {
+        id: card.id,
+        brand: card.brandId,
+        amount: card.amount.toNumber(),
+        claimCode,
+        pinCode,
+        status: (card.status as BuyGiftcardItem["status"]) ?? "UNUSED",
+        reportedAmount: card.reportedAmount ? card.reportedAmount.toNumber() : undefined,
+        sellerId: card.ownerId ?? undefined,
+      };
+    });
   } catch (error) {
     console.error("Error fetching order cards:", error);
     return [];

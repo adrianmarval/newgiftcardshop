@@ -10,7 +10,7 @@ import { getUserBuyRate, confirmOrderUsage } from "@/actions/order-actions";
 
 export function ConfirmUsageStep() {
   const { foundGiftcards, setStep, orderId, setAdjustedTotal } = useBuyFlow();
-  const [buyRate, setBuyRate] = useState(100);
+  const [buyRate, setBuyRate] = useState(0.85);
   const [isUpdating, setIsUpdating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -24,7 +24,7 @@ export function ConfirmUsageStep() {
     return sum;
   }, 0);
 
-  const totalAmount = rawTotal * (buyRate / 100);
+  const totalAmount = rawTotal * buyRate;
 
   const handleConfirmUsage = async () => {
     if (!orderId) return;
@@ -97,9 +97,7 @@ export function ConfirmUsageStep() {
           </div>
         </div>
 
-        {errorMessage && (
-          <p className="text-sm text-destructive font-medium">{errorMessage}</p>
-        )}
+        {errorMessage && <p className="text-sm text-destructive font-medium">{errorMessage}</p>}
 
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
           <Button

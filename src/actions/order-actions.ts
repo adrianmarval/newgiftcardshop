@@ -18,10 +18,10 @@ export async function getUserBuyRate() {
       select: { buyRate: true },
     });
 
-    return user?.buyRate ? user.buyRate.toNumber() : 100.0;
+    return user?.buyRate ? user.buyRate.toNumber() : 85.0;
   } catch (error) {
     console.error("Error fetching user buy rate:", error);
-    return 100.0;
+    return 85.0;
   }
 }
 
@@ -48,12 +48,9 @@ export async function createOrder(giftcardIds: string[]) {
     ]);
 
     if (!user) throw new Error("User not found");
-    // Ensure buyRate is treated as a percentage (e.g. 85 means 85%)
-    const buyRatePercent = user.buyRate ? user.buyRate.toNumber() : 100.0;
-    const buyFactor = buyRatePercent / 100;
 
     const total = giftcards.reduce((sum, card) => {
-      return sum + card.amount.toNumber() * buyFactor;
+      return sum + card.amount.toNumber() * user.buyRate.toNumber();
     }, 0);
 
     // Use a transaction to create the order and reserve cards atomically
@@ -62,6 +59,7 @@ export async function createOrder(giftcardIds: string[]) {
         data: {
           userId,
           total: new Prisma.Decimal(total),
+          buyRate: user.buyRate,
           status: "PENDING",
           giftcards: {
             connect: giftcardIds.map((id) => ({ id })),
@@ -108,14 +106,6 @@ export async function confirmOrderUsage(orderId: string) {
     if (order.userId !== session.user.id) throw new Error("Not authorized");
     if (order.status !== "PENDING") throw new Error("Order cannot be confirmed in its current state");
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { buyRate: true },
-    });
-
-    const buyRatePercent = user?.buyRate ? user.buyRate.toNumber() : 100.0;
-    const buyFactor = buyRatePercent / 100;
-
     // Calculate effective total:
     // UNUSED         → face value
     // WRONG_AMOUNT   → reportedAmount
@@ -126,7 +116,7 @@ export async function confirmOrderUsage(orderId: string) {
       return sum;
     }, 0);
 
-    const adjustedTotal = rawTotal * buyFactor;
+    const adjustedTotal = rawTotal * order.buyRate.toNumber();
 
     await prisma.order.update({
       where: { id: orderId },
@@ -298,7 +288,6 @@ export async function getBuyerOrders() {
       giftcards: order.giftcards.map((card) => ({
         ...card,
         amount: Number(card.amount),
-        price: Number(card.price),
         reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
       })),
       payments: order.payments.map((p) => ({

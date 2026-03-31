@@ -30,6 +30,7 @@ interface Giftcard {
   claimCode: string;
   pinCode: string | null;
   amount: number;
+  reportedAmount?: number | null;
   status: string;
   isConfirmed: boolean;
   orderId: string | null;
@@ -54,6 +55,10 @@ interface Payment {
 interface Batch {
   id: string;
   createdAt: string;
+  sellRate: number;
+  isPaid: boolean;
+  effectiveTotal: number;
+  estimatedPayout: number;
   giftcards: Giftcard[];
   payments: Payment[];
 }
@@ -74,14 +79,16 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
   const totalCardsCount = batches.reduce((acc, b) => acc + b.giftcards.length, 0);
   const totalVolume = batches.reduce((acc, b) => acc + b.giftcards.reduce((sum, g) => sum + g.amount, 0), 0);
 
-  const totalPaid = batches.reduce(
-    (acc, b) => acc + b.payments.filter((p) => p.status === "COMPLETED").reduce((sum, p) => sum + p.amount, 0),
-    0,
-  );
+  const totalPaid = batches.reduce((acc, b) => {
+    const paymentTotal = b.payments.filter((p) => p.status === "COMPLETED").reduce((sum, p) => sum + p.amount, 0);
+    if (paymentTotal > 0) return acc + paymentTotal;
+    if (b.isPaid) return acc + b.estimatedPayout;
+    return acc;
+  }, 0);
 
   const awaitingPayoutCount = batches.filter((b) => {
     const allConfirmed = b.giftcards.every((g) => g.isConfirmed);
-    const notPaid = !b.payments.some((p) => p.status === "COMPLETED");
+    const notPaid = !b.isPaid && !b.payments.some((p) => p.status === "COMPLETED");
     return allConfirmed && notPaid && b.giftcards.length > 0;
   }).length;
 
@@ -91,7 +98,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
       (g) => g.claimCode.toLowerCase().includes(searchTerm.toLowerCase()) || g.brand.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
-    const isPaid = batch.payments.some((p) => p.status === "COMPLETED");
+    const isPaid = batch.isPaid || batch.payments.some((p) => p.status === "COMPLETED");
     const allConfirmed = batch.giftcards.every((g) => g.isConfirmed);
     const isAwaitingPayout = allConfirmed && !isPaid && batch.giftcards.length > 0;
     const isProcessing = !allConfirmed && !isPaid;
@@ -137,7 +144,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
   };
 
   const getBatchStatusInfo = (batch: Batch) => {
-    const isPaid = batch.payments.some((p) => p.status === "COMPLETED");
+    const isPaid = batch.isPaid || batch.payments.some((p) => p.status === "COMPLETED");
     const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
     const total = batch.giftcards.length;
     const allConfirmed = confirmedCount === total && total > 0;
@@ -246,6 +253,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
             filteredBatches.map((batch) => {
               const isExpanded = expandedBatch === batch.id;
               const batchTotal = batch.giftcards.reduce((sum, g) => sum + g.amount, 0);
+              const { estimatedPayout } = batch;
               const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
               const totalItems = batch.giftcards.length;
               const progressPercentage = totalItems > 0 ? (confirmedCount / totalItems) * 100 : 0;
@@ -300,6 +308,10 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                       <div className="text-right">
                         <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Value</div>
                         <div className="text-sm font-black text-primary italic tracking-tighter">${batchTotal.toFixed(2)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Est. Payout</div>
+                        <div className="text-sm font-black text-emerald-500 italic tracking-tighter">${estimatedPayout.toFixed(2)}</div>
                       </div>
                       <div className="flex items-center gap-3">
                         {hasReport && (
@@ -490,7 +502,18 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-black text-primary italic leading-none mb-1">${selectedCard.amount.toFixed(2)}</div>
+                  {selectedCard.status === "WRONG_AMOUNT" && selectedCard.reportedAmount != null ? (
+                    <div className="space-y-0.5">
+                      <div className="text-2xl font-black text-primary italic leading-none line-through opacity-50">
+                        ${selectedCard.amount.toFixed(2)}
+                      </div>
+                      <div className="text-2xl font-black text-destructive italic leading-none">
+                        ${selectedCard.reportedAmount.toFixed(2)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-black text-primary italic leading-none mb-1">${selectedCard.amount.toFixed(2)}</div>
+                  )}
                   <div className="scale-90 origin-right">{getCardStatusBadge(selectedCard)}</div>
                 </div>
               </div>

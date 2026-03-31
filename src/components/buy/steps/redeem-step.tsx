@@ -19,7 +19,7 @@ export function RedeemStep() {
 
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [correctedAmount, setCorrectedAmount] = useState<string>("");
-  const [buyRate, setBuyRate] = useState(100);
+  const [buyRate, setBuyRate] = useState(0.85);
   // Track which card IDs are currently loading a server call
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
 
@@ -30,7 +30,11 @@ export function RedeemStep() {
   const setLoading = (id: string, loading: boolean) => {
     setLoadingIds((prev) => {
       const next = new Set(prev);
-      if (loading) { next.add(id); } else { next.delete(id); }
+      if (loading) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
       return next;
     });
   };
@@ -105,7 +109,7 @@ export function RedeemStep() {
     return sum; // INVALID, ALREADY_USED, DEACTIVATED = 0
   }, 0);
 
-  const totalAmount = rawTotal * (buyRate / 100);
+  const totalAmount = rawTotal * buyRate;
 
   const reportedCount = foundGiftcards.filter((c) => c.status !== "UNUSED").length;
 

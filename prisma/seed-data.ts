@@ -1,3 +1,4 @@
+import { encrypt, hashCode } from "@/lib/encryption";
 import { Prisma } from "../src/generated/prisma/client";
 import { hashPassword } from "better-auth/crypto";
 
@@ -34,6 +35,7 @@ export const seedData: SeedData = {
       email: "solmaira.maza@gmail.com",
       emailVerified: true,
       role: ["SELLER"],
+      sellRate: 0.75,
       paymentMethod: {
         create: {
           address: "118s4g684sd68g48s64dg68sdg",
@@ -48,90 +50,93 @@ export const seedData: SeedData = {
               create: [
                 {
                   brand: { connect: { slug: "amazon" } },
-                  claimCode: "AMZ-BATCH1-001",
+                  claimCode: encrypt("AMZ-BATCH1-001"),
+                  codeHash: hashCode("AMZ-BATCH1-001"),
                   amount: 100.0,
-                  price: 95.0,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
                 {
                   brand: { connect: { slug: "amazon" } },
-                  claimCode: "AMZ-BATCH1-002",
+                  claimCode: encrypt("AMZ-BATCH1-002"),
+                  codeHash: hashCode("AMZ-BATCH1-002"),
                   amount: 50.0,
-                  price: 47.5,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
                 {
                   brand: { connect: { slug: "amazon" } },
-                  claimCode: "AMZ-BATCH1-003",
+                  claimCode: encrypt("AMZ-BATCH1-003"),
+                  codeHash: hashCode("AMZ-BATCH1-003"),
                   amount: 25.0,
-                  price: 23.75,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
               ],
             },
+            sellRate: 0.75,
           },
           {
             giftcards: {
               create: [
                 {
                   brand: { connect: { slug: "apple" } },
-                  claimCode: "APL-BATCH2-001",
+                  claimCode: encrypt("APL-BATCH2-001"),
+                  codeHash: hashCode("APL-BATCH2-001"),
                   amount: 100.0,
-                  price: 90.0,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
                 {
                   brand: { connect: { slug: "apple" } },
-                  claimCode: "APL-BATCH2-002",
+                  claimCode: encrypt("APL-BATCH2-002"),
+                  codeHash: hashCode("APL-BATCH2-002"),
                   amount: 100.0,
-                  price: 90.0,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
                 {
                   brand: { connect: { slug: "apple" } },
-                  claimCode: "APL-BATCH2-003",
+                  claimCode: encrypt("APL-BATCH2-003"),
+                  codeHash: hashCode("APL-BATCH2-003"),
                   amount: 50.0,
-                  price: 45.0,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
               ],
             },
+            sellRate: 0.75,
           },
           {
             giftcards: {
               create: [
                 {
                   brand: { connect: { slug: "google-play" } },
-                  claimCode: "RZR-BATCH3-001",
+                  claimCode: encrypt("RZR-BATCH3-001"),
+                  codeHash: hashCode("RZR-BATCH3-001"),
                   amount: 50.0,
-                  price: 48.0,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
                 {
                   brand: { connect: { slug: "google-play" } },
-                  claimCode: "RZR-BATCH3-002",
+                  claimCode: encrypt("RZR-BATCH3-002"),
+                  codeHash: hashCode("RZR-BATCH3-002"),
                   amount: 20.0,
-                  price: 19.2,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
                 {
                   brand: { connect: { slug: "google-play" } },
-                  claimCode: "RZR-BATCH3-003",
+                  claimCode: encrypt("RZR-BATCH3-003"),
+                  codeHash: hashCode("RZR-BATCH3-003"),
                   amount: 10.0,
-                  price: 9.6,
                   status: "UNUSED",
                   country: { connect: { code: "US" } },
                 },
               ],
             },
+            sellRate: 0.75,
           },
         ],
       },
@@ -147,6 +152,7 @@ export const seedData: SeedData = {
       name: "Dunia Marcano",
       email: "dunia@prisma.io",
       emailVerified: true,
+      buyRate: 0.85,
       role: ["BUYER"],
       paymentMethod: {
         create: {

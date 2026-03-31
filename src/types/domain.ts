@@ -37,7 +37,6 @@ export interface Giftcard {
   claimCode: string;
   pinCode: string | null;
   amount: number;
-  price?: number;
   /** May contain any GiftcardStatus value or a raw string from older data. */
   status: GiftcardStatus | string;
   isConfirmed: boolean;
@@ -72,6 +71,12 @@ export interface Batch {
   id: string;
   createdAt: string;
   updatedAt?: string;
+  sellRate: number;
+  isPaid: boolean;
+  /** Server-computed: sum of effective amounts from confirmed cards only. */
+  effectiveTotal: number;
+  /** Server-computed: effectiveTotal * sellRate. */
+  estimatedPayout: number;
   giftcards: Giftcard[];
   payments: Payment[];
 }

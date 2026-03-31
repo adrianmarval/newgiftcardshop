@@ -27,7 +27,6 @@ export interface BuyGiftcardItem {
   id: string;
   brand: string;
   amount: number;
-  price: number;
   /** Only populated after the order is created and codes are revealed (step 3). */
   claimCode?: string;
   pinCode?: string;

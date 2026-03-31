@@ -26,7 +26,7 @@ export function ResultsStep() {
   const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount, setOrderId, setFoundGiftcards } = useBuyFlow();
 
   const [brandData, setBrandData] = useState<Brand | null>(null);
-  const [buyRate, setBuyRate] = useState<number>(1.0);
+  const [buyRate, setBuyRate] = useState<number>(0.85);
   const [isConfirming, setIsConfirming] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
@@ -38,7 +38,7 @@ export function ResultsStep() {
   }, [selectedBrand]);
 
   const rawTotal = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
-  const discountedTotal = rawTotal * (buyRate / 100);
+  const discountedTotal = rawTotal * buyRate;
 
   const handlePlaceOrder = async () => {
     setIsConfirming(true);
@@ -91,7 +91,7 @@ export function ResultsStep() {
               <div className="text-right">
                 <span className="text-xl font-black text-primary">${discountedTotal.toFixed(2)}</span>
                 <p className="text-[10px] text-muted-foreground leading-none mt-1">
-                  {buyRate < 100 ? `With ${(100 - buyRate).toFixed(0)}% discount` : "Order value"}
+                  {buyRate < 1 ? `With ${(1 - buyRate * 100).toFixed(0)}% discount` : "Order value"}
                 </p>
               </div>
             </div>

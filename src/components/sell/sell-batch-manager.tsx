@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSellFlow } from "@/hooks/use-sell-flow";
+import { publishBatch } from "@/actions/seller-actions";
 import { BrandStep } from "./steps/brand-step";
 import { DetailsStep } from "./steps/details-step";
 import { ReviewStep } from "./steps/review-step";
@@ -33,21 +34,42 @@ interface Country {
 interface SellBatchManagerProps {
   brands: Brand[];
   countries: Country[];
+  sellRate: number;
 }
 
-export function SellBatchManager({ brands, countries }: SellBatchManagerProps) {
+export function SellBatchManager({ brands, countries, sellRate }: SellBatchManagerProps) {
   const { step, resetForm, giftcards, selectedBrand } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
   const handlePublish = async () => {
     setIsPublishing(true);
+    try {
+      const result = await publishBatch({
+        cards: giftcards.map((g) => ({
+          amount: g.amount,
+          claimCode: g.claimCode,
+          pinCode: g.pinCode || undefined,
+        })),
+        brandId: selectedBrand,
+        countryId: useSellFlow.getState().selectedCountry,
+      });
 
-    // Simulating API call - In the next phase we will replace this with a Server Action
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setIsPublishing(false);
-    setShowSuccessDialog(true);
+      if (result.success) {
+        // Handle duplicates notification if any
+        if (result.duplicates && result.duplicates.length > 0) {
+          // Could show a toast or info - for now just proceed to success
+        }
+        setShowSuccessDialog(true);
+      } else {
+        // Show error - for now alert, later toast
+        alert(result.error || "Failed to publish batch");
+      }
+    } catch {
+      alert("An error occurred while publishing the batch");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleFinishSuccess = () => {
@@ -161,6 +183,7 @@ export function SellBatchManager({ brands, countries }: SellBatchManagerProps) {
               isPublishing={isPublishing}
               brandName={brandMap[selectedBrand] || ""}
               countryName={countryMap[useSellFlow.getState().selectedCountry] || ""}
+              sellRate={sellRate}
             />
           </motion.div>
         )}

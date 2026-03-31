@@ -12,17 +12,16 @@ interface ReviewStepProps {
   isPublishing?: boolean;
   brandName: string;
   countryName: string;
+  sellRate: number;
 }
 
-export function ReviewStep({ onPublish, isPublishing, brandName, countryName }: ReviewStepProps) {
+export function ReviewStep({ onPublish, isPublishing, brandName, countryName, sellRate }: ReviewStepProps) {
   const { giftcards, setStep } = useSellFlow();
 
   // const totalCards = giftcards.length;
   const totalAmount = giftcards.reduce((sum, card) => sum + (parseFloat(card.amount) || 0), 0);
 
-  // Rate placeholder - in a real app, this would come from the user's sellRate
-  const rate = 0.85;
-  const totalToReceive = totalAmount * rate;
+  const totalToReceive = totalAmount * sellRate;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-start">
@@ -59,11 +58,11 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName }: 
             <div className="flex justify-between items-center text-[10px] md:text-xs">
               <span className="text-muted-foreground uppercase tracking-wider font-semibold">Estimated Payment</span>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0">
-                {(rate * 100).toFixed(0)}% Rate
+                {sellRate.toFixed(0)}% Rate
               </Badge>
             </div>
             <div className="text-2xl md:text-3xl font-black text-primary">${totalToReceive.toFixed(2)}</div>
-            <p className="text-[10px] text-muted-foreground italic">Payment will be processed once cards are verified.</p>
+            <p className="text-[10px] text-muted-foreground italic">Payment will be processed once cards are confirmed by buyers.</p>
           </div>
         </div>
 
