@@ -58,3 +58,52 @@ export interface ProfileFormProps {
 export interface Verify2FAFormProps {
   portal: Portal;
 }
+
+// ── Auth Form Props ───────────────────────────────────────────────────────────
+
+/**
+ * Props for the LoginForm component.
+ */
+export interface LoginFormProps {
+  portal: "buyer" | "seller" | "admin";
+  title: string;
+  subtitle: string;
+  forgotPasswordUrl: string;
+  emailPlaceholder?: string;
+  registerUrl?: string;
+  registerPrompt?: string;
+  registerLinkText?: string;
+}
+
+/**
+ * Props for the RegisterForm component.
+ */
+export interface RegisterFormProps {
+  portal: "buyer" | "seller";
+  redirectTo: string;
+  loginUrl: string;
+  title: string;
+  subtitle: string;
+}
+
+/**
+ * Props for the SecuritySection component in the profile page.
+ */
+export interface SecuritySectionProps {
+  isPending?: boolean;
+}
+
+/**
+ * Props for the ProfileInfoSection component in the profile page.
+ */
+export interface ProfileInfoSectionProps {
+  name: string;
+  email: string;
+}
+
+/**
+ * Props for the TwoFactorSection component in the profile page.
+ */
+export interface TwoFactorSectionProps {
+  initialEnabled: boolean;
+}

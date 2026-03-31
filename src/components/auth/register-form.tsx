@@ -11,14 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, Check, X } from "lucide-react";
 import { register } from "@/actions";
 import Form from "next/form";
-
-interface RegisterFormProps {
-  portal: "buyer" | "seller";
-  redirectTo: string;
-  loginUrl: string;
-  title: string;
-  subtitle: string;
-}
+import type { RegisterFormProps } from "@/types";
 
 function PasswordCheckItem({ valid, label }: { valid: boolean; label: string }) {
   return (

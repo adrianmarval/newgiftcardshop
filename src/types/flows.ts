@@ -7,6 +7,35 @@
 // ── Buy Flow ──────────────────────────────────────────────────────────────────
 
 /**
+ * Zustand store shape for the buy flow wizard.
+ */
+export interface BuyFlowState {
+  step: number;
+  selectedBrand: string;
+  selectedCountry: string;
+  targetAmount: string;
+  foundGiftcards: BuyGiftcardItem[];
+  orderId: string | null;
+  /** Set after confirmOrderUsage succeeds — the server-calculated adjusted total. */
+  adjustedTotal: number | null;
+
+  // Actions
+  setStep: (step: number) => void;
+  setSelectedBrand: (brand: string) => void;
+  setSelectedCountry: (country: string) => void;
+  setTargetAmount: (amount: string) => void;
+  setFoundGiftcards: (cards: BuyGiftcardItem[]) => void;
+  setOrderId: (id: string | null) => void;
+  setAdjustedTotal: (total: number | null) => void;
+
+  removeGiftcard: (id: string) => void;
+  reportIssue: (id: string, status: BuyGiftcardStatus, correctedAmount?: number) => void;
+  resetForm: () => void;
+}
+
+// ── Buy Flow item types ────────────────────────────────────────────────────────
+
+/**
  * The redemption status a buyer can assign to a gift card during the
  * "Redeem & Verify" step of the buy flow.
  *
@@ -49,4 +78,26 @@ export interface GiftCardItem {
   amount: string;
   claimCode: string;
   pinCode?: string;
+}
+
+/**
+ * Zustand store shape for the sell flow wizard.
+ */
+export interface SellFlowState {
+  step: number;
+  selectedBrand: string;
+  selectedCountry: string;
+  giftcards: GiftCardItem[];
+
+  // Actions
+  setStep: (step: number) => void;
+  setSelectedBrand: (brand: string) => void;
+  setSelectedCountry: (country: string) => void;
+  setGiftcards: (giftcards: GiftCardItem[]) => void;
+
+  addGiftcard: () => void;
+  removeGiftcard: (id: string) => void;
+  updateGiftcard: (id: string, field: keyof GiftCardItem, value: string) => void;
+  handleBulkImport: (cards: { amount: string; claimCode: string }[]) => void;
+  resetForm: () => void;
 }

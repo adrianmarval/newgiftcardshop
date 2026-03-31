@@ -10,12 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, CheckCircle, User } from "lucide-react";
 import { updateProfile } from "@/actions";
 import Form from "next/form";
-import type { ProfileState } from "@/types";
-
-interface ProfileInfoSectionProps {
-  name: string;
-  email: string;
-}
+import type { ProfileState, ProfileInfoSectionProps } from "@/types";
 
 export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
   const [state, formAction, isPending] = useActionState<ProfileState, FormData>(updateProfile, null);

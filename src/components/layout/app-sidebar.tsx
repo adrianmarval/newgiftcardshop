@@ -18,23 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { logout } from "@/actions";
 import Link from "next/link";
-
-export type NavItemIcon = React.ComponentType<{ size?: number | string; className?: string }>;
-
-export interface NavItem {
-  title: string;
-  url: string;
-  icon: NavItemIcon;
-}
-
-export interface PortalSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  navItems: NavItem[];
-  brandLabel: string;
-  brandHref: string;
-  groupLabel?: string;
-  portal: string;
-  logoutVariant?: "destructive" | "ghost" | "default" | "outline" | "secondary" | "link";
-}
+import type { NavItem, PortalSidebarProps } from "@/types";
 
 export function PortalSidebar({
   navItems,

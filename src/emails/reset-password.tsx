@@ -9,11 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-
-interface ResetPasswordProps {
-  url: string;
-  userName?: string;
-}
+import type { ResetPasswordProps } from "@/types/email";
 
 export function ResetPasswordTemplate({ url, userName }: ResetPasswordProps) {
   return (

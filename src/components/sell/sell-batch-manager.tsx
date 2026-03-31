@@ -16,26 +16,7 @@ import { publishBatch } from "@/actions/seller-actions";
 import { BrandStep } from "./steps/brand-step";
 import { DetailsStep } from "./steps/details-step";
 import { ReviewStep } from "./steps/review-step";
-
-interface Brand {
-  id: string;
-  slug: string;
-  name: string;
-  icon: string;
-  image: string | null;
-}
-
-interface Country {
-  id: string;
-  name: string;
-  code: string;
-}
-
-interface SellBatchManagerProps {
-  brands: Brand[];
-  countries: Country[];
-  sellRate: number;
-}
+import type { SellBatchManagerProps } from "@/types";
 
 export function SellBatchManager({ brands, countries, sellRate }: SellBatchManagerProps) {
   const { step, resetForm, giftcards, selectedBrand } = useSellFlow();

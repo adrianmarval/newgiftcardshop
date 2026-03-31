@@ -23,7 +23,9 @@ export type {
   // flows.ts
   BuyGiftcardStatus,
   BuyGiftcardItem,
+  BuyFlowState,
   GiftCardItem,
+  SellFlowState,
 } from "./flows";
 
 export type {
@@ -34,4 +36,38 @@ export type {
   Portal,
   ProfileFormProps,
   Verify2FAFormProps,
+  LoginFormProps,
+  RegisterFormProps,
+  SecuritySectionProps,
+  ProfileInfoSectionProps,
+  TwoFactorSectionProps,
 } from "./auth";
+
+export type {
+  // ui.ts
+  NavItemIcon,
+  NavItem,
+  PortalSidebarProps,
+} from "./ui";
+
+export type {
+  // components.ts
+  SellerCardsViewProps,
+  SellBatchManagerProps,
+  BrandStepProps,
+  ReviewStepProps,
+  BulkPasteDialogProps,
+} from "./sell";
+
+export type {
+  // server.ts — server-only types (Prisma/Decimal). Do NOT import in Client Components.
+  GiftcardSelectionResult,
+  BatchInfo,
+  PreprocessedBatchData,
+} from "./server";
+
+export type {
+  // email.ts
+  VerifyEmailProps,
+  ResetPasswordProps,
+} from "./email";

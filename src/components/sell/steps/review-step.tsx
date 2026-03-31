@@ -6,14 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useSellFlow } from "@/hooks/use-sell-flow";
-
-interface ReviewStepProps {
-  onPublish: () => void;
-  isPublishing?: boolean;
-  brandName: string;
-  countryName: string;
-  sellRate: number;
-}
+import type { ReviewStepProps } from "@/types";
 
 export function ReviewStep({ onPublish, isPublishing, brandName, countryName, sellRate }: ReviewStepProps) {
   const { giftcards, setStep } = useSellFlow();
@@ -58,7 +51,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
             <div className="flex justify-between items-center text-[10px] md:text-xs">
               <span className="text-muted-foreground uppercase tracking-wider font-semibold">Estimated Payment</span>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0">
-                {sellRate.toFixed(0)}% Rate
+                {sellRate * 100}% Rate
               </Badge>
             </div>
             <div className="text-2xl md:text-3xl font-black text-primary">${totalToReceive.toFixed(2)}</div>

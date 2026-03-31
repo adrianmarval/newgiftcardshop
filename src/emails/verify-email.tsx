@@ -9,11 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-
-interface VerifyEmailProps {
-  code: string;
-  userName?: string;
-}
+import type { VerifyEmailProps } from "@/types/email";
 
 export function VerifyEmailTemplate({ code, userName }: VerifyEmailProps) {
   return (

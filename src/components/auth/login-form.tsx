@@ -11,17 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle } from "lucide-react";
 import { login } from "@/actions";
 import Form from "next/form";
-
-interface LoginFormProps {
-  portal: "buyer" | "seller" | "admin";
-  title: string;
-  subtitle: string;
-  forgotPasswordUrl: string;
-  emailPlaceholder?: string;
-  registerUrl?: string;
-  registerPrompt?: string;
-  registerLinkText?: string;
-}
+import type { LoginFormProps } from "@/types";
 
 export function LoginForm({
   portal,

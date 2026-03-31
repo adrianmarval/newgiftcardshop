@@ -1,5 +1,8 @@
 import { Giftcard } from "@/generated/prisma/client";
 import { Decimal } from "@prisma/client/runtime/client";
+import type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from "@/types/server";
+
+export type { GiftcardSelectionResult };
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
@@ -8,27 +11,6 @@ const MAX_CARDS_EXACT_SEARCH = 30; // Consistente en todas las funciones
 const MAX_TARGET_AMOUNT = 1000;
 const MAX_DP_TARGET = 10000;
 const BATCH_GROUP_BY_DAY_THRESHOLD = 3; // Agrupar por día si hay más de cards/N lotes
-
-// ─── Tipos ─────────────────────────────────────────────────────────────────────
-
-export interface GiftcardSelectionResult {
-  selectedCards: Giftcard[];
-  total: Decimal;
-  isExactMatch: boolean;
-  isWithinToleranceRange: boolean;
-}
-
-interface BatchInfo {
-  createdAt: Date;
-  cards: Giftcard[];
-  totalValue: Decimal;
-}
-
-interface PreprocessedBatchData {
-  batches: BatchInfo[];
-  allCardsByAge: Giftcard[];
-  totalCards: number;
-}
 
 // ─── Función principal ─────────────────────────────────────────────────────────
 

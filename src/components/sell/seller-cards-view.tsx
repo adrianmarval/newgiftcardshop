@@ -24,48 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Image from "next/image";
-
-interface Giftcard {
-  id: string;
-  claimCode: string;
-  pinCode: string | null;
-  amount: number;
-  reportedAmount?: number | null;
-  status: string;
-  isConfirmed: boolean;
-  orderId: string | null;
-  brand: {
-    name: string;
-    icon: string;
-    image: string | null;
-  };
-  country: {
-    name: string;
-    code: string;
-  } | null;
-}
-
-interface Payment {
-  id: string;
-  amount: number;
-  status: string;
-  createdAt: string;
-}
-
-interface Batch {
-  id: string;
-  createdAt: string;
-  sellRate: number;
-  isPaid: boolean;
-  effectiveTotal: number;
-  estimatedPayout: number;
-  giftcards: Giftcard[];
-  payments: Payment[];
-}
-
-interface SellerCardsViewProps {
-  initialBatches: Batch[];
-}
+import type { Batch, Giftcard, SellerCardsViewProps } from "@/types";
 
 export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
   const [batches] = useState<Batch[]>(initialBatches);

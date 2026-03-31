@@ -9,17 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Check, Copy, AlertTriangle, Code } from "lucide-react";
-
-interface ParsedGiftCard {
-  amount: string;
-  claimCode: string;
-}
-
-interface BulkPasteDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onImport: (cards: ParsedGiftCard[]) => void;
-}
+import type { BulkPasteDialogProps, ParsedGiftCard } from "@/types";
 
 // Regex patterns for different gift card formats
 const AMAZON_PATTERN = /(?:^|\n)\s*([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}|\S+)\s+(\d+(?:\.\d{2})?)\s*$/gm;

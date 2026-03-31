@@ -11,8 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { forgotPassword } from "@/actions";
 import Form from "next/form";
-
-type ForgotPasswordState = { error?: string; success?: boolean; email?: string } | null;
+import type { ForgotPasswordState } from "@/types";
 
 export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
   const [state, formAction, isPending] = useActionState<ForgotPasswordState, FormData>(forgotPassword, null);

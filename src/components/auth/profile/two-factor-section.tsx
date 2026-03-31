@@ -11,10 +11,7 @@ import { AlertCircle, ShieldCheck, Copy, RefreshCw } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
-
-interface TwoFactorSectionProps {
-  initialEnabled: boolean;
-}
+import type { TwoFactorSectionProps } from "@/types";
 
 export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
   const [is2FAEnabled, setIs2FAEnabled] = useState(initialEnabled);

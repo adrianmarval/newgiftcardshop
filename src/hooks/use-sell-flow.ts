@@ -1,28 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { GiftCardItem } from "@/types";
-
-
-
-interface SellFlowState {
-  step: number;
-  selectedBrand: string;
-  selectedCountry: string;
-  giftcards: GiftCardItem[];
-  
-  // Actions
-  setStep: (step: number) => void;
-  setSelectedBrand: (brand: string) => void;
-  setSelectedCountry: (country: string) => void;
-  setGiftcards: (giftcards: GiftCardItem[]) => void;
-  
-  addGiftcard: () => void;
-  removeGiftcard: (id: string) => void;
-  updateGiftcard: (id: string, field: keyof GiftCardItem, value: string) => void;
-  handleBulkImport: (cards: { amount: string; claimCode: string }[]) => void;
-  resetForm: () => void;
-}
+import type { GiftCardItem, SellFlowState } from "@/types";
 
 export const useSellFlow = create<SellFlowState>((set) => ({
   step: 1,

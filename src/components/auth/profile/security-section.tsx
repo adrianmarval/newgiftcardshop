@@ -7,10 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Lock } from "lucide-react";
-
-interface SecuritySectionProps {
-  isPending?: boolean;
-}
+import type { SecuritySectionProps } from "@/types";
 
 export function SecuritySection({ isPending = false }: SecuritySectionProps) {
   const [showPasswordFields, setShowPasswordFields] = useState(false);
