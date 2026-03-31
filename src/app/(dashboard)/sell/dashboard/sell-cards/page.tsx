@@ -9,15 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SellBatchPage() {
-  const [brands, countries] = await Promise.all([
-    getActiveBrands(),
-    getActiveCountries(),
-  ]);
+  const [brands, countries] = await Promise.all([getActiveBrands(), getActiveCountries()]);
 
-  return (
-    <SellBatchManager
-      brands={brands as { id: string; slug: string; name: string; icon: string; image: string | null }[]}
-      countries={countries as { id: string; name: string; code: string }[]}
-    />
-  );
+  return <SellBatchManager brands={brands} countries={countries} />;
 }
