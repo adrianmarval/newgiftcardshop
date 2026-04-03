@@ -345,7 +345,13 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                                 <div className="col-span-3 flex items-center gap-3">
                                   <div className="w-8 h-8 rounded-lg bg-white relative overflow-hidden flex items-center justify-center border border-border/60 shadow-sm">
                                     {card.brand.image ? (
-                                      <Image src={card.brand.image} alt={card.brand.name} fill className="object-contain p-1" />
+                                      <Image
+                                        src={card.brand.image}
+                                        alt={card.brand.name}
+                                        fill
+                                        className="object-contain p-1"
+                                        loading="eager"
+                                      />
                                     ) : (
                                       <span className="text-lg">{card.brand.icon}</span>
                                     )}
@@ -449,7 +455,13 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
               <div className="p-5 bg-muted/30 rounded-3xl flex items-center gap-4 relative overflow-hidden">
                 <div className="w-14 h-14 bg-white rounded-2xl relative overflow-hidden flex items-center justify-center shadow-md border border-border/50">
                   {selectedCard.brand.image ? (
-                    <Image src={selectedCard.brand.image} alt={selectedCard.brand.name} fill className="object-contain p-1" />
+                    <Image
+                      src={selectedCard.brand.image}
+                      alt={selectedCard.brand.name}
+                      fill
+                      className="object-contain p-1"
+                      loading="eager"
+                    />
                   ) : (
                     <span className="text-3xl">{selectedCard.brand.icon}</span>
                   )}

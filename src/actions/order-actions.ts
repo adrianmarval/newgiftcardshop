@@ -178,6 +178,7 @@ export async function completeOrder(orderId: string, _paymentMethod: string, _tr
           status: "COMPLETED",
           transactionType: "DEBIT",
           orderId,
+          transactionId: _transactionId,
         },
       });
 
@@ -193,8 +194,13 @@ export async function completeOrder(orderId: string, _paymentMethod: string, _tr
             where: { id: card.id },
             data: { status: "USED", isConfirmed: true },
           });
+        } else {
+          // INVALID, ALREADY_USED, DEACTIVATED: keep status as-is, isConfirmed stays true
+          await tx.giftcard.update({
+            where: { id: card.id },
+            data: { isConfirmed: true, status: card.status },
+          });
         }
-        // INVALID, ALREADY_USED, DEACTIVATED: keep status as-is, isConfirmed stays false
       }
     });
 

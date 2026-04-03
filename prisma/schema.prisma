@@ -209,6 +209,7 @@ model Payment {
   balanceAfter    Decimal         @default(0) @db.Decimal(10, 2)
   status          PaymentStatus
   transactionType TransactionType
+  transactionId   String?
 
   orderId String?
   order   Order?  @relation(fields: [orderId], references: [id])

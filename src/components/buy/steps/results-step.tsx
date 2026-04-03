@@ -91,7 +91,7 @@ export function ResultsStep() {
               <div className="text-right">
                 <span className="text-xl font-black text-primary">${discountedTotal.toFixed(2)}</span>
                 <p className="text-[10px] text-muted-foreground leading-none mt-1">
-                  {buyRate < 1 ? `With ${(1 - buyRate * 100).toFixed(0)}% discount` : "Order value"}
+                  {buyRate < 1 ? `Rate: ${buyRate * 100}%` : "Order value"}
                 </p>
               </div>
             </div>
