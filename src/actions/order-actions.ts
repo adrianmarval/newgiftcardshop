@@ -197,7 +197,17 @@ export const cancelOrder = buyerActionClient
   .action(async ({ ctx }) => {
     await prisma.order.update({
       where: { id: ctx.order.id },
-      data: { status: "CANCELLED" },
+      data: {
+        status: "CANCELLED",
+        giftcards: {
+          updateMany: {
+            where: {
+              id: { in: ctx.order.giftcards.map((g) => g.id) },
+            },
+            data: { isConfirmed: true },
+          },
+        },
+      },
     });
     return { success: true, message: "Order cancelled successfully!" };
   });

@@ -77,11 +77,6 @@ export interface BuyerOrdersViewProps {
     totalPages: number;
     totalCount: number;
   };
-  currentFilters: {
-    status?: OrderStatus | "ALL";
-    search?: string;
-    sort: "newest" | "oldest";
-  };
 }
 
 // ── Effective Amount Calculation ──────────────────────────────────────────────

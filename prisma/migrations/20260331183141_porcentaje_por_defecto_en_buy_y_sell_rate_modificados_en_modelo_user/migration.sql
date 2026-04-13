@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "user" ALTER COLUMN "buyRate" SET DEFAULT 0.85,
-ALTER COLUMN "sellRate" SET DEFAULT 0.75;

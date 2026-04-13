@@ -25,6 +25,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Image from "next/image";
 import type { SellerBatch, Giftcard, SellerCardsViewProps } from "@/types";
+import { ClaimCodeField } from "@/components/ui/claim-code-field";
+import { EmptyState } from "@/components/ui/empty-state";
+import { GiftcardStatusBadge } from "@/components/ui/giftcard-status-badge";
 
 export function SellerCardsView({ batches }: SellerCardsViewProps) {
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
@@ -68,50 +71,6 @@ export function SellerCardsView({ batches }: SellerCardsViewProps) {
 
     return matchesSearch;
   });
-
-  const reportLabels: Record<string, string> = {
-    INVALID: "Invalid",
-    ALREADY_USED: "Already Used",
-    DEACTIVATED: "Deactivated",
-    WRONG_AMOUNT: "Wrong Amount",
-  };
-
-  const getCardStatusBadge = (card: Giftcard) => {
-    if (card.isConfirmed) {
-      if (card.status === "USED") {
-        return (
-          <Badge className="bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30 gap-1.5">
-            <CheckCircle2 className="w-3 h-3" /> Confirmed
-          </Badge>
-        );
-      }
-
-      const label = reportLabels[card.status] || card.status.replace("_", " ");
-      const isWrongAmount = card.status === "WRONG_AMOUNT";
-
-      return (
-        <Badge
-          className={`${isWrongAmount ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/20 border-amber-500/30" : "bg-destructive/20 text-destructive hover:bg-destructive/20 border-destructive/30"} gap-1.5`}
-        >
-          <AlertTriangle className="w-3 h-3" /> {label}
-        </Badge>
-      );
-    }
-
-    if (card.orderId) {
-      return (
-        <Badge className="bg-blue-500/20 text-blue-500 hover:bg-blue-500/20 border-blue-500/30 animate-pulse gap-1.5">
-          <Clock className="w-3 h-3" /> Taken (Pending)
-        </Badge>
-      );
-    }
-
-    return (
-      <Badge className="bg-muted text-muted-foreground hover:bg-muted border-border gap-1.5">
-        <Package className="w-3 h-3" /> Available
-      </Badge>
-    );
-  };
 
   const getBatchStatusInfo = (batch: SellerBatch) => {
     const isPaid = batch.isPaid || batch.payments.some((p) => p.status === "COMPLETED");
@@ -372,7 +331,7 @@ export function SellerCardsView({ batches }: SellerCardsViewProps) {
                                 </div>
 
                                 <div className="col-span-3">
-                                  <CodeDisplay code={card.claimCode} />
+                                  <ClaimCodeField code={card.claimCode} />
                                 </div>
 
                                 <div className="col-span-2 text-base font-black italic">
@@ -390,7 +349,7 @@ export function SellerCardsView({ batches }: SellerCardsViewProps) {
                                   )}
                                 </div>
 
-                                <div className="col-span-2">{getCardStatusBadge(card)}</div>
+                                <div className="col-span-2"><GiftcardStatusBadge card={card} /></div>
 
                                 <div className="col-span-1 text-right flex justify-end">
                                   <Button
@@ -449,17 +408,11 @@ export function SellerCardsView({ batches }: SellerCardsViewProps) {
               );
             })
           ) : (
-            <div className="pt-24 pb-24 flex flex-col items-center justify-center text-center space-y-6">
-              <div className="w-24 h-24 bg-muted/20 rounded-full flex items-center justify-center">
-                <History className="w-12 h-12 text-muted-foreground/20" />
-              </div>
-              <div className="space-y-1.5 max-w-sm">
-                <h3 className="text-3xl font-black italic tracking-tight uppercase">No records found</h3>
-                <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest leading-relaxed px-10">
-                  Try adjusting your filters or search keywords.
-                </p>
-              </div>
-            </div>
+            <EmptyState
+              icon={<History className="w-12 h-12 text-muted-foreground/20" />}
+              title="No records found"
+              description="Try adjusting your filters or search keywords."
+            />
           )}
         </AnimatePresence>
       </div>
@@ -520,7 +473,7 @@ export function SellerCardsView({ batches }: SellerCardsViewProps) {
                   ) : (
                     <div className="text-2xl font-black text-primary italic leading-none mb-1">${selectedCard.amount.toFixed(2)}</div>
                   )}
-                  <div className="scale-90 origin-right mt-1">{getCardStatusBadge(selectedCard)}</div>
+                  <div className="scale-90 origin-right mt-1"><GiftcardStatusBadge card={selectedCard} /></div>
                 </div>
               </div>
 
@@ -568,45 +521,6 @@ export function SellerCardsView({ batches }: SellerCardsViewProps) {
           )}
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function CodeDisplay({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const copy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className="flex items-center gap-2 w-full">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <code
-              onClick={copy}
-              className="text-base font-mono bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60 cursor-pointer hover:bg-muted transition-colors font-bold tracking-tight text-foreground truncate max-w-35"
-            >
-              {code.slice(0, 4)}••••{code.slice(-4)}
-            </code>
-          </TooltipTrigger>
-          <TooltipContent className="bg-background border-border text-sm font-bold">
-            <p>Click to copy: {code}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          copy();
-        }}
-        className="text-sm text-primary/70 hover:text-primary transition-colors font-black uppercase tracking-widest"
-      >
-        {copied ? "DONE!" : "COPY"}
-      </button>
     </div>
   );
 }

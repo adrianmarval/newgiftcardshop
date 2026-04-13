@@ -12,6 +12,7 @@ datasource db {
   provider = "postgresql"
 }
 
+
 // --------------------------------------
 // Modelos de Usuario y Autenticación
 // --------------------------------------
