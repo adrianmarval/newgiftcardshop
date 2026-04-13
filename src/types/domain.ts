@@ -104,3 +104,7 @@ export interface PlatformSetting {
   value: string;
   description?: string | null;
 }
+
+// ── Buyer Order Re-exports ─────────────────────────────────────────────────────
+
+export type { BuyerOrder, BuyerOrderGiftcard, BuyerOrderPayment, PaginatedBuyerOrders, OrderStatus, BuyerOrdersViewProps, BuyerOrderEffectiveAmount } from "@/types/buy";

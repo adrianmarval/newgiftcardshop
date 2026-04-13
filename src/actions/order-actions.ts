@@ -1,7 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
+import { OrderStatus, Prisma } from "@/generated/prisma/client";
+import { decrypt } from "@/lib/encryption";
 import { ActionError, buyerActionClient } from "@/lib/safe-action";
 import z from "zod";
 
@@ -165,15 +166,32 @@ export const completeOrder = buyerActionClient
 /**
  * Cancels a buy order. The buyer can cancel their own PENDING orders.
  * Giftcards are NOT returned to stock (inStock stays false, status stays as-is).
+ *
+ * Guard: Only allows cancellation when effective amount is $0 (all cards INVALID/ALREADY_USED/DEACTIVATED
+ * with zero reportedAmount).
  */
 export const cancelOrder = buyerActionClient
   .inputSchema(z.object({ orderId: z.string() }))
   .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      select: { id: true, userId: true, status: true },
+      include: { giftcards: true },
     });
     if (!order) throw new ActionError("Order not found in database");
+
+    // Cancel guard: check effective amount === 0
+    const hasActiveCards = order.giftcards.some((g) => {
+      // UNUSED or USED cards have value
+      if (g.status === "UNUSED" || g.status === "USED") return true;
+      // WRONG_AMOUNT with reportedAmount > 0 has value
+      if (g.status === "WRONG_AMOUNT" && g.reportedAmount && g.reportedAmount.toNumber() > 0) return true;
+      return false;
+    });
+
+    if (hasActiveCards) {
+      throw new ActionError("Cannot cancel: order contains active cards with value. Wait for completion or contact support.");
+    }
+
     return next({ ctx: { order } });
   })
   .action(async ({ ctx }) => {
@@ -184,28 +202,168 @@ export const cancelOrder = buyerActionClient
     return { success: true, message: "Order cancelled successfully!" };
   });
 
+// Helper to compute effective total for an order's giftcards
+function computeEffectiveTotal(
+  giftcards: { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null }[],
+  buyRate: number,
+): number {
+  const rawTotal = giftcards.reduce((sum, card) => {
+    if (card.status === "UNUSED") return sum + card.amount.toNumber();
+    if (card.status === "WRONG_AMOUNT") return sum + (card.reportedAmount ? card.reportedAmount.toNumber() : 0);
+    return sum; // INVALID, ALREADY_USED, DEACTIVATED, USED contribute $0
+  }, 0);
+  return rawTotal * buyRate;
+}
+
+/**
+ * Fetches a single order by exact ID for the authenticated buyer.
+ * Used by the resume flow to hydrate the buy-flow store.
+ */
+export const getOrderById = buyerActionClient
+  .inputSchema(z.object({ orderId: z.string() }))
+  .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        giftcards: { include: { brand: true, country: true } },
+        payments: { where: { status: "COMPLETED" } },
+      },
+    });
+
+    if (!order) throw new ActionError("Order not found");
+    if (order.userId !== ctx.auth.user.id) throw new ActionError("Not authorized to view this order");
+
+    return next({ ctx: { order } });
+  })
+  .action(async ({ ctx }) => {
+    const { order } = ctx;
+
+    const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate.toNumber());
+    return {
+      ...order,
+      createdAt: order.createdAt.toISOString(),
+      updatedAt: order.updatedAt.toISOString(),
+      total: Number(order.total),
+      adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
+      buyRate: Number(order.buyRate),
+      effectiveTotal,
+      giftcards: order.giftcards.map((card) => {
+        let claimCode = card.claimCode;
+        let pinCode = card.pinCode ?? null;
+        try {
+          claimCode = decrypt(card.claimCode);
+        } catch {
+          /* legacy unencrypted */
+        }
+        if (card.pinCode) {
+          try {
+            pinCode = decrypt(card.pinCode);
+          } catch {
+            pinCode = card.pinCode;
+          }
+        }
+        return {
+          ...card,
+          claimCode,
+          pinCode,
+          amount: Number(card.amount),
+          reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+        };
+      }),
+      payments: order.payments.map((p) => ({
+        ...p,
+        amount: Number(p.amount),
+        balanceAfter: Number(p.balanceAfter),
+        createdAt: p.createdAt.toISOString(),
+      })),
+    };
+  });
+
 /**
  * Fetches orders for the authenticated buyer, including giftcards and payments.
+ * Supports pagination, filtering by status, search by order ID, and sorting.
  */
-export const getBuyerOrders = buyerActionClient.action(async ({ ctx }) => {
-  const orders = await prisma.order.findMany({
-    where: { userId: ctx.auth.user.id },
-    include: { giftcards: { include: { brand: true } }, payments: { where: { status: "COMPLETED" } } },
-    orderBy: { createdAt: "desc" },
+export const getBuyerOrders = buyerActionClient
+  .inputSchema(
+    z.object({
+      page: z.number().int().positive().optional().default(1),
+      limit: z.number().int().positive().max(100).optional().default(10),
+      status: z.enum(OrderStatus).optional(),
+      search: z.string().optional(),
+      sort: z.enum(["newest", "oldest"]).optional().default("newest"),
+    }),
+  )
+  .action(async ({ ctx, parsedInput }) => {
+    const { page, limit, status, search, sort } = parsedInput;
+    const skip = (page - 1) * limit;
+    const orderBy = sort === "newest" ? { createdAt: "desc" as const } : { createdAt: "asc" as const };
+
+    // Build where clause
+    const where: Prisma.OrderWhereInput = { userId: ctx.auth.user.id };
+    if (status) where.status = status;
+    if (search) where.id = { contains: search, mode: "insensitive" };
+
+    // Parallel queries: data + count
+    const [orders, totalCount] = await prisma.$transaction([
+      prisma.order.findMany({
+        where,
+        include: {
+          giftcards: { include: { brand: true, country: true } },
+          payments: { where: { status: "COMPLETED" } },
+        },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      prisma.order.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      orders: orders.map((order) => {
+        const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate.toNumber());
+        return {
+          ...order,
+          createdAt: order.createdAt.toISOString(),
+          updatedAt: order.updatedAt.toISOString(),
+          total: Number(order.total),
+          adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
+          buyRate: Number(order.buyRate),
+          effectiveTotal,
+          giftcards: order.giftcards.map((card) => {
+            let claimCode = card.claimCode;
+            let pinCode = card.pinCode ?? null;
+            try {
+              claimCode = decrypt(card.claimCode);
+            } catch {
+              /* legacy unencrypted */
+            }
+            if (card.pinCode) {
+              try {
+                pinCode = decrypt(card.pinCode);
+              } catch {
+                pinCode = card.pinCode;
+              }
+            }
+            return {
+              ...card,
+              claimCode,
+              pinCode,
+              amount: Number(card.amount),
+              reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+            };
+          }),
+          payments: order.payments.map((p) => ({
+            ...p,
+            amount: Number(p.amount),
+            balanceAfter: Number(p.balanceAfter),
+            createdAt: p.createdAt.toISOString(),
+          })),
+        };
+      }),
+      totalCount,
+      totalPages,
+      currentPage: page,
+    };
   });
-  return orders.map((order) => ({
-    ...order,
-    total: Number(order.total),
-    adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
-    giftcards: order.giftcards.map((card) => ({
-      ...card,
-      amount: Number(card.amount),
-      reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
-    })),
-    payments: order.payments.map((p) => ({
-      ...p,
-      amount: Number(p.amount),
-      balanceAfter: Number(p.balanceAfter),
-    })),
-  }));
-});

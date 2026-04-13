@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
@@ -8,15 +9,54 @@ import { ResultsStep } from "./steps/results-step";
 import { RedeemStep } from "./steps/redeem-step";
 import { ConfirmUsageStep } from "./steps/confirm-usage-step";
 import { PaymentStep } from "./steps/payment-step";
-import type { Brand, Country } from "@/types";
+import type { Brand, Country, BuyerOrder, BuyGiftcardItem, BuyGiftcardStatus } from "@/types";
 
 interface BuyGiftcardManagerProps {
   brands: Brand[];
   countries: Country[];
+  /** When present, hydrates the store to resume this order. When absent, resets to step 1. */
+  resumeOrder?: BuyerOrder | null;
 }
 
-export function BuyGiftcardManager({ brands, countries }: BuyGiftcardManagerProps) {
+export function BuyGiftcardManager({ brands, countries, resumeOrder }: BuyGiftcardManagerProps) {
   const { step } = useBuyFlow();
+
+  // Sync store ONCE per mount / per orderId change — synchronously before first paint
+  const syncedRef = useRef<string | null>(null);
+  const targetKey = resumeOrder?.id ?? "fresh";
+
+  if (syncedRef.current !== targetKey) {
+    syncedRef.current = targetKey;
+
+    if (resumeOrder) {
+      const giftcards: BuyGiftcardItem[] = resumeOrder.giftcards.map((card) => ({
+        id: card.id,
+        brand: card.brand.name,
+        amount: card.amount,
+        claimCode: card.claimCode,
+        pinCode: card.pinCode || undefined,
+        status: card.status as BuyGiftcardStatus,
+        reportedAmount: card.reportedAmount ?? undefined,
+      }));
+
+      let resumeStep = 1;
+      if (resumeOrder.status === "PENDING") resumeStep = 3;
+      else if (resumeOrder.status === "AWAITING_PAYMENT") resumeStep = 5;
+
+      useBuyFlow.setState({
+        step: resumeStep,
+        orderId: resumeOrder.id,
+        adjustedTotal: resumeOrder.adjustedTotal,
+        foundGiftcards: giftcards,
+        selectedBrand: "",
+        selectedCountry: "US",
+        targetAmount: "",
+      });
+    } else {
+      // Fresh flow — clean slate
+      useBuyFlow.getState().resetForm();
+    }
+  }
 
   return (
     <div className="w-full space-y-4 md:space-y-6 px-0 md:px-0 py-2 md:py-0">

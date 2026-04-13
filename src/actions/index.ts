@@ -19,7 +19,7 @@ export { getActiveCountries, getCountryById } from "./country-actions";
 export { searchGiftcards, getOrderCards, reportGiftcardIssue, undoGiftcardIssue } from "./buyer-actions";
 
 // ── Orders ────────────────────────────────────────────────────────────────────
-export { getUserBuyRate, createOrder, confirmOrderUsage, completeOrder, cancelOrder, getBuyerOrders } from "./order-actions";
+export { getUserBuyRate, createOrder, confirmOrderUsage, completeOrder, cancelOrder, getOrderById, getBuyerOrders } from "./order-actions";
 
 // ── Platform Settings ─────────────────────────────────────────────────────────
 export { getPlatformSetting, setPlatformSetting } from "./platform-actions";

@@ -32,7 +32,12 @@ export function RedeemStep() {
   });
 
   useEffect(() => {
-    getUserBuyRate().then((rate) => setRedeemState((prev) => ({ ...prev, buyRate: rate })));
+    getUserBuyRate().then((result) => {
+      const rate = result?.data;
+      if (typeof rate === "number") {
+        setRedeemState((prev) => ({ ...prev, buyRate: rate }));
+      }
+    });
   }, []);
 
   const setLoading = (id: string, loading: boolean) => {

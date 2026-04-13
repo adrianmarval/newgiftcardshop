@@ -60,6 +60,17 @@ export type {
 } from "./sell";
 
 export type {
+  // buy.ts
+  BuyerOrder,
+  BuyerOrderGiftcard,
+  BuyerOrderPayment,
+  PaginatedBuyerOrders,
+  OrderStatus,
+  BuyerOrdersViewProps,
+  BuyerOrderEffectiveAmount,
+} from "./buy";
+
+export type {
   // server.ts — server-only types (Prisma/Decimal). Do NOT import in Client Components.
   GiftcardSelectionResult,
   BatchInfo,
