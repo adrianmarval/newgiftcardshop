@@ -379,7 +379,7 @@ export function SellerCardsView({ batches }: SellerCardsViewProps) {
                                   {card.isConfirmed && card.status !== "USED" ? (
                                     card.status === "WRONG_AMOUNT" && card.reportedAmount != null ? (
                                       <div className="flex flex-col">
-                                        <span className="text-xs text-destructive/50 line-through text-sm">${card.amount.toFixed(2)}</span>
+                                        <span className="text-destructive/50 line-through text-sm">${card.amount.toFixed(2)}</span>
                                         <span className="text-amber-500">${card.reportedAmount.toFixed(2)}</span>
                                       </div>
                                     ) : (
