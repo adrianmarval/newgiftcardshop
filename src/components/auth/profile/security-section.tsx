@@ -20,15 +20,15 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
             <Lock className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-foreground">Security</h2>
-            <p className="text-sm text-muted-foreground">Access management</p>
+              <h2 className="text-2xl font-bold text-foreground">Security</h2>
+              <p className="text-base text-muted-foreground">Access management</p>
           </div>
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className={`border-border transition-all font-bold text-[10px] uppercase tracking-wider px-4 ${showPasswordFields ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20" : "bg-muted/40 hover:bg-muted/60"}`}
+          className={`border-border transition-all font-bold text-xs uppercase tracking-wider px-4 ${showPasswordFields ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20" : "bg-muted/40 hover:bg-muted/60"}`}
           onClick={() => setShowPasswordFields(!showPasswordFields)}
         >
           {showPasswordFields ? "Cancel" : "Modify Password"}
@@ -44,7 +44,7 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
             className="space-y-6 overflow-hidden"
           >
             <div className="space-y-2">
-              <Label htmlFor="currentPassword" className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/80">
+              <Label htmlFor="currentPassword" className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">
                 Current Password
               </Label>
               <Input
@@ -59,7 +59,7 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/80">
+                <Label htmlFor="newPassword" className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">
                   New Password
                 </Label>
                 <Input
@@ -73,7 +73,7 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/80">
+                <Label htmlFor="confirmPassword" className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">
                   Confirm Password
                 </Label>
                 <Input
@@ -88,7 +88,7 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
             </div>
 
             <div className="pt-2">
-              <p className="text-[10px] text-muted-foreground/50 italic">
+              <p className="text-xs text-muted-foreground/50 italic">
                 Password must be at least 8 characters long with numbers and symbols.
               </p>
             </div>
@@ -98,7 +98,7 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
 
       {!showPasswordFields && (
         <div className="h-6 flex items-center">
-          <p className="text-xs text-muted-foreground/40 italic">Password fields are hidden for your protection.</p>
+          <p className="text-sm text-muted-foreground/40 italic">Password fields are hidden for your protection.</p>
         </div>
       )}
     </Card>

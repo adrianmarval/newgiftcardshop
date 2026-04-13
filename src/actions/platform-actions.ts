@@ -1,49 +1,29 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { adminActionClient } from "@/lib/safe-action";
+import z from "zod";
 
 /**
- * Retrieves a platform setting value by key. No auth required.
+ * Retrieves a platform setting value by key.
+ * Requires authentication — prevents unauthenticated reads of potentially sensitive settings.
  * Returns null if the key does not exist.
  */
-export async function getPlatformSetting(key: string): Promise<string | null> {
-  try {
-    const setting = await prisma.platformSettings.findUnique({
-      where: { key },
-      select: { value: true },
-    });
-    return setting?.value ?? null;
-  } catch (error) {
-    console.error("Error fetching platform setting:", error);
-    return null;
-  }
-}
+export const getPlatformSetting = adminActionClient.action(async () => {
+  const settings = await prisma.platformSettings.findMany();
+  return settings;
+});
 
 /**
  * Creates or updates a platform setting. Requires ADMIN role.
  */
-export async function setPlatformSetting(key: string, value: string, description?: string) {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session || !session.user) throw new Error("Unauthorized");
-
-    const isAdmin = (session.user as { role?: string[] }).role?.includes("ADMIN") ?? false;
-    if (!isAdmin) throw new Error("Admin role required");
-
+export const setPlatformSetting = adminActionClient
+  .inputSchema(z.object({ key: z.string(), value: z.string(), description: z.string().optional() }))
+  .action(async ({ parsedInput: { key, value, description } }) => {
     await prisma.platformSettings.upsert({
       where: { key },
       update: { value, description },
       create: { key, value, description },
     });
-
     return { success: true };
-  } catch (error) {
-    console.error("Error setting platform setting:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to update setting" };
-  }
-}
+  });

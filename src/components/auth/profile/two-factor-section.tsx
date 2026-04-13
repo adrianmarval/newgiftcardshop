@@ -162,12 +162,12 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
               <h2 className="text-xl font-bold flex items-center gap-2 group-hover:text-primary transition-colors">
                 2FA
                 {is2FAEnabled && (
-                  <span className="text-[8px] bg-primary/20 text-primary px-3 py-1 rounded-full font-black tracking-widest uppercase">
+                  <span className="text-xs bg-primary/20 text-primary px-3 py-1 rounded-full font-black tracking-widest uppercase">
                     ACTIVE
                   </span>
                 )}
               </h2>
-              <p className="text-sm text-muted-foreground">Identity verification</p>
+              <p className="text-base text-muted-foreground">Identity verification</p>
             </div>
           </div>
 
@@ -196,8 +196,8 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
         {is2FAEnabled && (
           <div className="mt-8 pt-8 border-t border-border flex items-center justify-between group/codes">
             <div>
-              <h3 className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/80">Backup Codes</h3>
-              <p className="text-xs text-muted-foreground/60">Generate extra recovery keys</p>
+              <h3 className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">Backup Codes</h3>
+              <p className="text-sm text-muted-foreground/60">Generate extra recovery keys</p>
             </div>
             <Button
               variant="outline"
@@ -217,10 +217,10 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
         {!is2FAEnabled && (
           <div className="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/10">
-            <p className="text-[10px] leading-relaxed text-primary/80 font-medium">
-              We highly recommend enabling 2FA. This adds an extra shield to your transactions and personal data within the Solmaira
-              ecosystem.
-            </p>
+              <p className="text-xs leading-relaxed text-primary/80 font-medium">
+                We highly recommend enabling 2FA. This adds an extra shield to your transactions and personal data within the Solmaira
+                ecosystem.
+              </p>
           </div>
         )}
       </Card>
@@ -247,11 +247,11 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                 <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
                   <ShieldCheck className="h-8 w-8 text-green-500" />
                 </div>
-                <h3 className="text-lg font-bold">Your Backup Codes</h3>
-                <p className="text-sm text-muted-foreground">Each code can be used only once. Keep them in a safe place.</p>
+                <h3 className="text-xl font-bold">Your Backup Codes</h3>
+                <p className="text-base text-muted-foreground">Each code can be used only once. Keep them in a safe place.</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 p-4 bg-muted/50 rounded-xl font-mono text-sm border">
+              <div className="grid grid-cols-2 gap-2 p-4 bg-muted/50 rounded-xl font-mono text-base border">
                 {backupCodes.map((code, i) => (
                   <div key={i} className="flex items-center justify-between p-1">
                     <span>{code}</span>
@@ -290,7 +290,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                   {is2FAEnabled ? <RefreshCw className="h-8 w-8 text-primary" /> : <ShieldCheck className="h-8 w-8 text-primary" />}
                 </div>
-                <p className="text-sm">
+                <p className="text-base">
                   {is2FAEnabled
                     ? "Verify your password to generate a new set of backup codes."
                     : "We highly recommend enabling 2FA to keep your gift card portal secure."}
@@ -333,7 +333,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
             <div className="space-y-6 py-4">
               <div className="flex flex-col items-center space-y-4">
                 <div className="p-4 bg-white rounded-xl">{qrCodeData && <QRCodeSVG value={qrCodeData} size={200} />}</div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono break-all text-center">{qrCodeData}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-mono break-all text-center">{qrCodeData}</p>
               </div>
 
               <div className="space-y-2">

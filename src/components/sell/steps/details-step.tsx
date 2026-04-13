@@ -37,11 +37,11 @@ export function DetailsStep() {
         <Card className="md:col-span-3 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 space-y-4 md:space-y-6 sticky top-0 z-20">
           <div className="flex md:block items-center justify-between">
             <div>
-              <h2 className="text-lg md:text-xl font-bold mb-0.5 md:mb-1">Batch Actions</h2>
-              <p className="text-muted-foreground text-[10px] md:text-sm">Manage your gift cards.</p>
+              <h2 className="text-xl md:text-2xl font-bold mb-0.5 md:mb-1">Batch Actions</h2>
+              <p className="text-muted-foreground text-sm md:text-base">Manage your gift cards.</p>
             </div>
             <div className="md:hidden">
-              <span className="bg-muted text-foreground px-2 py-0.5 rounded-full font-bold text-[10px]">{giftcards.length} Cards</span>
+              <span className="bg-muted text-foreground px-2 py-0.5 rounded-full font-bold text-sm">{giftcards.length} Cards</span>
             </div>
           </div>
 
@@ -68,7 +68,7 @@ export function DetailsStep() {
               onClick={() => setShowBulkPasteDialog(true)}
               variant="outline"
               size="sm"
-              className="flex-1 border-border text-primary hover:bg-primary/10 h-9 text-[10px] uppercase font-bold tracking-wider"
+              className="flex-1 border-border text-primary hover:bg-primary/10 h-9 text-sm uppercase font-bold tracking-wider"
             >
               <Clipboard className="w-3 h-3 mr-2" /> Bulk
             </Button>
@@ -85,7 +85,7 @@ export function DetailsStep() {
                 onClick={() => setStep(1)}
                 variant="outline"
                 size="sm"
-                className="border-border text-muted-foreground hover:bg-muted h-10 md:h-11 text-xs md:text-sm"
+                className="border-border text-muted-foreground hover:bg-muted h-10 md:h-11 text-sm md:text-base"
               >
                 Back
               </Button>
@@ -93,7 +93,7 @@ export function DetailsStep() {
                 onClick={() => setStep(3)}
                 disabled={!isStep2Valid || giftcards.length === 0}
                 size="sm"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 text-xs md:text-sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 text-sm md:text-base"
               >
                 Review
               </Button>
@@ -104,9 +104,9 @@ export function DetailsStep() {
         {/* Right Column: Cards List */}
         <Card className="md:col-span-9 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 flex flex-col min-h-100 md:min-h-125">
           <div className="flex items-center justify-between mb-3 md:mb-4">
-            <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">Gift Card Details</Label>
+            <Label className="text-muted-foreground text-sm md:text-sm font-semibold uppercase tracking-wider">Gift Card Details</Label>
             {!isStep2Valid && (
-              <span className="text-[9px] md:text-[10px] text-amber-500 font-bold uppercase tracking-tight animate-pulse">
+              <span className="text-sm md:text-sm text-amber-500 font-bold uppercase tracking-tight animate-pulse">
                 Pending fields
               </span>
             )}
@@ -125,7 +125,7 @@ export function DetailsStep() {
                 >
                   {/* ID Counter */}
                   <div className="md:col-span-1 flex items-center justify-between md:flex-col md:justify-center">
-                    <span className="text-[10px] text-muted-foreground font-black md:mb-1">#{idx + 1}</span>
+                    <span className="text-sm text-muted-foreground font-black md:mb-1">#{idx + 1}</span>
                     <div className="md:hidden">
                       <Button
                         size="icon"
@@ -137,7 +137,7 @@ export function DetailsStep() {
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
-                    <div className="hidden md:flex w-8 h-8 rounded-full bg-muted border border-border items-center justify-center text-xs font-bold text-muted-foreground">
+                    <div className="hidden md:flex w-8 h-8 rounded-full bg-muted border border-border items-center justify-center text-sm font-bold text-muted-foreground">
                       {idx + 1}
                     </div>
                   </div>
@@ -145,39 +145,39 @@ export function DetailsStep() {
                   {/* Amount & PIN (Grid 2 cols on mobile) */}
                   <div className="grid grid-cols-2 md:contents gap-3">
                     <div className="md:col-span-3">
-                      <Label className="text-[10px] text-slate-500 font-bold uppercase mb-1 block ml-1">Amount</Label>
+                      <Label className="text-sm text-slate-500 font-bold uppercase mb-1 block ml-1">Amount</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-2.5 md:top-3 text-muted-foreground/50 text-xs">$</span>
+                        <span className="absolute left-3 top-2.5 md:top-3 text-muted-foreground/50 text-sm">$</span>
                         <Input
                           type="number"
                           placeholder="0.00"
                           value={card.amount}
                           onChange={(e) => updateGiftcard(card.id, "amount", e.target.value)}
-                          className="pl-7 border-border bg-muted/50 text-foreground h-10 md:h-11 focus:border-primary/50 text-sm"
+                          className="pl-7 border-border bg-muted/50 text-foreground h-10 md:h-11 focus:border-primary/50 text-base"
                         />
                       </div>
                     </div>
 
                     <div className="md:col-span-3">
-                      <Label className="text-[10px] text-slate-500 font-bold uppercase mb-1 block ml-1">PIN</Label>
+                      <Label className="text-sm text-slate-500 font-bold uppercase mb-1 block ml-1">PIN</Label>
                       <Input
                         type="password"
                         placeholder="Optional"
                         value={card.pinCode || ""}
                         onChange={(e) => updateGiftcard(card.id, "pinCode", e.target.value)}
-                        className="border-border bg-muted/50 text-foreground h-10 md:h-11 font-mono focus:border-primary/50 text-sm"
+className="border-border bg-muted/50 text-foreground h-10 md:h-11 font-mono focus:border-primary/50 text-base"
                       />
                     </div>
                   </div>
 
                   {/* Claim Code (Full width on mobile) */}
                   <div className="md:col-span-4">
-                    <Label className="text-[10px] text-slate-500 font-bold uppercase mb-1 block ml-1">Claim Code</Label>
+                    <Label className="text-sm text-slate-500 font-bold uppercase mb-1 block ml-1">Claim Code</Label>
                     <Input
                       placeholder="Enter code"
                       value={card.claimCode}
                       onChange={(e) => updateGiftcard(card.id, "claimCode", e.target.value)}
-                      className="border-border bg-muted/50 text-foreground h-10 md:h-11 font-mono focus:border-primary/50 text-sm"
+                      className="border-border bg-muted/50 text-foreground h-10 md:h-11 font-mono focus:border-primary/50 text-base"
                     />
                   </div>
 

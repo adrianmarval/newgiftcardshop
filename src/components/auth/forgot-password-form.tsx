@@ -23,8 +23,8 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
     <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Forgot Password</h1>
-          <p className="text-muted-foreground text-sm">Enter your email to receive a password reset link</p>
+          <h1 className="text-3xl font-bold">Forgot Password</h1>
+          <p className="text-base text-muted-foreground">Enter your email to receive a password reset link</p>
         </div>
 
         {state?.error && (
@@ -45,7 +45,7 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
           <input type="hidden" name="portal" value={portal} />
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-xs uppercase tracking-wider font-semibold opacity-70">
+            <Label htmlFor="email" className="text-sm uppercase tracking-wider font-semibold opacity-70">
               Email Address
             </Label>
             <Input
@@ -71,7 +71,7 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
           </Button>
         </Form>
 
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-base text-muted-foreground text-center">
           Remember your password?{" "}
           <Link href={`${authPath}/login`} className="text-primary hover:underline font-semibold">
             Sign in

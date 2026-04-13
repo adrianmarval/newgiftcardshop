@@ -6,12 +6,12 @@
 //   import type { SellerCardsViewProps } from "@/types";
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Batch, Brand, Country, ParsedGiftCard } from "./domain";
+import type { SellerBatch, Brand, Country, ParsedGiftCard } from "./domain";
 
 // ── SellerCardsView ───────────────────────────────────────────────────────────
 
 export interface SellerCardsViewProps {
-  initialBatches: Batch[];
+  batches: SellerBatch[];
 }
 
 // ── SellBatchManager ──────────────────────────────────────────────────────────

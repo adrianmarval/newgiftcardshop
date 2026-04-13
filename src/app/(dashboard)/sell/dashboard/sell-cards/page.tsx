@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default async function SellBatchPage() {
-  const [brands, countries, sellRate] = await Promise.all([
-    getActiveBrands(),
-    getActiveCountries(),
-    getSellerRate(),
-  ]);
+  const [brands, countries, sellRate] = await Promise.all([getActiveBrands(), getActiveCountries(), getSellerRate()]);
 
-  return <SellBatchManager brands={brands} countries={countries} sellRate={sellRate} />;
+  if (!sellRate.data) throw new Error("Failed to get seller rate");
+  if (!brands.data) throw new Error("Failed to get brands");
+  if (!countries.data) throw new Error("Failed to get countries");
+
+  return <SellBatchManager brands={brands.data} countries={countries.data} sellRate={sellRate.data} />;
 }

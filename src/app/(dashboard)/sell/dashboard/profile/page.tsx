@@ -1,5 +1,4 @@
-import { getSession } from "@/lib/get-session";
-import { redirect } from "next/navigation";
+import { getSession } from "@/lib/authorization";
 import { ProfileForm } from "@/components/auth/profile/profile-form";
 import { Metadata } from "next";
 
@@ -10,10 +9,6 @@ export const metadata: Metadata = {
 
 export default async function SellerProfilePage() {
   const session = await getSession();
-
-  if (!session?.user) {
-    return redirect("/sell/auth/login");
-  }
 
   return (
     <ProfileForm

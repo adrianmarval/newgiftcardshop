@@ -86,8 +86,8 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">{isRecoveryMode ? "2FA Recovery" : "Two-Factor Authentication"}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="text-3xl font-bold">{isRecoveryMode ? "2FA Recovery" : "Two-Factor Authentication"}</h1>
+          <p className="text-base text-muted-foreground">
             {isRecoveryMode
               ? "Enter one of your backup codes to access your account."
               : `Please enter the 6-digit code from your authenticator app to verify your ${portalNames[portal]} account.`}
@@ -135,11 +135,11 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
                 disabled={isPending}
               />
               <div className="grid gap-1.5 leading-none">
-                <Label htmlFor="trust" className="text-sm font-medium leading-none cursor-pointer flex items-center gap-2">
+                <Label htmlFor="trust" className="text-base font-medium leading-none cursor-pointer flex items-center gap-2">
                   <Laptop className="h-3.5 w-3.5" />
                   Trust this device
                 </Label>
-                <p className="text-xs text-muted-foreground">Don&apos;t ask for a code again on this browser for 30 days.</p>
+                <p className="text-sm text-muted-foreground">Don&apos;t ask for a code again on this browser for 30 days.</p>
               </div>
             </div>
           )}
@@ -177,7 +177,7 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
           >
             {isRecoveryMode ? "Use authenticator app" : "Lost access? Use a backup code"}
           </Button>
-          <p className="text-xs text-muted-foreground block">If you&apos;re having trouble, please contact support.</p>
+          <p className="text-sm text-muted-foreground block">If you&apos;re having trouble, please contact support.</p>
         </div>
       </div>
     </Card>

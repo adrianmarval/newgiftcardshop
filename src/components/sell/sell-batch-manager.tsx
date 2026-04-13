@@ -17,48 +17,43 @@ import { BrandStep } from "./steps/brand-step";
 import { DetailsStep } from "./steps/details-step";
 import { ReviewStep } from "./steps/review-step";
 import type { SellBatchManagerProps } from "@/types";
+import { toast } from "sonner";
+import { useAction } from "next-safe-action/hooks";
 
 export function SellBatchManager({ brands, countries, sellRate }: SellBatchManagerProps) {
   const { step, resetForm, giftcards, selectedBrand } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
+  const [duplicates, setDuplicates] = useState<string[]>([]);
+  const { execute, status } = useAction(publishBatch, {
+    onSuccess: (data) => {
+      if (data.data?.duplicates && data.data.duplicates.length > 0) {
+        setDuplicates(data.data.duplicates);
+        toast.info("Some cards were duplicates", {
+          description: `Found ${data.data.duplicates.length} duplicate cards. Duplicates are not added to the batch.
+          Duplicate Codes: ${data.data.duplicates.join(", ")}
+          `,
+        });
+      }
+      setShowSuccessDialog(true);
+    },
+    onError: (error) => {
+      toast.error("error publishing batch", {
+        description: error.error.serverError || error.error.validationErrors?._errors || error.error.thrownError?.message,
+      });
+    },
+  });
 
   const handlePublish = async () => {
-    setIsPublishing(true);
-    try {
-      const result = await publishBatch({
-        cards: giftcards.map((g) => ({
-          amount: g.amount,
-          claimCode: g.claimCode,
-          pinCode: g.pinCode || undefined,
-        })),
-        brandId: selectedBrand,
-        countryId: useSellFlow.getState().selectedCountry,
-      });
-
-      if (result.success) {
-        // Handle duplicates notification if any
-        if (result.duplicates && result.duplicates.length > 0) {
-          // Could show a toast or info - for now just proceed to success
-        }
-        setShowSuccessDialog(true);
-      } else {
-        // Show error - for now alert, later toast
-        alert(result.error || "Failed to publish batch");
-      }
-    } catch {
-      alert("An error occurred while publishing the batch");
-    } finally {
-      setIsPublishing(false);
-    }
+    execute({
+      cards: giftcards.map((g) => ({
+        amount: g.amount,
+        claimCode: g.claimCode,
+        pinCode: g.pinCode || undefined,
+      })),
+      brandId: selectedBrand,
+      countryId: useSellFlow.getState().selectedCountry,
+    });
   };
-
-  const handleFinishSuccess = () => {
-    setShowSuccessDialog(false);
-    resetForm();
-  };
-
-  const totalCards = giftcards.length;
 
   // Build a brand map for review step to get names without refetching
   const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
@@ -69,8 +64,8 @@ export function SellBatchManager({ brands, countries, sellRate }: SellBatchManag
       {/* Header & Progress combined */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 bg-card/40 px-3 py-4 md:p-6 rounded-none md:rounded-xl border-y md:border border-border backdrop-blur-sm">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-          <h1 className="text-2xl md:text-3xl font-bold mb-0.5 md:mb-1">Sell Gift Cards</h1>
-          <p className="text-muted-foreground text-xs md:text-sm">Create a new batch of gift cards to sell.</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-0.5 md:mb-1">Sell Gift Cards</h1>
+          <p className="text-muted-foreground text-sm md:text-base">Create a new batch of gift cards to sell.</p>
         </motion.div>
 
         {/* Compact Progress Steps */}
@@ -86,7 +81,7 @@ export function SellBatchManager({ brands, countries, sellRate }: SellBatchManag
                 <div className="relative group">
                   <motion.div
                     className={`
-                      w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-[10px] md:text-xs
+                      w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base
                       transition-all border-2
                       ${
                         s === step
@@ -103,7 +98,7 @@ export function SellBatchManager({ brands, countries, sellRate }: SellBatchManag
                   {/* Tooltip-like label - Hidden on XS mobile */}
                   <span
                     className={`
-                    absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] md:text-[10px] uppercase tracking-wider font-bold whitespace-nowrap
+                    absolute -bottom-5 left-1/2 -translate-x-1/2 text-sm md:text-sm uppercase tracking-wider font-bold whitespace-nowrap
                     hidden sm:block
                     ${s === step ? "text-primary" : "text-muted-foreground/70"}
                   `}
@@ -161,7 +156,7 @@ export function SellBatchManager({ brands, countries, sellRate }: SellBatchManag
           >
             <ReviewStep
               onPublish={handlePublish}
-              isPublishing={isPublishing}
+              isPublishing={status === "executing"}
               brandName={brandMap[selectedBrand] || ""}
               countryName={countryMap[useSellFlow.getState().selectedCountry] || ""}
               sellRate={sellRate}
@@ -184,12 +179,29 @@ export function SellBatchManager({ brands, countries, sellRate }: SellBatchManag
                 <Check className="w-10 h-10 text-primary" />
               </div>
             </motion.div>
-            <AlertDialogTitle className="text-center text-2xl">Batch Published Successfully!</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground text-center text-lg">
-              Your batch with {totalCards} gift card{totalCards !== 1 ? "s" : ""} has been submitted for verification.
+            <AlertDialogTitle className="text-center text-3xl">Batch Published Successfully!</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground text-center text-xl">
+              Your batch has been submitted for verification.
+              <div className="border-t border-border my-4"></div>
+              {duplicates.length > 0 && (
+                <div className="mt-4">
+                  <div className="font-semibold">Duplicate Codes:</div>
+                  <div className="mt-2">
+                    {duplicates.map((code) => (
+                      <div key={code}>{code}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogAction onClick={handleFinishSuccess} className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4 h-11">
+          <AlertDialogAction
+            onClick={() => {
+              setShowSuccessDialog(false);
+              resetForm();
+            }}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4 h-11"
+          >
             Back to Dashboard
           </AlertDialogAction>
         </AlertDialogContent>

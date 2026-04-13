@@ -1,28 +1,20 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { authActionClient } from "@/lib/safe-action";
+import z from "zod";
 
-export async function getActiveBrands() {
-  try {
-    const brands = await prisma.brand.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-    });
-    return brands;
-  } catch (error) {
-    console.error("Error fetching active brands:", error);
-    return [];
-  }
-}
+export const getActiveBrands = authActionClient.action(async () => {
+  const brands = await prisma.brand.findMany({
+    where: { isActive: true },
+    orderBy: { name: "asc" },
+  });
+  return brands;
+});
 
-export async function getBrandById(id: string) {
-  try {
-    const brand = await prisma.brand.findUnique({
-      where: { id },
-    });
-    return brand;
-  } catch (error) {
-    console.error("Error fetching brand by id:", error);
-    return null;
-  }
-}
+export const getBrandById = authActionClient.inputSchema(z.object({ id: z.string() })).action(async ({ parsedInput: { id } }) => {
+  const brand = await prisma.brand.findUnique({
+    where: { id },
+  });
+  return brand;
+});

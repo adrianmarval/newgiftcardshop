@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { completeOrder } from "@/actions/order-actions";
 import { getPlatformSetting } from "@/actions/platform-actions";
+import { toast } from "sonner";
 
 export function PaymentStep() {
   const { setStep, orderId: storedOrderId, adjustedTotal } = useBuyFlow();
@@ -21,8 +22,17 @@ export function PaymentStep() {
   const [binancePayId, setBinancePayId] = useState<string>("—");
 
   useEffect(() => {
-    getPlatformSetting("binance_pay_id").then((value) => {
-      if (value) setBinancePayId(value);
+    getPlatformSetting().then((response) => {
+      if (!response.data) {
+        toast.error("Error al obtener la configuración de Binance Pay");
+        return;
+      }
+      const binancePayIdSetting = response.data.find((setting) => setting.key === "binance_pay_id");
+      if (!binancePayIdSetting) {
+        toast.error("No se encontró la configuración de Binance Pay");
+        return;
+      }
+      setBinancePayId(binancePayIdSetting.value);
     });
   }, []);
 
@@ -30,21 +40,15 @@ export function PaymentStep() {
     if (!storedOrderId) return;
     setIsNotifying(true);
     setErrorMessage(null);
-
-    try {
-      const result = await completeOrder(storedOrderId, "BINANCE_PAY", transactionId || undefined);
-
-      if (result.success) {
-        setNotified(true);
-      } else {
-        setErrorMessage(result.error ?? "Failed to complete order. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error completing order:", error);
-      setErrorMessage("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsNotifying(false);
+    const result = await completeOrder({ orderId: storedOrderId, _transactionId: transactionId });
+    if (!result.data) {
+      const errorDescription = result.serverError || result.validationErrors?._errors?.join("") || "Error al completar orden";
+      toast.error("Error al completar orden", { description: errorDescription });
+      setErrorMessage(errorDescription);
+      return;
     }
+    setNotified(true);
+    setIsNotifying(false);
   };
 
   if (notified) {
@@ -58,8 +62,8 @@ export function PaymentStep() {
           <Check className="w-12 h-12 text-primary" />
         </motion.div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black italic uppercase tracking-tight">Payment Notified!</h2>
-          <p className="text-muted-foreground max-w-sm">
+          <h2 className="text-3xl font-black italic uppercase tracking-tight">Payment Notified!</h2>
+          <p className="text-muted-foreground text-base max-w-sm">
             We have received your payment notification for order <strong>#{storedOrderId?.slice(-8)}</strong>. The order has been marked as
             completed.
           </p>
@@ -86,22 +90,20 @@ export function PaymentStep() {
           >
             <Wallet className="w-8 h-8 text-primary" />
           </motion.div>
-          <h2 className="text-2xl md:text-3xl font-black tracking-tight italic uppercase">Binance Pay Detail</h2>
-          <p className="text-muted-foreground text-sm md:text-base">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight italic uppercase">Binance Pay Detail</h2>
+          <p className="text-muted-foreground text-base md:text-lg">
             Send the exact amount to the Binance Pay ID below to complete your order.
           </p>
         </div>
 
         <div className="w-full max-w-md bg-muted/50 border border-border rounded-2xl p-6 md:p-8 space-y-6 relative overflow-hidden group">
           <div className="space-y-1 relative z-10">
-            <div className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Total to Pay</div>
-            <div className="text-4xl md:text-5xl font-black text-primary">
-              ${adjustedTotal != null ? adjustedTotal.toFixed(2) : "—"}
-            </div>
+            <div className="text-xs text-muted-foreground uppercase font-black tracking-widest">Total to Pay</div>
+            <div className="text-4xl md:text-5xl font-black text-primary">${adjustedTotal != null ? adjustedTotal.toFixed(2) : "—"}</div>
           </div>
 
           <div className="space-y-2 relative z-10">
-            <Label className="text-[10px] text-muted-foreground uppercase font-black">Binance Pay ID</Label>
+            <Label className="text-xs text-muted-foreground uppercase font-black">Binance Pay ID</Label>
             <div className="flex items-center gap-2 bg-card border border-border p-3 rounded-xl justify-center font-mono text-xl font-bold">
               {binancePayId}
               {binancePayId !== "—" && (
@@ -122,18 +124,16 @@ export function PaymentStep() {
 
         <div className="max-w-md w-full space-y-4">
           <div className="space-y-1.5 text-left">
-            <Label className="text-[10px] text-muted-foreground uppercase font-black ml-1">Transaction ID (optional)</Label>
+            <Label className="text-xs text-muted-foreground uppercase font-black ml-1">Transaction ID (optional)</Label>
             <Input
               placeholder="Enter your payment transaction ID"
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
-              className="h-12 border-border bg-card/50 text-foreground font-mono font-bold text-center text-lg placeholder:text-muted-foreground/30 focus:border-primary/50"
+              className="h-12 border-border bg-card/50 text-foreground font-mono font-bold text-center text-xl placeholder:text-muted-foreground/30 focus:border-primary/50"
             />
           </div>
 
-          {errorMessage && (
-            <p className="text-sm text-destructive font-medium text-center">{errorMessage}</p>
-          )}
+          {errorMessage && <p className="text-sm text-destructive font-medium text-center">{errorMessage}</p>}
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
@@ -162,7 +162,7 @@ export function PaymentStep() {
 
         <div className="max-w-md w-full p-4 bg-primary/5 border border-primary/20 rounded-xl flex gap-3 text-left">
           <Info className="w-5 h-5 text-primary mt-0.5" />
-          <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+          <p className="text-xs text-muted-foreground leading-relaxed italic">
             Once you notify the payment, our system will pair the transaction with your order using the ID provided. Verification usually
             takes 1-5 minutes.
           </p>

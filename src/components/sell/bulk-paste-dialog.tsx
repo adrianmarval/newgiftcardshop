@@ -98,8 +98,8 @@ ZZZZ-ZZZZ-ZZZZ 75.50`;
                 <Code className="w-5 h-5 text-primary" />
                 <h3 className="font-semibold text-foreground">Expected Format</h3>
               </div>
-              <p className="text-sm text-muted-foreground">Each line should contain a gift card code followed by the amount:</p>
-              <div className="bg-muted rounded p-3 font-mono text-sm text-foreground border border-border">
+              <p className="text-base text-muted-foreground">Each line should contain a gift card code followed by the amount:</p>
+              <div className="bg-muted rounded p-3 font-mono text-base text-foreground border border-border">
                 {`CODE AMOUNT
 XXXX-XXXX-XXXX 50.00
 YYYY-YYYY-YYYY 100.00
@@ -113,12 +113,12 @@ ZZZZ-ZZZZ-ZZZZ 75.50`}
 
           {/* Paste Input Area */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Paste your gift cards here:</label>
+            <label className="text-base font-medium text-foreground">Paste your gift cards here:</label>
             <Textarea
               placeholder={"XXXX-XXXX-XXXX 50.00\nYYYY-YYYY-YYYY 100.00\nZZZZ-ZZZZ-ZZZZ 75.50"}
               value={pasteContent}
               onChange={(e) => setPasteContent(e.target.value)}
-              className="max-h-24 bg-card border-border text-foreground placeholder:text-muted-foreground font-mono text-sm min-h-32 resize-none"
+              className="max-h-24 bg-card border-border text-foreground placeholder:text-muted-foreground font-mono text-base min-h-32 resize-none"
             />
           </div>
 
@@ -162,10 +162,10 @@ ZZZZ-ZZZZ-ZZZZ 75.50`}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="flex items-center justify-between p-2 bg-muted/50 border border-border rounded text-sm"
+                      className="flex items-center justify-between p-2 bg-muted/50 border border-border rounded text-base"
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-semibold">
+                        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-semibold">
                           {idx + 1}
                         </div>
                         <div className="font-mono text-foreground">{card.claimCode}</div>

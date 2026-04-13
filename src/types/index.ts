@@ -13,7 +13,7 @@ export type {
   GiftcardStatus,
   Giftcard,
   Payment,
-  Batch,
+  SellerBatch,
   ParsedGiftCard,
   GiftcardIssue,
   PlatformSetting,

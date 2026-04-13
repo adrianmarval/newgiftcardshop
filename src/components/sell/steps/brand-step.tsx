@@ -28,8 +28,8 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
       {/* Left Column: Filters */}
       <Card className="md:col-span-4 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 space-y-4 md:space-y-6 flex flex-col h-auto md:h-full sticky top-0 z-20">
         <div>
-          <h2 className="text-lg md:text-xl font-bold mb-1 md:mb-2">Configuration</h2>
-          <p className="text-muted-foreground text-xs md:text-sm">Select region and search brands.</p>
+          <h2 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Configuration</h2>
+          <p className="text-muted-foreground text-sm md:text-base">Select region and search brands.</p>
         </div>
 
         {/* Country & Search - Grid on mobile to save vertical space */}
@@ -39,7 +39,7 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
               Country
             </Label>
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-              <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-sm">
+              <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-base">
                 <SelectValue placeholder="Select country..." />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border text-popover-foreground">
@@ -62,20 +62,20 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
                 placeholder="Search..."
                 value={searchBrand}
                 onChange={(e) => setSearchBrand(e.target.value)}
-                className="pl-9 md:pl-10 border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-sm"
+                className="pl-9 md:pl-10 border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-base"
               />
             </div>
           </div>
         </div>
 
         <div className="mt-auto pt-4 md:pt-6 border-t border-border flex flex-col gap-2 md:gap-3">
-          <div className="text-[10px] text-muted-foreground/70 italic">
+          <div className="text-sm text-muted-foreground/70 italic">
             {!isStep1Valid ? "Select country and brand" : "Ready to proceed"}
           </div>
           <Button
             onClick={() => setStep(2)}
             disabled={!isStep1Valid}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 transition-all text-sm font-bold"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 transition-all text-base font-bold"
           >
             Continue <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
@@ -85,8 +85,8 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
       {/* Right Column: Brand Grid */}
       <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-3 md:mb-4">
-          <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">Available Brands</Label>
-          <span className="text-[10px] text-muted-foreground/50">{filteredBrands.length} items</span>
+          <Label className="text-muted-foreground text-sm md:text-sm font-semibold uppercase tracking-wider">Available Brands</Label>
+          <span className="text-sm text-muted-foreground/50">{filteredBrands.length} items</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 overflow-y-auto pr-1 md:pr-2 custom-scrollbar flex-1 max-h-125 md:max-h-150">
@@ -117,7 +117,7 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
                     <span className="text-2xl md:text-5xl">{brand.icon}</span>
                   )}
                 </div>
-                <div className="text-[10px] md:text-sm font-bold text-center tracking-tight truncate w-full px-1">{brand.name}</div>
+                <div className="text-sm md:text-base font-bold text-center tracking-tight truncate w-full px-1">{brand.name}</div>
 
                 {selectedBrand === brand.id && (
                   <motion.div

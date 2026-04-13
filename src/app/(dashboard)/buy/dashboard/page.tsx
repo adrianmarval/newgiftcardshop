@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/get-session";
+import { getSession } from "@/lib/authorization";
 import { IconSearch, IconShoppingCart, IconWallet, IconStar } from "@tabler/icons-react";
 import { Metadata } from "next";
 
@@ -9,12 +9,11 @@ export const metadata: Metadata = {
 
 export default async function BuyerDashboardPage() {
   const session = await getSession();
-  const user = session?.user;
 
   return (
     <div>
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold">Welcome{user?.name ? `, ${user.name}` : ""}</h1>
+        <h1 className="text-4xl font-bold">Welcome{session.user.name ? `, ${session.user.name}` : ""}</h1>
         <p className="text-muted-foreground">Browse and buy discounted gift cards</p>
       </div>
 
@@ -22,33 +21,33 @@ export default async function BuyerDashboardPage() {
         <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconSearch className="h-5 w-5" />
-            <span className="text-sm font-medium">Available Cards</span>
+            <span className="text-base font-medium">Available Cards</span>
           </div>
-          <span className="text-3xl font-bold">1,248</span>
+          <span className="text-4xl font-bold">1,248</span>
         </div>
 
         <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconShoppingCart className="h-5 w-5" />
-            <span className="text-sm font-medium">My Orders</span>
+            <span className="text-base font-medium">My Orders</span>
           </div>
-          <span className="text-3xl font-bold">12</span>
+          <span className="text-4xl font-bold">12</span>
         </div>
 
         <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconWallet className="h-5 w-5" />
-            <span className="text-sm font-medium">Balance</span>
+            <span className="text-base font-medium">Balance</span>
           </div>
-          <span className="text-3xl font-bold">$420.00</span>
+          <span className="text-4xl font-bold">$420.00</span>
         </div>
 
         <div className="rounded-xl bg-card border border-border p-6 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconStar className="h-5 w-5" />
-            <span className="text-sm font-medium">Saved</span>
+            <span className="text-base font-medium">Saved</span>
           </div>
-          <span className="text-3xl font-bold">$125.50</span>
+          <span className="text-4xl font-bold">$125.50</span>
         </div>
       </div>
     </div>

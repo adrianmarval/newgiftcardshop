@@ -18,8 +18,8 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 bg-card/40 px-3 py-4 md:p-6 rounded-none md:rounded-xl border-y md:border border-border backdrop-blur-sm">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col">
-          <h1 className="text-2xl md:text-3xl font-bold mb-0.5 md:mb-1">Profile Settings</h1>
-          <p className="text-muted-foreground text-xs md:text-sm">
+          <h1 className="text-3xl md:text-4xl font-bold mb-0.5 md:mb-1">Profile Settings</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Manage your {portalLabels[portal].toLowerCase()} account settings and security preferences.
           </p>
         </motion.div>

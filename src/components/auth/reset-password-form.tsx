@@ -15,7 +15,7 @@ import { resetPassword } from "@/actions";
 import Form from "next/form";
 
 const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
-  <div className="flex items-center gap-2 text-sm">
+  <div className="flex items-center gap-2 text-base">
     {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-muted-foreground" />}
     <span className={valid ? "text-primary font-medium" : "text-muted-foreground"}>{label}</span>
   </div>
@@ -57,9 +57,9 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
       <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
         <div className="space-y-4 text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
-          <h1 className="text-2xl font-bold">Invalid Reset Link</h1>
-          <p className="text-muted-foreground text-sm">This password reset link is invalid or has expired.</p>
-          <Link href={`${authPath}/forgot-password`} className="text-primary hover:underline font-semibold text-sm">
+          <h1 className="text-3xl font-bold">Invalid Reset Link</h1>
+          <p className="text-base text-muted-foreground">This password reset link is invalid or has expired.</p>
+          <Link href={`${authPath}/forgot-password`} className="text-primary hover:underline font-semibold text-base">
             Request a new reset link
           </Link>
         </div>
@@ -71,8 +71,8 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
     <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Reset Password</h1>
-          <p className="text-muted-foreground text-sm">Create a new password for your account</p>
+          <h1 className="text-3xl font-bold">Reset Password</h1>
+          <p className="text-base text-muted-foreground">Create a new password for your account</p>
         </div>
 
         {error && (
@@ -87,7 +87,7 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
           <input type="hidden" name="token" value={token} />
 
           <div className="space-y-2">
-            <Label htmlFor="newPassword" className="text-xs uppercase tracking-wider font-semibold opacity-70">
+            <Label htmlFor="newPassword" className="text-sm uppercase tracking-wider font-semibold opacity-70">
               New Password
             </Label>
             <Input
@@ -102,7 +102,7 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
               className="bg-muted/50 border-none h-11"
             />
             <div className="space-y-2 mt-2 p-3 bg-muted/30 rounded-lg">
-              <p className="text-xs font-semibold uppercase opacity-60">Requirements:</p>
+              <p className="text-sm font-semibold uppercase opacity-60">Requirements:</p>
               <div className="grid grid-cols-1 gap-1">
                 <PasswordCheckItem valid={passwordChecks.length} label="At least 8 characters" />
                 <PasswordCheckItem valid={passwordChecks.uppercase} label="Uppercase letter" />
@@ -114,7 +114,7 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-xs uppercase tracking-wider font-semibold opacity-70">
+            <Label htmlFor="confirmPassword" className="text-sm uppercase tracking-wider font-semibold opacity-70">
               Confirm Password
             </Label>
             <Input
@@ -140,7 +140,7 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
           </Button>
         </Form>
 
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-base text-muted-foreground text-center">
           <Link href={`${authPath}/login`} className="text-primary hover:underline font-semibold">
             Back to Sign In
           </Link>

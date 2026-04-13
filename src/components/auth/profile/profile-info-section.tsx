@@ -41,14 +41,14 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
               <User className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">Personal Information</h2>
-              <p className="text-sm text-muted-foreground">General details for your account</p>
+              <h2 className="text-2xl font-bold text-foreground">Personal Information</h2>
+              <p className="text-base text-muted-foreground">General details for your account</p>
             </div>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[10px] md:text-xs uppercase tracking-widest font-black text-muted-foreground/80">
+              <Label htmlFor="name" className="text-xs md:text-sm uppercase tracking-widest font-black text-muted-foreground/80">
                 Full Name
               </Label>
               <Input
@@ -63,7 +63,7 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[10px] md:text-xs uppercase tracking-widest font-black text-muted-foreground/80">
+              <Label htmlFor="email" className="text-xs md:text-sm uppercase tracking-widest font-black text-muted-foreground/80">
                 Email Address
               </Label>
               <Input
@@ -73,17 +73,17 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
                 disabled
                 className="bg-muted/30 border-dashed border-border h-12 md:h-14 opacity-60 cursor-not-allowed italic font-medium"
               />
-              <p className="text-[10px] text-muted-foreground/50 italic px-1">Verification required for changes</p>
+              <p className="text-xs text-muted-foreground/50 italic px-1">Verification required for changes</p>
             </div>
           </div>
 
           <div className="mt-8 pt-8 border-t border-border flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground/70">Ensure your information is up to date.</p>
+              <p className="text-sm text-muted-foreground/70">Ensure your information is up to date.</p>
             </div>
             <Button
               type="submit"
-              className="h-12 px-10 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 transition-all active:scale-95"
+              className="h-12 px-10 font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 transition-all active:scale-95"
               disabled={isPending}
             >
               {isPending ? (

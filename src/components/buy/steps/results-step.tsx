@@ -18,80 +18,105 @@ import {
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { getBrandById } from "@/actions/brand-actions";
 import { createOrder, getUserBuyRate } from "@/actions/order-actions";
-import { getOrderCards } from "@/actions/giftcard-actions";
+import { getOrderCards } from "@/actions/buyer-actions";
 import Image from "next/image";
 import type { Brand } from "@/types";
+import { toast } from "sonner";
 
 export function ResultsStep() {
   const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount, setOrderId, setFoundGiftcards } = useBuyFlow();
-
-  const [brandData, setBrandData] = useState<Brand | null>(null);
-  const [buyRate, setBuyRate] = useState<number>(0.85);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [resultsState, setResultsState] = useState<{
+    brandData: Brand | null;
+    buyRate: number;
+    isConfirming: boolean;
+    showConfirmDialog: boolean;
+  }>({
+    brandData: null,
+    buyRate: 0,
+    isConfirming: false,
+    showConfirmDialog: false,
+  });
 
   useEffect(() => {
     if (selectedBrand) {
-      getBrandById(selectedBrand).then((data) => setBrandData(data as Brand));
+      getBrandById({ id: selectedBrand }).then((brand) => {
+        const brandData = brand.data;
+        if (!brandData) {
+          toast.error("Error al obtener la marca", { description: brand.serverError || brand.validationErrors?._errors });
+          return;
+        }
+        setResultsState((prev) => ({ ...prev, brandData }));
+      });
     }
-    getUserBuyRate().then(setBuyRate);
+    getUserBuyRate().then((response) => {
+      const rate = response.data;
+      if (!rate) {
+        toast.error("Error al obtener la tasa de compra", { description: response.serverError || response.validationErrors?.formErrors });
+        return;
+      }
+      setResultsState((prev) => ({ ...prev, buyRate: rate }));
+    });
   }, [selectedBrand]);
 
-  const rawTotal = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
-  const discountedTotal = rawTotal * buyRate;
-
   const handlePlaceOrder = async () => {
-    setIsConfirming(true);
-    try {
-      const cardIds = foundGiftcards.map((c) => c.id);
-      const result = await createOrder(cardIds);
+    setResultsState((prev) => ({ ...prev, isConfirming: true }));
 
-      if (result.success && result.orderId) {
-        setOrderId(result.orderId);
+    const cardIds = foundGiftcards.map((c) => c.id);
+    const result = await createOrder({ giftcardIds: cardIds });
 
-        // Fetch cards WITH claimCodes now that the order is locked in
-        const cardsWithCodes = await getOrderCards(result.orderId);
-        if (cardsWithCodes.length > 0) {
-          setFoundGiftcards(cardsWithCodes);
-        }
-
-        setStep(3);
-      } else {
-        console.error("Failed to create order:", result.error);
-      }
-    } catch (error) {
-      console.error("Error creating order:", error);
-    } finally {
-      setIsConfirming(false);
-      setShowConfirmDialog(false);
+    if (!result.data) {
+      toast.error("Failed to create order", {
+        description: result.serverError || result.validationErrors?._errors,
+      });
+      return;
     }
+
+    setOrderId(result.data.orderId);
+
+    // Fetch cards WITH claimCodes now that the order is locked in
+    const orderCards = await getOrderCards({ orderId: result.data.orderId });
+    const giftcards = orderCards.data;
+
+    if (!giftcards) {
+      toast.error("Error al obtener las tarjetas de la orden", {
+        description: orderCards.serverError || orderCards.validationErrors?._errors,
+      });
+      return;
+    }
+
+    setFoundGiftcards(giftcards);
+    setStep(3);
+    setResultsState((prev) => ({ ...prev, isConfirming: false, showConfirmDialog: false }));
   };
+
+  const rawTotal = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
+  const discountedTotal = rawTotal * resultsState.buyRate;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-full items-start">
       {/* Left Column: Selection Summary */}
       <Card className="md:col-span-4 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 space-y-4 md:space-y-6 flex flex-col h-auto md:h-full sticky top-0 z-20">
         <div>
-          <h2 className="text-lg md:text-xl font-bold mb-0.5 md:mb-1">Selection</h2>
-          <p className="text-muted-foreground text-[10px] md:text-sm">Review your proposed gift cards.</p>
+          <h2 className="text-xl md:text-2xl font-bold mb-0.5 md:mb-1">Selection</h2>
+          <p className="text-muted-foreground text-xs md:text-sm">Review your proposed gift cards.</p>
         </div>
 
         <div className="space-y-4">
           <div className="bg-muted/50 border border-border rounded-xl p-3 md:p-4 space-y-3">
-            <div className="flex justify-between items-center text-xs md:text-sm">
+            <div className="flex justify-between items-center text-sm md:text-base">
               <span className="text-muted-foreground">Search Target</span>
               <span className="font-bold">${targetAmount}</span>
             </div>
-            <div className="flex justify-between items-center text-xs md:text-sm">
+            <div className="flex justify-between items-center text-sm md:text-base">
               <span className="text-muted-foreground">Found Cards</span>
               <span className="font-bold">{foundGiftcards.length} items</span>
             </div>
-            <div className="flex justify-between items-center text-xs md:text-sm pt-2 border-t border-border">
+            <div className="flex justify-between items-center text-sm md:text-base pt-2 border-t border-border">
               <span className="text-muted-foreground">Total to Pay</span>
               <div className="text-right">
-                <span className="text-xl font-black text-primary">${discountedTotal.toFixed(2)}</span>
-                <p className="text-[10px] text-muted-foreground leading-none mt-1">
-                  {buyRate < 1 ? `Rate: ${buyRate * 100}%` : "Order value"}
+                <span className="text-2xl font-black text-primary">${discountedTotal.toFixed(2)}</span>
+                <p className="text-xs text-muted-foreground leading-none mt-1">
+                  {resultsState.buyRate < 1 ? `Rate: ${resultsState.buyRate * 100}%` : "Order value"}
                 </p>
               </div>
             </div>
@@ -99,7 +124,7 @@ export function ResultsStep() {
 
           <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex gap-3 items-start">
             <Info className="w-4 h-4 text-primary mt-0.5" />
-            <p className="text-[10px] md:text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
               Codes will be revealed in the next step. You can remove cards you don&apos;t want from the list on the right.
             </p>
           </div>
@@ -114,8 +139,8 @@ export function ResultsStep() {
             Adjust
           </Button>
           <Button
-            onClick={() => setShowConfirmDialog(true)}
-            disabled={foundGiftcards.length === 0}
+            onClick={() => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }))}
+            disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0}
             className="flex-2 bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 font-bold shadow-lg shadow-primary/20"
           >
             Place Order <ChevronRight className="w-4 h-4 ml-1" />
@@ -126,8 +151,8 @@ export function ResultsStep() {
       {/* Right Column: Cards List */}
       <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-4">
-          <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">Proposed Bundle</Label>
-          <span className="text-[10px] text-muted-foreground/50">{foundGiftcards.length} items</span>
+          <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider">Proposed Bundle</Label>
+          <span className="text-xs text-muted-foreground/50">{foundGiftcards.length} items</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 overflow-y-auto pr-1 custom-scrollbar">
@@ -142,15 +167,21 @@ export function ResultsStep() {
               <div className="flex items-start justify-between relative z-10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center text-xl shadow-sm relative overflow-hidden">
-                    {brandData?.image ? (
-                      <Image src={brandData.image} alt={brandData.name} fill className="p-1 object-contain" loading="eager" />
+                    {resultsState.brandData?.image ? (
+                      <Image
+                        src={resultsState.brandData.image}
+                        alt={resultsState.brandData.name}
+                        fill
+                        className="p-1 object-contain"
+                        loading="eager"
+                      />
                     ) : (
-                      brandData?.icon
+                      resultsState.brandData?.icon
                     )}
                   </div>
                   <div>
-                    <div className="text-lg font-black text-foreground">${card.amount}</div>
-                    <div className="text-[10px] font-mono text-muted-foreground/50 tracking-tighter uppercase whitespace-nowrap">
+                    <div className="text-xl font-black text-foreground">${card.amount}</div>
+                    <div className="text-xs font-mono text-muted-foreground/50 tracking-tighter uppercase whitespace-nowrap">
                       CODE: XXXX-XXXX-XXXX
                     </div>
                   </div>
@@ -175,8 +206,8 @@ export function ResultsStep() {
               <div className="p-4 bg-muted rounded-full mb-4">
                 <Trash2 className="w-8 h-8 text-muted-foreground/50" />
               </div>
-              <h3 className="font-bold mb-1">Bundle is empty</h3>
-              <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+              <h3 className="text-xl font-bold mb-1">Bundle is empty</h3>
+              <p className="text-muted-foreground text-base max-w-xs mx-auto">
                 Go back to search or adjust your criteria to find more cards.
               </p>
               <Button variant="outline" onClick={() => setStep(1)} className="mt-6 border-primary/50 text-primary hover:bg-primary/10">
@@ -188,7 +219,10 @@ export function ResultsStep() {
       </Card>
 
       {/* Confirmation Dialog */}
-      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+      <AlertDialog
+        open={resultsState.showConfirmDialog}
+        onOpenChange={(open) => setResultsState((prev) => ({ ...prev, showConfirmDialog: open }))}
+      >
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Place Order?</AlertDialogTitle>
@@ -198,16 +232,16 @@ export function ResultsStep() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isConfirming}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={resultsState.isConfirming}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 handlePlaceOrder();
               }}
-              disabled={isConfirming}
+              disabled={resultsState.isConfirming}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
             >
-              {isConfirming ? (
+              {resultsState.isConfirming ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Placing Order...

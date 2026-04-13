@@ -15,7 +15,7 @@ import type { RegisterFormProps } from "@/types";
 
 function PasswordCheckItem({ valid, label }: { valid: boolean; label: string }) {
   return (
-    <div className="flex items-center gap-2 text-sm">
+    <div className="flex items-center gap-2 text-base">
       {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-muted-foreground" />}
       <span className={valid ? "text-green-600" : "text-muted-foreground"}>{label}</span>
     </div>
@@ -46,8 +46,8 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
     <Card className="w-full max-w-md mx-auto p-8">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">{title}</h1>
-          <p className="text-muted-foreground">{subtitle}</p>
+          <h1 className="text-3xl font-bold">{title}</h1>
+          <p className="text-base text-muted-foreground">{subtitle}</p>
         </div>
 
         {error && (
@@ -83,7 +83,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
               onChange={(e) => setPassword(e.target.value)}
             />
             <div className="space-y-2 mt-2 p-3 bg-muted rounded-md">
-              <p className="text-xs font-medium">Password requirements:</p>
+              <p className="text-sm font-medium">Password requirements:</p>
               <PasswordCheckItem valid={checks.length} label="At least 8 characters" />
               <PasswordCheckItem valid={checks.uppercase} label="Uppercase letter" />
               <PasswordCheckItem valid={checks.lowercase} label="Lowercase letter" />
@@ -118,7 +118,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
           </Button>
         </Form>
 
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-base text-muted-foreground text-center">
           {signInText}{" "}
           <Link href={loginUrl} className="text-primary hover:underline font-medium">
             Sign in

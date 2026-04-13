@@ -24,16 +24,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Image from "next/image";
-import type { Batch, Giftcard, SellerCardsViewProps } from "@/types";
+import type { SellerBatch, Giftcard, SellerCardsViewProps } from "@/types";
 
-export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
-  const [batches] = useState<Batch[]>(initialBatches);
+export function SellerCardsView({ batches }: SellerCardsViewProps) {
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCard, setSelectedCard] = useState<Giftcard | null>(null);
 
-  // Stats Calculation
   const totalBatches = batches.length;
   const totalCardsCount = batches.reduce((acc, b) => acc + b.giftcards.length, 0);
   const totalVolume = batches.reduce((acc, b) => acc + b.giftcards.reduce((sum, g) => sum + g.amount, 0), 0);
@@ -71,6 +69,13 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
     return matchesSearch;
   });
 
+  const reportLabels: Record<string, string> = {
+    INVALID: "Invalid",
+    ALREADY_USED: "Already Used",
+    DEACTIVATED: "Deactivated",
+    WRONG_AMOUNT: "Wrong Amount",
+  };
+
   const getCardStatusBadge = (card: Giftcard) => {
     if (card.isConfirmed) {
       if (card.status === "USED") {
@@ -80,9 +85,15 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
           </Badge>
         );
       }
+
+      const label = reportLabels[card.status] || card.status.replace("_", " ");
+      const isWrongAmount = card.status === "WRONG_AMOUNT";
+
       return (
-        <Badge className="bg-destructive/20 text-destructive hover:bg-destructive/20 border-destructive/30 gap-1.5">
-          <AlertTriangle className="w-3 h-3" /> Reported
+        <Badge
+          className={`${isWrongAmount ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/20 border-amber-500/30" : "bg-destructive/20 text-destructive hover:bg-destructive/20 border-destructive/30"} gap-1.5`}
+        >
+          <AlertTriangle className="w-3 h-3" /> {label}
         </Badge>
       );
     }
@@ -102,7 +113,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
     );
   };
 
-  const getBatchStatusInfo = (batch: Batch) => {
+  const getBatchStatusInfo = (batch: SellerBatch) => {
     const isPaid = batch.isPaid || batch.payments.some((p) => p.status === "COMPLETED");
     const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
     const total = batch.giftcards.length;
@@ -135,48 +146,46 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-6 bg-card/50 backdrop-blur-sm border-border space-y-2 group hover:border-primary/50 transition-all">
           <div className="flex justify-between items-center text-muted-foreground">
-            <span className="text-[10px] font-black uppercase tracking-widest">Batches History</span>
+            <span className="text-sm font-black uppercase tracking-widest">Batches History</span>
             <History className="w-4 h-4 text-primary" />
           </div>
-          <div className="text-3xl font-black italic tracking-tighter">{totalBatches}</div>
-          <p className="text-[10px] text-muted-foreground italic">{totalCardsCount} cards total</p>
+          <div className="text-4xl font-black italic tracking-tighter">{totalBatches}</div>
+          <p className="text-sm text-muted-foreground italic">{totalCardsCount} cards total</p>
         </Card>
 
         <Card className="p-6 bg-card/50 backdrop-blur-sm border-border space-y-2 group hover:border-blue-500/50 transition-all">
           <div className="flex justify-between items-center text-muted-foreground">
-            <span className="text-[10px] font-black uppercase tracking-widest">Pending Payout</span>
+            <span className="text-sm font-black uppercase tracking-widest">Pending Payout</span>
             <TrendingUp className="w-4 h-4 text-blue-500" />
           </div>
-          <div className="text-3xl font-black italic tracking-tighter text-blue-500">{awaitingPayoutCount}</div>
-          <p className="text-[10px] text-muted-foreground italic">Batches ready for payment</p>
+          <div className="text-4xl font-black italic tracking-tighter text-blue-500">{awaitingPayoutCount}</div>
+          <p className="text-sm text-muted-foreground italic">Batches ready for payment</p>
         </Card>
 
         <Card className="p-6 bg-card/50 backdrop-blur-sm border-border space-y-2 group hover:border-emerald-500/50 transition-all">
           <div className="flex justify-between items-center text-muted-foreground">
-            <span className="text-[10px] font-black uppercase tracking-widest">Total Earnings</span>
+            <span className="text-sm font-black uppercase tracking-widest">Total Earnings</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
-          <div className="text-3xl font-black italic tracking-tighter text-emerald-500">${totalPaid.toFixed(2)}</div>
-          <p className="text-[10px] text-muted-foreground italic">Sent to your wallet</p>
+          <div className="text-4xl font-black italic tracking-tighter text-emerald-500">${totalPaid.toFixed(2)}</div>
+          <p className="text-sm text-muted-foreground italic">Sent to your wallet</p>
         </Card>
 
         <Card className="p-6 bg-card/50 backdrop-blur-sm border-border space-y-2 group hover:border-amber-500/50 transition-all">
           <div className="flex justify-between items-center text-muted-foreground">
-            <span className="text-[10px] font-black uppercase tracking-widest">Gross Inventory</span>
+            <span className="text-sm font-black uppercase tracking-widest">Gross Inventory</span>
             <Package className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="text-3xl font-black italic tracking-tighter text-amber-500">${totalVolume.toFixed(2)}</div>
-          <p className="text-[10px] text-muted-foreground italic">Total nominal value loaded</p>
+          <div className="text-4xl font-black italic tracking-tighter text-amber-500">${totalVolume.toFixed(2)}</div>
+          <p className="text-sm text-muted-foreground italic">Total nominal value loaded</p>
         </Card>
       </div>
 
       {/* 2. Filters & Actions */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
         <div>
-          <h2 className="text-2xl font-black italic tracking-tight uppercase">Dashboard History</h2>
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
-            Monitor your batches status in real-time
-          </p>
+          <h2 className="text-3xl font-black italic tracking-tight uppercase">Dashboard History</h2>
+          <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Monitor your batches status in real-time</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
@@ -190,7 +199,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-44 h-10 bg-muted/20 border-border font-bold text-xs uppercase">
+            <SelectTrigger className="w-full sm:w-44 h-10 bg-muted/20 border-border font-bold text-sm uppercase">
               <Filter className="w-3 h-3 mr-2" />
               <SelectValue placeholder="STATUS" />
             </SelectTrigger>
@@ -242,10 +251,10 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">ID</span>
+                          <span className="text-sm font-black uppercase tracking-widest text-muted-foreground/50">ID</span>
                           <span className="text-sm font-mono font-bold">{batch.id.slice(-8).toUpperCase()}</span>
                         </div>
-                        <div className="text-[10px] text-muted-foreground font-bold font-mono">
+                        <div className="text-sm text-muted-foreground font-bold font-mono">
                           {new Date(batch.createdAt).toLocaleDateString()} AT{" "}
                           {new Date(batch.createdAt)
                             .toLocaleTimeString([], {
@@ -259,18 +268,18 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
 
                     <div className="flex flex-wrap items-center gap-4 md:gap-8">
                       <div className="text-right">
-                        <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Confirmation</div>
-                        <div className="text-sm font-black italic tracking-tighter">
+                        <div className="text-sm text-muted-foreground uppercase font-black tracking-widest mb-0.5">Confirmation</div>
+                        <div className="text-base font-black italic tracking-tighter">
                           {confirmedCount}/{totalItems} Cnfrm.
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Value</div>
-                        <div className="text-sm font-black text-primary italic tracking-tighter">${batchTotal.toFixed(2)}</div>
+                        <div className="text-sm text-muted-foreground uppercase font-black tracking-widest mb-0.5">Value</div>
+                        <div className="text-base font-black text-primary italic tracking-tighter">${batchTotal.toFixed(2)}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Est. Payout</div>
-                        <div className="text-sm font-black text-emerald-500 italic tracking-tighter">${estimatedPayout.toFixed(2)}</div>
+                        <div className="text-sm text-muted-foreground uppercase font-black tracking-widest mb-0.5">Est. Payout</div>
+                        <div className="text-base font-black text-emerald-500 italic tracking-tighter">${estimatedPayout.toFixed(2)}</div>
                       </div>
                       <div className="flex items-center gap-3">
                         {hasReport && (
@@ -279,19 +288,17 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                               <TooltipTrigger asChild>
                                 <div className="p-1 px-2 bg-destructive/10 text-destructive rounded flex items-center gap-1.5 animate-pulse">
                                   <AlertTriangle className="w-3 h-3" />
-                                  <span className="text-[10px] font-black">ISSUE</span>
+                                  <span className="text-sm font-black">ISSUE</span>
                                 </div>
                               </TooltipTrigger>
-                              <TooltipContent className="bg-destructive text-destructive-foreground font-bold text-xs p-2">
+                              <TooltipContent className="bg-destructive text-destructive-foreground font-bold text-sm p-2">
                                 <p>Some cards in this batch have been reported as invalid or used.</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                         )}
 
-                        <Badge
-                          className={`${status.color} px-3 py-1 font-black italic text-[10px] tracking-tight flex items-center gap-1.5`}
-                        >
+                        <Badge className={`${status.color} px-3 py-1 font-black italic text-sm tracking-tight flex items-center gap-1.5`}>
                           {status.icon} {status.label}
                         </Badge>
 
@@ -315,12 +322,12 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                         <div className="p-4 space-y-2">
                           <div className="flex items-center gap-2 mb-4 px-2">
                             <Info className="w-3.5 h-3.5 text-primary" />
-                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                            <p className="text-sm text-muted-foreground uppercase font-bold tracking-widest">
                               Review card status and wait for buyers to confirm usage.
                             </p>
                           </div>
 
-                          <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">
+                          <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-sm font-black uppercase tracking-widest text-muted-foreground/60">
                             <div className="col-span-1">Pos.</div>
                             <div className="col-span-3">Brand & Region</div>
                             <div className="col-span-3">Code Preview</div>
@@ -338,7 +345,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                                 transition={{ delay: idx * 0.03 }}
                                 className="grid grid-cols-1 md:grid-cols-12 gap-4 px-4 py-3 rounded-2xl bg-card border border-border/40 hover:border-primary/20 items-center group/card transition-all"
                               >
-                                <div className="col-span-1 hidden md:block text-xs font-mono font-bold text-muted-foreground/40 italic">
+                                <div className="col-span-1 hidden md:block text-sm font-mono font-bold text-muted-foreground/40 italic">
                                   #{idx + 1}
                                 </div>
 
@@ -357,8 +364,8 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                                     )}
                                   </div>
                                   <div>
-                                    <div className="text-xs font-black italic uppercase tracking-tight">{card.brand.name}</div>
-                                    <div className="text-[9px] text-muted-foreground font-bold tracking-wide">
+                                    <div className="text-sm font-black italic uppercase tracking-tight">{card.brand.name}</div>
+                                    <div className="text-sm text-muted-foreground font-bold tracking-wide">
                                       {card.country?.name || "GLOBAL"}
                                     </div>
                                   </div>
@@ -368,7 +375,20 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                                   <CodeDisplay code={card.claimCode} />
                                 </div>
 
-                                <div className="col-span-2 text-sm font-black text-primary italic">${card.amount.toFixed(2)}</div>
+                                <div className="col-span-2 text-base font-black italic">
+                                  {card.isConfirmed && card.status !== "USED" ? (
+                                    card.status === "WRONG_AMOUNT" && card.reportedAmount != null ? (
+                                      <div className="flex flex-col">
+                                        <span className="text-xs text-destructive/50 line-through text-sm">${card.amount.toFixed(2)}</span>
+                                        <span className="text-amber-500">${card.reportedAmount.toFixed(2)}</span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-destructive line-through">${card.amount.toFixed(2)}</span>
+                                    )
+                                  ) : (
+                                    <span className="text-primary">${card.amount.toFixed(2)}</span>
+                                  )}
+                                </div>
 
                                 <div className="col-span-2">{getCardStatusBadge(card)}</div>
 
@@ -393,14 +413,14 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                           {batch.payments.length > 0 && (
                             <div className="mt-8 p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10 relative overflow-hidden">
                               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
-                              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-4 inline-flex items-center gap-2">
+                              <h4 className="text-sm font-black uppercase tracking-[0.2em] text-emerald-500 mb-4 inline-flex items-center gap-2">
                                 <CreditCard className="w-3 h-3" /> Payout Information
                               </h4>
                               <div className="space-y-2.5">
                                 {batch.payments.map((p) => (
                                   <div
                                     key={p.id}
-                                    className="flex items-center justify-between text-xs px-2 py-2 bg-background/50 rounded-xl border border-emerald-500/10"
+                                    className="flex items-center justify-between text-sm px-2 py-2 bg-background/50 rounded-xl border border-emerald-500/10"
                                   >
                                     <div className="flex items-center gap-3">
                                       <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -410,12 +430,12 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                                         <span className="font-mono font-black text-foreground uppercase tracking-tighter">
                                           TRX ID: {p.id.slice(-8).toUpperCase()}
                                         </span>
-                                        <span className="text-[9px] text-muted-foreground font-bold">
+                                        <span className="text-sm text-muted-foreground font-bold">
                                           {new Date(p.createdAt).toLocaleDateString()}
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="text-base font-black text-emerald-500 italic">+${p.amount.toFixed(2)}</div>
+                                    <div className="text-xl font-black text-emerald-500 italic">+${p.amount.toFixed(2)}</div>
                                   </div>
                                 ))}
                               </div>
@@ -434,8 +454,8 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                 <History className="w-12 h-12 text-muted-foreground/20" />
               </div>
               <div className="space-y-1.5 max-w-sm">
-                <h3 className="text-2xl font-black italic tracking-tight uppercase">No records found</h3>
-                <p className="text-muted-foreground text-[11px] font-bold uppercase tracking-widest leading-relaxed px-10">
+                <h3 className="text-3xl font-black italic tracking-tight uppercase">No records found</h3>
+                <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest leading-relaxed px-10">
                   Try adjusting your filters or search keywords.
                 </p>
               </div>
@@ -448,7 +468,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
       <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
         <DialogContent className="bg-card border-border sm:max-w-106.25 rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black italic tracking-tighter uppercase">Card Details</DialogTitle>
+            <DialogTitle className="text-3xl font-black italic tracking-tighter uppercase">Card Details</DialogTitle>
           </DialogHeader>
           {selectedCard && (
             <div className="space-y-8 pt-4">
@@ -467,41 +487,56 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-black text-xl italic uppercase tracking-tighter leading-none mb-1">{selectedCard.brand.name}</h3>
-                  <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">
+                  <h3 className="font-black text-2xl italic uppercase tracking-tighter leading-none mb-1">{selectedCard.brand.name}</h3>
+                  <p className="text-sm text-muted-foreground font-bold tracking-widest uppercase">
                     {selectedCard.country?.name || "Global"}
                   </p>
                 </div>
                 <div className="text-right">
-                  {selectedCard.status === "WRONG_AMOUNT" && selectedCard.reportedAmount != null ? (
-                    <div className="space-y-0.5">
-                      <div className="text-2xl font-black text-primary italic leading-none line-through opacity-50">
-                        ${selectedCard.amount.toFixed(2)}
+                  {selectedCard.isConfirmed && selectedCard.status !== "USED" ? (
+                    selectedCard.status === "WRONG_AMOUNT" && selectedCard.reportedAmount != null ? (
+                      <div className="space-y-1">
+                        <div className="flex flex-col items-end">
+                          <span className="text-sm font-black uppercase tracking-widest text-muted-foreground/60">Original</span>
+                          <span className="text-xl font-black text-destructive/50 italic leading-none line-through">
+                            ${selectedCard.amount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-sm font-black uppercase tracking-widest text-amber-500/80">Effective</span>
+                          <span className="text-3xl font-black text-amber-500 italic leading-none">
+                            ${selectedCard.reportedAmount.toFixed(2)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-2xl font-black text-destructive italic leading-none">
-                        ${selectedCard.reportedAmount.toFixed(2)}
+                    ) : (
+                      <div className="space-y-0.5">
+                        <div className="text-3xl font-black text-destructive italic leading-none line-through">
+                          ${selectedCard.amount.toFixed(2)}
+                        </div>
+                        <div className="text-sm font-black uppercase tracking-widest text-destructive/60">Voided</div>
                       </div>
-                    </div>
+                    )
                   ) : (
                     <div className="text-2xl font-black text-primary italic leading-none mb-1">${selectedCard.amount.toFixed(2)}</div>
                   )}
-                  <div className="scale-90 origin-right">{getCardStatusBadge(selectedCard)}</div>
+                  <div className="scale-90 origin-right mt-1">{getCardStatusBadge(selectedCard)}</div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
+                  <span className="text-base font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
                     <Info className="w-3 h-3" /> Security Code
                   </span>
                   <div className="p-4 bg-muted/20 border border-border/60 rounded-2xl flex items-center justify-between group">
-                    <code className="text-base font-mono font-black tracking-widest text-foreground">{selectedCard.claimCode}</code>
+                    <code className="text-lg font-mono font-black tracking-widest text-foreground">{selectedCard.claimCode}</code>
                   </div>
                 </div>
 
                 {selectedCard.pinCode && (
                   <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Pin Access</span>
+                    <span className="text-base font-black uppercase text-muted-foreground tracking-widest">Pin Access</span>
                     <div className="p-4 bg-muted/20 border border-border/60 rounded-2xl font-mono text-base font-black">
                       {selectedCard.pinCode}
                     </div>
@@ -514,8 +549,8 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
                   <div className="absolute top-0 right-0 w-24 h-24 bg-destructive/5 rounded-full -mr-12 -mt-12 blur-2xl" />
                   <AlertTriangle className="w-6 h-6 text-destructive shrink-0 mt-1" />
                   <div className="space-y-1.5">
-                    <p className="text-xs font-black text-destructive uppercase tracking-widest">Action Required</p>
-                    <p className="text-[11px] text-destructive/80 font-bold leading-relaxed uppercase">
+                    <p className="text-sm font-black text-destructive uppercase tracking-widest">Action Required</p>
+                    <p className="text-base text-destructive/80 font-bold leading-relaxed uppercase">
                       THIS CARD WAS REPORTED AS <span className="underline">{selectedCard.status.replace("_", " ")}</span>. THE BUYER
                       CLAIMED AN ISSUE DURING REDEMPTION.
                     </p>
@@ -525,7 +560,7 @@ export function SellerCardsView({ initialBatches }: SellerCardsViewProps) {
 
               <Button
                 onClick={() => setSelectedCard(null)}
-                className="w-full h-14 font-black bg-primary text-primary-foreground text-base italic uppercase shadow-xl shadow-primary/20 rounded-2xl transition-all active:scale-95"
+                className="w-full h-14 font-black bg-primary text-primary-foreground text-xl italic uppercase shadow-xl shadow-primary/20 rounded-2xl transition-all active:scale-95"
               >
                 Close View
               </Button>
@@ -553,12 +588,12 @@ function CodeDisplay({ code }: { code: string }) {
           <TooltipTrigger asChild>
             <code
               onClick={copy}
-              className="text-[11px] font-mono bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60 cursor-pointer hover:bg-muted transition-colors font-bold tracking-tight text-foreground truncate max-w-35"
+              className="text-base font-mono bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60 cursor-pointer hover:bg-muted transition-colors font-bold tracking-tight text-foreground truncate max-w-35"
             >
               {code.slice(0, 4)}••••{code.slice(-4)}
             </code>
           </TooltipTrigger>
-          <TooltipContent className="bg-background border-border text-[10px] font-bold">
+          <TooltipContent className="bg-background border-border text-sm font-bold">
             <p>Click to copy: {code}</p>
           </TooltipContent>
         </Tooltip>
@@ -568,7 +603,7 @@ function CodeDisplay({ code }: { code: string }) {
           e.stopPropagation();
           copy();
         }}
-        className="text-[9px] text-primary/70 hover:text-primary transition-colors font-black uppercase tracking-widest"
+        className="text-sm text-primary/70 hover:text-primary transition-colors font-black uppercase tracking-widest"
       >
         {copied ? "DONE!" : "COPY"}
       </button>

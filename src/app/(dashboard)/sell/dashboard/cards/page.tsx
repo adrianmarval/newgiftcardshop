@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/get-session";
+import { getSession } from "@/lib/authorization";
 import { getSellerBatches } from "@/actions/seller-actions";
 import { SellerCardsView } from "@/components/sell/seller-cards-view";
 import { Metadata } from "next";
@@ -10,33 +10,18 @@ export const metadata: Metadata = {
 };
 
 export default async function SellerCardsPage() {
-  const session = await getSession();
-
-  if (!session?.user) {
-    redirect("/sell/auth/login");
-  }
-
-  // Double check roles if needed, though layout usually handles this.
-  // But for this specific dashboard, we want to be sure.
-  const user = session.user as typeof session.user & { role?: string[] };
-  const userRoles = user.role || [];
-  if (!userRoles.includes("SELLER")) {
-    redirect("/sell/dashboard");
-  }
-
   const batches = await getSellerBatches();
 
-  // Serializing for the client (though our action already did some)
-  const serializedBatches = JSON.parse(JSON.stringify(batches));
+  if (!batches.data) return <p>No batches found</p>;
 
   return (
     <div className="container mx-auto py-6 space-y-8">
       <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-black italic tracking-tighter">MY CARDS</h1>
-        <p className="text-muted-foreground text-sm">Track your inventory, sales status, and payment reports.</p>
+        <h1 className="text-5xl font-black italic tracking-tighter">MY CARDS</h1>
+        <p className="text-muted-foreground text-base">Track your inventory, sales status, and payment reports.</p>
       </div>
 
-      <SellerCardsView initialBatches={serializedBatches} />
+      <SellerCardsView batches={batches.data} />
     </div>
   );
 }

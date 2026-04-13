@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { getUserBuyRate, confirmOrderUsage } from "@/actions/order-actions";
+import { toast } from "sonner";
 
 export function ConfirmUsageStep() {
   const { foundGiftcards, setStep, orderId, setAdjustedTotal } = useBuyFlow();
@@ -15,7 +16,14 @@ export function ConfirmUsageStep() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    getUserBuyRate().then(setBuyRate);
+    getUserBuyRate().then((response) => {
+      const rate = response.data;
+      if (!rate) {
+        toast.error("Error al obtener la tasa de compra", { description: response.serverError || response.validationErrors?.formErrors });
+        return;
+      }
+      setBuyRate(rate);
+    });
   }, []);
 
   const rawTotal = foundGiftcards.reduce((sum, card) => {
@@ -28,25 +36,21 @@ export function ConfirmUsageStep() {
 
   const handleConfirmUsage = async () => {
     if (!orderId) return;
-
     setIsUpdating(true);
     setErrorMessage(null);
-
-    try {
-      const result = await confirmOrderUsage(orderId);
-
-      if (result.success && result.adjustedTotal != null) {
-        setAdjustedTotal(result.adjustedTotal);
-        setStep(5);
-      } else {
-        setErrorMessage(result.error ?? "Confirmation failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error confirming order usage:", error);
-      setErrorMessage("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsUpdating(false);
+    const result = await confirmOrderUsage({ orderId });
+    if (!result.data) {
+      toast.error("Error al confirmar uso de tarjetas", {
+        description: result.serverError || result.validationErrors?._errors,
+      });
+      setErrorMessage(result.serverError || result.validationErrors?._errors?.join("") || "Error al confirmar uso de tarjetas");
+      return;
     }
+    if (result.data?.adjustedTotal) {
+      setAdjustedTotal(result.data.adjustedTotal);
+    }
+    setStep(5);
+    setIsUpdating(false);
   };
 
   const reportedCards = foundGiftcards.filter((c) => c.status !== "UNUSED");
@@ -64,8 +68,8 @@ export function ConfirmUsageStep() {
             <Check className="w-10 h-10 text-primary" />
           </motion.div>
 
-          <h2 className="text-2xl md:text-3xl font-black tracking-tight italic">FINAL CONFIRMATION</h2>
-          <p className="text-muted-foreground text-sm md:text-base">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight italic">FINAL CONFIRMATION</h2>
+          <p className="text-muted-foreground text-base md:text-lg">
             You are about to confirm that you have used all cards correctly. Once confirmed, you will proceed to payment and{" "}
             <strong>reporting will be disabled</strong>.
           </p>
@@ -73,24 +77,24 @@ export function ConfirmUsageStep() {
 
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-muted/50 border border-border rounded-2xl">
-            <div className="text-[10px] text-muted-foreground uppercase font-black mb-1">Total Cards</div>
-            <div className="text-2xl font-black">{foundGiftcards.length}</div>
+            <div className="text-xs text-muted-foreground uppercase font-black mb-1">Total Cards</div>
+            <div className="text-3xl font-black">{foundGiftcards.length}</div>
           </div>
           <div className="p-4 bg-muted/50 border border-border rounded-2xl">
-            <div className="text-[10px] text-muted-foreground uppercase font-black mb-1">Reported Issues</div>
-            <div className={`text-2xl font-black ${reportedCards.length > 0 ? "text-destructive" : ""}`}>{reportedCards.length}</div>
+            <div className="text-xs text-muted-foreground uppercase font-black mb-1">Reported Issues</div>
+            <div className={`text-3xl font-black ${reportedCards.length > 0 ? "text-destructive" : ""}`}>{reportedCards.length}</div>
           </div>
           <div className="p-4 bg-primary/10 border border-primary/20 rounded-2xl">
-            <div className="text-[10px] text-primary uppercase font-black mb-1">Final Amount Due</div>
-            <div className="text-2xl font-black text-primary">${totalAmount.toFixed(2)}</div>
+            <div className="text-xs text-primary uppercase font-black mb-1">Final Amount Due</div>
+            <div className="text-3xl font-black text-primary">${totalAmount.toFixed(2)}</div>
           </div>
         </div>
 
         <div className="max-w-lg w-full p-4 bg-destructive/5 border border-destructive/20 rounded-xl flex gap-3 text-left">
           <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
           <div className="space-y-1">
-            <p className="text-xs font-bold text-destructive uppercase">Important Disclaimer</p>
-            <p className="text-[11px] text-destructive/80 leading-relaxed italic">
+            <p className="text-sm font-bold text-destructive uppercase">Important Disclaimer</p>
+            <p className="text-sm text-destructive/80 leading-relaxed italic">
               Confirmation is irreversible. Ensure you have redemption screenshots or video evidence for all cards, especially those
               reported as having issues.
             </p>

@@ -11,95 +11,110 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { getUserBuyRate } from "@/actions/order-actions";
-import { reportGiftcardIssue, undoGiftcardIssue } from "@/actions/giftcard-actions";
-import type { BuyGiftcardStatus } from "@/types";
+import { reportGiftcardIssue, undoGiftcardIssue } from "@/actions/buyer-actions";
+import { GiftcardIssueType } from "@/generated/prisma/enums";
+import { toast } from "sonner";
+import { BuyGiftcardStatus } from "@/types";
 
 export function RedeemStep() {
   const { foundGiftcards, reportIssue, setStep, orderId } = useBuyFlow();
 
-  const [activeReportId, setActiveReportId] = useState<string | null>(null);
-  const [correctedAmount, setCorrectedAmount] = useState<string>("");
-  const [buyRate, setBuyRate] = useState(0.85);
-  // Track which card IDs are currently loading a server call
-  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+  const [redeemState, setRedeemState] = useState<{
+    activeReportId: string | null;
+    correctedAmount: string;
+    buyRate: number;
+    loadingIds: Set<string>;
+  }>({
+    activeReportId: null,
+    correctedAmount: "",
+    buyRate: 0.85,
+    loadingIds: new Set<string>(),
+  });
 
   useEffect(() => {
-    getUserBuyRate().then(setBuyRate);
+    getUserBuyRate().then((rate) => setRedeemState((prev) => ({ ...prev, buyRate: rate })));
   }, []);
 
   const setLoading = (id: string, loading: boolean) => {
-    setLoadingIds((prev) => {
-      const next = new Set(prev);
+    setRedeemState((prev) => {
+      const next = new Set(prev.loadingIds);
       if (loading) {
         next.add(id);
       } else {
         next.delete(id);
       }
-      return next;
+      return { ...prev, loadingIds: next };
     });
   };
 
-  const handleReport = async (id: string, status: BuyGiftcardStatus) => {
+  const handleReport = async (id: string, status: GiftcardIssueType) => {
     if (status === "WRONG_AMOUNT") {
-      setActiveReportId(id);
+      setRedeemState((prev) => ({ ...prev, activeReportId: id }));
       return;
     }
-
     // Optimistic local update
     reportIssue(id, status);
-
     if (!orderId) return;
     setLoading(id, true);
-    try {
-      await reportGiftcardIssue({ giftcardId: id, orderId, issueType: status });
-    } catch (error) {
-      console.error("Error persisting giftcard issue:", error);
-      // Roll back local state on failure
+    const result = await reportGiftcardIssue({ giftcardId: id, orderId, issueType: status });
+    if (!result.data) {
+      toast.error("Error reporting issue", {
+        description: result.serverError || result.validationErrors?._errors,
+      });
       reportIssue(id, "UNUSED");
-    } finally {
-      setLoading(id, false);
     }
+    toast.success("Issue reported successfully");
+    setLoading(id, false);
   };
 
   const submitCorrectedAmount = async (id: string) => {
-    const val = parseFloat(correctedAmount);
+    const val = parseFloat(redeemState.correctedAmount);
     if (isNaN(val)) {
-      setActiveReportId(null);
-      setCorrectedAmount("");
+      setRedeemState((prev) => ({ ...prev, activeReportId: null, correctedAmount: "" }));
       return;
     }
 
     // Optimistic local update
     reportIssue(id, "WRONG_AMOUNT", val);
-    setActiveReportId(null);
-    setCorrectedAmount("");
+    setRedeemState((prev) => ({ ...prev, activeReportId: null, correctedAmount: "" }));
 
     if (!orderId) return;
     setLoading(id, true);
-    try {
-      await reportGiftcardIssue({ giftcardId: id, orderId, issueType: "WRONG_AMOUNT", reportedAmount: val });
-    } catch (error) {
-      console.error("Error persisting wrong amount report:", error);
-      // Roll back on failure
+    const result = await reportGiftcardIssue({ giftcardId: id, orderId, issueType: "WRONG_AMOUNT", reportedAmount: val });
+    if (!result.data) {
+      toast.error("Error reporting issue", {
+        description: result.serverError || result.validationErrors?._errors,
+      });
       reportIssue(id, "UNUSED");
-    } finally {
-      setLoading(id, false);
     }
+    toast.success("Issue reported successfully");
+    setLoading(id, false);
   };
 
-  const handleUndoReport = async (id: string) => {
+  const handleUndoReport = async (giftcardId: string, status: BuyGiftcardStatus) => {
     // Optimistic local update
-    reportIssue(id, "UNUSED");
+    reportIssue(giftcardId, "UNUSED");
 
     if (!orderId) return;
-    setLoading(id, true);
-    try {
-      await undoGiftcardIssue(id, orderId);
-    } catch (error) {
-      console.error("Error undoing giftcard issue:", error);
-    } finally {
-      setLoading(id, false);
+    setLoading(giftcardId, true);
+    const result = await undoGiftcardIssue({ giftcardId, orderId });
+    if (!result.data) {
+      toast.error("Error undoing giftcard issue", {
+        description: result.serverError || result.validationErrors?._errors,
+      });
+      // Retornar al status en el que estaba
+      reportIssue(giftcardId, status);
     }
+    toast.success("Issue undone successfully");
+    setLoading(giftcardId, false);
+
+    // try {
+    //   await undoGiftcardIssue({ giftcardId, orderId });
+    // } catch (error) {
+    //   console.error("Error undoing giftcard issue:", error);
+    // } finally {
+    //   setLoading(giftcardId, false);
+    // }
   };
 
   // Calculate totals based on status and apply buyRate
@@ -109,7 +124,7 @@ export function RedeemStep() {
     return sum; // INVALID, ALREADY_USED, DEACTIVATED = 0
   }, 0);
 
-  const totalAmount = rawTotal * buyRate;
+  const totalAmount = rawTotal * redeemState.buyRate;
 
   const reportedCount = foundGiftcards.filter((c) => c.status !== "UNUSED").length;
 
@@ -118,24 +133,24 @@ export function RedeemStep() {
       {/* Left Column: Order Summary & Actions */}
       <Card className="md:col-span-4 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 space-y-4 md:space-y-6 flex flex-col h-auto md:h-full sticky top-0 z-20">
         <div>
-          <h2 className="text-lg md:text-xl font-bold mb-0.5 md:mb-1">Redeem & Verify</h2>
-          <p className="text-muted-foreground text-[10px] md:text-sm">Copy your codes and report any issues.</p>
+          <h2 className="text-xl md:text-2xl font-bold mb-0.5 md:mb-1">Redeem & Verify</h2>
+          <p className="text-muted-foreground text-xs md:text-sm">Copy your codes and report any issues.</p>
         </div>
 
         <div className="space-y-4">
           <div className="bg-muted/50 border border-border rounded-xl p-3 md:p-4 space-y-3">
-            <div className="flex justify-between items-center text-xs md:text-sm">
+            <div className="flex justify-between items-center text-sm md:text-base">
               <span className="text-muted-foreground">Active Cards</span>
               <span className="font-bold">
                 {foundGiftcards.length - reportedCount} / {foundGiftcards.length}
               </span>
             </div>
 
-            <div className="flex justify-between items-center text-xs md:text-sm pt-2 border-t border-border">
+            <div className="flex justify-between items-center text-sm md:text-base pt-2 border-t border-border">
               <span className="text-muted-foreground">Adjusted Total</span>
               <div className="text-right">
-                <span className="text-xl font-black text-primary">${totalAmount.toFixed(2)}</span>
-                <p className="text-[10px] text-muted-foreground leading-none mt-1">Final amount to pay</p>
+                <span className="text-2xl font-black text-primary">${totalAmount.toFixed(2)}</span>
+                <p className="text-xs text-muted-foreground leading-none mt-1">Final amount to pay</p>
               </div>
             </div>
           </div>
@@ -143,7 +158,7 @@ export function RedeemStep() {
           {reportedCount > 0 && (
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex gap-3 items-start">
               <AlertTriangle className="w-4 h-4 text-destructive mt-0.5" />
-              <p className="text-[10px] md:text-xs text-destructive/80 leading-relaxed font-medium">
+              <p className="text-xs md:text-sm text-destructive/80 leading-relaxed font-medium">
                 You have reported issues with {reportedCount} card
                 {reportedCount !== 1 ? "s" : ""}. The total has been automatically adjusted.
               </p>
@@ -152,7 +167,7 @@ export function RedeemStep() {
 
           <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex gap-3 items-start">
             <Info className="w-4 h-4 text-primary mt-0.5" />
-            <p className="text-[10px] md:text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
               Verify each card manually. Once you confirm usage, reporting will be disabled and an order will be generated.
             </p>
           </div>
@@ -165,16 +180,16 @@ export function RedeemStep() {
           >
             I have verified all cards <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
-          <p className="text-[9px] text-muted-foreground text-center italic">Make sure all reports are correct before proceeding.</p>
+          <p className="text-xs text-muted-foreground text-center italic">Make sure all reports are correct before proceeding.</p>
         </div>
       </Card>
 
       {/* Right Column: Cards Reveal & Reporting */}
       <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-4">
-          <Label className="text-muted-foreground text-[10px] md:text-xs font-semibold uppercase tracking-wider">Revealed Codes</Label>
+          <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider">Revealed Codes</Label>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground/50">{foundGiftcards.length} items</span>
+            <span className="text-xs text-muted-foreground/50">{foundGiftcards.length} items</span>
           </div>
         </div>
 
@@ -204,12 +219,12 @@ export function RedeemStep() {
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`text-lg font-black ${card.status === "UNUSED" ? "text-foreground" : "text-muted-foreground line-through"}`}
+                          className={`text-xl font-black ${card.status === "UNUSED" ? "text-foreground" : "text-muted-foreground line-through"}`}
                         >
                           ${card.amount}
                         </span>
                         {card.status !== "UNUSED" && (
-                          <Badge variant="destructive" className="text-[8px] h-4 uppercase font-bold py-0">
+                          <Badge variant="destructive" className="text-xs h-4 uppercase font-bold py-0">
                             {card.status.replace("_", " ")}
                             {card.status === "WRONG_AMOUNT" && `: $${card.reportedAmount}`}
                           </Badge>
@@ -229,14 +244,14 @@ export function RedeemStep() {
                             </Button>
                           </div>
                         ) : (
-                          <span className="font-mono text-xs text-muted-foreground/50">CODE UNAVAILABLE</span>
+                          <span className="font-mono text-sm text-muted-foreground/50">CODE UNAVAILABLE</span>
                         )}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 self-end md:self-center">
-                    {loadingIds.has(card.id) ? (
+                    {redeemState.loadingIds.has(card.id) ? (
                       <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                     ) : card.status === "UNUSED" ? (
                       <DropdownMenu>
@@ -244,7 +259,7 @@ export function RedeemStep() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-[10px] h-8 border-destructive/30 text-destructive/80 hover:bg-destructive/10"
+                            className="text-xs h-8 border-destructive/30 text-destructive/80 hover:bg-destructive/10"
                           >
                             Report issue
                           </Button>
@@ -275,8 +290,8 @@ export function RedeemStep() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-[10px] h-8 text-muted-foreground hover:bg-muted"
-                        onClick={() => handleUndoReport(card.id)}
+                        className="text-xs h-8 text-muted-foreground hover:bg-muted"
+                        onClick={() => handleUndoReport(card.id, card.status)}
                       >
                         Undo report
                       </Button>
@@ -285,7 +300,7 @@ export function RedeemStep() {
                 </div>
 
                 {/* Inline form for WRONG_AMOUNT */}
-                {activeReportId === card.id && (
+                {redeemState.activeReportId === card.id && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
@@ -296,19 +311,24 @@ export function RedeemStep() {
                       <Input
                         type="number"
                         placeholder="Correct amt"
-                        value={correctedAmount}
-                        onChange={(e) => setCorrectedAmount(e.target.value)}
-                        className="pl-5 h-8 text-xs bg-muted/50 border-border"
+                        value={redeemState.correctedAmount}
+                        onChange={(e) => setRedeemState((prev) => ({ ...prev, correctedAmount: e.target.value }))}
+                        className="pl-5 h-8 text-sm bg-muted/50 border-border"
                       />
                     </div>
                     <Button
                       size="sm"
-                      className="h-8 bg-primary text-primary-foreground text-xs"
+                      className="h-8 bg-primary text-primary-foreground text-sm"
                       onClick={() => submitCorrectedAmount(card.id)}
                     >
                       Update
                     </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setActiveReportId(null)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={() => setRedeemState((prev) => ({ ...prev, activeReportId: null, correctedAmount: "" }))}
+                    >
                       <X className="w-4 h-4" />
                     </Button>
                   </motion.div>

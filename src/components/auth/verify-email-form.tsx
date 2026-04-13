@@ -28,8 +28,8 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
         <div className="space-y-6">
           <div className="space-y-2 text-center">
             <CheckCircle className="h-12 w-12 text-primary mx-auto" />
-            <h1 className="text-2xl font-bold">Verify Your Email</h1>
-            <p className="text-muted-foreground text-sm">Click below to complete your email verification</p>
+            <h1 className="text-3xl font-bold">Verify Your Email</h1>
+            <p className="text-base text-muted-foreground">Click below to complete your email verification</p>
           </div>
 
           {error && (
@@ -65,8 +65,8 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
       <div className="space-y-6">
         <div className="space-y-2 text-center">
           <Mail className="h-12 w-12 text-primary mx-auto" />
-          <h1 className="text-2xl font-bold">Check Your Email</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="text-3xl font-bold">Check Your Email</h1>
+          <p className="text-base text-muted-foreground">
             We&apos;ve sent a verification link to<br />
             {email && <span className="font-semibold text-primary">{email}</span>}
           </p>

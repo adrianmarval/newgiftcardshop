@@ -32,8 +32,8 @@ export function LoginForm({
     <Card className="w-full max-w-md mx-auto p-8">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">{title}</h1>
-          <p className="text-muted-foreground">{subtitle}</p>
+          <h1 className="text-3xl font-bold">{title}</h1>
+          <p className="text-base text-muted-foreground">{subtitle}</p>
         </div>
 
         {error && (
@@ -61,7 +61,7 @@ export function LoginForm({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <Link href={forgotPasswordUrl} className="text-xs text-primary hover:underline font-medium">
+              <Link href={forgotPasswordUrl} className="text-sm text-primary hover:underline font-medium">
                 Forgot password?
               </Link>
             </div>
@@ -88,7 +88,7 @@ export function LoginForm({
         </Form>
 
         {registerUrl && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             {registerPrompt}{" "}
             <Link href={registerUrl} className="text-primary hover:underline font-medium">
               {registerLinkText}

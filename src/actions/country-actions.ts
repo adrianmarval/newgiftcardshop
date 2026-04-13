@@ -1,28 +1,20 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { authActionClient } from "@/lib/safe-action";
+import z from "zod";
 
-export async function getActiveCountries() {
-  try {
-    const countries = await prisma.country.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-    });
-    return countries;
-  } catch (error) {
-    console.error("Error fetching active countries:", error);
-    return [];
-  }
-}
+export const getActiveCountries = authActionClient.action(async () => {
+  const countries = await prisma.country.findMany({
+    where: { isActive: true },
+    orderBy: { name: "asc" },
+  });
+  return countries;
+});
 
-export async function getCountryById(id: string) {
-  try {
-    const country = await prisma.country.findUnique({
-      where: { id },
-    });
-    return country;
-  } catch (error) {
-    console.error("Error fetching country by id:", error);
-    return null;
-  }
-}
+export const getCountryById = authActionClient.inputSchema(z.object({ id: z.string() })).action(async ({ parsedInput: { id } }) => {
+  const country = await prisma.country.findUnique({
+    where: { id },
+  });
+  return country;
+});

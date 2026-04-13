@@ -67,19 +67,7 @@ export interface Payment {
  * Named "Batch" in the UI layer to distinguish it from the Prisma
  * model "GiftcardBatch".
  */
-export interface Batch {
-  id: string;
-  createdAt: string;
-  updatedAt?: string;
-  sellRate: number;
-  isPaid: boolean;
-  /** Server-computed: sum of effective amounts from confirmed cards only. */
-  effectiveTotal: number;
-  /** Server-computed: effectiveTotal * sellRate. */
-  estimatedPayout: number;
-  giftcards: Giftcard[];
-  payments: Payment[];
-}
+export type { SellerBatch } from "@/actions/seller-actions";
 
 // ── Bulk Import ───────────────────────────────────────────────────────────────
 

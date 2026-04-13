@@ -1,65 +1,50 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { Prisma } from "@/generated/prisma/client";
+import { ActionError, buyerActionClient } from "@/lib/safe-action";
+import z from "zod";
 
-export async function getUserBuyRate() {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session || !session.user) return 100.0;
-
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { buyRate: true },
-    });
-
-    return user?.buyRate ? user.buyRate.toNumber() : 85.0;
-  } catch (error) {
-    console.error("Error fetching user buy rate:", error);
-    return 85.0;
-  }
-}
+export const getUserBuyRate = buyerActionClient.action(async ({ ctx }) => {
+  const dbUser = await prisma.user.findUnique({
+    where: { id: ctx.auth.user.id },
+    select: { buyRate: true },
+  });
+  return dbUser?.buyRate ? dbUser.buyRate.toNumber() : 85.0;
+});
 
 /**
  * Creates a buy order and reserves the giftcards (marks inStock: false)
  * inside a transaction so the reservation is atomic with order creation.
  */
-export async function createOrder(giftcardIds: string[]) {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session || !session.user) {
-      throw new Error("Unauthorized");
-    }
-
-    const userId = session.user.id;
-
-    // Fetch user and giftcards to calculate total with buyRate
-    const [user, giftcards] = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId } }),
+export const createOrder = buyerActionClient
+  .inputSchema(z.object({ giftcardIds: z.array(z.string()) }))
+  .useValidated(async ({ parsedInput: { giftcardIds }, ctx, next }) => {
+    const [dbUser, giftcards] = await Promise.all([
+      prisma.user.findUnique({ where: { id: ctx.auth.user.id } }),
       prisma.giftcard.findMany({ where: { id: { in: giftcardIds } } }),
     ]);
 
-    if (!user) throw new Error("User not found");
+    if (!dbUser) throw new ActionError("User not found in database");
 
-    const total = giftcards.reduce((sum, card) => {
-      return sum + card.amount.toNumber() * user.buyRate.toNumber();
+    return next({
+      ctx: {
+        dbUser,
+        giftcards,
+      },
+    });
+  })
+  .action(async ({ parsedInput: { giftcardIds }, ctx }) => {
+    const total = ctx.giftcards.reduce((sum, card) => {
+      return sum + card.amount.toNumber() * ctx.dbUser.buyRate.toNumber();
     }, 0);
 
-    // Use a transaction to create the order and reserve cards atomically
     const order = await prisma.$transaction(async (tx) => {
       const createdOrder = await tx.order.create({
         data: {
-          userId,
+          userId: ctx.auth.user.id,
           total: new Prisma.Decimal(total),
-          buyRate: user.buyRate,
+          buyRate: ctx.dbUser.buyRate,
           status: "PENDING",
           giftcards: {
             connect: giftcardIds.map((id) => ({ id })),
@@ -67,7 +52,6 @@ export async function createOrder(giftcardIds: string[]) {
         },
       });
 
-      // Reserve all selected giftcards so they cannot be purchased by another buyer
       await tx.giftcard.updateMany({
         where: { id: { in: giftcardIds } },
         data: { inStock: false },
@@ -77,35 +61,27 @@ export async function createOrder(giftcardIds: string[]) {
     });
 
     return { success: true, orderId: order.id };
-  } catch (error) {
-    console.error("Error creating order:", error);
-    return { success: false, error: "Failed to create order" };
-  }
-}
+  });
 
 /**
  * Locks in the buyer's issue reports and moves the order to AWAITING_PAYMENT.
  * Calculates the adjustedTotal based on effective card amounts and the buyer's rate.
  */
-export async function confirmOrderUsage(orderId: string) {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session || !session.user) {
-      throw new Error("Unauthorized");
-    }
-
+export const confirmOrderUsage = buyerActionClient
+  .inputSchema(z.object({ orderId: z.string() }))
+  .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { giftcards: true },
     });
 
-    if (!order) throw new Error("Order not found");
-    if (order.userId !== session.user.id) throw new Error("Not authorized");
-    if (order.status !== "PENDING") throw new Error("Order cannot be confirmed in its current state");
-
+    if (!order) throw new ActionError("Order not found");
+    if (order.userId !== ctx.auth.user.id) throw new ActionError("Not authorized");
+    if (order.status !== "PENDING") throw new ActionError("Order cannot be confirmed in its current state");
+    return next({ ctx: { order } });
+  })
+  .action(async ({ parsedInput: { orderId }, ctx }) => {
+    const order = ctx.order;
     // Calculate effective total:
     // UNUSED         → face value
     // WRONG_AMOUNT   → reportedAmount
@@ -120,56 +96,34 @@ export async function confirmOrderUsage(orderId: string) {
 
     await prisma.order.update({
       where: { id: orderId },
-      data: {
-        status: "AWAITING_PAYMENT",
-        adjustedTotal: new Prisma.Decimal(adjustedTotal),
-      },
+      data: { status: "AWAITING_PAYMENT", adjustedTotal: new Prisma.Decimal(adjustedTotal) },
     });
 
     return { success: true, adjustedTotal };
-  } catch (error) {
-    console.error("Error confirming order usage:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to confirm order" };
-  }
-}
+  });
 
 /**
  * Completes a buy order after the buyer notifies payment.
  * Order must be in AWAITING_PAYMENT state (i.e. confirmOrderUsage was called).
  * Updates each giftcard status based on the reported issue type.
  */
-export async function completeOrder(orderId: string, _paymentMethod: string, _transactionId?: string) {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
 
-    if (!session || !session.user) {
-      throw new Error("Unauthorized");
-    }
-
+export const completeOrder = buyerActionClient
+  .inputSchema(z.object({ orderId: z.string(), _transactionId: z.string() }))
+  .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { giftcards: true },
     });
-
-    if (!order) throw new Error("Order not found");
-
-    if (order.userId !== session.user.id) {
-      throw new Error("Not authorized to complete this order");
-    }
-
-    if (order.status === "COMPLETED") {
-      throw new Error("Order is already completed");
-    }
-
-    if (order.status !== "AWAITING_PAYMENT") {
-      throw new Error("Order must be confirmed before payment can be submitted");
-    }
-
-    // Use adjustedTotal for the payment; fall back to total if somehow null
+    if (!order) throw new ActionError("Order not found");
+    if (order.userId !== ctx.auth.user.id) throw new ActionError("Not authorized to complete this order");
+    if (order.status === "COMPLETED") throw new ActionError("Order is already completed");
+    if (order.status !== "AWAITING_PAYMENT") throw new ActionError("Order must be confirmed before payment can be submitted");
+    return next({ ctx: { order } });
+  })
+  .action(async ({ parsedInput: { _transactionId }, ctx }) => {
+    const { order } = ctx;
     const paymentAmount = order.adjustedTotal ?? order.total;
-
     await prisma.$transaction(async (tx) => {
       await tx.payment.create({
         data: {
@@ -177,25 +131,23 @@ export async function completeOrder(orderId: string, _paymentMethod: string, _tr
           balanceAfter: 0,
           status: "COMPLETED",
           transactionType: "DEBIT",
-          orderId,
+          orderId: order.id,
           transactionId: _transactionId,
         },
       });
-
       await tx.order.update({
-        where: { id: orderId },
+        where: { id: order.id },
         data: { status: "COMPLETED" },
       });
-
       for (const card of order.giftcards) {
-        if (card.status === "UNUSED" || card.status === "WRONG_AMOUNT") {
-          // Card was used successfully (WRONG_AMOUNT already has reportedAmount saved)
+        if (card.status === "UNUSED") {
+          // Card was used successfully with no issues
           await tx.giftcard.update({
             where: { id: card.id },
             data: { status: "USED", isConfirmed: true },
           });
         } else {
-          // INVALID, ALREADY_USED, DEACTIVATED: keep status as-is, isConfirmed stays true
+          // WRONG_AMOUNT, INVALID, ALREADY_USED, DEACTIVATED: keep status as-is, mark confirmed
           await tx.giftcard.update({
             where: { id: card.id },
             data: { isConfirmed: true, status: card.status },
@@ -203,107 +155,57 @@ export async function completeOrder(orderId: string, _paymentMethod: string, _tr
         }
       }
     });
-
     return {
       success: true,
-      orderId,
+      orderId: order.id,
       message: "Order completed successfully",
     };
-  } catch (error) {
-    console.error("Error completing order:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to complete order" };
-  }
-}
+  });
 
 /**
  * Cancels a buy order. The buyer can cancel their own PENDING orders.
  * Giftcards are NOT returned to stock (inStock stays false, status stays as-is).
  */
-export async function cancelOrder(orderId: string) {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session || !session.user) {
-      throw new Error("Unauthorized");
-    }
-
+export const cancelOrder = buyerActionClient
+  .inputSchema(z.object({ orderId: z.string() }))
+  .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      select: { userId: true, status: true },
+      select: { id: true, userId: true, status: true },
     });
-
-    if (!order) throw new Error("Order not found");
-
-    const isOwner = order.userId === session.user.id;
-    const isAdmin = (session.user as { role?: string[] }).role?.includes("ADMIN") ?? false;
-
-    if (!isOwner && !isAdmin) throw new Error("Not authorized to cancel this order");
-
+    if (!order) throw new ActionError("Order not found in database");
+    return next({ ctx: { order } });
+  })
+  .action(async ({ ctx }) => {
     await prisma.order.update({
-      where: { id: orderId },
+      where: { id: ctx.order.id },
       data: { status: "CANCELLED" },
     });
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error cancelling order:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to cancel order" };
-  }
-}
+    return { success: true, message: "Order cancelled successfully!" };
+  });
 
 /**
  * Fetches orders for the authenticated buyer, including giftcards and payments.
  */
-export async function getBuyerOrders() {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session || !session.user) {
-      throw new Error("Unauthorized");
-    }
-
-    const orders = await prisma.order.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      include: {
-        giftcards: {
-          include: {
-            brand: true,
-          },
-        },
-        payments: {
-          where: {
-            status: "COMPLETED",
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return orders.map((order) => ({
-      ...order,
-      total: Number(order.total),
-      adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
-      giftcards: order.giftcards.map((card) => ({
-        ...card,
-        amount: Number(card.amount),
-        reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
-      })),
-      payments: order.payments.map((p) => ({
-        ...p,
-        amount: Number(p.amount),
-        balanceAfter: Number(p.balanceAfter),
-      })),
-    }));
-  } catch (error) {
-    console.error("Error fetching buyer orders:", error);
-    return [];
-  }
-}
+export const getBuyerOrders = buyerActionClient.action(async ({ ctx }) => {
+  const orders = await prisma.order.findMany({
+    where: { userId: ctx.auth.user.id },
+    include: { giftcards: { include: { brand: true } }, payments: { where: { status: "COMPLETED" } } },
+    orderBy: { createdAt: "desc" },
+  });
+  return orders.map((order) => ({
+    ...order,
+    total: Number(order.total),
+    adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
+    giftcards: order.giftcards.map((card) => ({
+      ...card,
+      amount: Number(card.amount),
+      reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+    })),
+    payments: order.payments.map((p) => ({
+      ...p,
+      amount: Number(p.amount),
+      balanceAfter: Number(p.balanceAfter),
+    })),
+  }));
+});
