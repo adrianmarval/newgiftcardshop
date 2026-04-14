@@ -4,7 +4,6 @@ import { findGiftcardCombination } from '@/lib/browse-giftcards';
 import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
-import { authorizeByRequiredRole } from '@/lib/authorization';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import type { BuyGiftcardItem } from '@/types';
 import {
@@ -45,8 +44,7 @@ export const searchGiftcards = buyerActionClient
 export const getOrderCards = buyerActionClient
   .inputSchema(getOrderCardsInputSchema)
   .outputSchema(getOrderCardsOutputSchema)
-  .action(async ({ parsedInput: { orderId } }) => {
-    const { user } = await authorizeByRequiredRole(['BUYER', 'ADMIN']);
+  .action(async ({ parsedInput: { orderId }, ctx }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -56,7 +54,7 @@ export const getOrderCards = buyerActionClient
       },
     });
     if (!order) throw new ActionError('Orden no encontrada');
-    if (order.userId !== user.id) throw new ActionError('No estás autorizado para ver esta orden');
+    if (order.userId !== ctx.auth.user.id) throw new ActionError('No estás autorizado para ver esta orden');
     return {
       success: true as const,
       giftcards: order.giftcards.map((card) => {
