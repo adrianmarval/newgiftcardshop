@@ -225,11 +225,12 @@ export function ResultsStep() {
         open={resultsState.showConfirmDialog}
         onOpenChange={(open) => setResultsState((prev) => ({ ...prev, showConfirmDialog: open }))}
       >
-        <AlertDialogContent className="bg-card border-border">
+        <AlertDialogContent className="bg-card border-border sm:min-w-[450px]">
           <AlertDialogHeader>
             <AlertDialogTitle>¿Realizar Pedido?</AlertDialogTitle>
             <AlertDialogDescription>
-              El proceso no se puede revertir porque los códigos serán revelados. Una vez revelados, se consideran tuyos y debes aplicarlos y pagarlos.
+              El proceso no se puede revertir porque los códigos serán revelados. Una vez revelados, se consideran tuyos y debes aplicarlos
+              y pagarlos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
