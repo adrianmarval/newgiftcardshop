@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { IconDashboard, IconSearch, IconShoppingCart, IconWallet, IconSettings, IconUser } from '@tabler/icons-react';
 import { Sidebar } from '@/components/ui/sidebar';
-import { PortalSidebar } from './app-sidebar';
+import { PortalSidebar } from '@/components/layout/app-sidebar';
 
 const navItems = [
   { title: 'Panel Control', url: '/buy/dashboard', icon: IconDashboard },
@@ -22,7 +22,7 @@ const navItems = [
   { title: 'Ajustes', url: '/buy/dashboard/settings', icon: IconSettings },
 ];
 
-export function BuyerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export const BuyerSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   return (
     <PortalSidebar
       navItems={navItems}
@@ -33,4 +33,4 @@ export function BuyerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       {...props}
     />
   );
-}
+};

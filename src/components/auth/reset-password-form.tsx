@@ -1,34 +1,32 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Alert } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, Check, X } from 'lucide-react';
 import { resetPassword } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 
-const PasswordCheckItem = ({ valid, label, portal = 'buy' }: { valid: boolean; label: string; portal?: string }) => (
+const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
   <div className="flex items-center gap-2 text-base">
     {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="text-muted-foreground h-4 w-4" />}
     <span className={valid ? 'text-primary font-medium' : 'text-muted-foreground'}>{label}</span>
   </div>
 );
 
-function ResetPasswordFormContent({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) {
+const ResetPasswordFormContent = ({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
 
   const isSpanish = portal === 'buy' || portal === 'admin';
 
@@ -65,13 +63,12 @@ function ResetPasswordFormContent({ portal = 'buy' }: { portal?: 'admin' | 'buy'
     },
     onError: ({ error }) => {
       const defaultError = isSpanish ? 'Error al restablecer la contraseña' : 'Failed to reset password';
-      setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
+      toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     execute({ token, newPassword, confirmPassword, portal });
   };
 
@@ -103,13 +100,6 @@ function ResetPasswordFormContent({ portal = 'buy' }: { portal?: 'admin' | 'buy'
             {isSpanish ? 'Crea una nueva contraseña para tu cuenta' : 'Create a new password for your account'}
           </p>
         </div>
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <span>{error}</span>
-          </Alert>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input type="hidden" name="portal" value={portal} />
@@ -162,7 +152,7 @@ function ResetPasswordFormContent({ portal = 'buy' }: { portal?: 'admin' | 'buy'
           <Button type="submit" className="h-11 w-full font-semibold" disabled={status === 'executing' || !allValid}>
             {status === 'executing' ? (
               <>
-                <Spinner className="mr-2 h-4 w-4" />
+                <Spinner size="sm" className="mr-2" />
                 {isSpanish ? 'Restableciendo...' : 'Resetting...'}
               </>
             ) : isSpanish ? (
@@ -181,13 +171,13 @@ function ResetPasswordFormContent({ portal = 'buy' }: { portal?: 'admin' | 'buy'
       </div>
     </Card>
   );
-}
+};
 
-export function ResetPasswordForm({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) {
+export const ResetPasswordForm = ({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) => {
   const isSpanish = portal === 'buy' || portal === 'admin';
   return (
     <Suspense fallback={<div>{isSpanish ? 'Cargando...' : 'Loading...'}</div>}>
       <ResetPasswordFormContent portal={portal} />
     </Suspense>
   );
-}
+};

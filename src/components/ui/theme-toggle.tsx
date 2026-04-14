@@ -1,6 +1,6 @@
 'use client';
 import { FaMoon, FaSun } from 'react-icons/fa';
-import { Button } from './button';
+import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 
 export const ThemeToggle = () => {

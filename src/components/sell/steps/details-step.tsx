@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import { BulkPasteDialog } from '../bulk-paste-dialog';
+import { BulkPasteDialog } from '@/components/sell/bulk-paste-dialog';
 
 export function DetailsStep() {
   const { giftcards, addGiftcard, removeGiftcard, updateGiftcard, handleBulkImport, setStep } = useSellFlow();

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Alert } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, ShieldCheck, Copy, RefreshCw } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
@@ -14,7 +14,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import type { TwoFactorSectionProps } from '@/types';
 import { usePathname } from 'next/navigation';
 
-export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
+export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
   const pathname = usePathname();
   const isSpanish = pathname.includes('/admin') || pathname.includes('/buy');
   const [is2FAEnabled, setIs2FAEnabled] = useState(initialEnabled);
@@ -37,7 +37,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
   const handleEnable2FA = async () => {
     if (!password) {
-      setTwoFactorError(isSpanish ? 'Se requiere contraseña para habilitar 2FA' : 'Password is required to enable 2FA');
+      toast.error(isSpanish ? 'Se requiere contraseña para habilitar 2FA' : 'Password is required to enable 2FA');
       return;
     }
     setIs2FAPending(true);
@@ -46,7 +46,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
       const { data, error } = await authClient.twoFactor.enable({ password });
       if (error) {
         console.log('Error enabling 2FA:', error);
-        setTwoFactorError(error.message || (isSpanish ? 'Error al habilitar 2FA' : 'Failed to enable 2FA'));
+        toast.error(error.message || (isSpanish ? 'Error al habilitar 2FA' : 'Failed to enable 2FA'));
       } else if (data) {
         setQrCodeData(data.totpURI);
         setTwoStepEnable(true);
@@ -55,7 +55,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
       }
     } catch (err) {
       console.log(err);
-      setTwoFactorError('An unexpected error occurred');
+      toast.error('An unexpected error occurred');
     } finally {
       setIs2FAPending(false);
     }
@@ -69,7 +69,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
         code: totpCode,
       });
       if (error) {
-        setTwoFactorError(error.message || (isSpanish ? 'Código inválido' : 'Invalid code'));
+        toast.error(error.message || (isSpanish ? 'Código inválido' : 'Invalid code'));
       } else {
         setIs2FAEnabled(true);
         const responseData = data as { backupCodes?: string[] } | null;
@@ -82,7 +82,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
       }
     } catch (err) {
       console.log(err);
-      setTwoFactorError('An unexpected error occurred');
+      toast.error('An unexpected error occurred');
     } finally {
       setIs2FAPending(false);
     }
@@ -90,7 +90,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
   const handleRegenerateBackupCodes = async () => {
     if (!password) {
-      setTwoFactorError(isSpanish ? 'Se requiere contraseña para regenerar códigos' : 'Password is required to regenerate backup codes');
+      toast.error(isSpanish ? 'Se requiere contraseña para regenerar códigos' : 'Password is required to regenerate backup codes');
       return;
     }
     setIs2FAPending(true);
@@ -100,7 +100,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
         password,
       });
       if (error) {
-        setTwoFactorError(error.message || (isSpanish ? 'Error al regenerar códigos' : 'Failed to regenerate codes'));
+        toast.error(error.message || (isSpanish ? 'Error al regenerar códigos' : 'Failed to regenerate codes'));
       } else if (data) {
         setBackupCodes(data.backupCodes);
         setShowBackupCodes(true);
@@ -108,7 +108,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
       }
     } catch (err) {
       console.log(err);
-      setTwoFactorError('An unexpected error occurred');
+      toast.error('An unexpected error occurred');
     } finally {
       setIs2FAPending(false);
     }
@@ -116,7 +116,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
   const handleDisable2FA = async () => {
     if (!password) {
-      setTwoFactorError(isSpanish ? 'Se requiere contraseña para deshabilitar 2FA' : 'Password is required to disable 2FA');
+      toast.error(isSpanish ? 'Se requiere contraseña para deshabilitar 2FA' : 'Password is required to disable 2FA');
       return;
     }
     setIs2FAPending(true);
@@ -124,7 +124,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
     try {
       const { error } = await authClient.twoFactor.disable({ password });
       if (error) {
-        setTwoFactorError(error.message || (isSpanish ? 'Error al deshabilitar 2FA' : 'Failed to disable 2FA'));
+        toast.error(error.message || (isSpanish ? 'Error al deshabilitar 2FA' : 'Failed to disable 2FA'));
       } else {
         setIs2FAEnabled(false);
         setShowDisableDialog(false);
@@ -132,7 +132,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
       }
     } catch (err) {
       console.log(err);
-      setTwoFactorError('An unexpected error occurred');
+      toast.error('An unexpected error occurred');
     } finally {
       setIs2FAPending(false);
     }
@@ -335,10 +335,10 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
               <div className="space-y-2">
                 {twoFactorError && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
+                  <Card className="border-destructive/20 bg-destructive/10 text-destructive p-3">
+                    <AlertCircle className="mb-1 h-4 w-4" />
                     <span>{twoFactorError}</span>
-                  </Alert>
+                  </Card>
                 )}
                 <Label
                   htmlFor="setupPassword"
@@ -358,12 +358,12 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
               {is2FAEnabled ? (
                 <Button onClick={handleRegenerateBackupCodes} className="h-11 w-full font-semibold" disabled={is2FAPending || !password}>
-                  {is2FAPending && <Spinner className="mr-2 h-4 w-4" />}
+                  {is2FAPending && <Spinner size="sm" className="mr-2" />}
                   {isSpanish ? 'Regenerar Códigos de Respaldo' : 'Regenerate Backup Codes'}
                 </Button>
               ) : (
                 <Button onClick={handleEnable2FA} className="h-11 w-full font-semibold" disabled={is2FAPending || !password}>
-                  {is2FAPending && <Spinner className="mr-2 h-4 w-4" />}
+                  {is2FAPending && <Spinner size="sm" className="mr-2" />}
                   {isSpanish ? 'Habilitar Autenticador' : 'Enable Authenticator'}
                 </Button>
               )}
@@ -377,10 +377,10 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
               <div className="space-y-2">
                 {twoFactorError && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
+                  <Card className="border-destructive/20 bg-destructive/10 text-destructive p-3">
+                    <AlertCircle className="mb-1 h-4 w-4" />
                     <span>{twoFactorError}</span>
-                  </Alert>
+                  </Card>
                 )}
                 <Label htmlFor="totpCode" className="text-xs font-semibold tracking-wider uppercase opacity-70">
                   {isSpanish ? 'Código de Verificación' : 'Verification Code'}
@@ -396,7 +396,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
               </div>
 
               <Button onClick={handleVerify2FA} className="h-11 w-full" disabled={is2FAPending || totpCode.length !== 6}>
-                {is2FAPending ? <Spinner className="mr-2 h-4 w-4" /> : null}
+                {is2FAPending ? <Spinner size="sm" className="mr-2" /> : null}
                 {isSpanish ? 'Verificar y Activar' : 'Verify and Activate'}
               </Button>
             </div>
@@ -435,7 +435,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
               className="h-11 w-full font-semibold"
               disabled={is2FAPending || !password}
             >
-              {is2FAPending ? <Spinner className="mr-2 h-4 w-4" /> : null}
+              {is2FAPending ? <Spinner size="sm" className="mr-2" /> : null}
               {isSpanish ? 'Deshabilitar 2FA' : 'Disable 2FA'}
             </Button>
           </div>
@@ -443,4 +443,4 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
       </Dialog>
     </>
   );
-}
+};

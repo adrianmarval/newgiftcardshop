@@ -2,20 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Alert } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { forgotPassword } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 
-export function ForgotPasswordForm({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) {
+export const ForgotPasswordForm = ({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) => {
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const isSpanish = portal === 'buy' || portal === 'admin';
   const portalPath = portal === 'buy' ? '/buy' : `/${portal}`;
@@ -25,11 +24,10 @@ export function ForgotPasswordForm({ portal = 'buy' }: { portal?: 'admin' | 'buy
     onSuccess: ({ data }) => {
       if (data?.success) {
         setSuccess(true);
-        setError(null);
       }
     },
     onError: ({ error }) => {
-      setError(
+      toast.error(
         error.serverError ||
           error.validationErrors?._errors?.[0] ||
           (isSpanish ? 'Error al enviar el enlace de restablecimiento' : 'Failed to send reset link'),
@@ -39,7 +37,6 @@ export function ForgotPasswordForm({ portal = 'buy' }: { portal?: 'admin' | 'buy
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     execute({ email, portal });
   };
 
@@ -55,22 +52,15 @@ export function ForgotPasswordForm({ portal = 'buy' }: { portal?: 'admin' | 'buy
           </p>
         </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <span>{error}</span>
-          </Alert>
-        )}
-
         {success && (
-          <Alert className="border-primary/50 bg-primary/5 text-primary">
-            <CheckCircle className="h-4 w-4" />
+          <Card className="border-primary/50 bg-primary/5 text-primary p-4">
+            <CheckCircle className="mb-2 h-4 w-4" />
             <span>
               {isSpanish
                 ? 'Si existe una cuenta con ese correo, se ha enviado un enlace de restablecimiento. Revisa tu bandeja de entrada.'
                 : 'If an account exists with that email, a reset link has been sent. Check your inbox.'}
             </span>
-          </Alert>
+          </Card>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,7 +86,7 @@ export function ForgotPasswordForm({ portal = 'buy' }: { portal?: 'admin' | 'buy
           <Button type="submit" className="h-11 w-full font-semibold" disabled={status === 'executing' || success}>
             {status === 'executing' ? (
               <>
-                <Spinner className="mr-2 h-4 w-4" />
+                <Spinner size="sm" className="mr-2" />
                 {isSpanish ? 'Enviando...' : 'Sending...'}
               </>
             ) : isSpanish ? (
@@ -116,4 +106,4 @@ export function ForgotPasswordForm({ portal = 'buy' }: { portal?: 'admin' | 'buy
       </div>
     </Card>
   );
-}
+};

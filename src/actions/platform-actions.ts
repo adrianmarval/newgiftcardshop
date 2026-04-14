@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
-import { getPlatformSettingOutputSchema, setPlatformSettingInputSchema, setPlatformSettingOutputSchema } from '@/types/platform/actions';
+import { getPlatformSettingOutputSchema, setPlatformSettingInputSchema, setPlatformSettingOutputSchema } from '@/types/platform/schemas';
 
 /**
  * Retrieves all platform settings.

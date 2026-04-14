@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { resetPasswordSchema, resetPasswordOutputSchema } from '@/types/auth/actions';
+import { resetPasswordSchema, resetPasswordOutputSchema } from '@/types/auth/schemas';
 
 export const resetPassword = actionClient
   .inputSchema(resetPasswordSchema)

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clipboard, AlertTriangle, ChevronRight, X, Info, Loader2 } from 'lucide-react';
+import { Clipboard, AlertTriangle, ChevronRight, X, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -14,9 +14,11 @@ import { getUserBuyRate } from '@/actions/order-actions';
 import { reportGiftcardIssue, undoGiftcardIssue } from '@/actions/buyer-actions';
 import { GiftcardIssueType } from '@/generated/prisma/enums';
 import { toast } from 'sonner';
-import { BuyGiftcardStatus } from '@/types';
+import { BuyFlowGiftcardStatus } from '@/types';
+import { Spinner } from '@/components/ui/spinner';
+import { useAction } from 'next-safe-action/hooks';
 
-export function RedeemStep() {
+export const RedeemStep = () => {
   const { foundGiftcards, reportIssue, setStep, orderId } = useBuyFlow();
 
   const [redeemState, setRedeemState] = useState<{
@@ -31,14 +33,18 @@ export function RedeemStep() {
     loadingIds: new Set<string>(),
   });
 
-  useEffect(() => {
-    getUserBuyRate().then((result) => {
-      const rate = result?.data;
+  const { execute: executeGetUserBuyRate } = useAction(getUserBuyRate, {
+    onSuccess: ({ data }) => {
+      const rate = data;
       if (typeof rate === 'number') {
         setRedeemState((prev) => ({ ...prev, buyRate: rate }));
       }
-    });
-  }, []);
+    },
+  });
+
+  useEffect(() => {
+    executeGetUserBuyRate();
+  }, [executeGetUserBuyRate]);
 
   const setLoading = (id: string, loading: boolean) => {
     setRedeemState((prev) => {
@@ -113,7 +119,7 @@ export function RedeemStep() {
     setLoading(id, false);
   };
 
-  const handleUndoReport = async (giftcardId: string, status: BuyGiftcardStatus) => {
+  const handleUndoReport = async (giftcardId: string, status: BuyFlowGiftcardStatus) => {
     // Optimistic local update
     reportIssue(giftcardId, 'UNUSED');
 
@@ -129,14 +135,6 @@ export function RedeemStep() {
     }
     toast.success('Problema deshecho con éxito');
     setLoading(giftcardId, false);
-
-    // try {
-    //   await undoGiftcardIssue({ giftcardId, orderId });
-    // } catch (error) {
-    //   console.error("Error undoing giftcard issue:", error);
-    // } finally {
-    //   setLoading(giftcardId, false);
-    // }
   };
 
   // Calculate totals based on status and apply buyRate
@@ -278,7 +276,7 @@ export function RedeemStep() {
 
                   <div className="flex items-center gap-2 self-end md:self-center">
                     {redeemState.loadingIds.has(card.id) ? (
-                      <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                      <Spinner className="text-muted-foreground" />
                     ) : card.status === 'UNUSED' ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -377,4 +375,4 @@ export function RedeemStep() {
       </Card>
     </div>
   );
-}
+};

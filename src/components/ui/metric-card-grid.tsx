@@ -1,9 +1,9 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import type { MetricCardGridProps } from '@/types';
+import type { MetricCardGridProps } from '@/components/ui/types';
 
-export function MetricCardGrid({ items }: MetricCardGridProps) {
+export const MetricCardGrid = ({ items }: MetricCardGridProps) => {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {items.map((item, index) => (
@@ -23,4 +23,4 @@ export function MetricCardGrid({ items }: MetricCardGridProps) {
       ))}
     </div>
   );
-}
+};

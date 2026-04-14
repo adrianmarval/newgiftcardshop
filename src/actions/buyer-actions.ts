@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import type { BuyGiftcardItem } from '@/types';
+import type { BuyFlowGiftcard } from '@/types';
 import {
   searchGiftcardSchema,
   searchGiftcardsOutputSchema,
@@ -15,7 +15,7 @@ import {
   reportGiftcardIssueOutputSchema,
   undoGiftcardIssueInputSchema,
   undoGiftcardIssueOutputSchema,
-} from '@/types/giftcard/actions';
+} from '@/types/giftcard/schemas';
 
 export const searchGiftcards = buyerActionClient
   .inputSchema(searchGiftcardSchema)
@@ -78,7 +78,7 @@ export const getOrderCards = buyerActionClient
           amount: card.amount.toNumber(),
           claimCode,
           pinCode,
-          status: (card.status as BuyGiftcardItem['status']) ?? 'UNUSED',
+          status: (card.status as BuyFlowGiftcard['status']) ?? 'UNUSED',
           reportedAmount: card.reportedAmount ? card.reportedAmount.toNumber() : undefined,
         };
       }),

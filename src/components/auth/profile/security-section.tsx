@@ -10,7 +10,7 @@ import { Lock } from 'lucide-react';
 import type { SecuritySectionProps } from '@/types';
 import { usePathname } from 'next/navigation';
 
-export function SecuritySection({ isPending = false }: SecuritySectionProps) {
+export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => {
   const pathname = usePathname();
   const isSpanish = pathname.includes('/admin') || pathname.includes('/buy');
   const [showPasswordFields, setShowPasswordFields] = useState(false);
@@ -110,4 +110,4 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
       )}
     </Card>
   );
-}
+};

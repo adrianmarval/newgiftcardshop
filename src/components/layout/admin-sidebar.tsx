@@ -12,7 +12,7 @@ import {
   IconUser,
 } from '@tabler/icons-react';
 import { Sidebar } from '@/components/ui/sidebar';
-import { PortalSidebar } from './app-sidebar';
+import { PortalSidebar } from '@/components/layout/app-sidebar';
 
 const navItems = [
   { title: 'Dashboard', url: '/admin/dashboard', icon: IconDashboard },
@@ -37,7 +37,7 @@ const navItems = [
   { title: 'Ajustes', url: '/admin/dashboard/settings', icon: IconSettings },
 ];
 
-export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export const AdminSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   return (
     <PortalSidebar
       navItems={navItems}
@@ -49,4 +49,4 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       {...props}
     />
   );
-}
+};

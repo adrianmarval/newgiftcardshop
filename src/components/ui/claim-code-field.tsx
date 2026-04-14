@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { CodeDisplayProps } from '@/types';
+import type { CodeDisplayProps } from '@/components/ui/types';
 
 export function ClaimCodeField({ code }: CodeDisplayProps) {
   const [copied, setCopied] = useState(false);

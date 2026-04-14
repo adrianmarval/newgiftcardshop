@@ -1,9 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// UI Types — Navigation components
+// UI Types — Navigation data shapes
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type * as React from 'react';
-import type { Sidebar } from '@/components/ui/sidebar';
 
 /**
  * Icon component type used in navigation items.
@@ -21,17 +20,4 @@ export interface NavItem {
   title: string;
   url: string;
   icon: NavItemIcon;
-}
-
-/**
- * Props for the PortalSidebar component.
- * Extends Sidebar's own props with portal-specific configuration.
- */
-export interface PortalSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  navItems: NavItem[];
-  brandLabel: string;
-  brandHref: string;
-  groupLabel?: string;
-  portal: string;
-  logoutVariant?: 'destructive' | 'ghost' | 'default' | 'outline' | 'secondary' | 'link';
 }

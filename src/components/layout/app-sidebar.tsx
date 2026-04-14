@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { logout } from '@/actions';
 import Link from 'next/link';
 import { useAction } from 'next-safe-action/hooks';
-import type { PortalSidebarProps } from '@/types';
+import type { PortalSidebarProps } from '@/components/ui/types';
 
 export function PortalSidebar({
   navItems,

@@ -4,20 +4,21 @@
 
 import type { BuyerOrder } from './buyer-order';
 
+// ── UI Pagination (generic) ────────────────────────────────────────────────────
+
+export interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+}
+
+// ── Paginated Orders ─────────────────────────────────────────────────────────
+
 export interface PaginatedBuyerOrders {
   orders: BuyerOrder[];
   totalCount: number;
   totalPages: number;
   currentPage: number;
-}
-
-export interface BuyerOrdersViewProps {
-  orders: BuyerOrder[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
-  };
 }
 
 export interface BuyerOrderEffectiveAmount {
@@ -27,12 +28,4 @@ export interface BuyerOrderEffectiveAmount {
     cardId: string;
     effectiveValue: number;
   }[];
-}
-
-// ── UI Pagination (generic) ────────────────────────────────────────────────────
-
-export interface PaginationInfo {
-  currentPage: number;
-  totalPages: number;
-  totalCount: number;
 }

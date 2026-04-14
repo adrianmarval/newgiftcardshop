@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ProfileInfoSection } from './profile-info-section';
-import { SecuritySection } from './security-section';
-import { TwoFactorSection } from './two-factor-section';
+import { ProfileInfoSection } from '@/components/auth/profile/profile-info-section';
+import { SecuritySection } from '@/components/auth/profile/security-section';
+import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
 import type { ProfileFormProps } from '@/types';
 
 const portalLabels: Record<ProfileFormProps['portal'], string> = {
@@ -12,7 +12,7 @@ const portalLabels: Record<ProfileFormProps['portal'], string> = {
   buy: 'Comprador',
 };
 
-export function ProfileForm({ user, portal }: ProfileFormProps) {
+export const ProfileForm = ({ user, portal }: ProfileFormProps) => {
   const isSpanish = portal === 'admin' || portal === 'buy';
 
   return (
@@ -43,4 +43,4 @@ export function ProfileForm({ user, portal }: ProfileFormProps) {
       </div>
     </div>
   );
-}
+};

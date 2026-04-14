@@ -12,7 +12,8 @@ import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { searchGiftcards } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
-import type { SearchStepProps, Brand, Country } from '@/types';
+import type { Brand, Country } from '@/types';
+import type { SearchStepProps } from '../types';
 import { toast } from 'sonner';
 
 export function SearchStep({ brands, countries }: SearchStepProps) {

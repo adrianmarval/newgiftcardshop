@@ -1,62 +1,52 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Alert } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, CheckCircle, User } from 'lucide-react';
+import { CheckCircle, User } from 'lucide-react';
 import { updateProfile } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import type { ProfileInfoSectionProps } from '@/types';
 import { usePathname } from 'next/navigation';
 
-export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
+export const ProfileInfoSection = ({ name, email }: ProfileInfoSectionProps) => {
   const pathname = usePathname();
   const isSpanish = pathname.includes('/admin') || pathname.includes('/buy');
   const [nameValue, setNameValue] = useState(name);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const { execute, status } = useAction(updateProfile, {
     onSuccess: ({ data }) => {
       if (data?.success) {
         setSuccess(true);
-        setError(null);
         // Reset success message after a delay
         setTimeout(() => setSuccess(false), 3000);
       }
     },
     onError: ({ error }) => {
       const defaultError = isSpanish ? 'Error al actualizar el perfil' : 'Failed to update profile';
-      setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
+      toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
       setSuccess(false);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setSuccess(false);
     execute({ name: nameValue });
   };
 
   return (
     <div className="space-y-4">
-      {error && (
-        <Alert variant="destructive" className="bounce-in animate-in border-destructive/20 bg-destructive/10 text-destructive duration-300">
-          <AlertCircle className="h-4 w-4" />
-          <span>{error}</span>
-        </Alert>
-      )}
-
       {success && (
-        <Alert className="animate-in border-primary/50 bg-primary/10 text-primary zoom-in duration-300">
-          <CheckCircle className="h-4 w-4" />
+        <Card className="border-primary/50 bg-primary/10 text-primary p-4">
+          <CheckCircle className="mb-2 h-4 w-4" />
           <span>{isSpanish ? '¡Perfil actualizado con éxito!' : 'Profile updated successfully!'}</span>
-        </Alert>
+        </Card>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -123,7 +113,7 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
             >
               {status === 'executing' ? (
                 <>
-                  <Spinner className="mr-2 h-4 w-4" />
+                  <Spinner size="sm" className="mr-2" />
                   {isSpanish ? 'Guardando...' : 'Saving...'}
                 </>
               ) : isSpanish ? (
@@ -137,4 +127,4 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
       </form>
     </div>
   );
-}
+};

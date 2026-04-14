@@ -1,9 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Giftcard Types — Input/Output schemas for giftcard buyer actions
+// Giftcard Schemas — Input/Output Zod schemas for giftcard buyer actions
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';
 import { GiftcardIssueType } from '@/generated/prisma/client';
+import { giftcardIssueSchema } from '@/types/giftcard/issues';
 
 // ── Search Giftcards ─────────────────────────────────────────────────────────
 
@@ -71,26 +72,11 @@ export const reportGiftcardIssueSchema = z.object({
 
 export type ReportGiftcardIssueInput = z.infer<typeof reportGiftcardIssueSchema>;
 
-/** Issue item schema for report output */
-export const giftcardIssueItemSchema = z.object({
-  id: z.string(),
-  issueType: z.string(),
-  reportedAmount: z.number().nullable(),
-  proofImageUrl: z.string().nullable(),
-  giftcardId: z.string(),
-  orderId: z.string(),
-  reportedById: z.string(),
-  sellerId: z.string().nullable(),
-  createdAt: z.string(),
-});
-
-export type GiftcardIssueItem = z.infer<typeof giftcardIssueItemSchema>;
-
 /** Output schema for reportGiftcardIssue action */
 export const reportGiftcardIssueOutputSchema = z.union([
   z.object({
     success: z.literal(true),
-    issue: giftcardIssueItemSchema,
+    issue: giftcardIssueSchema,
   }),
   z.object({ error: z.string() }),
 ]);

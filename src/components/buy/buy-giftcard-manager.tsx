@@ -4,14 +4,15 @@ import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
-import { SearchStep } from './steps/search-step';
-import { ResultsStep } from './steps/results-step';
-import { RedeemStep } from './steps/redeem-step';
-import { ConfirmUsageStep } from './steps/confirm-usage-step';
-import { PaymentStep } from './steps/payment-step';
-import type { BuyGiftcardManagerProps, BuyGiftcardItem, BuyGiftcardStatus } from '@/types';
+import { SearchStep } from '@/components/buy/steps/search-step';
+import { ResultsStep } from '@/components/buy/steps/results-step';
+import { RedeemStep } from '@/components/buy/steps/redeem-step';
+import { ConfirmUsageStep } from '@/components/buy/steps/confirm-usage-step';
+import { PaymentStep } from '@/components/buy/steps/payment-step';
+import type { BuyFlowGiftcard, BuyFlowGiftcardStatus } from '@/types';
+import type { BuyGiftcardManagerProps } from './types';
 
-export function BuyGiftcardManager({ brands, countries, resumeOrder }: BuyGiftcardManagerProps) {
+export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftcardManagerProps) => {
   const { step } = useBuyFlow();
 
   // Sync store ONCE per mount / per orderId change — synchronously before first paint
@@ -22,13 +23,13 @@ export function BuyGiftcardManager({ brands, countries, resumeOrder }: BuyGiftca
     syncedRef.current = targetKey;
 
     if (resumeOrder) {
-      const giftcards: BuyGiftcardItem[] = resumeOrder.giftcards.map((card) => ({
+      const giftcards: BuyFlowGiftcard[] = resumeOrder.giftcards.map((card) => ({
         id: card.id,
         brand: card.brand.name,
         amount: card.amount,
         claimCode: card.claimCode,
         pinCode: card.pinCode || undefined,
-        status: card.status as BuyGiftcardStatus,
+        status: card.status as BuyFlowGiftcardStatus,
         reportedAmount: card.reportedAmount ?? undefined,
       }));
 
@@ -112,4 +113,4 @@ export function BuyGiftcardManager({ brands, countries, resumeOrder }: BuyGiftca
       </div>
     </div>
   );
-}
+};

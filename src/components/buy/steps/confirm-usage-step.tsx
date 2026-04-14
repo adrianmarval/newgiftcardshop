@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, AlertCircle, ArrowLeft, Loader2, XCircle, Ban } from 'lucide-react';
+import { Check, AlertCircle, ArrowLeft, XCircle, Ban } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
@@ -10,24 +10,30 @@ import { getUserBuyRate, confirmOrderUsage, cancelOrder } from '@/actions/order-
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Spinner } from '@/components/ui/spinner';
 
-export function ConfirmUsageStep() {
+export const ConfirmUsageStep = () => {
   const { foundGiftcards, setStep, orderId, setAdjustedTotal, resetForm } = useBuyFlow();
   const router = useRouter();
   const [buyRate, setBuyRate] = useState(0.85);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    getUserBuyRate().then((result) => {
-      if (result.data?.success && typeof result.data.rate === 'number') {
-        setBuyRate(result.data.rate);
-      } else if (result.serverError || result.validationErrors) {
-        toast.error('Error al obtener la tasa de compra', {
-          description: result.serverError || result.validationErrors?.formErrors?.[0],
-        });
+  const { execute: executeGetUserBuyRate } = useAction(getUserBuyRate, {
+    onSuccess: ({ data }) => {
+      if (data?.success && typeof data.rate === 'number') {
+        setBuyRate(data.rate);
       }
-    });
-  }, []);
+    },
+    onError: ({ error }) => {
+      toast.error('Error al obtener la tasa de compra', {
+        description: error.serverError || error.validationErrors?.formErrors?.[0],
+      });
+    },
+  });
+
+  useEffect(() => {
+    executeGetUserBuyRate();
+  }, [executeGetUserBuyRate]);
 
   const rawTotal = foundGiftcards.reduce((sum, card) => {
     if (card.status === 'UNUSED') return sum + card.amount;
@@ -180,7 +186,7 @@ export function ConfirmUsageStep() {
             >
               {cancelStatus === 'executing' ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Cancelando...
+                  <Spinner size="sm" className="mr-2" /> Cancelando...
                 </>
               ) : (
                 <>
@@ -196,7 +202,7 @@ export function ConfirmUsageStep() {
             >
               {confirmStatus === 'executing' ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirmando...
+                  <Spinner size="sm" className="mr-2" /> Confirmando...
                 </>
               ) : (
                 'Confirmar y Proceder al Pago'
@@ -207,4 +213,4 @@ export function ConfirmUsageStep() {
       </Card>
     </div>
   );
-}
+};

@@ -1,10 +1,12 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, ChevronRight, Info, Loader2 } from 'lucide-react';
+import { Trash2, ChevronRight, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +26,7 @@ import Image from 'next/image';
 import type { Brand } from '@/types';
 import { toast } from 'sonner';
 
-export function ResultsStep() {
+export const ResultsStep = () => {
   const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount, setOrderId, setFoundGiftcards } = useBuyFlow();
   const [resultsState, setResultsState] = useState<{
     brandData: Brand | null;
@@ -38,51 +40,71 @@ export function ResultsStep() {
     showConfirmDialog: false,
   });
 
+  const { execute: executeGetBrandById, result: brandResult } = useAction(getBrandById, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.brand) {
+        setResultsState((prev) => ({ ...prev, brandData: data.brand }));
+      }
+    },
+    onError: ({ error }) => {
+      toast.error('Error al obtener la marca', {
+        description: error.serverError || error.validationErrors?._errors?.[0],
+      });
+    },
+  });
+
+  const { execute: executeGetUserBuyRate, result: buyRateResult } = useAction(getUserBuyRate, {
+    onSuccess: ({ data }) => {
+      if (data?.success && typeof data.rate === 'number') {
+        setResultsState((prev) => ({ ...prev, buyRate: data.rate }));
+      }
+    },
+    onError: ({ error }) => {
+      toast.error('Error al obtener la tasa de compra', {
+        description: error.serverError || error.validationErrors?.formErrors?.[0],
+      });
+    },
+  });
+
+  const { execute: executeGetOrderCards } = useAction(getOrderCards, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.giftcards) {
+        setFoundGiftcards(data.giftcards);
+        setStep(3);
+      } else {
+        toast.error('Error al obtener las tarjetas de la orden');
+      }
+      setResultsState((prev) => ({
+        ...prev,
+        isConfirming: false,
+        showConfirmDialog: false,
+      }));
+    },
+    onError: ({ error }) => {
+      toast.error('Error al obtener las tarjetas de la orden', {
+        description: error.serverError || error.validationErrors?._errors?.[0],
+      });
+      setResultsState((prev) => ({
+        ...prev,
+        isConfirming: false,
+        showConfirmDialog: false,
+      }));
+    },
+  });
+
   useEffect(() => {
     if (selectedBrand) {
-      getBrandById({ id: selectedBrand }).then((result) => {
-        if (result.data?.success && result.data.brand) {
-          const brand = result.data.brand;
-          setResultsState((prev) => ({ ...prev, brandData: brand }));
-        } else if (result.serverError || result.validationErrors) {
-          toast.error('Error al obtener la marca', {
-            description: result.serverError || result.validationErrors?._errors?.[0],
-          });
-        }
-      });
+      executeGetBrandById({ id: selectedBrand });
     }
-    getUserBuyRate().then((result) => {
-      if (result.data?.success && typeof result.data.rate === 'number') {
-        const rate = result.data.rate;
-        setResultsState((prev) => ({ ...prev, buyRate: rate }));
-      } else if (result.serverError || result.validationErrors) {
-        toast.error('Error al obtener la tasa de compra', {
-          description: result.serverError || result.validationErrors?.formErrors?.[0],
-        });
-      }
-    });
-  }, [selectedBrand]);
+    executeGetUserBuyRate();
+  }, [selectedBrand, executeGetBrandById, executeGetUserBuyRate]);
 
   const { execute: createOrderExecute, status: createOrderStatus } = useAction(createOrder, {
     onSuccess: ({ data }) => {
       if (data?.success && data.orderId) {
         setOrderId(data.orderId);
         // Fetch cards WITH claimCodes now that the order is locked in
-        getOrderCards({ orderId: data.orderId }).then((orderCardsResult) => {
-          if (orderCardsResult.data?.success && orderCardsResult.data.giftcards) {
-            setFoundGiftcards(orderCardsResult.data.giftcards);
-            setStep(3);
-          } else if (orderCardsResult.serverError || orderCardsResult.validationErrors) {
-            toast.error('Error al obtener las tarjetas de la orden', {
-              description: orderCardsResult.serverError || orderCardsResult.validationErrors?._errors?.[0],
-            });
-          }
-          setResultsState((prev) => ({
-            ...prev,
-            isConfirming: false,
-            showConfirmDialog: false,
-          }));
-        });
+        executeGetOrderCards({ orderId: data.orderId });
       }
     },
     onError: ({ error }) => {
@@ -253,7 +275,7 @@ export function ResultsStep() {
             >
               {resultsState.isConfirming ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="sm" className="mr-2" />
                   Creando Pedido...
                 </>
               ) : (
@@ -265,4 +287,4 @@ export function ResultsStep() {
       </AlertDialog>
     </div>
   );
-}
+};

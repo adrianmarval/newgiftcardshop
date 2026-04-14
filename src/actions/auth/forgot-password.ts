@@ -2,10 +2,10 @@
 
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { authActionClient } from '@/lib/safe-action';
-import { forgotPasswordSchema, forgotPasswordOutputSchema } from '@/types/auth/actions';
+import { actionClient } from '@/lib/safe-action';
+import { forgotPasswordSchema, forgotPasswordOutputSchema } from '@/types/auth/schemas';
 
-export const forgotPassword = authActionClient
+export const forgotPassword = actionClient
   .inputSchema(forgotPasswordSchema)
   .outputSchema(forgotPasswordOutputSchema)
   .action(async function ({ parsedInput: { email, portal } }) {

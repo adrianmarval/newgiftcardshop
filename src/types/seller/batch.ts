@@ -3,36 +3,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';
-
-export const sellerBatchCardSchema = z.object({
-  id: z.string(),
-  claimCode: z.string(),
-  pinCode: z.string().nullable(),
-  amount: z.number(),
-  status: z.string(),
-  isConfirmed: z.boolean(),
-  reportedAmount: z.number().nullable(),
-  orderId: z.string().nullable(),
-  brand: z.object({
-    name: z.string(),
-    icon: z.string(),
-    image: z.string().nullable(),
-  }),
-  country: z.object({ name: z.string(), code: z.string() }).nullable(),
-});
-
-export type SellerBatchCard = z.infer<typeof sellerBatchCardSchema>;
-
-export const sellerBatchPaymentSchema = z.object({
-  id: z.string(),
-  amount: z.number(),
-  balanceAfter: z.number(),
-  status: z.string(),
-  /** CRITICAL FIX: createdAt is serialized as ISO string, not Date */
-  createdAt: z.string(),
-});
-
-export type SellerBatchPayment = z.infer<typeof sellerBatchPaymentSchema>;
+import { giftcardSchema } from '@/types/giftcard/giftcard';
+import { paymentSchema } from '@/types/order/payments';
 
 /**
  * A seller's gift-card batch as returned from getSellerBatches().
@@ -48,8 +20,8 @@ export const sellerBatchSchema = z.object({
   createdAt: z.string(),
   /** updatedAt may be needed for future use */
   updatedAt: z.string().optional(),
-  giftcards: z.array(sellerBatchCardSchema),
-  payments: z.array(sellerBatchPaymentSchema),
+  giftcards: z.array(giftcardSchema),
+  payments: z.array(paymentSchema),
   effectiveTotal: z.number(),
   estimatedPayout: z.number(),
 });

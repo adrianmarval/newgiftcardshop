@@ -1,29 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// UI Types — Feedback and display components
+// UI Types — Stats data shape
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type * as React from 'react';
 
-// ── Stats Grid ────────────────────────────────────────────────────────────────
-
+/**
+ * A single stats item for the stats grid component.
+ */
 export interface StatsItem {
   label: string;
   value: string | number;
   description: string;
   icon: React.ReactNode;
   color?: string;
-}
-
-// ── Empty State ───────────────────────────────────────────────────────────────
-
-export interface EmptyStateProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
-
-// ── Code Display ──────────────────────────────────────────────────────────────
-
-export interface CodeDisplayProps {
-  code: string;
 }

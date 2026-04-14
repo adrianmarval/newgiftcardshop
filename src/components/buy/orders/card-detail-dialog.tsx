@@ -6,7 +6,7 @@ import { Info } from 'lucide-react';
 import Image from 'next/image';
 import { GiftcardStatusBadge } from '@/components/ui/giftcard-status-badge';
 import { GiftcardIssueAlert } from '@/components/ui/giftcard-issue-alert';
-import type { CardDetailDialogProps } from '@/types';
+import type { CardDetailDialogProps } from './types';
 
 export function CardDetailDialog({ card, orderStatus, open, onOpenChange }: CardDetailDialogProps) {
   if (!card) return null;

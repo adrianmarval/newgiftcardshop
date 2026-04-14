@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Seller Types — Input/Output schemas for seller actions
+// Seller Schemas — Input/Output Zod schemas for seller actions
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';

@@ -2,9 +2,9 @@
 
 import { AlertTriangle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import type { GiftcardIssueAlertProps } from '@/types';
+import type { GiftcardIssueAlertProps } from '@/components/ui/types';
 
-export function GiftcardIssueAlert({ status }: GiftcardIssueAlertProps) {
+export const GiftcardIssueAlert = ({ status }: GiftcardIssueAlertProps) => {
   const pathname = usePathname();
   const portal = pathname?.includes('/buy') || pathname?.includes('/admin') ? 'buy' : 'sell';
   const label = status.replace('_', ' ');
@@ -32,4 +32,4 @@ export function GiftcardIssueAlert({ status }: GiftcardIssueAlertProps) {
       </div>
     </div>
   );
-}
+};

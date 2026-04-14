@@ -1,9 +1,9 @@
 'use client';
 
 import { History } from 'lucide-react';
-import type { EmptyStateProps } from '@/types';
+import type { EmptyStateProps } from '@/components/ui/types';
 
-export function EmptyState({ icon, title, description }: EmptyStateProps) {
+export const EmptyState = ({ icon, title, description }: EmptyStateProps) => {
   return (
     <div className="flex flex-col items-center justify-center space-y-6 pt-24 pb-24 text-center">
       <div className="bg-muted/20 flex h-24 w-24 items-center justify-center rounded-full">
@@ -15,4 +15,4 @@ export function EmptyState({ icon, title, description }: EmptyStateProps) {
       </div>
     </div>
   );
-}
+};

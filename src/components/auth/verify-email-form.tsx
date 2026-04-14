@@ -1,25 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Alert } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, CheckCircle, Mail } from 'lucide-react';
+import { CheckCircle, Mail } from 'lucide-react';
 import { verifyEmail, resendVerification } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
-import { Suspense } from 'react';
 import type { Portal } from '@/types';
 
-function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
+const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: Portal }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
 
   const [resendSuccess, setResendSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const isSpanish = portal === 'buy' || portal === 'admin';
 
@@ -31,7 +29,7 @@ function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
     },
     onError: ({ error }) => {
       const defaultError = isSpanish ? 'La verificación falló' : 'Verification failed';
-      setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
+      toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 
@@ -43,14 +41,13 @@ function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
     },
     onError: ({ error }) => {
       const defaultError = isSpanish ? 'Error al reenviar la verificación' : 'Failed to resend verification';
-      setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
+      toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 
   // If we have a token, show verify button
   if (token) {
     const handleVerify = () => {
-      setError(null);
       verifyExecute({ portal, token });
     };
 
@@ -65,13 +62,6 @@ function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
             </p>
           </div>
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <span>{error}</span>
-            </Alert>
-          )}
-
           <div className="space-y-4">
             <input type="hidden" name="portal" value={portal} />
             <input type="hidden" name="token" value={token} />
@@ -79,7 +69,7 @@ function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
             <Button type="button" onClick={handleVerify} className="h-11 w-full font-semibold" disabled={verifyStatus === 'executing'}>
               {verifyStatus === 'executing' ? (
                 <>
-                  <Spinner className="mr-2 h-4 w-4" />
+                  <Spinner size="sm" className="mr-2" />
                   {isSpanish ? 'Verificando...' : 'Verifying...'}
                 </>
               ) : isSpanish ? (
@@ -96,7 +86,6 @@ function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
 
   // If no token, show pending verification state with resend option
   const handleResend = () => {
-    setError(null);
     setResendSuccess(false);
     resendExecute({ portal, email });
   };
@@ -114,22 +103,15 @@ function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
           </p>
         </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <span>{error}</span>
-          </Alert>
-        )}
-
         {resendSuccess && (
-          <Alert className="border-primary/50 bg-primary/5 text-primary">
-            <CheckCircle className="h-4 w-4" />
+          <Card className="border-primary/50 bg-primary/5 text-primary p-4">
+            <CheckCircle className="mb-2 h-4 w-4" />
             <span>
               {isSpanish
                 ? '¡Correo de verificación reenviado! Revisa tu bandeja de entrada.'
                 : 'Verification email resent! Check your inbox.'}
             </span>
-          </Alert>
+          </Card>
         )}
 
         {email && (
@@ -146,7 +128,7 @@ function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
             >
               {resendStatus === 'executing' ? (
                 <>
-                  <Spinner className="mr-2 h-4 w-4" />
+                  <Spinner size="sm" className="mr-2" />
                   {isSpanish ? 'Reenviando...' : 'Resending...'}
                 </>
               ) : isSpanish ? (
@@ -160,13 +142,13 @@ function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
       </div>
     </Card>
   );
-}
+};
 
-export function VerifyEmailForm({ portal = 'buy' }: { portal?: Portal }) {
+export const VerifyEmailForm = ({ portal = 'buy' }: { portal?: Portal }) => {
   const isSpanish = portal === 'buy' || portal === 'admin';
   return (
     <Suspense fallback={<div>{isSpanish ? 'Cargando...' : 'Loading...'}</div>}>
       <VerifyEmailFormContent portal={portal} />
     </Suspense>
   );
-}
+};

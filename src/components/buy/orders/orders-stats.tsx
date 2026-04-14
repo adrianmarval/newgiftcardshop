@@ -2,7 +2,7 @@
 
 import { History, Clock, CheckCircle2, CreditCard } from 'lucide-react';
 import { MetricCardGrid } from '@/components/ui/metric-card-grid';
-import type { OrdersStatsProps } from '@/types';
+import type { OrdersStatsProps } from './types';
 
 export function OrdersStats({ orders, totalCount }: OrdersStatsProps) {
   const totalOrders = orders.length;

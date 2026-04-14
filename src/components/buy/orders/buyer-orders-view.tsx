@@ -1,19 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { OrdersStats } from './orders-stats';
-import { OrdersFilters } from './orders-filters';
-import { OrdersList } from './orders-list';
-import { CardDetailDialog } from './card-detail-dialog';
-import type { BuyerOrdersViewProps, BuyerOrderGiftcard, OrderStatus } from '@/types';
+import { OrdersStats } from '@/components/buy/orders/orders-stats';
+import { OrdersFilters } from '@/components/buy/orders/orders-filters';
+import { OrdersList } from '@/components/buy/orders/orders-list';
+import { CardDetailDialog } from '@/components/buy/orders/card-detail-dialog';
+import type { Giftcard, OrderStatus } from '@/types';
+import type { BuyerOrdersViewProps } from './types';
 
-export function BuyerOrdersView({ orders, pagination }: BuyerOrdersViewProps) {
+export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) => {
   const [selectedCard, setSelectedCard] = useState<{
-    card: BuyerOrderGiftcard;
+    card: Giftcard;
     orderStatus: OrderStatus;
   } | null>(null);
 
-  const handleCardClick = (card: BuyerOrderGiftcard, orderStatus: OrderStatus) => {
+  const handleCardClick = (card: Giftcard, orderStatus: OrderStatus) => {
     setSelectedCard({ card, orderStatus });
   };
 
@@ -39,4 +40,4 @@ export function BuyerOrdersView({ orders, pagination }: BuyerOrdersViewProps) {
       />
     </div>
   );
-}
+};

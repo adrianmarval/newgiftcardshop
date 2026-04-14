@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { verifyEmailSchema, verifyEmailOutputSchema } from '@/types/auth/actions';
+import { verifyEmailSchema, verifyEmailOutputSchema } from '@/types/auth/schemas';
 
 export const verifyEmail = actionClient
   .inputSchema(verifyEmailSchema)

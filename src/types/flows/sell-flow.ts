@@ -11,7 +11,7 @@
  * wizard. All fields are strings because they come directly from form inputs
  * before any parsing or validation.
  */
-export interface GiftCardItem {
+export interface SellFlowGiftcard {
   id: string;
   amount: string;
   claimCode: string;
@@ -27,17 +27,17 @@ export interface SellFlowState {
   step: number;
   selectedBrand: string;
   selectedCountry: string;
-  giftcards: GiftCardItem[];
+  giftcards: SellFlowGiftcard[];
 
   // Actions
   setStep: (step: number) => void;
   setSelectedBrand: (brand: string) => void;
   setSelectedCountry: (country: string) => void;
-  setGiftcards: (giftcards: GiftCardItem[]) => void;
+  setGiftcards: (giftcards: SellFlowGiftcard[]) => void;
 
   addGiftcard: () => void;
   removeGiftcard: (id: string) => void;
-  updateGiftcard: (id: string, field: keyof GiftCardItem, value: string) => void;
+  updateGiftcard: (id: string, field: keyof SellFlowGiftcard, value: string) => void;
   handleBulkImport: (cards: { amount: string; claimCode: string }[]) => void;
   resetForm: () => void;
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Info, XCircle, RotateCcw, Loader2 } from 'lucide-react';
+import { Info, XCircle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Image from 'next/image';
@@ -12,7 +12,8 @@ import { cancelOrder } from '@/actions/order-actions';
 import { ClaimCodeField } from '@/components/ui/claim-code-field';
 import { GiftcardStatusBadge } from '@/components/ui/giftcard-status-badge';
 import { TransactionList } from '@/components/ui/transaction-list';
-import type { OrderDetailsProps } from '@/types';
+import { Spinner } from '@/components/ui/spinner';
+import type { OrderDetailsProps } from './types';
 
 export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProps) {
   const router = useRouter();
@@ -172,7 +173,7 @@ export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProp
                     variant="outline"
                     className="border-destructive/50 text-destructive hover:bg-destructive/10"
                   >
-                    {isCancelling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+                    {isCancelling ? <Spinner size="sm" className="mr-2" /> : <XCircle className="mr-2 h-4 w-4" />}
                     Cancelar Orden
                   </Button>
                 </span>

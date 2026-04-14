@@ -3,33 +3,32 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Alert } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, Check, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { register } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import type { RegisterFormProps } from '@/types';
 
-function PasswordCheckItem({ valid, label }: { valid: boolean; label: string }) {
+const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => {
   return (
     <div className="flex items-center gap-2 text-base">
       {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="text-muted-foreground h-4 w-4" />}
       <span className={valid ? 'text-green-600' : 'text-muted-foreground'}>{label}</span>
     </div>
   );
-}
+};
 
-export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterFormProps) {
+export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterFormProps) => {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
 
   const checks = {
     length: password.length >= 8,
@@ -54,13 +53,14 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
       }
     },
     onError: ({ error }) => {
-      setError(error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al registrarse' : 'Registration failed'));
+      toast.error(
+        error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al registrarse' : 'Registration failed'),
+      );
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     execute({
       fullName,
       email,
@@ -77,13 +77,6 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
           <h1 className="text-3xl font-bold">{title}</h1>
           <p className="text-muted-foreground text-base">{subtitle}</p>
         </div>
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <span>{error}</span>
-          </Alert>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input type="hidden" name="portal" value={portalValue} />
@@ -154,7 +147,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
           <Button type="submit" className="w-full" disabled={status === 'executing' || !passwordValid || !passwordsMatch}>
             {status === 'executing' ? (
               <>
-                <Spinner className="mr-2 h-4 w-4" />
+                <Spinner size="sm" className="mr-2" />
                 {isSpanish ? 'Creando cuenta...' : 'Creating account...'}
               </>
             ) : (
@@ -172,4 +165,4 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
       </div>
     </Card>
   );
-}
+};

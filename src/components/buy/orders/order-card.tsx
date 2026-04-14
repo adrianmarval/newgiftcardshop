@@ -7,8 +7,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Image from 'next/image';
-import { OrderDetails } from './order-details';
-import type { OrderCardProps, BuyerOrderGiftcard } from '@/types';
+import { OrderDetails } from '@/components/buy/orders/order-details';
+import type { OrderCardProps } from './types';
+import type { Giftcard } from '@/types';
 
 // Status badge configuration
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -34,7 +35,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
   },
 };
 
-export function OrderCard({ order, onCardClick }: OrderCardProps) {
+export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const confirmedCount = order.giftcards.filter((g) => g.isConfirmed).length;
@@ -55,7 +56,7 @@ export function OrderCard({ order, onCardClick }: OrderCardProps) {
       }
       return acc;
     },
-    [] as BuyerOrderGiftcard['brand'][],
+    [] as Giftcard['brand'][],
   );
   const brandIcons = uniqueBrands.slice(0, 3);
   const extraBrands = uniqueBrands.length - 3;
@@ -174,4 +175,4 @@ export function OrderCard({ order, onCardClick }: OrderCardProps) {
       </AnimatePresence>
     </Card>
   );
-}
+};

@@ -2,12 +2,12 @@
 
 import { AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
-import { OrderCard } from './order-card';
+import { OrderCard } from '@/components/buy/orders/order-card';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
-import type { OrdersListProps } from '@/types';
+import type { OrdersListProps } from './types';
 
-export function OrdersList({ orders, totalPages, onCardClick }: OrdersListProps) {
+export const OrdersList = ({ orders, totalPages, onCardClick }: OrdersListProps) => {
   if (orders.length === 0) {
     return (
       <EmptyState
@@ -30,4 +30,4 @@ export function OrdersList({ orders, totalPages, onCardClick }: OrdersListProps)
       <UrlPagination totalPages={totalPages} />
     </>
   );
-}
+};

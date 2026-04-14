@@ -2,9 +2,9 @@
 
 import { usePathname } from 'next/navigation';
 import { CreditCard, CheckCircle2 } from 'lucide-react';
-import type { TransactionListProps } from '@/types';
+import type { TransactionListProps } from '@/components/ui/types';
 
-export function TransactionList({ payments }: TransactionListProps) {
+export const TransactionList = ({ payments }: TransactionListProps) => {
   const pathname = usePathname();
   const isSpanish = pathname?.includes('/buy') || pathname?.includes('/admin');
 
@@ -41,4 +41,4 @@ export function TransactionList({ payments }: TransactionListProps) {
       </div>
     </div>
   );
-}
+};

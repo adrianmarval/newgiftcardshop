@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Catalog Types — Input/Output schemas for catalog actions (brands, countries)
+// Catalog Schemas — Input/Output Zod schemas for catalog actions (brands, countries)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';

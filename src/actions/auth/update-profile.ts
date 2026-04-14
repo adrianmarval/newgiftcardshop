@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { authActionClient } from '@/lib/safe-action';
-import { updateProfileSchema, updateProfileOutputSchema } from '@/types/auth/actions';
+import { updateProfileSchema, updateProfileOutputSchema } from '@/types/auth/schemas';
 
 export const updateProfile = authActionClient
   .inputSchema(updateProfileSchema)

@@ -24,15 +24,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Image from 'next/image';
-import type { SellerBatch, Giftcard, SellerCardsViewProps } from '@/types';
+import { useQueryState } from 'nuqs';
+import type { SellerBatch, Giftcard } from '@/types';
+import type { SellerCardsViewProps } from './types';
 import { ClaimCodeField } from '@/components/ui/claim-code-field';
 import { EmptyState } from '@/components/ui/empty-state';
 import { GiftcardStatusBadge } from '@/components/ui/giftcard-status-badge';
 
-export function SellerCardsView({ batches }: SellerCardsViewProps) {
+export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useQueryState('search', { defaultValue: '' });
+  const [statusFilter, setStatusFilter] = useQueryState('status', { defaultValue: 'all' });
   const [selectedCard, setSelectedCard] = useState<Giftcard | null>(null);
 
   const totalBatches = batches.length;
@@ -527,4 +529,4 @@ export function SellerCardsView({ batches }: SellerCardsViewProps) {
       </Dialog>
     </div>
   );
-}
+};

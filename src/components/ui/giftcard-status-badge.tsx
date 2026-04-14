@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Clock, Package, XCircle, AlertTriangle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import type { GiftcardStatusBadgeProps } from '@/types';
+import type { GiftcardStatusBadgeProps } from '@/components/ui/types';
 
 const reportLabels: Record<string, Record<string, string>> = {
   buy: {
@@ -24,7 +24,7 @@ const reportLabels: Record<string, Record<string, string>> = {
   },
 };
 
-export function GiftcardStatusBadge({ card, orderStatus }: GiftcardStatusBadgeProps) {
+export const GiftcardStatusBadge = ({ card, orderStatus }: GiftcardStatusBadgeProps) => {
   const pathname = usePathname();
   const portal = pathname?.includes('/buy') || pathname?.includes('/admin') ? 'buy' : 'sell';
   const labels = reportLabels[portal] || reportLabels.sell;
@@ -75,4 +75,4 @@ export function GiftcardStatusBadge({ card, orderStatus }: GiftcardStatusBadgePr
       <Package className="h-3 w-3" /> {portal === 'buy' ? 'Disponible' : 'Available'}
     </Badge>
   );
-}
+};

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Auth Types — Input/Output schemas for auth actions
+// Auth Schemas — Form validation & Input/Output Zod schemas for auth actions
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';

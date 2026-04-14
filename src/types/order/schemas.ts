@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Order Types — Input/Output schemas for order actions
+// Order Schemas — Input/Output Zod schemas for order actions
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';

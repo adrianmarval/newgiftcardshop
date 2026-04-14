@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Alert } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { ShieldCheck, AlertCircle, Laptop, KeyRound } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
@@ -20,9 +20,8 @@ const dashboardMap = {
   admin: '/admin/dashboard',
 } as const;
 
-export function Verify2FAForm({ portal }: Verify2FAFormProps) {
+export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [code, setCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
@@ -42,7 +41,6 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
     if (isRecoveryMode && !code) return;
 
     setIsPending(true);
-    setError(null);
 
     try {
       if (isRecoveryMode) {
@@ -52,7 +50,7 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
 
         if (authError) {
           const defaultError = isSpanish ? 'Código de respaldo inválido' : 'Invalid backup code';
-          setError(authError.message || defaultError);
+          toast.error(authError.message || defaultError);
           setIsPending(false);
           return;
         }
@@ -64,7 +62,7 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
 
         if (authError) {
           const defaultError = isSpanish ? 'Código de verificación inválido' : 'Invalid verification code';
-          setError(authError.message || defaultError);
+          toast.error(authError.message || defaultError);
           setIsPending(false);
           return;
         }
@@ -78,7 +76,7 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
       const defaultError = isSpanish
         ? 'Ocurrió un error inesperado. Por favor, intenta de nuevo.'
         : 'An unexpected error occurred. Please try again.';
-      setError(defaultError);
+      toast.error(defaultError);
       setIsPending(false);
     }
   };
@@ -112,13 +110,6 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
                 : `Please enter the 6-digit code from your authenticator app to verify your ${portal === 'sell' ? 'Seller' : portalNames[portal]} account.`}
           </p>
         </div>
-
-        {error && (
-          <Alert variant="destructive" className="text-left">
-            <AlertCircle className="h-4 w-4" />
-            <span>{error}</span>
-          </Alert>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-center py-4">
@@ -174,7 +165,7 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
           >
             {isPending ? (
               <>
-                <Spinner className="mr-2 h-5 w-5" />
+                <Spinner size="sm" className="mr-2" />
                 {isSpanish ? 'Verificando...' : 'Verifying...'}
               </>
             ) : isRecoveryMode ? (
@@ -200,7 +191,6 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
             onClick={() => {
               setIsRecoveryMode(!isRecoveryMode);
               setCode('');
-              setError(null);
             }}
             disabled={isPending}
           >
@@ -219,4 +209,4 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
       </div>
     </Card>
   );
-}
+};

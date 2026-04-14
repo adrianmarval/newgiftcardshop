@@ -9,7 +9,7 @@ import {
   publishBatchOutputSchema,
   getSellerBatchesOutputSchema,
   getSellerRateOutputSchema,
-} from '@/types/seller/actions';
+} from '@/types/seller/schemas';
 
 export const publishBatch = sellerActionClient
   .inputSchema(publishBatchSchema)

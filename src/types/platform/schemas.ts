@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Platform Types — Platform settings schemas
+// Platform Schemas — Platform settings Zod schemas
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';

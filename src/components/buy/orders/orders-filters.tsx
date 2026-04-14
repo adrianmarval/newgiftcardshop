@@ -4,10 +4,10 @@ import { useQueryStates, debounce } from 'nuqs';
 import { Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { orderSearchParamsParsers } from './orders-search-params';
-import type { OrdersFiltersProps } from '@/types';
+import { orderSearchParamsParsers } from '@/components/buy/orders/orders-search-params';
+import type { OrdersFiltersProps } from './types';
 
-export function OrdersFilters({ onSearchChange }: OrdersFiltersProps) {
+export const OrdersFilters = ({ onSearchChange }: OrdersFiltersProps) => {
   const [{ status, search, sort }, setParams] = useQueryStates(orderSearchParamsParsers, {
     shallow: false,
     limitUrlUpdates: debounce(400),
@@ -76,4 +76,4 @@ export function OrdersFilters({ onSearchChange }: OrdersFiltersProps) {
       </div>
     </div>
   );
-}
+};

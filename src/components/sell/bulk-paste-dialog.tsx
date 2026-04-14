@@ -9,19 +9,20 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Check, Copy, AlertTriangle, Code } from 'lucide-react';
-import type { BulkPasteDialogProps, ParsedGiftCard } from '@/types';
+import type { ParsedGiftcard } from '@/types';
+import type { BulkPasteDialogProps } from './types';
 
 // Regex patterns for different gift card formats
 const AMAZON_PATTERN = /(?:^|\n)\s*([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}|\S+)\s+(\d+(?:\.\d{2})?)\s*$/gm;
 
 export function BulkPasteDialog({ open, onOpenChange, onImport }: BulkPasteDialogProps) {
   const [pasteContent, setPasteContent] = useState('');
-  const [parsedCards, setParsedCards] = useState<ParsedGiftCard[]>([]);
+  const [parsedCards, setParsedCards] = useState<ParsedGiftcard[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const parseCards = (text: string): { cards: ParsedGiftCard[]; errors: string[] } => {
-    const cards: ParsedGiftCard[] = [];
+  const parseCards = (text: string): { cards: ParsedGiftcard[]; errors: string[] } => {
+    const cards: ParsedGiftcard[] = [];
     const errors: string[] = [];
 
     // Try multiple patterns if needed, for now sticking to the common one

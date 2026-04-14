@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clipboard, Check, Wallet, Info, ArrowLeft, Loader2 } from 'lucide-react';
+import { Clipboard, Check, Wallet, Info, ArrowLeft } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,9 @@ import { completeOrder } from '@/actions/order-actions';
 import { getPlatformSetting } from '@/actions/platform-actions';
 import { useAction } from 'next-safe-action/hooks';
 import { toast } from 'sonner';
+import { Spinner } from '@/components/ui/spinner';
 
-export function PaymentStep() {
+export const PaymentStep = () => {
   const { setStep, orderId: storedOrderId, adjustedTotal } = useBuyFlow();
 
   const [transactionId, setTransactionId] = useState('');
@@ -21,20 +22,25 @@ export function PaymentStep() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [binancePayId, setBinancePayId] = useState<string>('—');
 
-  useEffect(() => {
-    getPlatformSetting().then((result) => {
-      if (result.data?.success && result.data.settings) {
-        const binancePayIdSetting = result.data.settings.find((setting) => setting.key === 'binance_pay_id');
+  const { execute: executeGetPlatformSetting } = useAction(getPlatformSetting, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.settings) {
+        const binancePayIdSetting = data.settings.find((setting) => setting.key === 'binance_pay_id');
         if (!binancePayIdSetting) {
           toast.error('No se encontró la configuración de Binance Pay');
           return;
         }
         setBinancePayId(binancePayIdSetting.value);
-      } else if (result.serverError || result.validationErrors) {
-        toast.error('Error al obtener la configuración de Binance Pay');
       }
-    });
-  }, []);
+    },
+    onError: () => {
+      toast.error('Error al obtener la configuración de Binance Pay');
+    },
+  });
+
+  useEffect(() => {
+    executeGetPlatformSetting();
+  }, [executeGetPlatformSetting]);
 
   const { execute: completeExecute, status: completeStatus } = useAction(completeOrder, {
     onSuccess: ({ data }) => {
@@ -157,7 +163,7 @@ export function PaymentStep() {
             >
               {completeStatus === 'executing' ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Notificando...
+                  <Spinner size="sm" className="mr-2" /> Notificando...
                 </>
               ) : (
                 'Notificar Pago'
@@ -176,4 +182,4 @@ export function PaymentStep() {
       </Card>
     </div>
   );
-}
+};

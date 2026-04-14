@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-import { getCountryByIdInputSchema, getActiveCountriesOutputSchema, getCountryByIdOutputSchema } from '@/types/catalog/actions';
+import { getCountryByIdInputSchema, getActiveCountriesOutputSchema, getCountryByIdOutputSchema } from '@/types/catalog/schemas';
 
 export const getActiveCountries = authActionClient.outputSchema(getActiveCountriesOutputSchema).action(async () => {
   const countries = await prisma.country.findMany({

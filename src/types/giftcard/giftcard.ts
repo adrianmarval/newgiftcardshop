@@ -4,10 +4,11 @@
 
 import { z } from 'zod';
 
-/** String-literal mirror of the Prisma GiftcardStatus enum — safe for client components. */
-export type GiftcardStatus = 'USED' | 'UNUSED' | 'ALREADY_USED' | 'INVALID' | 'DEACTIVATED' | 'WRONG_AMOUNT';
-
+/** Enum schema for gift card status values */
 export const giftcardStatusEnum = z.enum(['USED', 'UNUSED', 'ALREADY_USED', 'INVALID', 'DEACTIVATED', 'WRONG_AMOUNT']);
+
+/** String-literal type derived from giftcardStatusEnum — safe for client components. */
+export type GiftcardStatus = z.infer<typeof giftcardStatusEnum>;
 
 /**
  * A gift card as returned from server actions that include brand/country
@@ -18,8 +19,8 @@ export const giftcardSchema = z.object({
   claimCode: z.string(),
   pinCode: z.string().nullable(),
   amount: z.number(),
-  /** May contain any GiftcardStatus value or a raw string from older data. */
-  status: z.union([giftcardStatusEnum, z.string()]),
+  /** Current status of the gift card. */
+  status: giftcardStatusEnum,
   isConfirmed: z.boolean(),
   /** Amount reported by the buyer when using/redeeming the card */
   reportedAmount: z.number().nullable().optional(),
@@ -36,7 +37,7 @@ export const giftcardSchema = z.object({
 export type Giftcard = z.infer<typeof giftcardSchema>;
 
 /** A single gift-card parsed from the bulk-paste dialog. */
-export interface ParsedGiftCard {
+export interface ParsedGiftcard {
   amount: string;
   claimCode: string;
 }

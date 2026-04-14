@@ -5,6 +5,9 @@ import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { buyerOrderSchema } from '@/types/order/buyer-order';
+import type { OrderStatus } from '@/types/order/buyer-order';
+import type { Giftcard, GiftcardStatus } from '@/types/giftcard/giftcard';
+import type { Payment, PaymentStatus } from '@/types/order/payments';
 import {
   getUserBuyRateOutputSchema,
   createOrderInputSchema,
@@ -19,7 +22,7 @@ import {
   getOrderByIdOutputSchema,
   getBuyerOrdersInputSchema,
   getBuyerOrdersOutputSchema,
-} from '@/types/order/actions';
+} from '@/types/order/schemas';
 
 export const getUserBuyRate = buyerActionClient.outputSchema(getUserBuyRateOutputSchema).action(async ({ ctx }) => {
   const dbUser = await prisma.user.findUnique({
@@ -291,11 +294,6 @@ function serializePayment(payment: {
   };
 }
 
-// orderShapeSchema uses the imported schemas from @/types/order/buyer-order
-// CRITICAL FIX: transactionType is now included in serializePayment output
-// and buyerOrderPaymentSchema includes it (unlike the original inline definition)
-const orderShapeSchema = buyerOrderSchema;
-
 export const getOrderById = buyerActionClient
   .inputSchema(getOrderByIdInputSchema)
   .outputSchema(getOrderByIdOutputSchema)
@@ -317,25 +315,60 @@ export const getOrderById = buyerActionClient
     const { order } = ctx;
 
     const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate);
+    const giftcards: Giftcard[] = order.giftcards.map((card) => {
+      let claimCode = card.claimCode;
+      let pinCode = card.pinCode ?? null;
+      try {
+        claimCode = decrypt(card.claimCode);
+      } catch {
+        /* legacy unencrypted */
+      }
+      if (card.pinCode) {
+        try {
+          pinCode = decrypt(card.pinCode);
+        } catch {
+          pinCode = card.pinCode;
+        }
+      }
+      return {
+        id: card.id,
+        claimCode,
+        pinCode,
+        amount: Number(card.amount),
+        status: card.status as GiftcardStatus,
+        isConfirmed: card.isConfirmed,
+        reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+        orderId: card.orderId,
+        batchId: card.batchId ?? undefined,
+        brand: {
+          name: card.brand.name,
+          icon: card.brand.icon,
+          image: card.brand.image,
+        },
+        country: card.country,
+      };
+    });
+    const payments: Payment[] = order.payments.map((p) => ({
+      id: p.id,
+      amount: Number(p.amount),
+      balanceAfter: Number(p.balanceAfter),
+      status: p.status as PaymentStatus,
+      createdAt: p.createdAt.toISOString(),
+    }));
+
     return {
       success: true as const,
       order: {
         id: order.id,
-        status: order.status,
+        status: order.status as OrderStatus,
         total: Number(order.total),
         adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
         buyRate: Number(order.buyRate),
         effectiveTotal,
         createdAt: order.createdAt.toISOString(),
         updatedAt: order.updatedAt.toISOString(),
-        giftcards: order.giftcards.map((card) => ({
-          id: card.id,
-          ...serializeGiftcard(card),
-        })),
-        payments: order.payments.map((p) => ({
-          id: p.id,
-          ...serializePayment(p),
-        })),
+        giftcards,
+        payments,
       },
     };
   });
@@ -374,23 +407,57 @@ export const getBuyerOrders = buyerActionClient
       success: true as const,
       orders: orders.map((order) => {
         const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate);
+        const giftcards: Giftcard[] = order.giftcards.map((card) => {
+          let claimCode = card.claimCode;
+          let pinCode = card.pinCode ?? null;
+          try {
+            claimCode = decrypt(card.claimCode);
+          } catch {
+            /* legacy unencrypted */
+          }
+          if (card.pinCode) {
+            try {
+              pinCode = decrypt(card.pinCode);
+            } catch {
+              pinCode = card.pinCode;
+            }
+          }
+          return {
+            id: card.id,
+            claimCode,
+            pinCode,
+            amount: Number(card.amount),
+            status: card.status as GiftcardStatus,
+            isConfirmed: card.isConfirmed,
+            reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+            orderId: card.orderId,
+            batchId: card.batchId ?? undefined,
+            brand: {
+              name: card.brand.name,
+              icon: card.brand.icon,
+              image: card.brand.image,
+            },
+            country: card.country,
+          };
+        });
+        const payments: Payment[] = order.payments.map((p) => ({
+          id: p.id,
+          amount: Number(p.amount),
+          balanceAfter: Number(p.balanceAfter),
+          status: p.status as PaymentStatus,
+          createdAt: p.createdAt.toISOString(),
+        }));
         return {
           id: order.id,
-          status: order.status,
+          status: order.status as OrderStatus,
           total: Number(order.total),
           adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
           buyRate: Number(order.buyRate),
           effectiveTotal,
           createdAt: order.createdAt.toISOString(),
           updatedAt: order.updatedAt.toISOString(),
-          giftcards: order.giftcards.map((card) => ({
-            id: card.id,
-            ...serializeGiftcard(card),
-          })),
-          payments: order.payments.map((p) => ({
-            id: p.id,
-            ...serializePayment(p),
-          })),
+          giftcards,
+          payments,
         };
       }),
       totalCount,

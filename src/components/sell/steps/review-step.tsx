@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import type { ReviewStepProps } from '@/types';
+import type { ReviewStepProps } from '../types';
 
 export function ReviewStep({ onPublish, isPublishing, brandName, countryName, sellRate }: ReviewStepProps) {
   const { giftcards, setStep } = useSellFlow();

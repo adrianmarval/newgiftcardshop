@@ -13,14 +13,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { publishBatch } from '@/actions/seller-actions';
-import { BrandStep } from './steps/brand-step';
-import { DetailsStep } from './steps/details-step';
-import { ReviewStep } from './steps/review-step';
-import type { SellBatchManagerProps } from '@/types';
+import { BrandStep } from '@/components/sell/steps/brand-step';
+import { DetailsStep } from '@/components/sell/steps/details-step';
+import { ReviewStep } from '@/components/sell/steps/review-step';
+import type { SellBatchManagerProps } from './types';
 import { toast } from 'sonner';
 import { useAction } from 'next-safe-action/hooks';
 
-export function SellBatchManager({ brands, countries, sellRate }: SellBatchManagerProps) {
+export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManagerProps) => {
   const { step, resetForm, giftcards, selectedBrand } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [duplicates, setDuplicates] = useState<string[]>([]);
@@ -195,4 +195,4 @@ export function SellBatchManager({ brands, countries, sellRate }: SellBatchManag
       </AlertDialog>
     </div>
   );
-}
+};

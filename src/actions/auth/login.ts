@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { loginSchema, loginOutputSchema } from '@/types/auth/actions';
+import { loginSchema, loginOutputSchema } from '@/types/auth/schemas';
 
 const dashboardMap = {
   sell: '/sell/dashboard',
