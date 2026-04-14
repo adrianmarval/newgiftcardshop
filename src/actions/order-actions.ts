@@ -38,7 +38,7 @@ export const createOrder = buyerActionClient
       prisma.giftcard.findMany({ where: { id: { in: giftcardIds } } }),
     ]);
 
-    if (!dbUser) throw new ActionError("User not found in database");
+    if (!dbUser) throw new ActionError("Usuario no encontrado en la base de datos");
 
     return next({
       ctx: {
@@ -49,14 +49,15 @@ export const createOrder = buyerActionClient
   })
   .action(async ({ parsedInput: { giftcardIds }, ctx }) => {
     const total = ctx.giftcards.reduce((sum, card) => {
-      return sum + card.amount.toNumber() * ctx.dbUser.buyRate.toNumber();
-    }, 0);
+      // Use Prisma Decimal arithmetic to avoid floating-point precision loss
+      return sum.plus(card.amount.mul(ctx.dbUser.buyRate));
+    }, new Prisma.Decimal(0));
 
     const order = await prisma.$transaction(async (tx) => {
       const createdOrder = await tx.order.create({
         data: {
           userId: ctx.auth.user.id,
-          total: new Prisma.Decimal(total),
+          total: total,
           buyRate: ctx.dbUser.buyRate,
           status: "PENDING",
           giftcards: {
@@ -85,24 +86,18 @@ export const confirmOrderUsage = buyerActionClient
       include: { giftcards: true },
     });
 
-    if (!order) throw new ActionError("Order not found");
-    if (order.userId !== ctx.auth.user.id) throw new ActionError("Not authorized");
-    if (order.status !== "PENDING") throw new ActionError("Order cannot be confirmed in its current state");
+    if (!order) throw new ActionError("Orden no encontrada");
+    if (order.userId !== ctx.auth.user.id) throw new ActionError("No autorizado");
+    if (order.status !== "PENDING") throw new ActionError("La orden no puede ser confirmada en su estado actual");
     return next({ ctx: { order } });
   })
   .action(async ({ parsedInput: { orderId }, ctx }) => {
     const order = ctx.order;
-    // Calculate effective total:
+    // Calculate effective total using Prisma Decimal to avoid floating-point precision loss:
     // UNUSED         → face value
     // WRONG_AMOUNT   → reportedAmount
     // INVALID / ALREADY_USED / DEACTIVATED → 0
-    const rawTotal = order.giftcards.reduce((sum, card) => {
-      if (card.status === "UNUSED") return sum + card.amount.toNumber();
-      if (card.status === "WRONG_AMOUNT") return sum + (card.reportedAmount ? card.reportedAmount.toNumber() : 0);
-      return sum;
-    }, 0);
-
-    const adjustedTotal = rawTotal * order.buyRate.toNumber();
+    const adjustedTotal = computeEffectiveTotal(order.giftcards, order.buyRate);
 
     await prisma.order.update({
       where: { id: orderId },
@@ -120,10 +115,10 @@ export const completeOrder = buyerActionClient
       where: { id: orderId },
       include: { giftcards: true },
     });
-    if (!order) throw new ActionError("Order not found");
-    if (order.userId !== ctx.auth.user.id) throw new ActionError("Not authorized to complete this order");
-    if (order.status === "COMPLETED") throw new ActionError("Order is already completed");
-    if (order.status !== "AWAITING_PAYMENT") throw new ActionError("Order must be confirmed before payment can be submitted");
+    if (!order) throw new ActionError("Orden no encontrada");
+    if (order.userId !== ctx.auth.user.id) throw new ActionError("No estás autorizado para completar esta orden");
+    if (order.status === "COMPLETED") throw new ActionError("La orden ya ha sido completada");
+    if (order.status !== "AWAITING_PAYMENT") throw new ActionError("La orden debe ser confirmada antes de enviar el pago");
     return next({ ctx: { order } });
   })
   .action(async ({ parsedInput: { _transactionId }, ctx }) => {
@@ -163,7 +158,7 @@ export const completeOrder = buyerActionClient
     return {
       success: true as const,
       orderId: order.id,
-      message: "Order completed successfully",
+      message: "Orden completada con éxito",
     };
   });
 
@@ -175,7 +170,7 @@ export const cancelOrder = buyerActionClient
       where: { id: orderId },
       include: { giftcards: true },
     });
-    if (!order) throw new ActionError("Order not found in database");
+    if (!order) throw new ActionError("Orden no encontrada en la base de datos");
 
     // Cancel guard: check effective amount === 0
     const hasActiveCards = order.giftcards.some((g) => {
@@ -187,7 +182,7 @@ export const cancelOrder = buyerActionClient
     });
 
     if (hasActiveCards) {
-      throw new ActionError("Cannot cancel: order contains active cards with value. Wait for completion or contact support.");
+      throw new ActionError("No se puede cancelar: la orden contiene tarjetas activas con valor. Espera a que se complete o contacta al soporte.");
     }
 
     return next({ ctx: { order } });
@@ -207,20 +202,21 @@ export const cancelOrder = buyerActionClient
         },
       },
     });
-    return { success: true as const, message: "Order cancelled successfully!" };
+    return { success: true as const, message: "¡Orden cancelada con éxito!" };
   });
 
 // Helper to compute effective total for an order's giftcards
+// Uses Prisma Decimal arithmetic to avoid floating-point precision loss
 function computeEffectiveTotal(
   giftcards: { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null }[],
-  buyRate: number,
+  buyRate: Prisma.Decimal,
 ): number {
   const rawTotal = giftcards.reduce((sum, card) => {
-    if (card.status === "UNUSED") return sum + card.amount.toNumber();
-    if (card.status === "WRONG_AMOUNT") return sum + (card.reportedAmount ? card.reportedAmount.toNumber() : 0);
+    if (card.status === "UNUSED") return sum.plus(card.amount);
+    if (card.status === "WRONG_AMOUNT") return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
     return sum; // INVALID, ALREADY_USED, DEACTIVATED, USED contribute $0
-  }, 0);
-  return rawTotal * buyRate;
+  }, new Prisma.Decimal(0));
+  return rawTotal.mul(buyRate).toNumber();
 }
 
 // Helper to serialize a giftcard for output
@@ -300,15 +296,15 @@ export const getOrderById = buyerActionClient
       },
     });
 
-    if (!order) throw new ActionError("Order not found");
-    if (order.userId !== ctx.auth.user.id) throw new ActionError("Not authorized to view this order");
+    if (!order) throw new ActionError("Orden no encontrada");
+    if (order.userId !== ctx.auth.user.id) throw new ActionError("No estás autorizado para ver esta orden");
 
     return next({ ctx: { order } });
   })
   .action(async ({ ctx }) => {
     const { order } = ctx;
 
-    const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate.toNumber());
+    const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate);
     return {
       success: true as const,
       order: {
@@ -365,7 +361,7 @@ export const getBuyerOrders = buyerActionClient
     return {
       success: true as const,
       orders: orders.map((order) => {
-        const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate.toNumber());
+        const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate);
         return {
           id: order.id,
           status: order.status,

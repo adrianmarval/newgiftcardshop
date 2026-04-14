@@ -12,19 +12,19 @@ import type { OrderCardProps, BuyerOrderGiftcard } from "@/types";
 
 // Status badge configuration
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  PENDING: { label: "PENDING", color: "bg-amber-500/20 text-amber-500 border-amber-500/30", icon: null },
+  PENDING: { label: "PENDIENTE", color: "bg-amber-500/20 text-amber-500 border-amber-500/30", icon: null },
   AWAITING_PAYMENT: {
-    label: "AWAITING PAYMENT",
+    label: "ESPERANDO PAGO",
     color: "bg-blue-500/20 text-blue-500 border-blue-500/30",
     icon: null,
   },
   COMPLETED: {
-    label: "COMPLETED",
+    label: "COMPLETADA",
     color: "bg-emerald-500/20 text-emerald-500 border-emerald-500/30",
     icon: null,
   },
   CANCELLED: {
-    label: "CANCELLED",
+    label: "CANCELADA",
     color: "bg-destructive/20 text-destructive border-destructive/30",
     icon: null,
   },
@@ -79,7 +79,7 @@ export function OrderCard({ order, onCardClick }: OrderCardProps) {
               <span className="text-sm font-mono font-bold">{order.id.slice(-8).toUpperCase()}</span>
             </div>
             <div className="text-sm text-muted-foreground font-bold font-mono">
-              {new Date(order.createdAt).toLocaleDateString()} AT{" "}
+              {new Date(order.createdAt).toLocaleDateString()} A LAS{" "}
               {new Date(order.createdAt)
                 .toLocaleTimeString([], {
                   hour: "2-digit",
@@ -92,9 +92,9 @@ export function OrderCard({ order, onCardClick }: OrderCardProps) {
 
         <div className="flex flex-wrap items-center gap-4 md:gap-8">
           <div className="text-right">
-            <div className="text-sm text-muted-foreground uppercase font-black tracking-widest mb-0.5">Cards</div>
+            <div className="text-sm text-muted-foreground uppercase font-black tracking-widest mb-0.5">Tarjetas</div>
             <div className="text-base font-black italic tracking-tighter">
-              {confirmedCount}/{totalItems} Cnfrm.
+              {confirmedCount}/{totalItems} Conf.
             </div>
           </div>
           <div className="text-right">
@@ -132,11 +132,11 @@ export function OrderCard({ order, onCardClick }: OrderCardProps) {
                   <TooltipTrigger asChild>
                     <div className="p-1 px-2 bg-destructive/10 text-destructive rounded flex items-center gap-1.5 animate-pulse">
                       <AlertTriangle className="w-3 h-3" />
-                      <span className="text-sm font-black">ISSUE</span>
+                      <span className="text-sm font-black">PROBLEMA</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent className="bg-destructive text-destructive-foreground font-bold text-sm p-2">
-                    <p>Some cards in this order have been reported as invalid or used.</p>
+                    <p>Algunas tarjetas en esta orden han sido reportadas como inválidas o usadas.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

@@ -14,7 +14,7 @@ import { AlertCircle, Check, X } from "lucide-react";
 import { resetPassword } from "@/actions";
 import { useAction } from "next-safe-action/hooks";
 
-const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
+const PasswordCheckItem = ({ valid, label, portal = "buy" }: { valid: boolean; label: string; portal?: string }) => (
   <div className="flex items-center gap-2 text-base">
     {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-muted-foreground" />}
     <span className={valid ? "text-primary font-medium" : "text-muted-foreground"}>{label}</span>
@@ -29,6 +29,8 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const isSpanish = portal === "buy" || portal === "admin";
 
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
@@ -62,7 +64,8 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
       }
     },
     onError: ({ error }) => {
-      setError(error.serverError || error.validationErrors?._errors?.[0] || "Failed to reset password");
+      const defaultError = isSpanish ? "Error al restablecer la contraseña" : "Failed to reset password";
+      setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 
@@ -77,10 +80,14 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
       <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
         <div className="space-y-4 text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
-          <h1 className="text-3xl font-bold">Invalid Reset Link</h1>
-          <p className="text-base text-muted-foreground">This password reset link is invalid or has expired.</p>
+          <h1 className="text-3xl font-bold">{isSpanish ? "Enlace Inválido" : "Invalid Reset Link"}</h1>
+          <p className="text-base text-muted-foreground">
+            {isSpanish 
+              ? "Este enlace de restablecimiento es inválido o ha expirado." 
+              : "This password reset link is invalid or has expired."}
+          </p>
           <Link href={`${authPath}/forgot-password`} className="text-primary hover:underline font-semibold text-base">
-            Request a new reset link
+            {isSpanish ? "Solicita un nuevo enlace" : "Request a new reset link"}
           </Link>
         </div>
       </Card>
@@ -91,8 +98,10 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
     <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Reset Password</h1>
-          <p className="text-base text-muted-foreground">Create a new password for your account</p>
+          <h1 className="text-3xl font-bold">{isSpanish ? "Restablecer Contraseña" : "Reset Password"}</h1>
+          <p className="text-base text-muted-foreground">
+            {isSpanish ? "Crea una nueva contraseña para tu cuenta" : "Create a new password for your account"}
+          </p>
         </div>
 
         {error && (
@@ -108,7 +117,7 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
 
           <div className="space-y-2">
             <Label htmlFor="newPassword" className="text-sm uppercase tracking-wider font-semibold opacity-70">
-              New Password
+              {isSpanish ? "Nueva Contraseña" : "New Password"}
             </Label>
             <Input
               id="newPassword"
@@ -122,20 +131,37 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
               className="bg-muted/50 border-none h-11"
             />
             <div className="space-y-2 mt-2 p-3 bg-muted/30 rounded-lg">
-              <p className="text-sm font-semibold uppercase opacity-60">Requirements:</p>
+              <p className="text-sm font-semibold uppercase opacity-60">
+                {isSpanish ? "Requisitos:" : "Requirements:"}
+              </p>
               <div className="grid grid-cols-1 gap-1">
-                <PasswordCheckItem valid={passwordChecks.length} label="At least 8 characters" />
-                <PasswordCheckItem valid={passwordChecks.uppercase} label="Uppercase letter" />
-                <PasswordCheckItem valid={passwordChecks.lowercase} label="Lowercase letter" />
-                <PasswordCheckItem valid={passwordChecks.number} label="Number" />
-                <PasswordCheckItem valid={passwordChecks.special} label="Special character" />
+                <PasswordCheckItem 
+                  valid={passwordChecks.length} 
+                  label={isSpanish ? "Al menos 8 caracteres" : "At least 8 characters"} 
+                />
+                <PasswordCheckItem 
+                  valid={passwordChecks.uppercase} 
+                  label={isSpanish ? "Una letra mayúscula" : "Uppercase letter"} 
+                />
+                <PasswordCheckItem 
+                  valid={passwordChecks.lowercase} 
+                  label={isSpanish ? "Una letra minúscula" : "Lowercase letter"} 
+                />
+                <PasswordCheckItem 
+                  valid={passwordChecks.number} 
+                  label={isSpanish ? "Un número" : "Number"} 
+                />
+                <PasswordCheckItem 
+                  valid={passwordChecks.special} 
+                  label={isSpanish ? "Un carácter especial" : "Special character"} 
+                />
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword" className="text-sm uppercase tracking-wider font-semibold opacity-70">
-              Confirm Password
+              {isSpanish ? "Confirmar Contraseña" : "Confirm Password"}
             </Label>
             <Input
               id="confirmPassword"
@@ -154,17 +180,17 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
             {status === "executing" ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
-                Resetting...
+                {isSpanish ? "Restableciendo..." : "Resetting..."}
               </>
             ) : (
-              "Reset Password"
+              isSpanish ? "Restablecer Contraseña" : "Reset Password"
             )}
           </Button>
         </form>
 
         <p className="text-base text-muted-foreground text-center">
           <Link href={`${authPath}/login`} className="text-primary hover:underline font-semibold">
-            Back to Sign In
+            {isSpanish ? "Volver al Inicio de Sesión" : "Back to Sign In"}
           </Link>
         </p>
       </div>
@@ -173,8 +199,9 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
 }
 
 export function ResetPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
+  const isSpanish = portal === "buy" || portal === "admin";
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>{isSpanish ? "Cargando..." : "Loading..."}</div>}>
       <ResetPasswordFormContent portal={portal} />
     </Suspense>
   );

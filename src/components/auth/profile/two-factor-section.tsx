@@ -12,8 +12,11 @@ import { authClient } from "@/lib/auth-client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import type { TwoFactorSectionProps } from "@/types";
+import { usePathname } from "next/navigation";
 
 export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
+  const pathname = usePathname();
+  const isSpanish = pathname.includes("/admin") || pathname.includes("/buy");
   const [is2FAEnabled, setIs2FAEnabled] = useState(initialEnabled);
 
   // Setup dialog state
@@ -34,7 +37,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
   const handleEnable2FA = async () => {
     if (!password) {
-      setTwoFactorError("Password is required to enable 2FA");
+      setTwoFactorError(isSpanish ? "Se requiere contraseña para habilitar 2FA" : "Password is required to enable 2FA");
       return;
     }
     setIs2FAPending(true);
@@ -43,7 +46,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
       const { data, error } = await authClient.twoFactor.enable({ password });
       if (error) {
         console.log("Error enabling 2FA:", error);
-        setTwoFactorError(error.message || "Failed to enable 2FA");
+        setTwoFactorError(error.message || (isSpanish ? "Error al habilitar 2FA" : "Failed to enable 2FA"));
       } else if (data) {
         setQrCodeData(data.totpURI);
         setTwoStepEnable(true);
@@ -64,7 +67,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
     try {
       const { data, error } = await authClient.twoFactor.verifyTotp({ code: totpCode });
       if (error) {
-        setTwoFactorError(error.message || "Invalid code");
+        setTwoFactorError(error.message || (isSpanish ? "Código inválido" : "Invalid code"));
       } else {
         setIs2FAEnabled(true);
         const responseData = data as { backupCodes?: string[] } | null;
@@ -85,7 +88,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
   const handleRegenerateBackupCodes = async () => {
     if (!password) {
-      setTwoFactorError("Password is required to regenerate backup codes");
+      setTwoFactorError(isSpanish ? "Se requiere contraseña para regenerar códigos" : "Password is required to regenerate backup codes");
       return;
     }
     setIs2FAPending(true);
@@ -93,7 +96,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
     try {
       const { data, error } = await authClient.twoFactor.generateBackupCodes({ password });
       if (error) {
-        setTwoFactorError(error.message || "Failed to regenerate codes");
+        setTwoFactorError(error.message || (isSpanish ? "Error al regenerar códigos" : "Failed to regenerate codes"));
       } else if (data) {
         setBackupCodes(data.backupCodes);
         setShowBackupCodes(true);
@@ -109,7 +112,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
   const handleDisable2FA = async () => {
     if (!password) {
-      setTwoFactorError("Password is required to disable 2FA");
+      setTwoFactorError(isSpanish ? "Se requiere contraseña para deshabilitar 2FA" : "Password is required to disable 2FA");
       return;
     }
     setIs2FAPending(true);
@@ -117,7 +120,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
     try {
       const { error } = await authClient.twoFactor.disable({ password });
       if (error) {
-        setTwoFactorError(error.message || "Failed to disable 2FA");
+        setTwoFactorError(error.message || (isSpanish ? "Error al deshabilitar 2FA" : "Failed to disable 2FA"));
       } else {
         setIs2FAEnabled(false);
         setShowDisableDialog(false);
@@ -163,11 +166,13 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                 2FA
                 {is2FAEnabled && (
                   <span className="text-xs bg-primary/20 text-primary px-3 py-1 rounded-full font-black tracking-widest uppercase">
-                    ACTIVE
+                    {isSpanish ? "ACTIVO" : "ACTIVE"}
                   </span>
                 )}
               </h2>
-              <p className="text-base text-muted-foreground">Identity verification</p>
+              <p className="text-base text-muted-foreground">
+                {isSpanish ? "Verificación de identidad" : "Identity verification"}
+              </p>
             </div>
           </div>
 
@@ -179,7 +184,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
               onClick={() => setShowDisableDialog(true)}
               disabled={is2FAPending}
             >
-              Disable
+              {isSpanish ? "Deshabilitar" : "Disable"}
             </Button>
           ) : (
             <Button
@@ -188,7 +193,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
               onClick={() => setShow2FADialog(true)}
               disabled={is2FAPending}
             >
-              Configure
+              {isSpanish ? "Configurar" : "Configure"}
             </Button>
           )}
         </div>
@@ -196,8 +201,12 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
         {is2FAEnabled && (
           <div className="mt-8 pt-8 border-t border-border flex items-center justify-between group/codes">
             <div>
-              <h3 className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">Backup Codes</h3>
-              <p className="text-sm text-muted-foreground/60">Generate extra recovery keys</p>
+              <h3 className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">
+                {isSpanish ? "Códigos de Respaldo" : "Backup Codes"}
+              </h3>
+              <p className="text-sm text-muted-foreground/60">
+                {isSpanish ? "Genera llaves de recuperación extra" : "Generate extra recovery keys"}
+              </p>
             </div>
             <Button
               variant="outline"
@@ -210,7 +219,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
               }}
             >
               <RefreshCw className="h-3.5 w-3.5 mr-2 group-hover/codes:rotate-180 transition-transform duration-500" />
-              Manage
+              {isSpanish ? "Gestionar" : "Manage"}
             </Button>
           </div>
         )}
@@ -218,8 +227,9 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
         {!is2FAEnabled && (
           <div className="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/10">
               <p className="text-xs leading-relaxed text-primary/80 font-medium">
-                We highly recommend enabling 2FA. This adds an extra shield to your transactions and personal data within the Solmaira
-                ecosystem.
+                {isSpanish 
+                  ? "Recomendamos encarecidamente habilitar 2FA. Esto añade un escudo extra a tus transacciones y datos personales dentro del ecosistema Solmaira."
+                  : "We highly recommend enabling 2FA. This adds an extra shield to your transactions and personal data within the Solmaira ecosystem."}
               </p>
           </div>
         )}
@@ -230,14 +240,22 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
         <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
             <DialogTitle>
-              {showBackupCodes ? "Backup Codes" : !twoStepEnable ? "Set up Two-Factor Authentication" : "Scan QR Code"}
+              {showBackupCodes 
+                ? (isSpanish ? "Códigos de Respaldo" : "Backup Codes") 
+                : !twoStepEnable 
+                  ? (isSpanish ? "Configurar Autenticación de Dos Factores" : "Set up Two-Factor Authentication") 
+                  : (isSpanish ? "Escanear Código QR" : "Scan QR Code")}
             </DialogTitle>
             <DialogDescription>
               {showBackupCodes
-                ? "Save these codes in a safe place. They are the only way to recover your account if you lose your device."
+                ? (isSpanish 
+                    ? "Guarda estos códigos en un lugar seguro. Son la única forma de recuperar tu cuenta si pierdes tu dispositivo." 
+                    : "Save these codes in a safe place. They are the only way to recover your account if you lose your device.")
                 : !twoStepEnable
-                  ? "Protect your account with a secondary verification method."
-                  : "Scan the QR code with your authenticator app and enter the code."}
+                  ? (isSpanish ? "Protege tu cuenta con un método de verificación secundario." : "Protect your account with a secondary verification method.")
+                  : (isSpanish 
+                      ? "Escanea el código QR con tu aplicación de autenticación e ingresa el código." 
+                      : "Scan the QR code with your authenticator app and enter the code.")}
             </DialogDescription>
           </DialogHeader>
 
@@ -247,8 +265,12 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                 <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
                   <ShieldCheck className="h-8 w-8 text-green-500" />
                 </div>
-                <h3 className="text-xl font-bold">Your Backup Codes</h3>
-                <p className="text-base text-muted-foreground">Each code can be used only once. Keep them in a safe place.</p>
+                <h3 className="text-xl font-bold">{isSpanish ? "Tus Códigos de Respaldo" : "Your Backup Codes"}</h3>
+                <p className="text-base text-muted-foreground">
+                  {isSpanish 
+                    ? "Cada código puede usarse solo una vez. Guárdalos en un lugar seguro." 
+                    : "Each code can be used only once. Keep them in a safe place."}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 p-4 bg-muted/50 rounded-xl font-mono text-base border">
@@ -269,7 +291,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                   }}
                 >
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy All Codes
+                  {isSpanish ? "Copiar Todos los Códigos" : "Copy All Codes"}
                 </Button>
                 <Button
                   onClick={() => {
@@ -280,7 +302,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                   }}
                   className="w-full h-11 font-semibold"
                 >
-                  I&apos;ve Saved These Codes
+                  {isSpanish ? "He Guardado Estos Códigos" : "I've Saved These Codes"}
                 </Button>
               </div>
             </div>
@@ -292,8 +314,12 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                 </div>
                 <p className="text-base">
                   {is2FAEnabled
-                    ? "Verify your password to generate a new set of backup codes."
-                    : "We highly recommend enabling 2FA to keep your gift card portal secure."}
+                    ? (isSpanish 
+                        ? "Verifica tu contraseña para generar un nuevo set de códigos de respaldo." 
+                        : "Verify your password to generate a new set of backup codes.")
+                    : (isSpanish 
+                        ? "Recomendamos encarecidamente habilitar 2FA para mantener seguro tu portal de tarjetas de regalo." 
+                        : "We highly recommend enabling 2FA to keep your gift card portal secure.")}
                 </p>
               </div>
 
@@ -304,15 +330,15 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                     <span>{twoFactorError}</span>
                   </Alert>
                 )}
-                <Label htmlFor="setupPassword" title="Verify your password to continue">
-                  Password
+                <Label htmlFor="setupPassword" title={isSpanish ? "Verifica tu contraseña para continuar" : "Verify your password to continue"}>
+                  {isSpanish ? "Contraseña" : "Password"}
                 </Label>
                 <Input
                   id="setupPassword"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your account password"
+                  placeholder={isSpanish ? "Ingresa la contraseña de tu cuenta" : "Enter your account password"}
                   className="bg-muted/50 border-none h-11"
                 />
               </div>
@@ -320,12 +346,12 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
               {is2FAEnabled ? (
                 <Button onClick={handleRegenerateBackupCodes} className="w-full h-11 font-semibold" disabled={is2FAPending || !password}>
                   {is2FAPending && <Spinner className="h-4 w-4 mr-2" />}
-                  Regenerate Backup Codes
+                  {isSpanish ? "Regenerar Códigos de Respaldo" : "Regenerate Backup Codes"}
                 </Button>
               ) : (
                 <Button onClick={handleEnable2FA} className="w-full h-11 font-semibold" disabled={is2FAPending || !password}>
                   {is2FAPending && <Spinner className="h-4 w-4 mr-2" />}
-                  Enable Authenticator
+                  {isSpanish ? "Habilitar Autenticador" : "Enable Authenticator"}
                 </Button>
               )}
             </div>
@@ -344,7 +370,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
                   </Alert>
                 )}
                 <Label htmlFor="totpCode" className="text-xs uppercase tracking-wider font-semibold opacity-70">
-                  Verification Code
+                  {isSpanish ? "Código de Verificación" : "Verification Code"}
                 </Label>
                 <Input
                   id="totpCode"
@@ -358,7 +384,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
 
               <Button onClick={handleVerify2FA} className="w-full h-11" disabled={is2FAPending || totpCode.length !== 6}>
                 {is2FAPending ? <Spinner className="h-4 w-4 mr-2" /> : null}
-                Verify and Activate
+                {isSpanish ? "Verificar y Activar" : "Verify and Activate"}
               </Button>
             </div>
           )}
@@ -369,19 +395,23 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
       <Dialog open={showDisableDialog} onOpenChange={handleCloseDisableDialog}>
         <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
-            <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
-            <DialogDescription>Are you sure you want to disable 2FA? This will make your account less secure.</DialogDescription>
+            <DialogTitle>{isSpanish ? "Deshabilitar Autenticación de Dos Factores" : "Disable Two-Factor Authentication"}</DialogTitle>
+            <DialogDescription>
+              {isSpanish 
+                ? "¿Estás seguro de que quieres deshabilitar 2FA? Esto hará que tu cuenta sea menos segura." 
+                : "Are you sure you want to disable 2FA? This will make your account less secure."}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="disablePassword">Account Password</Label>
+              <Label htmlFor="disablePassword">{isSpanish ? "Contraseña de la Cuenta" : "Account Password"}</Label>
               <Input
                 id="disablePassword"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Confirm your password"
+                placeholder={isSpanish ? "Confirma tu contraseña" : "Confirm your password"}
                 className="bg-muted/50 border-none h-11"
               />
             </div>
@@ -393,7 +423,7 @@ export function TwoFactorSection({ initialEnabled }: TwoFactorSectionProps) {
               disabled={is2FAPending || !password}
             >
               {is2FAPending ? <Spinner className="h-4 w-4 mr-2" /> : null}
-              Disable 2FA
+              {isSpanish ? "Deshabilitar 2FA" : "Disable 2FA"}
             </Button>
           </div>
         </DialogContent>

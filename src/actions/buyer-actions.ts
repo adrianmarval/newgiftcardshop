@@ -55,8 +55,8 @@ export const getOrderCards = buyerActionClient
         },
       },
     });
-    if (!order) throw new ActionError("Order not found");
-    if (order.userId !== user.id) throw new ActionError("Not authorized to view this order");
+    if (!order) throw new ActionError("Orden no encontrada");
+    if (order.userId !== user.id) throw new ActionError("No estás autorizado para ver esta orden");
     return {
       success: true as const,
       giftcards: order.giftcards.map((card) => {
@@ -82,7 +82,6 @@ export const getOrderCards = buyerActionClient
           pinCode,
           status: (card.status as BuyGiftcardItem["status"]) ?? "UNUSED",
           reportedAmount: card.reportedAmount ? card.reportedAmount.toNumber() : undefined,
-          sellerId: card.ownerId ?? undefined,
         };
       }),
     };
@@ -95,11 +94,16 @@ export const reportGiftcardIssue = buyerActionClient
     const order = await prisma.order.findUnique({
       where: { id: orderId },
     });
-    if (!order) throw new ActionError("Order not found");
-    if (order.userId !== ctx.auth.user.id) throw new ActionError("Not authorized");
+    if (!order) throw new ActionError("Orden no encontrada");
+    if (order.userId !== ctx.auth.user.id) throw new ActionError("No autorizado");
     if (issueType === "WRONG_AMOUNT" && !reportedAmount) {
-      throw new ActionError("Reported amount is required for WRONG_AMOUNT issue type");
+      throw new ActionError("El monto reportado es obligatorio para el tipo de problema MONTO_INCORRECTO");
     }
+    // Idempotency: prevent duplicate issue reports for the same card/order/user
+    const existingIssue = await prisma.giftcardIssue.findFirst({
+      where: { giftcardId, orderId, reportedById: ctx.auth.user.id },
+    });
+    if (existingIssue) throw new ActionError("Ya has reportado un problema con esta tarjeta en esta orden");
     const foundGiftcard = await prisma.giftcard.findUnique({
       where: { id: giftcardId },
       select: { ownerId: true },
@@ -151,24 +155,36 @@ export const undoGiftcardIssue = buyerActionClient
     const order = await prisma.order.findUnique({
       where: { id: orderId },
     });
-    if (!order) throw new ActionError("Order not found");
-    if (order.userId !== ctx.auth.user.id) throw new ActionError("Not authorized");
+    if (!order) throw new ActionError("Orden no encontrada");
+    if (order.userId !== ctx.auth.user.id) throw new ActionError("No autorizado");
     const foundGiftcard = await prisma.giftcard.findUnique({
       where: { id: giftcardId },
       select: { ownerId: true },
     });
     if (!foundGiftcard) throw new ActionError("Giftcard not found");
+    // Only delete issues reported by this user (not other users' issues)
+    const deleted = await prisma.giftcardIssue.deleteMany({
+      where: { giftcardId, orderId, reportedById: ctx.auth.user.id },
+    });
+
+    // If no issues were deleted, the user might be trying to undo an issue they didn't create
+    if (deleted.count === 0) {
+      throw new ActionError("No se encontró ningún problema para deshacer en esta tarjeta");
+    }
     return next({ ctx: { foundGiftcard } });
   })
   .action(async ({ parsedInput: { giftcardId, orderId }, ctx }) => {
-    await prisma.$transaction([
-      prisma.giftcardIssue.deleteMany({
-        where: { giftcardId, orderId },
-      }),
-      prisma.giftcard.update({
+    // Only reset card status to UNUSED if no other issues remain on this card
+    const remainingIssues = await prisma.giftcardIssue.findFirst({
+      where: { giftcardId },
+    });
+
+    if (!remainingIssues) {
+      await prisma.giftcard.update({
         where: { id: giftcardId },
         data: { status: "UNUSED", reportedAmount: null },
-      }),
-    ]);
+      });
+    }
+
     return { success: true as const };
   });

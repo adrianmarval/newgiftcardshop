@@ -78,16 +78,16 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
       {/* Left Column: Filters */}
       <Card className="md:col-span-4 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 space-y-4 md:space-y-6 flex flex-col h-auto md:h-full sticky top-0 z-20">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Configuration</h2>
-          <p className="text-muted-foreground text-sm md:text-base">What are you looking for?</p>
+          <h2 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Configuración</h2>
+          <p className="text-muted-foreground text-sm md:text-base">¿Qué estás buscando?</p>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-1.5 md:space-y-2">
-            <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider mb-1 block">Country</Label>
+            <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider mb-1 block">País</Label>
             <Select value={selectedCountry} onValueChange={setSelectedCountry} disabled={searchState.loading}>
               <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-base">
-                <SelectValue placeholder={searchState.loading ? "Loading..." : "Select country..."} />
+                <SelectValue placeholder={searchState.loading ? "Cargando..." : "Seleccionar país..."} />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border text-popover-foreground">
                 {searchState.country.map((country) => (
@@ -101,13 +101,13 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
 
           <div className="space-y-1.5 md:space-y-2">
             <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider mb-1 block">
-              Target Total Amount
+              Monto Total Objetivo
             </Label>
             <div className="relative">
               <span className="absolute left-3 top-2.5 md:top-3 text-muted-foreground/50 text-base">$</span>
               <Input
                 type="number"
-                placeholder="Ex: 500"
+                placeholder="Ej: 500"
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
                 className="pl-7 border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-base"
@@ -117,12 +117,12 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
 
           <div className="space-y-1.5 md:space-y-2">
             <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider mb-1 block">
-              Search Brand
+              Buscar Marca
             </Label>
             <div className="relative">
               <Search className="absolute left-3 top-2.5 md:top-3 w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground/50" />
               <Input
-                placeholder="Search..."
+                placeholder="Buscar..."
                 value={searchState.searchBrand}
                 onChange={(e) => setSearchState((prev) => ({ ...prev, searchBrand: e.target.value }))}
                 className="pl-9 md:pl-10 border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 md:h-11 text-base"
@@ -137,7 +137,7 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
             disabled={!isValid || status === "executing"}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 transition-all text-base font-bold shadow-lg shadow-primary/20"
           >
-            {searchState.isSearching ? "Finding Cards..." : "Search Availability"}
+            {searchState.isSearching ? "Buscando Tarjetas..." : "Consultar Disponibilidad"}
             {!searchState.isSearching && <ChevronRight className="w-4 h-4 ml-2" />}
           </Button>
         </div>
@@ -146,8 +146,8 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
       {/* Right Column: Brand Grid */}
       <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-3 md:mb-4">
-          <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider">Available Brands</Label>
-          <span className="text-xs text-muted-foreground/50">{filteredBrands.length} items</span>
+          <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider">Marcas Disponibles</Label>
+          <span className="text-xs text-muted-foreground/50">{filteredBrands.length} ítems</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 overflow-y-auto pr-1 md:pr-2 custom-scrollbar flex-1 max-h-125 md:max-h-150">

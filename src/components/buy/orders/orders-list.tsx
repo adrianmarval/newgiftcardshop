@@ -12,8 +12,8 @@ export function OrdersList({ orders, totalPages, onCardClick }: OrdersListProps)
     return (
       <EmptyState
         icon={<History className="w-12 h-12 text-muted-foreground/20" />}
-        title="No records found"
-        description="Try adjusting your filters or search keywords."
+        title="No se encontraron registros"
+        description="Intenta ajustar tus filtros o palabras clave de búsqueda."
       />
     );
   }

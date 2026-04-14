@@ -4,8 +4,8 @@ import { searchParamsCache } from "@/lib/search-params-cache";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "My Orders | Solmaira Cards",
-  description: "View and track your gift card purchase orders.",
+  title: "Mis Órdenes | Solmaira Cards",
+  description: "Consulta y rastrea tus órdenes de compra de tarjetas de regalo.",
 };
 
 export default async function BuyerOrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -35,8 +35,8 @@ export default async function BuyerOrdersPage({ searchParams }: { searchParams: 
   return (
     <div className="container mx-auto py-6 space-y-8">
       <div className="flex flex-col gap-1">
-        <h1 className="text-5xl font-black italic tracking-tighter">MY ORDERS</h1>
-        <p className="text-muted-foreground text-base">Track your purchases and manage pending orders.</p>
+        <h1 className="text-5xl font-black italic tracking-tighter">MIS ÓRDENES</h1>
+        <p className="text-muted-foreground text-base">Rastrea tus compras y gestiona órdenes pendientes.</p>
       </div>
 
       <BuyerOrdersView orders={result.data.orders} pagination={pagination} />

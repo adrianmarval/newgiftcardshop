@@ -14,29 +14,29 @@ export function OrdersStats({ orders, totalCount }: OrdersStatsProps) {
 
   const statsItems = [
     {
-      label: "Total Orders",
+      label: "Total Órdenes",
       value: totalOrders,
-      description: `${totalCount} orders found`,
+      description: `${totalCount} órdenes encontradas`,
       icon: <History className="w-4 h-4 text-primary" />,
     },
     {
-      label: "Active Orders",
+      label: "Órdenes Activas",
       value: activeOrders,
-      description: "Pending or awaiting payment",
+      description: "Pendientes o esperando pago",
       icon: <Clock className="w-4 h-4 text-amber-500" />,
       color: "amber-500",
     },
     {
-      label: "Completed",
+      label: "Completadas",
       value: completedOrders,
-      description: "Orders fulfilled",
+      description: "Órdenes finalizadas",
       icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" />,
       color: "emerald-500",
     },
     {
-      label: "Total Spent",
+      label: "Total Gastado",
       value: `$${totalSpent.toFixed(2)}`,
-      description: "On completed orders",
+      description: "En órdenes completadas",
       icon: <CreditCard className="w-4 h-4 text-blue-500" />,
       color: "blue-500",
     },

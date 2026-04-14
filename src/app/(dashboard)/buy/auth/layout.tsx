@@ -6,7 +6,7 @@ export default function BuyAuthLayout({ children }: { children: ReactNode }) {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h2 className="text-4xl font-bold text-white">Solmaira Buy</h2>
-          <p className="text-lg text-blue-300/70 mt-1">Gift Card Marketplace</p>
+          <p className="text-lg text-blue-300/70 mt-1">Mercado de Tarjetas de Regalo</p>
         </div>
         {children}
       </div>

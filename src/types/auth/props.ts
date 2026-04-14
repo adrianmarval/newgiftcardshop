@@ -35,7 +35,7 @@ export interface Verify2FAFormProps {
  * Props for the LoginForm component.
  */
 export interface LoginFormProps {
-  portal: "buyer" | "seller" | "admin";
+  portal: Portal;
   title: string;
   subtitle: string;
   forgotPasswordUrl: string;
@@ -49,7 +49,7 @@ export interface LoginFormProps {
  * Props for the RegisterForm component.
  */
 export interface RegisterFormProps {
-  portal: "buyer" | "seller";
+  portal: "buy" | "sell";
   redirectTo: string;
   loginUrl: string;
   title: string;

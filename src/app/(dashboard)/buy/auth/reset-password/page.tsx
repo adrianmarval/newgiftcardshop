@@ -3,13 +3,13 @@ import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Reset Password | Solmaira Cards",
-  description: "Create a new password for your Solmaira account",
+  title: "Restablecer Contraseña | Solmaira Cards",
+  description: "Crea una nueva contraseña para tu cuenta de Solmaira",
 };
 
 export default function BuyerResetPasswordPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Cargando...</div>}>
       <ResetPasswordForm portal="buy" />
     </Suspense>
   );

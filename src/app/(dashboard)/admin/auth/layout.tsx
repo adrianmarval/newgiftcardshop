@@ -6,7 +6,7 @@ export default function AdminAuthLayout({ children }: { children: ReactNode }) {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h2 className="text-4xl font-bold text-white">Solmaira Admin</h2>
-          <p className="text-lg text-violet-300/70 mt-1">Administration Portal</p>
+          <p className="text-lg text-violet-300/70 mt-1">Portal de Administración</p>
         </div>
         {children}
       </div>

@@ -3,8 +3,8 @@ import { ProfileForm } from "@/components/auth/profile/profile-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Profile | Admin Dashboard | Solmaira Cards",
-  description: "Manage your Solmaira admin profile settings",
+  title: "Perfil | Panel de Administración | Solmaira Cards",
+  description: "Gestiona los ajustes de tu perfil de administrador de Solmaira",
 };
 
 export default async function AdminProfilePage() {

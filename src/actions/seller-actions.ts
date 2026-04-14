@@ -23,7 +23,7 @@ export const publishBatch = sellerActionClient
     });
 
     if (validCards.length === 0) {
-      throw new ActionError("No se proporcionaron tarjetas válidas para procesar.");
+      throw new ActionError("No valid cards were provided for processing.");
     }
 
     const dbUser = await prisma.user.findUnique({
@@ -31,7 +31,7 @@ export const publishBatch = sellerActionClient
       select: { sellRate: true },
     });
 
-    if (!dbUser) throw new ActionError("Usuario no encontrado en el sistema.");
+    if (!dbUser) throw new ActionError("User not found in the system.");
 
     const hashedCodes = validCards.map((card) => hashCode(card.claimCode.trim()));
 
@@ -46,7 +46,7 @@ export const publishBatch = sellerActionClient
 
     validCards.forEach((card, i) => (existingHashes.has(hashedCodes[i]) ? duplicates.push(card.claimCode.trim()) : uniqueCards.push(card)));
 
-    if (uniqueCards.length === 0) throw new ActionError("Todas las tarjetas proporcionadas ya existen en el inventario.");
+    if (uniqueCards.length === 0) throw new ActionError("All provided cards already exist in the inventory.");
 
     return next({ ctx: { uniqueCards, duplicates, dbUser } });
   })

@@ -6,12 +6,12 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { PortalSidebar } from "./app-sidebar";
 
 const navItems = [
-  { title: "Dashboard", url: "/buy/dashboard", icon: IconDashboard },
-  { title: "Browse Cards", url: "/buy/dashboard/browse-cards", icon: IconSearch },
-  { title: "My Orders", url: "/buy/dashboard/orders", icon: IconShoppingCart },
-  { title: "Wallet", url: "/buy/dashboard/wallet", icon: IconWallet },
-  { title: "Profile", url: "/buy/dashboard/profile", icon: IconUser },
-  { title: "Settings", url: "/buy/dashboard/settings", icon: IconSettings },
+  { title: "Panel Control", url: "/buy/dashboard", icon: IconDashboard },
+  { title: "Explorar Tarjetas", url: "/buy/dashboard/browse-cards", icon: IconSearch },
+  { title: "Mis Órdenes", url: "/buy/dashboard/orders", icon: IconShoppingCart },
+  { title: "Billetera", url: "/buy/dashboard/wallet", icon: IconWallet },
+  { title: "Perfil", url: "/buy/dashboard/profile", icon: IconUser },
+  { title: "Ajustes", url: "/buy/dashboard/settings", icon: IconSettings },
 ];
 
 export function BuyerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

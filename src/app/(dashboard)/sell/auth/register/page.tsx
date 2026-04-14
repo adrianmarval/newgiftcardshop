@@ -11,7 +11,7 @@ export default function SellerRegisterPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <RegisterForm
-        portal="seller"
+        portal="sell"
         redirectTo="/sell"
         loginUrl="/sell/auth/login"
         title="Become a Seller"

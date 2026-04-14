@@ -63,12 +63,12 @@ export function RedeemStep() {
     setLoading(id, true);
     const result = await reportGiftcardIssue({ giftcardId: id, orderId, issueType: status });
     if (!result.data) {
-      toast.error("Error reporting issue", {
+      toast.error("Error al reportar el problema", {
         description: result.serverError || result.validationErrors?._errors,
       });
       reportIssue(id, "UNUSED");
     }
-    toast.success("Issue reported successfully");
+    toast.success("Problema reportado con éxito");
     setLoading(id, false);
   };
 
@@ -87,12 +87,12 @@ export function RedeemStep() {
     setLoading(id, true);
     const result = await reportGiftcardIssue({ giftcardId: id, orderId, issueType: "WRONG_AMOUNT", reportedAmount: val });
     if (!result.data) {
-      toast.error("Error reporting issue", {
+      toast.error("Error al reportar el problema", {
         description: result.serverError || result.validationErrors?._errors,
       });
       reportIssue(id, "UNUSED");
     }
-    toast.success("Issue reported successfully");
+    toast.success("Problema reportado con éxito");
     setLoading(id, false);
   };
 
@@ -104,13 +104,13 @@ export function RedeemStep() {
     setLoading(giftcardId, true);
     const result = await undoGiftcardIssue({ giftcardId, orderId });
     if (!result.data) {
-      toast.error("Error undoing giftcard issue", {
+      toast.error("Error al deshacer el problema de la tarjeta", {
         description: result.serverError || result.validationErrors?._errors,
       });
       // Retornar al status en el que estaba
       reportIssue(giftcardId, status);
     }
-    toast.success("Issue undone successfully");
+    toast.success("Problema deshecho con éxito");
     setLoading(giftcardId, false);
 
     // try {
@@ -138,24 +138,24 @@ export function RedeemStep() {
       {/* Left Column: Order Summary & Actions */}
       <Card className="md:col-span-4 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 space-y-4 md:space-y-6 flex flex-col h-auto md:h-full sticky top-0 z-20">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold mb-0.5 md:mb-1">Redeem & Verify</h2>
-          <p className="text-muted-foreground text-xs md:text-sm">Copy your codes and report any issues.</p>
+          <h2 className="text-xl md:text-2xl font-bold mb-0.5 md:mb-1">Redimir y Verificar</h2>
+          <p className="text-muted-foreground text-xs md:text-sm">Copia tus códigos y reporta cualquier problema.</p>
         </div>
 
         <div className="space-y-4">
           <div className="bg-muted/50 border border-border rounded-xl p-3 md:p-4 space-y-3">
             <div className="flex justify-between items-center text-sm md:text-base">
-              <span className="text-muted-foreground">Active Cards</span>
+              <span className="text-muted-foreground">Tarjetas Activas</span>
               <span className="font-bold">
                 {foundGiftcards.length - reportedCount} / {foundGiftcards.length}
               </span>
             </div>
 
             <div className="flex justify-between items-center text-sm md:text-base pt-2 border-t border-border">
-              <span className="text-muted-foreground">Adjusted Total</span>
+              <span className="text-muted-foreground">Total Ajustado</span>
               <div className="text-right">
                 <span className="text-2xl font-black text-primary">${totalAmount.toFixed(2)}</span>
-                <p className="text-xs text-muted-foreground leading-none mt-1">Final amount to pay</p>
+                <p className="text-xs text-muted-foreground leading-none mt-1">Monto final a pagar</p>
               </div>
             </div>
           </div>
@@ -164,8 +164,8 @@ export function RedeemStep() {
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex gap-3 items-start">
               <AlertTriangle className="w-4 h-4 text-destructive mt-0.5" />
               <p className="text-xs md:text-sm text-destructive/80 leading-relaxed font-medium">
-                You have reported issues with {reportedCount} card
-                {reportedCount !== 1 ? "s" : ""}. The total has been automatically adjusted.
+                Has reportado problemas con {reportedCount} tarjeta
+                {reportedCount !== 1 ? "s" : ""}. El total ha sido ajustado automáticamente.
               </p>
             </div>
           )}
@@ -173,7 +173,7 @@ export function RedeemStep() {
           <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex gap-3 items-start">
             <Info className="w-4 h-4 text-primary mt-0.5" />
             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-              Verify each card manually. Once you confirm usage, reporting will be disabled and an order will be generated.
+              Verifica cada tarjeta manualmente. Una vez que confirmes el uso, se desactivarán los reportes y se generará el pedido.
             </p>
           </div>
         </div>
@@ -183,18 +183,18 @@ export function RedeemStep() {
             onClick={() => setStep(4)}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 font-bold shadow-lg shadow-primary/20"
           >
-            I have verified all cards <ChevronRight className="w-4 h-4 ml-1" />
+            He verificado todas las tarjetas <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
-          <p className="text-xs text-muted-foreground text-center italic">Make sure all reports are correct before proceeding.</p>
+          <p className="text-xs text-muted-foreground text-center italic">Asegúrate de que todos los reportes sean correctos antes de continuar.</p>
         </div>
       </Card>
 
       {/* Right Column: Cards Reveal & Reporting */}
       <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-4">
-          <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider">Revealed Codes</Label>
+          <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider">Códigos Revelados</Label>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground/50">{foundGiftcards.length} items</span>
+            <span className="text-xs text-muted-foreground/50">{foundGiftcards.length} ítems</span>
           </div>
         </div>
 
@@ -230,7 +230,15 @@ export function RedeemStep() {
                         </span>
                         {card.status !== "UNUSED" && (
                           <Badge variant="destructive" className="text-xs h-4 uppercase font-bold py-0">
-                            {card.status.replace("_", " ")}
+                            {card.status === "INVALID"
+                              ? "INVÁLIDA"
+                              : card.status === "ALREADY_USED"
+                                ? "YA USADA"
+                                : card.status === "DEACTIVATED"
+                                  ? "DESACTIVADA"
+                                  : card.status === "WRONG_AMOUNT"
+                                    ? "MONTO INCORRECTO"
+                                    : card.status}
                             {card.status === "WRONG_AMOUNT" && `: $${card.reportedAmount}`}
                           </Badge>
                         )}
@@ -249,7 +257,7 @@ export function RedeemStep() {
                             </Button>
                           </div>
                         ) : (
-                          <span className="font-mono text-sm text-muted-foreground/50">CODE UNAVAILABLE</span>
+                          <span className="font-mono text-sm text-muted-foreground/50">CÓDIGO NO DISPONIBLE</span>
                         )}
                       </div>
                     </div>
@@ -266,7 +274,7 @@ export function RedeemStep() {
                             size="sm"
                             className="text-xs h-8 border-destructive/30 text-destructive/80 hover:bg-destructive/10"
                           >
-                            Report issue
+                            Reportar problema
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-popover border-border">
@@ -274,21 +282,21 @@ export function RedeemStep() {
                             className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                             onClick={() => handleReport(card.id, "INVALID")}
                           >
-                            Invalid code
+                            Código inválido
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                             onClick={() => handleReport(card.id, "ALREADY_USED")}
                           >
-                            Already used
+                            Ya usada
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                             onClick={() => handleReport(card.id, "DEACTIVATED")}
                           >
-                            Deactivated
+                            Desactivada
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleReport(card.id, "WRONG_AMOUNT")}>Wrong amount</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleReport(card.id, "WRONG_AMOUNT")}>Monto incorrecto</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
@@ -298,7 +306,7 @@ export function RedeemStep() {
                         className="text-xs h-8 text-muted-foreground hover:bg-muted"
                         onClick={() => handleUndoReport(card.id, card.status)}
                       >
-                        Undo report
+                        Deshacer reporte
                       </Button>
                     )}
                   </div>
@@ -315,7 +323,7 @@ export function RedeemStep() {
                       <span className="absolute left-2 top-1.5 text-muted-foreground/50 text-xs">$</span>
                       <Input
                         type="number"
-                        placeholder="Correct amt"
+                        placeholder="Monto corr."
                         value={redeemState.correctedAmount}
                         onChange={(e) => setRedeemState((prev) => ({ ...prev, correctedAmount: e.target.value }))}
                         className="pl-5 h-8 text-sm bg-muted/50 border-border"
@@ -326,7 +334,7 @@ export function RedeemStep() {
                       className="h-8 bg-primary text-primary-foreground text-sm"
                       onClick={() => submitCorrectedAmount(card.id)}
                     >
-                      Update
+                      Actualizar
                     </Button>
                     <Button
                       size="sm"

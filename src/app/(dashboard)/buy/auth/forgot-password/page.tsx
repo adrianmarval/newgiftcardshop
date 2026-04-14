@@ -3,8 +3,8 @@ import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Forgot Password | Solmaira Cards",
-  description: "Reset your Solmaira account password",
+  title: "Olvidé mi Contraseña | Solmaira Cards",
+  description: "Restablece la contraseña de tu cuenta de Solmaira",
 };
 
 export default function BuyerForgotPasswordPage() {

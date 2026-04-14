@@ -81,11 +81,11 @@ export function PortalSidebar({
         <Button
           type="button"
           variant={logoutVariant}
-          className="w-full justify-start"
+          className="w-full justify-start font-bold uppercase tracking-widest text-xs h-12 rounded-xl px-4"
           onClick={handleLogout}
           disabled={status === "executing"}
         >
-          Sign Out
+          {(portal === "buy" || portal === "admin") ? "Cerrar Sesión" : "Sign Out"}
         </Button>
       </SidebarFooter>
     </Sidebar>

@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Lock } from "lucide-react";
 import type { SecuritySectionProps } from "@/types";
+import { usePathname } from "next/navigation";
 
 export function SecuritySection({ isPending = false }: SecuritySectionProps) {
+  const pathname = usePathname();
+  const isSpanish = pathname.includes("/admin") || pathname.includes("/buy");
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   return (
@@ -20,8 +23,12 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
             <Lock className="h-6 w-6 text-primary" />
           </div>
           <div>
-              <h2 className="text-2xl font-bold text-foreground">Security</h2>
-              <p className="text-base text-muted-foreground">Access management</p>
+              <h2 className="text-2xl font-bold text-foreground">
+                {isSpanish ? "Seguridad" : "Security"}
+              </h2>
+              <p className="text-base text-muted-foreground">
+                {isSpanish ? "Gestión de acceso" : "Access management"}
+              </p>
           </div>
         </div>
         <Button
@@ -31,7 +38,9 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
           className={`border-border transition-all font-bold text-xs uppercase tracking-wider px-4 ${showPasswordFields ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20" : "bg-muted/40 hover:bg-muted/60"}`}
           onClick={() => setShowPasswordFields(!showPasswordFields)}
         >
-          {showPasswordFields ? "Cancel" : "Modify Password"}
+          {showPasswordFields 
+            ? (isSpanish ? "Cancelar" : "Cancel") 
+            : (isSpanish ? "Modificar Contraseña" : "Modify Password")}
         </Button>
       </div>
 
@@ -45,7 +54,7 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
           >
             <div className="space-y-2">
               <Label htmlFor="currentPassword" className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">
-                Current Password
+                {isSpanish ? "Contraseña Actual" : "Current Password"}
               </Label>
               <Input
                 id="currentPassword"
@@ -60,7 +69,7 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="newPassword" className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">
-                  New Password
+                  {isSpanish ? "Nueva Contraseña" : "New Password"}
                 </Label>
                 <Input
                   id="newPassword"
@@ -74,7 +83,7 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-xs uppercase tracking-widest font-black text-muted-foreground/80">
-                  Confirm Password
+                  {isSpanish ? "Confirmar Contraseña" : "Confirm Password"}
                 </Label>
                 <Input
                   id="confirmPassword"
@@ -89,7 +98,9 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
 
             <div className="pt-2">
               <p className="text-xs text-muted-foreground/50 italic">
-                Password must be at least 8 characters long with numbers and symbols.
+                {isSpanish 
+                  ? "La contraseña debe tener al menos 8 caracteres con números y símbolos." 
+                  : "Password must be at least 8 characters long with numbers and symbols."}
               </p>
             </div>
           </motion.div>
@@ -98,7 +109,11 @@ export function SecuritySection({ isPending = false }: SecuritySectionProps) {
 
       {!showPasswordFields && (
         <div className="h-6 flex items-center">
-          <p className="text-sm text-muted-foreground/40 italic">Password fields are hidden for your protection.</p>
+          <p className="text-sm text-muted-foreground/40 italic">
+            {isSpanish 
+              ? "Los campos de contraseña están ocultos para tu protección." 
+              : "Password fields are hidden for your protection."}
+          </p>
         </div>
       )}
     </Card>

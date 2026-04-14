@@ -29,8 +29,8 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Map the portal prop to the value the server action expects
-  const portalValue = portal === "buyer" ? "buy" : portal === "seller" ? "sell" : "admin";
+  // The portal prop is now consistent with the values the server action expects
+  const portalValue = portal;
 
   const { execute, status } = useAction(login, {
     onSuccess: ({ data }) => {
@@ -39,7 +39,8 @@ export function LoginForm({
       }
     },
     onError: ({ error }) => {
-      setError(error.serverError || error.validationErrors?._errors?.[0] || "Login failed");
+      const isSpanish = portal === "buy" || portal === "admin";
+      setError(error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? "Error al iniciar sesión" : "Login failed"));
     },
   });
 
@@ -68,7 +69,7 @@ export function LoginForm({
           <input type="hidden" name="portal" value={portalValue} />
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{(portal === "buy" || portal === "admin") ? "Correo electrónico" : "Email"}</Label>
             <Input
               id="email"
               name="email"
@@ -83,9 +84,9 @@ export function LoginForm({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{(portal === "buy" || portal === "admin") ? "Contraseña" : "Password"}</Label>
               <Link href={forgotPasswordUrl} className="text-sm text-primary hover:underline font-medium">
-                Forgot password?
+                {(portal === "buy" || portal === "admin") ? "¿Olvidaste tu contraseña?" : "Forgot password?"}
               </Link>
             </div>
             <Input
@@ -104,10 +105,10 @@ export function LoginForm({
             {status === "executing" ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
-                Signing in...
+                {(portal === "buy" || portal === "admin") ? "Iniciando sesión..." : "Signing in..."}
               </>
             ) : (
-              "Sign In"
+              (portal === "buy" || portal === "admin") ? "Iniciar Sesión" : "Sign In"
             )}
           </Button>
         </form>

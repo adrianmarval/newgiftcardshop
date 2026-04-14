@@ -60,15 +60,15 @@ export function ConfirmUsageStep() {
 
   const { execute: cancelExecute, status: cancelStatus } = useAction(cancelOrder, {
     onSuccess: () => {
-      toast.success("Order cancelled successfully");
+      toast.success("Orden cancelada con éxito");
       resetForm();
       router.push("/buy/dashboard/orders");
     },
     onError: ({ error }) => {
-      toast.error("Failed to cancel order", {
-        description: error.serverError || error.validationErrors?._errors?.[0] || "Failed to cancel order",
+      toast.error("Error al cancelar la orden", {
+        description: error.serverError || error.validationErrors?._errors?.[0] || "Error al cancelar la orden",
       });
-      setErrorMessage(error.serverError || "Failed to cancel order");
+      setErrorMessage(error.serverError || "Error al cancelar la orden");
     },
   });
 
@@ -96,18 +96,18 @@ export function ConfirmUsageStep() {
 
           {allCardsWorthless ? (
             <>
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight italic">ALL CARDS REPORTED</h2>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight italic">TODAS LAS TARJETAS REPORTADAS</h2>
               <p className="text-muted-foreground text-base md:text-lg">
-                Every card in this order has been reported as invalid. There is <strong>nothing to pay</strong>. You can cancel this
-                order or go back to review your reports.
+                Cada tarjeta en esta orden ha sido reportada como inválida. No hay <strong>nada que pagar</strong>. Puedes cancelar esta
+                orden o volver para revisar tus reportes.
               </p>
             </>
           ) : (
             <>
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight italic">FINAL CONFIRMATION</h2>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight italic">CONFIRMACIÓN FINAL</h2>
               <p className="text-muted-foreground text-base md:text-lg">
-                You are about to confirm that you have used all cards correctly. Once confirmed, you will proceed to payment and{" "}
-                <strong>reporting will be disabled</strong>.
+                Estás a punto de confirmar que has usado todas las tarjetas correctamente. Una vez confirmado, procederás al pago y{" "}
+                <strong>los reportes serán desactivados</strong>.
               </p>
             </>
           )}
@@ -115,15 +115,15 @@ export function ConfirmUsageStep() {
 
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-muted/50 border border-border rounded-2xl">
-            <div className="text-xs text-muted-foreground uppercase font-black mb-1">Total Cards</div>
+            <div className="text-xs text-muted-foreground uppercase font-black mb-1">Total Tarjetas</div>
             <div className="text-3xl font-black">{foundGiftcards.length}</div>
           </div>
           <div className="p-4 bg-muted/50 border border-border rounded-2xl">
-            <div className="text-xs text-muted-foreground uppercase font-black mb-1">Reported Issues</div>
+            <div className="text-xs text-muted-foreground uppercase font-black mb-1">Problemas Reportados</div>
             <div className={`text-3xl font-black ${reportedCards.length > 0 ? "text-destructive" : ""}`}>{reportedCards.length}</div>
           </div>
           <div className={`p-4 rounded-2xl ${allCardsWorthless ? "bg-destructive/10 border border-destructive/20" : "bg-primary/10 border border-primary/20"}`}>
-            <div className={`text-xs uppercase font-black mb-1 ${allCardsWorthless ? "text-destructive" : "text-primary"}`}>Final Amount Due</div>
+            <div className={`text-xs uppercase font-black mb-1 ${allCardsWorthless ? "text-destructive" : "text-primary"}`}>Monto Final Adeudado</div>
             <div className={`text-3xl font-black ${allCardsWorthless ? "text-destructive" : "text-primary"}`}>${totalAmount.toFixed(2)}</div>
           </div>
         </div>
@@ -132,10 +132,9 @@ export function ConfirmUsageStep() {
           <div className="max-w-lg w-full p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl flex gap-3 text-left">
             <XCircle className="w-5 h-5 text-amber-500 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-sm font-bold text-amber-500 uppercase">No valid cards remaining</p>
+              <p className="text-sm font-bold text-amber-500 uppercase">No quedan tarjetas válidas</p>
               <p className="text-sm text-muted-foreground leading-relaxed italic">
-                All cards have been reported as invalid, already used, or deactivated. You can cancel this order at no cost, or go
-                back to adjust your reports if you made a mistake.
+                Todas las tarjetas han sido reportadas como inválidas, ya usadas o desactivadas. Puedes cancelar esta orden sin costo, o volver para ajustar tus reportes si cometiste un error.
               </p>
             </div>
           </div>
@@ -143,10 +142,9 @@ export function ConfirmUsageStep() {
           <div className="max-w-lg w-full p-4 bg-destructive/5 border border-destructive/20 rounded-xl flex gap-3 text-left">
             <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
             <div className="space-y-1">
-              <p className="text-sm font-bold text-destructive uppercase">Important Disclaimer</p>
+              <p className="text-sm font-bold text-destructive uppercase">Aviso Importante</p>
               <p className="text-sm text-destructive/80 leading-relaxed italic">
-                Confirmation is irreversible. Ensure you have redemption screenshots or video evidence for all cards, especially those
-                reported as having issues.
+                La confirmación es irreversible. Asegúrate de tener capturas de pantalla de la redención o evidencia en video para todas las tarjetas, especialmente aquellas que reportaste con problemas.
               </p>
             </div>
           </div>
@@ -161,7 +159,7 @@ export function ConfirmUsageStep() {
             className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted"
             disabled={confirmStatus === "executing" || cancelStatus === "executing"}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Review
+            <ArrowLeft className="w-4 h-4 mr-2" /> Volver a Revisar
           </Button>
 
           {allCardsWorthless ? (
@@ -172,11 +170,11 @@ export function ConfirmUsageStep() {
             >
               {cancelStatus === "executing" ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Cancelling...
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Cancelando...
                 </>
               ) : (
                 <>
-                  <XCircle className="w-4 h-4 mr-2" /> Cancel Order
+                  <XCircle className="w-4 h-4 mr-2" /> Cancelar Orden
                 </>
               )}
             </Button>
@@ -188,10 +186,10 @@ export function ConfirmUsageStep() {
             >
               {confirmStatus === "executing" ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Confirming...
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Confirmando...
                 </>
               ) : (
-                "Confirm & Proceed to Payment"
+                "Confirmar y Proceder al Pago"
               )}
             </Button>
           )}

@@ -17,6 +17,7 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isSpanish = portal === "buy" || portal === "admin";
   const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
   const authPath = `${portalPath}/auth`;
 
@@ -28,7 +29,7 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
       }
     },
     onError: ({ error }) => {
-      setError(error.serverError || error.validationErrors?._errors?.[0] || "Failed to send reset link");
+      setError(error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? "Error al enviar el enlace de restablecimiento" : "Failed to send reset link"));
     },
   });
 
@@ -42,8 +43,8 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
     <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Forgot Password</h1>
-          <p className="text-base text-muted-foreground">Enter your email to receive a password reset link</p>
+          <h1 className="text-3xl font-bold">{isSpanish ? "Olvidé mi Contraseña" : "Forgot Password"}</h1>
+          <p className="text-base text-muted-foreground">{isSpanish ? "Ingresa tu correo para recibir un enlace de restablecimiento de contraseña" : "Enter your email to receive a password reset link"}</p>
         </div>
 
         {error && (
@@ -56,7 +57,7 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
         {success && (
           <Alert className="border-primary/50 bg-primary/5 text-primary">
             <CheckCircle className="h-4 w-4" />
-            <span>If an account exists with that email, a reset link has been sent. Check your inbox.</span>
+            <span>{isSpanish ? "Si existe una cuenta con ese correo, se ha enviado un enlace de restablecimiento. Revisa tu bandeja de entrada." : "If an account exists with that email, a reset link has been sent. Check your inbox."}</span>
           </Alert>
         )}
 
@@ -65,7 +66,7 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm uppercase tracking-wider font-semibold opacity-70">
-              Email Address
+              {isSpanish ? "Dirección de Correo" : "Email Address"}
             </Label>
             <Input
               id="email"
@@ -84,18 +85,18 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
             {status === "executing" ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
-                Sending...
+                {isSpanish ? "Enviando..." : "Sending..."}
               </>
             ) : (
-              "Send Reset Link"
+              isSpanish ? "Enviar Enlace" : "Send Reset Link"
             )}
           </Button>
         </form>
 
         <p className="text-base text-muted-foreground text-center">
-          Remember your password?{" "}
+          {isSpanish ? "¿Recordaste tu contraseña?" : "Remember your password?"}{" "}
           <Link href={`${authPath}/login`} className="text-primary hover:underline font-semibold">
-            Sign in
+            {isSpanish ? "Iniciar sesión" : "Sign in"}
           </Link>
         </p>
       </div>

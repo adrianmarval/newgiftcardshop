@@ -11,7 +11,7 @@ export default function SellerLoginPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <LoginForm
-        portal="seller"
+        portal="sell"
         title="Seller Sign In"
         subtitle="Access your seller dashboard to manage gift cards"
         forgotPasswordUrl="/sell/auth/forgot-password"

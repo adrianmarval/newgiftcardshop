@@ -11,8 +11,11 @@ import { AlertCircle, CheckCircle, User } from "lucide-react";
 import { updateProfile } from "@/actions";
 import { useAction } from "next-safe-action/hooks";
 import type { ProfileInfoSectionProps } from "@/types";
+import { usePathname } from "next/navigation";
 
 export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
+  const pathname = usePathname();
+  const isSpanish = pathname.includes("/admin") || pathname.includes("/buy");
   const [nameValue, setNameValue] = useState(name);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +30,8 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
       }
     },
     onError: ({ error }) => {
-      setError(error.serverError || error.validationErrors?._errors?.[0] || "Failed to update profile");
+      const defaultError = isSpanish ? "Error al actualizar el perfil" : "Failed to update profile";
+      setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
       setSuccess(false);
     },
   });
@@ -51,7 +55,7 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
       {success && (
         <Alert className="border-primary/50 bg-primary/10 text-primary animate-in zoom-in duration-300">
           <CheckCircle className="h-4 w-4" />
-          <span>Profile updated successfully!</span>
+          <span>{isSpanish ? "¡Perfil actualizado con éxito!" : "Profile updated successfully!"}</span>
         </Alert>
       )}
 
@@ -65,15 +69,19 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
               <User className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Personal Information</h2>
-              <p className="text-base text-muted-foreground">General details for your account</p>
+              <h2 className="text-2xl font-bold text-foreground">
+                {isSpanish ? "Información Personal" : "Personal Information"}
+              </h2>
+              <p className="text-base text-muted-foreground">
+                {isSpanish ? "Detalles generales de tu cuenta" : "General details for your account"}
+              </p>
             </div>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-xs md:text-sm uppercase tracking-widest font-black text-muted-foreground/80">
-                Full Name
+                {isSpanish ? "Nombre Completo" : "Full Name"}
               </Label>
               <Input
                 id="name"
@@ -89,7 +97,7 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
 
             <div className="space-y-2">
               <Label htmlFor="email" className="text-xs md:text-sm uppercase tracking-widest font-black text-muted-foreground/80">
-                Email Address
+                {isSpanish ? "Correo Electrónico" : "Email Address"}
               </Label>
               <Input
                 id="email"
@@ -98,13 +106,17 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
                 disabled
                 className="bg-muted/30 border-dashed border-border h-12 md:h-14 opacity-60 cursor-not-allowed italic font-medium"
               />
-              <p className="text-xs text-muted-foreground/50 italic px-1">Verification required for changes</p>
+              <p className="text-xs text-muted-foreground/50 italic px-1">
+                {isSpanish ? "Se requiere verificación para cambios" : "Verification required for changes"}
+              </p>
             </div>
           </div>
 
           <div className="mt-8 pt-8 border-t border-border flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground/70">Ensure your information is up to date.</p>
+              <p className="text-sm text-muted-foreground/70">
+                {isSpanish ? "Asegúrate de que tu información esté al día." : "Ensure your information is up to date."}
+              </p>
             </div>
             <Button
               type="submit"
@@ -114,10 +126,10 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
               {status === "executing" ? (
                 <>
                   <Spinner className="h-4 w-4 mr-2" />
-                  Saving...
+                  {isSpanish ? "Guardando..." : "Saving..."}
                 </>
               ) : (
-                "Save Changes"
+                isSpanish ? "Guardar Cambios" : "Save Changes"
               )}
             </Button>
           </div>

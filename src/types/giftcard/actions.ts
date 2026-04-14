@@ -48,7 +48,6 @@ export const orderCardItemSchema = z.object({
   pinCode: z.string().optional(),
   status: z.string(),
   reportedAmount: z.number().optional(),
-  sellerId: z.string().optional(),
 });
 
 export type OrderCardItem = z.infer<typeof orderCardItemSchema>;

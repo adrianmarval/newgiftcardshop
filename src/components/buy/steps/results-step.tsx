@@ -78,7 +78,7 @@ export function ResultsStep() {
       }
     },
     onError: ({ error }) => {
-      toast.error("Failed to create order", {
+      toast.error("Error al crear la orden", {
         description: error.serverError || error.validationErrors?._errors?.[0],
       });
       setResultsState((prev) => ({ ...prev, isConfirming: false }));
@@ -99,26 +99,26 @@ export function ResultsStep() {
       {/* Left Column: Selection Summary */}
       <Card className="md:col-span-4 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 space-y-4 md:space-y-6 flex flex-col h-auto md:h-full sticky top-0 z-20">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold mb-0.5 md:mb-1">Selection</h2>
-          <p className="text-muted-foreground text-xs md:text-sm">Review your proposed gift cards.</p>
+          <h2 className="text-xl md:text-2xl font-bold mb-0.5 md:mb-1">Selección</h2>
+          <p className="text-muted-foreground text-xs md:text-sm">Revisa las tarjetas de regalo propuestas.</p>
         </div>
 
         <div className="space-y-4">
           <div className="bg-muted/50 border border-border rounded-xl p-3 md:p-4 space-y-3">
             <div className="flex justify-between items-center text-sm md:text-base">
-              <span className="text-muted-foreground">Search Target</span>
+              <span className="text-muted-foreground">Objetivo de Búsqueda</span>
               <span className="font-bold">${targetAmount}</span>
             </div>
             <div className="flex justify-between items-center text-sm md:text-base">
-              <span className="text-muted-foreground">Found Cards</span>
-              <span className="font-bold">{foundGiftcards.length} items</span>
+              <span className="text-muted-foreground">Tarjetas Encontradas</span>
+              <span className="font-bold">{foundGiftcards.length} ítems</span>
             </div>
             <div className="flex justify-between items-center text-sm md:text-base pt-2 border-t border-border">
-              <span className="text-muted-foreground">Total to Pay</span>
+              <span className="text-muted-foreground">Total a Pagar</span>
               <div className="text-right">
                 <span className="text-2xl font-black text-primary">${discountedTotal.toFixed(2)}</span>
                 <p className="text-xs text-muted-foreground leading-none mt-1">
-                  {resultsState.buyRate < 1 ? `Rate: ${resultsState.buyRate * 100}%` : "Order value"}
+                  {resultsState.buyRate < 1 ? `Tasa: ${resultsState.buyRate * 100}%` : "Valor de la orden"}
                 </p>
               </div>
             </div>
@@ -127,7 +127,7 @@ export function ResultsStep() {
           <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex gap-3 items-start">
             <Info className="w-4 h-4 text-primary mt-0.5" />
             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-              Codes will be revealed in the next step. You can remove cards you don&apos;t want from the list on the right.
+              Los códigos se revelarán en el siguiente paso. Puedes eliminar las tarjetas que no quieras de la lista de la derecha.
             </p>
           </div>
         </div>
@@ -138,14 +138,14 @@ export function ResultsStep() {
             variant="outline"
             className="flex-1 border-border text-muted-foreground hover:bg-muted h-10 md:h-11"
           >
-            Adjust
+            Ajustar
           </Button>
           <Button
             onClick={() => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }))}
             disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === "executing"}
             className="flex-2 bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 font-bold shadow-lg shadow-primary/20"
           >
-            Place Order <ChevronRight className="w-4 h-4 ml-1" />
+            Realizar Pedido <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </Card>
@@ -153,8 +153,8 @@ export function ResultsStep() {
       {/* Right Column: Cards List */}
       <Card className="md:col-span-8 border-border bg-card/50 backdrop-blur-sm p-4 md:p-6 flex flex-col min-h-100 md:min-h-125">
         <div className="flex items-center justify-between mb-4">
-          <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider">Proposed Bundle</Label>
-          <span className="text-xs text-muted-foreground/50">{foundGiftcards.length} items</span>
+          <Label className="text-muted-foreground text-xs md:text-sm font-semibold uppercase tracking-wider">Paquete Propuesto</Label>
+          <span className="text-xs text-muted-foreground/50">{foundGiftcards.length} ítems</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 overflow-y-auto pr-1 custom-scrollbar">
@@ -184,7 +184,7 @@ export function ResultsStep() {
                   <div>
                     <div className="text-xl font-black text-foreground">${card.amount}</div>
                     <div className="text-xs font-mono text-muted-foreground/50 tracking-tighter uppercase whitespace-nowrap">
-                      CODE: XXXX-XXXX-XXXX
+                      CÓDIGO: XXXX-XXXX-XXXX
                     </div>
                   </div>
                 </div>
@@ -208,12 +208,12 @@ export function ResultsStep() {
               <div className="p-4 bg-muted rounded-full mb-4">
                 <Trash2 className="w-8 h-8 text-muted-foreground/50" />
               </div>
-              <h3 className="text-xl font-bold mb-1">Bundle is empty</h3>
+              <h3 className="text-xl font-bold mb-1">El paquete está vacío</h3>
               <p className="text-muted-foreground text-base max-w-xs mx-auto">
-                Go back to search or adjust your criteria to find more cards.
+                Vuelve a la búsqueda o ajusta tus criterios para encontrar más tarjetas.
               </p>
               <Button variant="outline" onClick={() => setStep(1)} className="mt-6 border-primary/50 text-primary hover:bg-primary/10">
-                Return to Search
+                Volver a Buscar
               </Button>
             </div>
           )}
@@ -227,14 +227,13 @@ export function ResultsStep() {
       >
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Place Order?</AlertDialogTitle>
+            <AlertDialogTitle>¿Realizar Pedido?</AlertDialogTitle>
             <AlertDialogDescription>
-              The process cannot be reversed because the codes will be revealed. Once revealed, they are considered yours and you must apply
-              and pay for them.
+              El proceso no se puede revertir porque los códigos serán revelados. Una vez revelados, se consideran tuyos y debes aplicarlos y pagarlos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={resultsState.isConfirming}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={resultsState.isConfirming}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -246,10 +245,10 @@ export function ResultsStep() {
               {resultsState.isConfirming ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Placing Order...
+                  Creando Pedido...
                 </>
               ) : (
-                "Confirm & Revel Codes"
+                "Confirmar y Revelar Códigos"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

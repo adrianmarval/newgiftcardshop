@@ -23,16 +23,16 @@ export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProp
     try {
       const result = await cancelOrder({ orderId: order.id });
       if (result.serverError || result.validationErrors) {
-        toast.error("Failed to cancel order", {
+        toast.error("Error al cancelar la orden", {
           description: (result.serverError || result.validationErrors?._errors) as string,
         });
       } else {
-        toast.success("Order cancelled successfully!");
+        toast.success("¡Orden cancelada con éxito!");
         router.refresh();
       }
     } catch (error) {
-      toast.error("Failed to cancel order", {
-        description: error instanceof Error ? error.message : "Unknown error",
+      toast.error("Error al cancelar la orden", {
+        description: error instanceof Error ? error.message : "Error desconocido",
       });
     } finally {
       setIsCancelling(false);
@@ -48,17 +48,17 @@ export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProp
       <div className="flex items-center gap-2 mb-4 px-2">
         <Info className="w-3.5 h-3.5 text-primary" />
         <p className="text-sm text-muted-foreground uppercase font-bold tracking-widest">
-          Review your order details below.
+          Revisa los detalles de tu orden a continuación.
         </p>
       </div>
 
       <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-sm font-black uppercase tracking-widest text-muted-foreground/60">
         <div className="col-span-1">Pos.</div>
-        <div className="col-span-3">Brand & Region</div>
-        <div className="col-span-3">Code Preview</div>
-        <div className="col-span-2">Value</div>
-        <div className="col-span-2">Stage</div>
-        <div className="col-span-1 text-right">Details</div>
+        <div className="col-span-3">Marca y Región</div>
+        <div className="col-span-3">Vista Previa del Código</div>
+        <div className="col-span-2">Valor</div>
+        <div className="col-span-2">Etapa</div>
+        <div className="col-span-1 text-right">Detalles</div>
       </div>
 
       <div className="space-y-1.5">
@@ -129,7 +129,7 @@ export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProp
                   onCardClick?.(card, order.status);
                 }}
               >
-                <span className="sr-only">View details</span>
+                <span className="sr-only">Ver detalles</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
                   <circle cx="12" cy="12" r="3"/>
@@ -155,7 +155,7 @@ export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProp
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
-            Resume Order
+            Reanudar Orden
           </Button>
         )}
 
@@ -179,13 +179,13 @@ export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProp
                     ) : (
                       <XCircle className="w-4 h-4 mr-2" />
                     )}
-                    Cancel Order
+                    Cancelar Orden
                   </Button>
                 </span>
               </TooltipTrigger>
               {!canCancel && (
                 <TooltipContent className="bg-destructive text-destructive-foreground font-bold text-sm p-2">
-                  <p>Cannot cancel: order has cards with value. Wait for completion or contact support.</p>
+                  <p>No se puede cancelar: la orden tiene tarjetas con valor. Espera a que se complete o contacta a soporte.</p>
                 </TooltipContent>
               )}
             </Tooltip>

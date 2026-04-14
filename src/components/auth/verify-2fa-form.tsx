@@ -28,10 +28,12 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
   const [trustDevice, setTrustDevice] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
+  const isSpanish = portal === "buy" || portal === "admin";
+
   const portalNames = {
-    buy: "Buyer",
+    buy: "Comprador",
     sell: "Seller",
-    admin: "Admin",
+    admin: "Administrador",
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,7 +51,8 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
         });
 
         if (authError) {
-          setError(authError.message || "Invalid backup code");
+          const defaultError = isSpanish ? "Código de respaldo inválido" : "Invalid backup code";
+          setError(authError.message || defaultError);
           setIsPending(false);
           return;
         }
@@ -60,7 +63,8 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
         });
 
         if (authError) {
-          setError(authError.message || "Invalid verification code");
+          const defaultError = isSpanish ? "Código de verificación inválido" : "Invalid verification code";
+          setError(authError.message || defaultError);
           setIsPending(false);
           return;
         }
@@ -71,7 +75,8 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
       router.refresh();
     } catch (err) {
       console.error("2FA verification error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      const defaultError = isSpanish ? "Ocurrió un error inesperado. Por favor, intenta de nuevo." : "An unexpected error occurred. Please try again.";
+      setError(defaultError);
       setIsPending(false);
     }
   };
@@ -86,11 +91,17 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">{isRecoveryMode ? "2FA Recovery" : "Two-Factor Authentication"}</h1>
+          <h1 className="text-3xl font-bold">
+            {isRecoveryMode 
+              ? (isSpanish ? "Recuperación de 2FA" : "2FA Recovery") 
+              : (isSpanish ? "Autenticación de Dos Factores" : "Two-Factor Authentication")}
+          </h1>
           <p className="text-base text-muted-foreground">
             {isRecoveryMode
-              ? "Enter one of your backup codes to access your account."
-              : `Please enter the 6-digit code from your authenticator app to verify your ${portalNames[portal]} account.`}
+              ? (isSpanish ? "Ingresa uno de tus códigos de respaldo para acceder a tu cuenta." : "Enter one of your backup codes to access your account.")
+              : (isSpanish 
+                  ? `Por favor, ingresa el código de 6 dígitos de tu aplicación de autenticación para verificar tu cuenta de ${portalNames[portal]}.`
+                  : `Please enter the 6-digit code from your authenticator app to verify your ${portal === "sell" ? "Seller" : portalNames[portal]} account.`)}
           </p>
         </div>
 
@@ -105,7 +116,7 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
           <div className="flex justify-center py-4">
             {isRecoveryMode ? (
               <Input
-                placeholder="Enter backup code"
+                placeholder={isSpanish ? "Ingresar código de respaldo" : "Enter backup code"}
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 className="text-center font-mono uppercase tracking-wider h-12"
@@ -137,9 +148,13 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
               <div className="grid gap-1.5 leading-none">
                 <Label htmlFor="trust" className="text-base font-medium leading-none cursor-pointer flex items-center gap-2">
                   <Laptop className="h-3.5 w-3.5" />
-                  Trust this device
+                  {isSpanish ? "Confiar en este dispositivo" : "Trust this device"}
                 </Label>
-                <p className="text-sm text-muted-foreground">Don&apos;t ask for a code again on this browser for 30 days.</p>
+                <p className="text-sm text-muted-foreground">
+                  {isSpanish 
+                    ? "No volver a pedir código en este navegador por 30 días."
+                    : "Don't ask for a code again on this browser for 30 days."}
+                </p>
               </div>
             </div>
           )}
@@ -152,12 +167,12 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
             {isPending ? (
               <>
                 <Spinner className="mr-2 h-5 w-5" />
-                Verifying...
+                {isSpanish ? "Verificando..." : "Verifying..."}
               </>
             ) : isRecoveryMode ? (
-              "Verify Backup Code"
+              (isSpanish ? "Verificar Código de Respaldo" : "Verify Backup Code")
             ) : (
-              "Verify Code"
+              (isSpanish ? "Verificar Código" : "Verify Code")
             )}
           </Button>
         </form>
@@ -175,9 +190,15 @@ export function Verify2FAForm({ portal }: Verify2FAFormProps) {
             }}
             disabled={isPending}
           >
-            {isRecoveryMode ? "Use authenticator app" : "Lost access? Use a backup code"}
+            {isRecoveryMode 
+              ? (isSpanish ? "Usar app de autenticación" : "Use authenticator app") 
+              : (isSpanish ? "¿Perdiste el acceso? Usa un código de respaldo" : "Lost access? Use a backup code")}
           </Button>
-          <p className="text-sm text-muted-foreground block">If you&apos;re having trouble, please contact support.</p>
+          <p className="text-sm text-muted-foreground block">
+            {isSpanish 
+              ? "Si tienes problemas, por favor contacta a soporte." 
+              : "If you're having trouble, please contact support."}
+          </p>
         </div>
       </div>
     </Card>

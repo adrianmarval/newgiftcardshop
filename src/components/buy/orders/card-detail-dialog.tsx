@@ -15,8 +15,8 @@ export function CardDetailDialog({ card, orderStatus, open, onOpenChange }: Card
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border sm:max-w-106.25 rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-black italic tracking-tighter uppercase">Card Details</DialogTitle>
-          <DialogDescription className="sr-only">View the claimant code, pin and status of your gift card.</DialogDescription>
+          <DialogTitle className="text-3xl font-black italic tracking-tighter uppercase">Detalles de la Tarjeta</DialogTitle>
+          <DialogDescription className="sr-only">Ver el código de reclamo, pin y estado de tu tarjeta de regalo.</DialogDescription>
         </DialogHeader>
         <div className="space-y-8 pt-4">
           <div className="p-5 bg-muted/30 rounded-3xl flex items-center gap-4 relative overflow-hidden">
@@ -42,14 +42,14 @@ export function CardDetailDialog({ card, orderStatus, open, onOpenChange }: Card
                       </span>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-sm font-black uppercase tracking-widest text-amber-500/80">Effective</span>
+                      <span className="text-sm font-black uppercase tracking-widest text-amber-500/80">Efectivo</span>
                       <span className="text-3xl font-black text-amber-500 italic leading-none">${card.reportedAmount.toFixed(2)}</span>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-0.5">
                     <div className="text-3xl font-black text-destructive italic leading-none line-through">${card.amount.toFixed(2)}</div>
-                    <div className="text-sm font-black uppercase tracking-widest text-destructive/60">Voided</div>
+                    <div className="text-sm font-black uppercase tracking-widest text-destructive/60">Anulada</div>
                   </div>
                 )
               ) : (
@@ -64,7 +64,7 @@ export function CardDetailDialog({ card, orderStatus, open, onOpenChange }: Card
           <div className="space-y-4">
             <div className="space-y-2">
               <span className="text-base font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
-                <Info className="w-3 h-3" /> Claim Code
+                <Info className="w-3 h-3" /> Código de Reclamo
               </span>
               <div className="p-4 bg-muted/20 border border-border/60 rounded-2xl overflow-hidden">
                 <code className="text-sm font-mono font-black tracking-tight text-foreground break-all">{card.claimCode}</code>
@@ -73,7 +73,7 @@ export function CardDetailDialog({ card, orderStatus, open, onOpenChange }: Card
 
             {card.pinCode && (
               <div className="space-y-2">
-                <span className="text-base font-black uppercase text-muted-foreground tracking-widest">Pin Access</span>
+                <span className="text-base font-black uppercase text-muted-foreground tracking-widest">Acceso Pin</span>
                 <div className="p-4 bg-muted/20 border border-border/60 rounded-2xl font-mono text-sm font-black break-all overflow-hidden">
                   {card.pinCode}
                 </div>
@@ -87,7 +87,7 @@ export function CardDetailDialog({ card, orderStatus, open, onOpenChange }: Card
             onClick={() => onOpenChange(false)}
             className="w-full h-14 font-black bg-primary text-primary-foreground text-xl italic uppercase shadow-xl shadow-primary/20 rounded-2xl transition-all active:scale-95"
           >
-            Close View
+            Cerrar Vista
           </Button>
         </div>
       </DialogContent>

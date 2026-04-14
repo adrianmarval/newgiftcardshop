@@ -42,9 +42,10 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
   const passwordValid = Object.values(checks).every(Boolean);
   const passwordsMatch = password === confirmPassword;
 
-  const portalValue = portal === "buyer" ? "buy" : "sell";
-  const submitLabel = portal === "buyer" ? "Create Account" : "Create Seller Account";
-  const signInText = portal === "buyer" ? "Already have an account?" : "Already have a seller account?";
+  const isSpanish = portal === "buy";
+  const portalValue = portal;
+  const submitLabel = isSpanish ? "Crear Cuenta" : (portal === "sell" ? "Create Seller Account" : "Create Account");
+  const signInText = isSpanish ? "¿Ya tienes una cuenta?" : "Already have an account?";
 
   const { execute, status } = useAction(register, {
     onSuccess: ({ data }) => {
@@ -53,7 +54,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
       }
     },
     onError: ({ error }) => {
-      setError(error.serverError || error.validationErrors?._errors?.[0] || "Registration failed");
+      setError(error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? "Error al registrarse" : "Registration failed"));
     },
   });
 
@@ -82,7 +83,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
           <input type="hidden" name="portal" value={portalValue} />
 
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="fullName">{isSpanish ? "Nombre completo" : "Full Name"}</Label>
             <Input
               id="fullName"
               name="fullName"
@@ -95,7 +96,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{isSpanish ? "Correo electrónico" : "Email"}</Label>
             <Input
               id="email"
               name="email"
@@ -109,7 +110,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{isSpanish ? "Contraseña" : "Password"}</Label>
             <Input
               id="password"
               name="password"
@@ -121,17 +122,17 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
               onChange={(e) => setPassword(e.target.value)}
             />
             <div className="space-y-2 mt-2 p-3 bg-muted rounded-md">
-              <p className="text-sm font-medium">Password requirements:</p>
-              <PasswordCheckItem valid={checks.length} label="At least 8 characters" />
-              <PasswordCheckItem valid={checks.uppercase} label="Uppercase letter" />
-              <PasswordCheckItem valid={checks.lowercase} label="Lowercase letter" />
-              <PasswordCheckItem valid={checks.number} label="Number" />
-              <PasswordCheckItem valid={checks.special} label="Special character" />
+              <p className="text-sm font-medium">{isSpanish ? "Requisitos de contraseña:" : "Password requirements:"}</p>
+              <PasswordCheckItem valid={checks.length} label={isSpanish ? "Al menos 8 caracteres" : "At least 8 characters"} />
+              <PasswordCheckItem valid={checks.uppercase} label={isSpanish ? "Letra mayúscula" : "Uppercase letter"} />
+              <PasswordCheckItem valid={checks.lowercase} label={isSpanish ? "Letra minúscula" : "Lowercase letter"} />
+              <PasswordCheckItem valid={checks.number} label={isSpanish ? "Un número" : "Number"} />
+              <PasswordCheckItem valid={checks.special} label={isSpanish ? "Carácter especial" : "Special character"} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{isSpanish ? "Confirmar contraseña" : "Confirm Password"}</Label>
             <Input
               id="confirmPassword"
               name="confirmPassword"
@@ -148,7 +149,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
             {status === "executing" ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
-                Creating account...
+                {isSpanish ? "Creando cuenta..." : "Creating account..."}
               </>
             ) : (
               submitLabel
@@ -159,7 +160,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
         <p className="text-base text-muted-foreground text-center">
           {signInText}{" "}
           <Link href={loginUrl} className="text-primary hover:underline font-medium">
-            Sign in
+            {isSpanish ? "Iniciar sesión" : "Sign in"}
           </Link>
         </p>
       </div>

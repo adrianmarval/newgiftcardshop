@@ -16,13 +16,13 @@ import { PortalSidebar } from "./app-sidebar";
 
 const navItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: IconDashboard },
-  { title: "Users", url: "/admin/dashboard/users", icon: IconUsers },
-  { title: "All Orders", url: "/admin/dashboard/orders", icon: IconShoppingCart },
-  { title: "Gift Cards", url: "/admin/dashboard/cards", icon: IconCreditCard },
-  { title: "Analytics", url: "/admin/dashboard/analytics", icon: IconChartBar },
-  { title: "Payments", url: "/admin/dashboard/payments", icon: IconCash },
-  { title: "Profile", url: "/admin/dashboard/profile", icon: IconUser },
-  { title: "Settings", url: "/admin/dashboard/settings", icon: IconSettings },
+  { title: "Usuarios", url: "/admin/dashboard/users", icon: IconUsers },
+  { title: "Todas las Órdenes", url: "/admin/dashboard/orders", icon: IconShoppingCart },
+  { title: "Tarjetas de Regalo", url: "/admin/dashboard/cards", icon: IconCreditCard },
+  { title: "Estadísticas", url: "/admin/dashboard/analytics", icon: IconChartBar },
+  { title: "Pagos", url: "/admin/dashboard/payments", icon: IconCash },
+  { title: "Perfil", url: "/admin/dashboard/profile", icon: IconUser },
+  { title: "Ajustes", url: "/admin/dashboard/settings", icon: IconSettings },
 ];
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -31,7 +31,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       navItems={navItems}
       brandLabel="Solmaira Admin"
       brandHref="/admin/dashboard"
-      groupLabel="Management"
+      groupLabel="Gestión"
       portal="admin"
       logoutVariant="ghost"
       {...props}

@@ -56,8 +56,8 @@ export function BuyGiftcardManager({ brands, countries, resumeOrder }: BuyGiftca
       {/* Header & Progress combined */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 bg-card/40 px-3 py-4 md:p-6 rounded-none md:rounded-xl border-y md:border border-border backdrop-blur-sm">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col">
-          <h1 className="text-3xl md:text-4xl font-bold mb-0.5 md:mb-1">Buy Gift Cards</h1>
-          <p className="text-muted-foreground text-sm md:text-base">Find and purchase gift cards at the best rates.</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-0.5 md:mb-1">Comprar Tarjetas de Regalo</h1>
+          <p className="text-muted-foreground text-sm md:text-base">Encuentra y compra tarjetas de regalo a las mejores tasas.</p>
         </motion.div>
 
         {/* Multi-step Progress */}
@@ -88,7 +88,7 @@ export function BuyGiftcardManager({ brands, countries, resumeOrder }: BuyGiftca
                   ${s === step ? "text-primary" : "text-muted-foreground/70"}
                 `}
                 >
-                  {s === 1 ? "Search" : s === 2 ? "Select" : s === 3 ? "Redeem" : s === 4 ? "Usage" : "Pay"}
+                  {s === 1 ? "Buscar" : s === 2 ? "Seleccionar" : s === 3 ? "Redimir" : s === 4 ? "Uso" : "Pagar"}
                 </span>
               </div>
               {s < 5 && (

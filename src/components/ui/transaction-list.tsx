@@ -1,9 +1,13 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { CreditCard, CheckCircle2 } from "lucide-react";
 import type { TransactionListProps } from "@/types";
 
 export function TransactionList({ payments }: TransactionListProps) {
+  const pathname = usePathname();
+  const isSpanish = pathname?.includes("/buy") || pathname?.includes("/admin");
+
   if (payments.length === 0) {
     return null;
   }
@@ -12,7 +16,7 @@ export function TransactionList({ payments }: TransactionListProps) {
     <div className="mt-8 p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
       <h4 className="text-sm font-black uppercase tracking-[0.2em] text-emerald-500 mb-4 inline-flex items-center gap-2">
-        <CreditCard className="w-3 h-3" /> Payment Information
+        <CreditCard className="w-3 h-3" /> {isSpanish ? "Información de Pago" : "Payment Information"}
       </h4>
       <div className="space-y-2.5">
         {payments.map((p) => (

@@ -10,13 +10,13 @@ export default function AdminDashboardError({ error, reset }: { error: Error & {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-      <h2 className="text-2xl font-bold">Something went wrong</h2>
+      <h2 className="text-2xl font-bold">Algo salió mal</h2>
       <p className="text-muted-foreground text-center max-w-md">{error.message}</p>
       <Button
         onClick={reset}
         className="rounded-lg bg-primary px-6 py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
       >
-        Try again
+        Reintentar
       </Button>
     </div>
   );
