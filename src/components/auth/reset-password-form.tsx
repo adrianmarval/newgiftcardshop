@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, Check, X } from "lucide-react";
 import { resetPassword } from "@/actions";
-import Form from "next/form";
+import { useAction } from "next-safe-action/hooks";
 
 const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
   <div className="flex items-center gap-2 text-base">
@@ -22,14 +22,14 @@ const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) 
 );
 
 function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
-  const [error, formAction, isPending] = useActionState(resetPassword, null);
-
-  const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
-  const authPath = `${portalPath}/auth`;
 
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
     uppercase: false,
@@ -51,6 +51,26 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
   };
 
   const allValid = Object.values(passwordChecks).every(Boolean);
+
+  const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
+  const authPath = `${portalPath}/auth`;
+
+  const { execute, status } = useAction(resetPassword, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.redirectTo) {
+        router.push(data.redirectTo);
+      }
+    },
+    onError: ({ error }) => {
+      setError(error.serverError || error.validationErrors?._errors?.[0] || "Failed to reset password");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    execute({ token, newPassword, confirmPassword, portal });
+  };
 
   if (!token) {
     return (
@@ -82,7 +102,7 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
           </Alert>
         )}
 
-        <Form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input type="hidden" name="portal" value={portal} />
           <input type="hidden" name="token" value={token} />
 
@@ -98,7 +118,7 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
               value={newPassword}
               onChange={handlePasswordChange}
               required
-              disabled={isPending}
+              disabled={status === "executing"}
               className="bg-muted/50 border-none h-11"
             />
             <div className="space-y-2 mt-2 p-3 bg-muted/30 rounded-lg">
@@ -123,13 +143,15 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
               type="password"
               placeholder="••••••••"
               required
-              disabled={isPending}
+              disabled={status === "executing"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               className="bg-muted/50 border-none h-11"
             />
           </div>
 
-          <Button type="submit" className="w-full h-11 font-semibold" disabled={isPending || !allValid}>
-            {isPending ? (
+          <Button type="submit" className="w-full h-11 font-semibold" disabled={status === "executing" || !allValid}>
+            {status === "executing" ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
                 Resetting...
@@ -138,7 +160,7 @@ function ResetPasswordFormContent({ portal = "buy" }: { portal?: "admin" | "buy"
               "Reset Password"
             )}
           </Button>
-        </Form>
+        </form>
 
         <p className="text-base text-muted-foreground text-center">
           <Link href={`${authPath}/login`} className="text-primary hover:underline font-semibold">

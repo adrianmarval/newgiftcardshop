@@ -25,20 +25,22 @@ export function SellBatchManager({ brands, countries, sellRate }: SellBatchManag
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [duplicates, setDuplicates] = useState<string[]>([]);
   const { execute, status } = useAction(publishBatch, {
-    onSuccess: (data) => {
-      if (data.data?.duplicates && data.data.duplicates.length > 0) {
-        setDuplicates(data.data.duplicates);
-        toast.info("Some cards were duplicates", {
-          description: `Found ${data.data.duplicates.length} duplicate cards. Duplicates are not added to the batch.
-          Duplicate Codes: ${data.data.duplicates.join(", ")}
-          `,
-        });
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        if (data.duplicates && data.duplicates.length > 0) {
+          setDuplicates(data.duplicates);
+          toast.info("Some cards were duplicates", {
+            description: `Found ${data.duplicates.length} duplicate cards. Duplicates are not added to the batch.
+            Duplicate Codes: ${data.duplicates.join(", ")}
+            `,
+          });
+        }
+        setShowSuccessDialog(true);
       }
-      setShowSuccessDialog(true);
     },
-    onError: (error) => {
+    onError: ({ error }) => {
       toast.error("error publishing batch", {
-        description: error.error.serverError || error.error.validationErrors?._errors || error.error.thrownError?.message,
+        description: error.serverError || error.validationErrors?._errors?.[0] || "Failed to publish batch",
       });
     },
   });

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Form from "next/form";
+import { useRouter } from "next/navigation";
 
 import {
   Sidebar,
@@ -18,7 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { logout } from "@/actions";
 import Link from "next/link";
-import type { NavItem, PortalSidebarProps } from "@/types";
+import { useAction } from "next-safe-action/hooks";
+import type { PortalSidebarProps } from "@/types";
 
 export function PortalSidebar({
   navItems,
@@ -29,6 +30,19 @@ export function PortalSidebar({
   logoutVariant = "destructive",
   ...props
 }: PortalSidebarProps) {
+  const router = useRouter();
+
+  const { execute, status } = useAction(logout, {
+    onSuccess: () => {
+      router.push(`/${portal}/auth/login`);
+      router.refresh();
+    },
+  });
+
+  const handleLogout = () => {
+    execute({ portal: portal as "buy" | "sell" | "admin" });
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -64,12 +78,15 @@ export function PortalSidebar({
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <Form action={logout}>
-          <input type="hidden" name="portal" value={portal} />
-          <Button variant={logoutVariant} className="w-full justify-start">
-            Sign Out
-          </Button>
-        </Form>
+        <Button
+          type="button"
+          variant={logoutVariant}
+          className="w-full justify-start"
+          onClick={handleLogout}
+          disabled={status === "executing"}
+        >
+          Sign Out
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );

@@ -3,6 +3,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createSearchParamsCache } from "nuqs/server";
-import { orderSearchParamsParsers } from "@/types/search-params";
+import { orderSearchParamsParsers } from "@/types/order/search-params";
 
 export const searchParamsCache = createSearchParamsCache(orderSearchParamsParsers);

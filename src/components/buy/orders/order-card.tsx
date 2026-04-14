@@ -8,12 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Image from "next/image";
 import { OrderDetails } from "./order-details";
-import type { BuyerOrder, BuyerOrderGiftcard, OrderStatus } from "@/types";
-
-interface OrderCardProps {
-  order: BuyerOrder;
-  onCardClick?: (card: BuyerOrderGiftcard, orderStatus: OrderStatus) => void;
-}
+import type { OrderCardProps, BuyerOrderGiftcard } from "@/types";
 
 // Status badge configuration
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {

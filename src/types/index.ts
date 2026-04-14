@@ -6,34 +6,64 @@
 //   import type { Brand, Country, BuyGiftcardStatus } from "@/types";
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type {
-  // domain.ts
-  Brand,
-  Country,
-  GiftcardStatus,
-  Giftcard,
-  Payment,
-  SellerBatch,
-  ParsedGiftCard,
-  GiftcardIssue,
-  PlatformSetting,
-} from "./domain";
+// ── catalog/ ──────────────────────────────────────────────────────────────────
+
+export type { Brand, Country } from "./catalog/brand";
+
+// ── giftcard/ ────────────────────────────────────────────────────────────────
+
+export type { GiftcardStatus, Giftcard, ParsedGiftCard } from "./giftcard/giftcard";
+export type { GiftcardIssue } from "./giftcard/issues";
+
+// ── order/ ───────────────────────────────────────────────────────────────────
 
 export type {
-  // flows.ts
-  BuyGiftcardStatus,
-  BuyGiftcardItem,
-  BuyFlowState,
-  GiftCardItem,
-  SellFlowState,
-} from "./flows";
+  OrderStatus,
+  BuyerOrder,
+  BuyerOrderGiftcard,
+  BuyerOrderPayment,
+} from "./order/buyer-order";
+
+export type { Payment } from "./order/payments";
 
 export type {
-  // auth.ts
-  ProfileState,
-  ForgotPasswordState,
-  ResendState,
-  Portal,
+  PaginatedBuyerOrders,
+  PaginationInfo,
+  BuyerOrdersViewProps,
+  BuyerOrderEffectiveAmount,
+} from "./order/pagination";
+
+export type { OrderSearchParams, OrderSearchParamsKeys } from "./order/search-params";
+
+export { orderSearchParamsParsers } from "./order/search-params";
+
+// ── seller/ ─────────────────────────────────────────────────────────────────
+
+export type { SellerBatch, SellerBatchCard, SellerBatchPayment } from "./seller/batch";
+
+// ── flows/ ──────────────────────────────────────────────────────────────────
+
+export type { BuyGiftcardStatus, BuyGiftcardItem, BuyFlowState } from "./flows/buy-flow";
+export type { GiftCardItem, SellFlowState } from "./flows/sell-flow";
+
+// ── ui/ ─────────────────────────────────────────────────────────────────────
+
+export type { NavItemIcon, NavItem, PortalSidebarProps } from "./ui/navigation";
+export type { StatsItem, EmptyStateProps, CodeDisplayProps } from "./ui/feedback";
+export type {
+  CardStatusInput,
+  GiftcardStatusBadgeProps,
+  GiftcardIssueAlertProps,
+  TransactionListProps,
+  UrlPaginationProps,
+  MetricCardGridProps,
+} from "./ui/cards";
+
+// ── auth/ ───────────────────────────────────────────────────────────────────
+
+export type { ProfileState, ForgotPasswordState, ResendState, Portal } from "./auth/states";
+
+export type {
   ProfileFormProps,
   Verify2FAFormProps,
   LoginFormProps,
@@ -41,60 +71,104 @@ export type {
   SecuritySectionProps,
   ProfileInfoSectionProps,
   TwoFactorSectionProps,
-} from "./auth";
+} from "./auth/props";
+
+// ── email/ ─────────────────────────────────────────────────────────────────
+
+export type { VerifyEmailProps, ResetPasswordProps } from "./email/templates";
+
+// ── server/ ─────────────────────────────────────────────────────────────────
+// Server-only types (Prisma/Decimal). Do NOT import in Client Components.
 
 export type {
-  // ui.ts
-  NavItemIcon,
-  NavItem,
-  PortalSidebarProps,
-  StatsItem,
-  PaginationInfo,
-  EmptyStateProps,
-  CodeDisplayProps,
-  CardStatusInput,
-} from "./ui";
-
-export type {
-  // components.ts
-  SellerCardsViewProps,
-  SellBatchManagerProps,
-  BrandStepProps,
-  ReviewStepProps,
-  BulkPasteDialogProps,
-} from "./sell";
-
-export type {
-  // buy.ts
-  BuyerOrder,
-  BuyerOrderGiftcard,
-  BuyerOrderPayment,
-  PaginatedBuyerOrders,
-  OrderStatus,
-  BuyerOrdersViewProps,
-  BuyerOrderEffectiveAmount,
-} from "./buy";
-
-export type {
-  // server.ts — server-only types (Prisma/Decimal). Do NOT import in Client Components.
   GiftcardSelectionResult,
   BatchInfo,
   PreprocessedBatchData,
-} from "./server";
+} from "./server/batch-processing";
 
-export type {
-  // email.ts
-  VerifyEmailProps,
-  ResetPasswordProps,
-} from "./email";
+// ── Platform Settings ────────────────────────────────────────────────────────
 
-export type {
-  // search-params.ts
-  OrderSearchParams,
-  OrderSearchParamsKeys,
-} from "./search-params";
+export type { PlatformSetting } from "./platform/actions";
 
-export {
-  // search-params.ts
-  orderSearchParamsParsers,
-} from "./search-params";
+// ── Sell component props (from original sell.ts) ─────────────────────────────
+
+import type { SellerBatch } from "./seller/batch";
+import type { Brand, Country } from "./catalog/brand";
+import type { ParsedGiftCard } from "./giftcard/giftcard";
+import type { BuyerOrder, BuyerOrderGiftcard, OrderStatus } from "./order/buyer-order";
+
+export interface SellerCardsViewProps {
+  batches: SellerBatch[];
+}
+
+export interface SellBatchManagerProps {
+  brands: Brand[];
+  countries: Country[];
+  sellRate: number;
+}
+
+export interface BrandStepProps {
+  brands: Brand[];
+  countries: Country[];
+}
+
+export interface ReviewStepProps {
+  onPublish: () => void;
+  isPublishing?: boolean;
+  brandName: string;
+  countryName: string;
+  sellRate: number;
+}
+
+export interface BulkPasteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onImport: (cards: ParsedGiftCard[]) => void;
+}
+
+// ── Order component props (Phase 2 additions) ────────────────────────────────
+
+export interface OrdersStatsProps {
+  orders: BuyerOrder[];
+  totalCount: number;
+}
+
+export interface OrdersListProps {
+  orders: BuyerOrder[];
+  totalPages: number;
+  onCardClick?: (card: BuyerOrderGiftcard, orderStatus: OrderStatus) => void;
+}
+
+export interface OrderDetailsProps {
+  order: BuyerOrder;
+  canCancel: boolean;
+  onCardClick?: (card: BuyerOrderGiftcard, orderStatus: BuyerOrder["status"]) => void;
+}
+
+export interface CardDetailDialogProps {
+  card: BuyerOrderGiftcard | null;
+  orderStatus: OrderStatus | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export interface OrdersFiltersProps {
+  onSearchChange?: (search: string) => void;
+}
+
+export interface OrderCardProps {
+  order: BuyerOrder;
+  onCardClick?: (card: BuyerOrderGiftcard, orderStatus: OrderStatus) => void;
+}
+
+export interface SearchStepProps {
+  brands: Brand[];
+  countries: Country[];
+}
+
+export interface BuyGiftcardManagerProps {
+  brands: Brand[];
+  countries: Country[];
+  /** When present, hydrates the store to resume this order. When absent, resets to step 1. */
+  resumeOrder?: BuyerOrder | null;
+}

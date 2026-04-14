@@ -9,7 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import type { ResetPasswordProps } from "@/types/email";
+import type { ResetPasswordProps } from "@/types";
 
 export function ResetPasswordTemplate({ url, userName }: ResetPasswordProps) {
   return (

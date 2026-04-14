@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/authorization";
 import { getSellerBatches } from "@/actions/seller-actions";
 import { SellerCardsView } from "@/components/sell/seller-cards-view";
 import { Metadata } from "next";
@@ -10,9 +8,11 @@ export const metadata: Metadata = {
 };
 
 export default async function SellerCardsPage() {
-  const batches = await getSellerBatches();
+  const result = await getSellerBatches();
 
-  if (!batches.data) return <p>No batches found</p>;
+  if (!result.data?.success) return <p>No batches found</p>;
+
+  const batches = result.data.batches;
 
   return (
     <div className="container mx-auto py-6 space-y-8">
@@ -21,7 +21,7 @@ export default async function SellerCardsPage() {
         <p className="text-muted-foreground text-base">Track your inventory, sales status, and payment reports.</p>
       </div>
 
-      <SellerCardsView batches={batches.data} />
+      <SellerCardsView batches={batches} />
     </div>
   );
 }

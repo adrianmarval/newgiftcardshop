@@ -2,44 +2,29 @@
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { z } from "zod";
+import { authActionClient } from "@/lib/safe-action";
+import { forgotPasswordSchema, forgotPasswordOutputSchema } from "@/types/auth/actions";
 
-const ForgotPasswordData = z.object({
-  email: z.email("Invalid email address"),
-  portal: z.enum(["sell", "buy", "admin"]),
-});
+export const forgotPassword = authActionClient
+  .inputSchema(forgotPasswordSchema)
+  .outputSchema(forgotPasswordOutputSchema)
+  .action(async function ({ parsedInput: { email, portal }, ctx }) {
+    const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
+    const callbackURL = `${process.env.BETTER_AUTH_URL}${portalPath}/auth/reset-password`;
 
-export const forgotPassword = async (
-  prevState: unknown,
-  formData: FormData,
-) => {
-  const result = ForgotPasswordData.safeParse({
-    email: formData.get("email"),
-    portal: formData.get("portal"),
+    try {
+      await auth.api.requestPasswordReset({
+        body: {
+          email,
+          redirectTo: callbackURL,
+        },
+        headers: await headers(),
+      });
+
+      return { success: true, email };
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      // Always return success to prevent email enumeration
+      return { success: true, email };
+    }
   });
-
-  if (!result.success) {
-    return { error: result.error.issues[0].message };
-  }
-
-  const { email, portal } = result.data;
-
-  const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
-  const callbackURL = `${process.env.BETTER_AUTH_URL}${portalPath}/auth/reset-password`;
-
-  try {
-    await auth.api.requestPasswordReset({
-      body: {
-        email,
-        redirectTo: callbackURL,
-      },
-      headers: await headers(),
-    });
-
-    return { success: true, email };
-  } catch (error) {
-    console.error("Forgot password error:", error);
-    // Always return success to prevent email enumeration
-    return { success: true, email };
-  }
-};

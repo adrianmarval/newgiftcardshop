@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,14 +10,33 @@ import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { forgotPassword } from "@/actions";
-import Form from "next/form";
-import type { ForgotPasswordState } from "@/types";
+import { useAction } from "next-safe-action/hooks";
 
 export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy" | "sell" }) {
-  const [state, formAction, isPending] = useActionState<ForgotPasswordState, FormData>(forgotPassword, null);
+  const [email, setEmail] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
   const authPath = `${portalPath}/auth`;
+
+  const { execute, status } = useAction(forgotPassword, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        setSuccess(true);
+        setError(null);
+      }
+    },
+    onError: ({ error }) => {
+      setError(error.serverError || error.validationErrors?._errors?.[0] || "Failed to send reset link");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    execute({ email, portal });
+  };
 
   return (
     <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
@@ -27,21 +46,21 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
           <p className="text-base text-muted-foreground">Enter your email to receive a password reset link</p>
         </div>
 
-        {state?.error && (
+        {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <span>{state.error}</span>
+            <span>{error}</span>
           </Alert>
         )}
 
-        {state?.success && (
+        {success && (
           <Alert className="border-primary/50 bg-primary/5 text-primary">
             <CheckCircle className="h-4 w-4" />
             <span>If an account exists with that email, a reset link has been sent. Check your inbox.</span>
           </Alert>
         )}
 
-        <Form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input type="hidden" name="portal" value={portal} />
 
           <div className="space-y-2">
@@ -54,13 +73,15 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
               type="email"
               placeholder="you@example.com"
               required
-              disabled={isPending || state?.success}
+              disabled={status === "executing" || success}
               className="bg-muted/50 border-none h-11"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          <Button type="submit" className="w-full h-11 font-semibold" disabled={isPending || state?.success}>
-            {isPending ? (
+          <Button type="submit" className="w-full h-11 font-semibold" disabled={status === "executing" || success}>
+            {status === "executing" ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
                 Sending...
@@ -69,7 +90,7 @@ export function ForgotPasswordForm({ portal = "buy" }: { portal?: "admin" | "buy
               "Send Reset Link"
             )}
           </Button>
-        </Form>
+        </form>
 
         <p className="text-base text-muted-foreground text-center">
           Remember your password?{" "}

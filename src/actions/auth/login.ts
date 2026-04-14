@@ -1,14 +1,9 @@
 "use server";
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { z } from "zod";
 
-const LoginData = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
-  portal: z.enum(["sell", "buy", "admin"]),
-});
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { authActionClient } from "@/lib/safe-action";
+import { loginSchema, loginOutputSchema } from "@/types/auth/actions";
 
 const dashboardMap = {
   sell: "/sell/dashboard",
@@ -22,64 +17,49 @@ const roleMap = {
   admin: "ADMIN",
 } as const;
 
-export const login = async (prevState: unknown, formData: FormData) => {
-  const result = LoginData.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-    portal: formData.get("portal"),
-  });
+export const login = authActionClient
+  .inputSchema(loginSchema)
+  .outputSchema(loginOutputSchema)
+  .action(async function ({ parsedInput: { email, password, portal }, ctx }) {
+    const callbackURL = dashboardMap[portal];
+    const requiredRole = roleMap[portal];
 
-  if (!result.success) {
-    return result.error.issues[0].message;
-  }
-
-  const { email, password, portal } = result.data;
-  const callbackURL = dashboardMap[portal];
-  const requiredRole = roleMap[portal];
-
-  // 1. Declarar una variable para almacenar la ruta de destino
-  let redirectPath: string | null = null;
-
-  try {
-    const response = (await auth.api.signInEmail({
-      body: { email, password, callbackURL },
-      headers: await headers(),
-    })) as {
-      twoFactorRedirect?: boolean;
-      user?: {
-        id: string;
-        email: string;
-        emailVerified: boolean;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
-        image?: string | null;
-        role?: string[];
+    try {
+      const response = (await auth.api.signInEmail({
+        body: { email, password, callbackURL },
+        headers: await headers(),
+      })) as {
+        twoFactorRedirect?: boolean;
+        user?: {
+          id: string;
+          email: string;
+          emailVerified: boolean;
+          name: string;
+          createdAt: Date;
+          updatedAt: Date;
+          image?: string | null;
+          role?: string[];
+        };
       };
-    };
 
-    // 2. Asignar la ruta de 2FA si es necesario (sin hacer el redirect aún)
-    if (response.twoFactorRedirect) {
-      redirectPath = `/${portal}/auth/verify-2fa`;
-    } else if (response.user) {
-      // Verificar si el usuario tiene el rol requerido (solo si no va a 2FA)
-      const user = response.user;
-
-      if (!user.role?.includes(requiredRole)) {
-        await auth.api.signOut({ headers: await headers() });
-        return `Your account does not have ${requiredRole.toLowerCase()} access`;
+      if (response.twoFactorRedirect) {
+        return { success: true, redirectTo: `/${portal}/auth/verify-2fa` };
       }
 
-      // Si todo sale bien, asignamos la ruta del dashboard
-      redirectPath = callbackURL;
-    }
-  } catch (error) {
-    console.error("Login error:", error);
-    return "Invalid email or password";
-  }
+      if (response.user) {
+        const user = response.user;
 
-  // 3. Ejecutar la redirección FUERA del try/catch
-  if (redirectPath) {
-    redirect(redirectPath);
-  }
-};
+        if (!user.role?.includes(requiredRole)) {
+          await auth.api.signOut({ headers: await headers() });
+          return { error: `Your account does not have ${requiredRole.toLowerCase()} access` };
+        }
+
+        return { success: true, redirectTo: callbackURL };
+      }
+
+      return { error: "Invalid email or password" };
+    } catch (error) {
+      console.error("Login error:", error);
+      return { error: "Invalid email or password" };
+    }
+  });

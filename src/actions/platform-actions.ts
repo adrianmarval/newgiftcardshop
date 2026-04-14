@@ -2,28 +2,36 @@
 
 import prisma from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
-import z from "zod";
+import { getPlatformSettingOutputSchema, setPlatformSettingInputSchema, setPlatformSettingOutputSchema } from "@/types/platform/actions";
 
 /**
- * Retrieves a platform setting value by key.
+ * Retrieves all platform settings.
  * Requires authentication — prevents unauthenticated reads of potentially sensitive settings.
- * Returns null if the key does not exist.
  */
-export const getPlatformSetting = adminActionClient.action(async () => {
+export const getPlatformSetting = adminActionClient.outputSchema(getPlatformSettingOutputSchema).action(async () => {
   const settings = await prisma.platformSettings.findMany();
-  return settings;
+  return {
+    success: true as const,
+    settings: settings.map((s) => ({
+      id: s.id,
+      key: s.key,
+      value: s.value,
+      description: s.description ?? null,
+    })),
+  };
 });
 
 /**
  * Creates or updates a platform setting. Requires ADMIN role.
  */
 export const setPlatformSetting = adminActionClient
-  .inputSchema(z.object({ key: z.string(), value: z.string(), description: z.string().optional() }))
+  .inputSchema(setPlatformSettingInputSchema)
+  .outputSchema(setPlatformSettingOutputSchema)
   .action(async ({ parsedInput: { key, value, description } }) => {
     await prisma.platformSettings.upsert({
       where: { key },
       update: { value, description },
       create: { key, value, description },
     });
-    return { success: true };
+    return { success: true as const };
   });

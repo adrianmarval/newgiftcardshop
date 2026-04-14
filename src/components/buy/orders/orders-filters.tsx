@@ -5,10 +5,7 @@ import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { orderSearchParamsParsers } from "./orders-search-params";
-
-interface OrdersFiltersProps {
-  onSearchChange?: (search: string) => void;
-}
+import type { OrdersFiltersProps } from "@/types";
 
 export function OrdersFilters({ onSearchChange }: OrdersFiltersProps) {
   const [{ status, search, sort }, setParams] = useQueryStates(orderSearchParamsParsers, {

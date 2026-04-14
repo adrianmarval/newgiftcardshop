@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Search Params Types — nuqs v2 parsers for buyer orders
+// Order Types — Search params parsers for buyer orders (nuqs v2)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { parseAsInteger, parseAsString, parseAsStringLiteral } from "nuqs/server";

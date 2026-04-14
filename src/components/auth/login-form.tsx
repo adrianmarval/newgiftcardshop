@@ -1,6 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
+import { useAction } from "next-safe-action/hooks";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +12,6 @@ import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle } from "lucide-react";
 import { login } from "@/actions";
-import Form from "next/form";
 import type { LoginFormProps } from "@/types";
 
 export function LoginForm({
@@ -23,10 +24,30 @@ export function LoginForm({
   registerPrompt = "Don't have an account?",
   registerLinkText = "Sign up",
 }: LoginFormProps) {
-  const [error, formAction, isPending] = useActionState(login, null);
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   // Map the portal prop to the value the server action expects
   const portalValue = portal === "buyer" ? "buy" : portal === "seller" ? "sell" : "admin";
+
+  const { execute, status } = useAction(login, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.redirectTo) {
+        router.push(data.redirectTo);
+      }
+    },
+    onError: ({ error }) => {
+      setError(error.serverError || error.validationErrors?._errors?.[0] || "Login failed");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    execute({ email, password, portal: portalValue });
+  };
 
   return (
     <Card className="w-full max-w-md mx-auto p-8">
@@ -43,7 +64,7 @@ export function LoginForm({
           </Alert>
         )}
 
-        <Form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input type="hidden" name="portal" value={portalValue} />
 
           <div className="space-y-2">
@@ -54,7 +75,9 @@ export function LoginForm({
               type="email"
               placeholder={emailPlaceholder}
               required
-              disabled={isPending}
+              disabled={status === "executing"}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
@@ -71,12 +94,14 @@ export function LoginForm({
               type="password"
               placeholder="••••••••"
               required
-              disabled={isPending}
+              disabled={status === "executing"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? (
+          <Button type="submit" className="w-full" disabled={status === "executing"}>
+            {status === "executing" ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
                 Signing in...
@@ -85,7 +110,7 @@ export function LoginForm({
               "Sign In"
             )}
           </Button>
-        </Form>
+        </form>
 
         {registerUrl && (
           <p className="text-base text-muted-foreground">

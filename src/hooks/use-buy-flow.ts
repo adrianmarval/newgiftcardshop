@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { BuyGiftcardStatus, BuyGiftcardItem, BuyFlowState } from "@/types";
+import type { BuyFlowState } from "@/types";
 
 export const useBuyFlow = create<BuyFlowState>((set) => ({
   step: 1,

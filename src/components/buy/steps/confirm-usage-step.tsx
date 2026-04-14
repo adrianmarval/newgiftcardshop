@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { getUserBuyRate, confirmOrderUsage, cancelOrder } from "@/actions/order-actions";
+import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -14,18 +15,15 @@ export function ConfirmUsageStep() {
   const { foundGiftcards, setStep, orderId, setAdjustedTotal, resetForm } = useBuyFlow();
   const router = useRouter();
   const [buyRate, setBuyRate] = useState(0.85);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    getUserBuyRate().then((response) => {
-      const rate = response.data;
-      if (!rate) {
-        toast.error("Error al obtener la tasa de compra", { description: response.serverError || response.validationErrors?.formErrors });
-        return;
+    getUserBuyRate().then((result) => {
+      if (result.data?.success && typeof result.data.rate === "number") {
+        setBuyRate(result.data.rate);
+      } else if (result.serverError || result.validationErrors) {
+        toast.error("Error al obtener la tasa de compra", { description: result.serverError || result.validationErrors?.formErrors?.[0] });
       }
-      setBuyRate(rate);
     });
   }, []);
 
@@ -37,45 +35,51 @@ export function ConfirmUsageStep() {
 
   const totalAmount = rawTotal * buyRate;
 
-  const handleConfirmUsage = async () => {
-    if (!orderId) return;
-    setIsUpdating(true);
-    setErrorMessage(null);
-    const result = await confirmOrderUsage({ orderId });
-    if (!result.data) {
+  const { execute: confirmExecute, status: confirmStatus } = useAction(confirmOrderUsage, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        if (typeof data.adjustedTotal === "number") {
+          setAdjustedTotal(data.adjustedTotal);
+        }
+        setStep(5);
+      }
+    },
+    onError: ({ error }) => {
       toast.error("Error al confirmar uso de tarjetas", {
-        description: result.serverError || result.validationErrors?._errors,
+        description: error.serverError || error.validationErrors?._errors?.[0] || "Error al confirmar uso de tarjetas",
       });
-      setErrorMessage(result.serverError || result.validationErrors?._errors?.join("") || "Error al confirmar uso de tarjetas");
-      return;
-    }
-    if (result.data?.adjustedTotal) {
-      setAdjustedTotal(result.data.adjustedTotal);
-    }
-    setStep(5);
-    setIsUpdating(false);
+      setErrorMessage(error.serverError || error.validationErrors?._errors?.join("") || "Error al confirmar uso de tarjetas");
+    },
+  });
+
+  const handleConfirmUsage = () => {
+    if (!orderId) return;
+    setErrorMessage(null);
+    confirmExecute({ orderId });
+  };
+
+  const { execute: cancelExecute, status: cancelStatus } = useAction(cancelOrder, {
+    onSuccess: () => {
+      toast.success("Order cancelled successfully");
+      resetForm();
+      router.push("/buy/dashboard/orders");
+    },
+    onError: ({ error }) => {
+      toast.error("Failed to cancel order", {
+        description: error.serverError || error.validationErrors?._errors?.[0] || "Failed to cancel order",
+      });
+      setErrorMessage(error.serverError || "Failed to cancel order");
+    },
+  });
+
+  const handleCancelOrder = () => {
+    if (!orderId) return;
+    setErrorMessage(null);
+    cancelExecute({ orderId });
   };
 
   const reportedCards = foundGiftcards.filter((c) => c.status !== "UNUSED");
   const allCardsWorthless = totalAmount === 0 && foundGiftcards.length > 0;
-
-  const handleCancelOrder = async () => {
-    if (!orderId) return;
-    setIsCancelling(true);
-    setErrorMessage(null);
-    const result = await cancelOrder({ orderId });
-    if (result.serverError || result.validationErrors) {
-      toast.error("Failed to cancel order", {
-        description: (result.serverError || result.validationErrors?._errors) as string,
-      });
-      setErrorMessage(result.serverError || "Failed to cancel order");
-      setIsCancelling(false);
-      return;
-    }
-    toast.success("Order cancelled successfully");
-    resetForm();
-    router.push("/buy/dashboard/orders");
-  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-full items-start">
@@ -155,7 +159,7 @@ export function ConfirmUsageStep() {
             variant="ghost"
             onClick={() => setStep(3)}
             className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted"
-            disabled={isUpdating || isCancelling}
+            disabled={confirmStatus === "executing" || cancelStatus === "executing"}
           >
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Review
           </Button>
@@ -163,10 +167,10 @@ export function ConfirmUsageStep() {
           {allCardsWorthless ? (
             <Button
               onClick={handleCancelOrder}
-              disabled={isCancelling || !orderId}
+              disabled={cancelStatus === "executing" || !orderId}
               className="flex-2 h-12 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold shadow-xl shadow-destructive/30 text-base"
             >
-              {isCancelling ? (
+              {cancelStatus === "executing" ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Cancelling...
                 </>
@@ -179,10 +183,10 @@ export function ConfirmUsageStep() {
           ) : (
             <Button
               onClick={handleConfirmUsage}
-              disabled={isUpdating || !orderId}
+              disabled={confirmStatus === "executing" || !orderId}
               className="flex-2 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-xl shadow-primary/30 text-base"
             >
-              {isUpdating ? (
+              {confirmStatus === "executing" ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Confirming...
                 </>

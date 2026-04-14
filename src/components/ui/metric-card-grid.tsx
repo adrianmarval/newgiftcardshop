@@ -1,11 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import type { StatsItem as StatsItemType } from "@/types";
-
-interface MetricCardGridProps {
-  items: StatsItemType[];
-}
+import type { MetricCardGridProps } from "@/types";
 
 export function MetricCardGrid({ items }: MetricCardGridProps) {
   return (

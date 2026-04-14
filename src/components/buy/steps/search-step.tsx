@@ -10,13 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { searchGiftcards } from "@/actions";
+import { useAction } from "next-safe-action/hooks";
 import Image from "next/image";
-import type { Brand, Country } from "@/types";
-
-interface SearchStepProps {
-  brands: Brand[];
-  countries: Country[];
-}
+import type { SearchStepProps, Brand, Country } from "@/types";
+import { toast } from "sonner";
 
 export function SearchStep({ brands, countries }: SearchStepProps) {
   const {
@@ -50,20 +47,28 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
       brand.slug.toLowerCase().includes(searchState.searchBrand.toLowerCase()),
   );
 
-  const handleSearch = async () => {
+  const { execute, status } = useAction(searchGiftcards, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.giftcards) {
+        setFoundGiftcards(data.giftcards);
+        setStep(2);
+      }
+      setSearchState((prev) => ({ ...prev, isSearching: false }));
+    },
+    onError: ({ error }) => {
+      toast.error("Error al buscar las tarjetas", {
+        description: error.serverError || error.validationErrors?._errors?.[0] || "Ocurrio un error al buscar las tarjetas",
+      });
+      setSearchState((prev) => ({ ...prev, isSearching: false }));
+    },
+  });
+
+  const handleSearch = () => {
     if (!selectedBrand || !targetAmount) return;
 
     setSearchState((prev) => ({ ...prev, isSearching: true }));
     const amount = parseFloat(targetAmount);
-    const response = await searchGiftcards({ brandId: selectedBrand, countryId: selectedCountry, amount });
-
-    if (!response.data) {
-      throw new Error("Ocurrio un error al buscar las tarjetas");
-    }
-
-    setFoundGiftcards(response.data);
-    setSearchState((prev) => ({ ...prev, isSearching: false }));
-    setStep(2);
+    execute({ brandId: selectedBrand, countryId: selectedCountry, amount });
   };
 
   const isValid = selectedBrand && selectedCountry && targetAmount && parseFloat(targetAmount) > 0;
@@ -129,7 +134,7 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
         <div className="mt-auto pt-4 md:pt-6 border-t border-border flex flex-col gap-2 md:gap-3">
           <Button
             onClick={handleSearch}
-            disabled={!isValid || searchState.isSearching}
+            disabled={!isValid || status === "executing"}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 transition-all text-base font-bold shadow-lg shadow-primary/20"
           >
             {searchState.isSearching ? "Finding Cards..." : "Search Availability"}

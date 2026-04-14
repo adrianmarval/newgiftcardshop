@@ -8,25 +8,30 @@ export default async function BrowseCardsPage({
 }: {
   searchParams: Promise<{ orderId?: string }>;
 }) {
-  const [brands, countries, params] = await Promise.all([
+  const [brandsResult, countriesResult, params] = await Promise.all([
     getActiveBrands(),
     getActiveCountries(),
     searchParams,
   ]);
 
-  if (!brands.data) throw new Error("Ocurrio un error al cargar las marcas");
-  if (!countries.data) throw new Error("Ocurrio un error al cargar los paises");
+  if (!brandsResult.data?.success) throw new Error("Ocurrio un error al cargar las marcas");
+  if (!countriesResult.data?.success) throw new Error("Ocurrio un error al cargar los paises");
+
+  const brands = brandsResult.data.brands;
+  const countries = countriesResult.data.countries;
 
   let resumeOrder: BuyerOrder | null = null;
   if (params.orderId) {
     const result = await getOrderById({ orderId: params.orderId });
-    resumeOrder = (result?.data as BuyerOrder) ?? null;
+    if (result.data?.success && result.data.order) {
+      resumeOrder = result.data.order as BuyerOrder;
+    }
   }
 
   return (
     <BuyGiftcardManager
-      brands={brands.data}
-      countries={countries.data}
+      brands={brands}
+      countries={countries}
       resumeOrder={resumeOrder}
     />
   );

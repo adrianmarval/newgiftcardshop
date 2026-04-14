@@ -12,13 +12,7 @@ import { cancelOrder } from "@/actions/order-actions";
 import { ClaimCodeField } from "@/components/ui/claim-code-field";
 import { GiftcardStatusBadge } from "@/components/ui/giftcard-status-badge";
 import { TransactionList } from "@/components/ui/transaction-list";
-import type { BuyerOrder, BuyerOrderGiftcard } from "@/types";
-
-interface OrderDetailsProps {
-  order: BuyerOrder;
-  canCancel: boolean;
-  onCardClick?: (card: BuyerOrderGiftcard, orderStatus: BuyerOrder["status"]) => void;
-}
+import type { OrderDetailsProps } from "@/types";
 
 export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProps) {
   const router = useRouter();

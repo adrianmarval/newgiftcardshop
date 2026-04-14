@@ -4,22 +4,16 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { encrypt, decrypt, hashCode } from "@/lib/encryption";
 import { ActionError, sellerActionClient } from "@/lib/safe-action";
-import z from "zod";
-
-const publishBatchSchema = z.object({
-  cards: z.array(
-    z.object({
-      amount: z.string(),
-      claimCode: z.string(),
-      pinCode: z.string().optional(),
-    }),
-  ),
-  brandId: z.string(),
-  countryId: z.string(),
-});
+import {
+  publishBatchSchema,
+  publishBatchOutputSchema,
+  getSellerBatchesOutputSchema,
+  getSellerRateOutputSchema,
+} from "@/types/seller/actions";
 
 export const publishBatch = sellerActionClient
   .inputSchema(publishBatchSchema)
+  .outputSchema(publishBatchOutputSchema)
   .useValidated(async ({ parsedInput: { brandId, cards, countryId }, ctx, next }) => {
     if (!brandId || !countryId) throw new ActionError("Brand and country are required");
 
@@ -87,12 +81,13 @@ export const publishBatch = sellerActionClient
     });
 
     return {
+      success: true as const,
       batchId: batch.id,
       duplicates,
     };
   });
 
-export const getSellerBatches = sellerActionClient.action(async ({ ctx }) => {
+export const getSellerBatches = sellerActionClient.outputSchema(getSellerBatchesOutputSchema).action(async ({ ctx }) => {
   const batches = await prisma.giftcardBatch.findMany({
     where: { userId: ctx.auth.user.id },
     include: {
@@ -101,64 +96,82 @@ export const getSellerBatches = sellerActionClient.action(async ({ ctx }) => {
     },
     orderBy: { createdAt: "desc" },
   });
-  return batches.map((batch) => {
-    const sellRate = Number(batch.sellRate);
-    const giftcards = batch.giftcards.map((card) => {
-      let claimCode = card.claimCode;
-      let pinCode = card.pinCode ?? null;
-      try {
-        claimCode = decrypt(card.claimCode);
-      } catch {
-        // Legacy unencrypted data — return raw value
-      }
-      if (card.pinCode) {
+  return {
+    success: true as const,
+    batches: batches.map((batch) => {
+      const sellRate = Number(batch.sellRate);
+      const giftcards = batch.giftcards.map((card) => {
+        let claimCode = card.claimCode;
+        let pinCode = card.pinCode ?? null;
         try {
-          pinCode = decrypt(card.pinCode);
+          claimCode = decrypt(card.claimCode);
         } catch {
           // Legacy unencrypted data — return raw value
-          pinCode = card.pinCode;
         }
-      }
+        if (card.pinCode) {
+          try {
+            pinCode = decrypt(card.pinCode);
+          } catch {
+            // Legacy unencrypted data — return raw value
+            pinCode = card.pinCode;
+          }
+        }
+        return {
+          id: card.id,
+          claimCode,
+          pinCode,
+          amount: Number(card.amount),
+          status: card.status,
+          isConfirmed: card.isConfirmed,
+          reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+          orderId: card.orderId,
+          brand: {
+            name: card.brand.name,
+            icon: card.brand.icon,
+            image: card.brand.image,
+          },
+          country: card.country
+            ? {
+                name: card.country.name,
+                code: card.country.code,
+              }
+            : null,
+        };
+      });
+      // Compute effective total server-side (only confirmed cards contribute)
+      // USED → face amount, WRONG_AMOUNT → reportedAmount, INVALID/ALREADY_USED/DEACTIVATED → $0
+      const effectiveTotal = giftcards.reduce((sum, g) => {
+        if (!g.isConfirmed) return sum;
+        if (g.status === "USED") return sum + g.amount;
+        if (g.status === "WRONG_AMOUNT") return sum + (g.reportedAmount || 0);
+        return sum;
+      }, 0);
+      const estimatedPayout = effectiveTotal * sellRate;
       return {
-        ...card,
-        claimCode,
-        pinCode,
-        amount: Number(card.amount),
-        reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+        id: batch.id,
+        userId: batch.userId,
+        sellRate,
+        isPaid: batch.isPaid,
+        createdAt: batch.createdAt.toISOString(),
+        giftcards,
+        payments: batch.payments.map((payment) => ({
+          id: payment.id,
+          amount: Number(payment.amount),
+          balanceAfter: Number(payment.balanceAfter),
+          status: payment.status,
+          createdAt: payment.createdAt.toISOString(),
+        })),
+        effectiveTotal,
+        estimatedPayout,
       };
-    });
-    // Compute effective total server-side (only confirmed cards contribute)
-    // USED → face amount, WRONG_AMOUNT → reportedAmount, INVALID/ALREADY_USED/DEACTIVATED → $0
-    const effectiveTotal = giftcards.reduce((sum, g) => {
-      if (!g.isConfirmed) return sum;
-      if (g.status === "USED") return sum + g.amount;
-      if (g.status === "WRONG_AMOUNT") return sum + (g.reportedAmount || 0);
-      return sum;
-    }, 0);
-    const estimatedPayout = effectiveTotal * sellRate;
-    return {
-      ...batch,
-      sellRate,
-      isPaid: batch.isPaid,
-      effectiveTotal,
-      estimatedPayout,
-      giftcards,
-      payments: batch.payments.map((payment) => ({
-        ...payment,
-        amount: Number(payment.amount),
-        balanceAfter: Number(payment.balanceAfter),
-      })),
-    };
-  });
+    }),
+  };
 });
 
-type GetSellerBatchesResponse = Awaited<ReturnType<typeof getSellerBatches>>;
-export type SellerBatch = NonNullable<GetSellerBatchesResponse["data"]>[number];
-
-export const getSellerRate = sellerActionClient.action(async ({ ctx }) => {
+export const getSellerRate = sellerActionClient.outputSchema(getSellerRateOutputSchema).action(async ({ ctx }) => {
   const dbUser = await prisma.user.findUnique({
     where: { id: ctx.auth.user.id },
     select: { sellRate: true },
   });
-  return dbUser?.sellRate ? dbUser.sellRate.toNumber() : 0.75;
+  return { success: true as const, rate: dbUser?.sellRate ? dbUser.sellRate.toNumber() : 0.75 };
 });

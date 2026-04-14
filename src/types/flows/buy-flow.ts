@@ -1,37 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Flow Types — UI state types for the buy and sell flows
-// These are consumed by Zustand stores (use-buy-flow, use-sell-flow) and the
-// step components that participate in each multi-step wizard.
+// Flow Types — Buy flow state types
+// These are consumed by Zustand stores (use-buy-flow) and the
+// step components that participate in the buy multi-step wizard.
 // ─────────────────────────────────────────────────────────────────────────────
-
-// ── Buy Flow ──────────────────────────────────────────────────────────────────
-
-/**
- * Zustand store shape for the buy flow wizard.
- */
-export interface BuyFlowState {
-  step: number;
-  selectedBrand: string;
-  selectedCountry: string;
-  targetAmount: string;
-  foundGiftcards: BuyGiftcardItem[];
-  orderId: string | null;
-  /** Set after confirmOrderUsage succeeds — the server-calculated adjusted total. */
-  adjustedTotal: number | null;
-
-  // Actions
-  setStep: (step: number) => void;
-  setSelectedBrand: (brand: string) => void;
-  setSelectedCountry: (country: string) => void;
-  setTargetAmount: (amount: string) => void;
-  setFoundGiftcards: (cards: BuyGiftcardItem[]) => void;
-  setOrderId: (id: string | null) => void;
-  setAdjustedTotal: (total: number | null) => void;
-
-  removeGiftcard: (id: string) => void;
-  reportIssue: (id: string, status: BuyGiftcardStatus, correctedAmount?: number) => void;
-  resetForm: () => void;
-}
 
 // ── Buy Flow item types ────────────────────────────────────────────────────────
 
@@ -66,38 +37,31 @@ export interface BuyGiftcardItem {
   sellerId?: string;
 }
 
-// ── Sell Flow ─────────────────────────────────────────────────────────────────
+// ── Buy Flow State ────────────────────────────────────────────────────────────
 
 /**
- * Represents a single gift card being entered by a seller in the sell flow
- * wizard. All fields are strings because they come directly from form inputs
- * before any parsing or validation.
+ * Zustand store shape for the buy flow wizard.
  */
-export interface GiftCardItem {
-  id: string;
-  amount: string;
-  claimCode: string;
-  pinCode?: string;
-}
-
-/**
- * Zustand store shape for the sell flow wizard.
- */
-export interface SellFlowState {
+export interface BuyFlowState {
   step: number;
   selectedBrand: string;
   selectedCountry: string;
-  giftcards: GiftCardItem[];
+  targetAmount: string;
+  foundGiftcards: BuyGiftcardItem[];
+  orderId: string | null;
+  /** Set after confirmOrderUsage succeeds — the server-calculated adjusted total. */
+  adjustedTotal: number | null;
 
   // Actions
   setStep: (step: number) => void;
   setSelectedBrand: (brand: string) => void;
   setSelectedCountry: (country: string) => void;
-  setGiftcards: (giftcards: GiftCardItem[]) => void;
+  setTargetAmount: (amount: string) => void;
+  setFoundGiftcards: (cards: BuyGiftcardItem[]) => void;
+  setOrderId: (id: string | null) => void;
+  setAdjustedTotal: (total: number | null) => void;
 
-  addGiftcard: () => void;
   removeGiftcard: (id: string) => void;
-  updateGiftcard: (id: string, field: keyof GiftCardItem, value: string) => void;
-  handleBulkImport: (cards: { amount: string; claimCode: string }[]) => void;
+  reportIssue: (id: string, status: BuyGiftcardStatus, correctedAmount?: number) => void;
   resetForm: () => void;
 }

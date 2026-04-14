@@ -1,28 +1,55 @@
 "use client";
 
-import { useActionState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { verifyEmail, resendVerification } from "@/actions";
-import Form from "next/form";
+import { useAction } from "next-safe-action/hooks";
 import { Suspense } from "react";
-import type { ResendState, Portal } from "@/types";
-
+import type { Portal } from "@/types";
 
 function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
   const email = searchParams.get("email") || "";
 
-  const [error, verifyAction, isVerifying] = useActionState(verifyEmail, null);
-  const [resendState, resendAction, isResending] = useActionState<ResendState, FormData>(resendVerification, null);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { execute: verifyExecute, status: verifyStatus } = useAction(verifyEmail, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.redirectTo) {
+        router.push(data.redirectTo);
+      }
+    },
+    onError: ({ error }) => {
+      setError(error.serverError || error.validationErrors?._errors?.[0] || "Verification failed");
+    },
+  });
+
+  const { execute: resendExecute, status: resendStatus } = useAction(resendVerification, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        setResendSuccess(true);
+      }
+    },
+    onError: ({ error }) => {
+      setError(error.serverError || error.validationErrors?._errors?.[0] || "Failed to resend verification");
+    },
+  });
 
   // If we have a token, show verify button
   if (token) {
+    const handleVerify = () => {
+      setError(null);
+      verifyExecute({ portal, token });
+    };
+
     return (
       <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
         <div className="space-y-6">
@@ -39,12 +66,17 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
             </Alert>
           )}
 
-          <Form action={verifyAction} className="space-y-4">
+          <div className="space-y-4">
             <input type="hidden" name="portal" value={portal} />
             <input type="hidden" name="token" value={token} />
 
-            <Button type="submit" className="w-full h-11 font-semibold" disabled={isVerifying}>
-              {isVerifying ? (
+            <Button
+              type="button"
+              onClick={handleVerify}
+              className="w-full h-11 font-semibold"
+              disabled={verifyStatus === "executing"}
+            >
+              {verifyStatus === "executing" ? (
                 <>
                   <Spinner className="h-4 w-4 mr-2" />
                   Verifying...
@@ -53,13 +85,19 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
                 "Verify Email"
               )}
             </Button>
-          </Form>
+          </div>
         </div>
       </Card>
     );
   }
 
   // If no token, show pending verification state with resend option
+  const handleResend = () => {
+    setError(null);
+    setResendSuccess(false);
+    resendExecute({ portal, email });
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
       <div className="space-y-6">
@@ -72,14 +110,14 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
           </p>
         </div>
 
-        {resendState?.error && (
+        {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <span>{resendState.error}</span>
+            <span>{error}</span>
           </Alert>
         )}
 
-        {resendState?.success && (
+        {resendSuccess && (
           <Alert className="border-primary/50 bg-primary/5 text-primary">
             <CheckCircle className="h-4 w-4" />
             <span>Verification email resent! Check your inbox.</span>
@@ -87,17 +125,18 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
         )}
 
         {email && (
-          <Form action={resendAction}>
+          <div>
             <input type="hidden" name="portal" value={portal} />
             <input type="hidden" name="email" value={email} />
 
             <Button
-              type="submit"
+              type="button"
               variant="outline"
+              onClick={handleResend}
               className="w-full h-11 border-none bg-muted/30 hover:bg-muted/50 font-medium"
-              disabled={isResending}
+              disabled={resendStatus === "executing"}
             >
-              {isResending ? (
+              {resendStatus === "executing" ? (
                 <>
                   <Spinner className="h-4 w-4 mr-2" />
                   Resending...
@@ -106,7 +145,7 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
                 "Didn't receive email? Resend"
               )}
             </Button>
-          </Form>
+          </div>
         )}
       </div>
     </Card>

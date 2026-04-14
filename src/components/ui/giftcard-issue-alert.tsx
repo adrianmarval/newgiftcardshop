@@ -1,10 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-
-interface GiftcardIssueAlertProps {
-  status: string;
-}
+import type { GiftcardIssueAlertProps } from "@/types";
 
 export function GiftcardIssueAlert({ status }: GiftcardIssueAlertProps) {
   const label = status.replace("_", " ");

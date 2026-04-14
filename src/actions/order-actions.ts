@@ -1,25 +1,37 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { OrderStatus, Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { decrypt } from "@/lib/encryption";
 import { ActionError, buyerActionClient } from "@/lib/safe-action";
-import z from "zod";
+import { buyerOrderSchema } from "@/types/order/buyer-order";
+import {
+  getUserBuyRateOutputSchema,
+  createOrderInputSchema,
+  createOrderOutputSchema,
+  confirmOrderUsageInputSchema,
+  confirmOrderUsageOutputSchema,
+  completeOrderInputSchema,
+  completeOrderOutputSchema,
+  cancelOrderInputSchema,
+  cancelOrderOutputSchema,
+  getOrderByIdInputSchema,
+  getOrderByIdOutputSchema,
+  getBuyerOrdersInputSchema,
+  getBuyerOrdersOutputSchema,
+} from "@/types/order/actions";
 
-export const getUserBuyRate = buyerActionClient.action(async ({ ctx }) => {
+export const getUserBuyRate = buyerActionClient.outputSchema(getUserBuyRateOutputSchema).action(async ({ ctx }) => {
   const dbUser = await prisma.user.findUnique({
     where: { id: ctx.auth.user.id },
     select: { buyRate: true },
   });
-  return dbUser?.buyRate ? dbUser.buyRate.toNumber() : 85.0;
+  return { success: true as const, rate: dbUser?.buyRate ? dbUser.buyRate.toNumber() : 85.0 };
 });
 
-/**
- * Creates a buy order and reserves the giftcards (marks inStock: false)
- * inside a transaction so the reservation is atomic with order creation.
- */
 export const createOrder = buyerActionClient
-  .inputSchema(z.object({ giftcardIds: z.array(z.string()) }))
+  .inputSchema(createOrderInputSchema)
+  .outputSchema(createOrderOutputSchema)
   .useValidated(async ({ parsedInput: { giftcardIds }, ctx, next }) => {
     const [dbUser, giftcards] = await Promise.all([
       prisma.user.findUnique({ where: { id: ctx.auth.user.id } }),
@@ -61,15 +73,12 @@ export const createOrder = buyerActionClient
       return createdOrder;
     });
 
-    return { success: true, orderId: order.id };
+    return { success: true as const, orderId: order.id };
   });
 
-/**
- * Locks in the buyer's issue reports and moves the order to AWAITING_PAYMENT.
- * Calculates the adjustedTotal based on effective card amounts and the buyer's rate.
- */
 export const confirmOrderUsage = buyerActionClient
-  .inputSchema(z.object({ orderId: z.string() }))
+  .inputSchema(confirmOrderUsageInputSchema)
+  .outputSchema(confirmOrderUsageOutputSchema)
   .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -100,17 +109,12 @@ export const confirmOrderUsage = buyerActionClient
       data: { status: "AWAITING_PAYMENT", adjustedTotal: new Prisma.Decimal(adjustedTotal) },
     });
 
-    return { success: true, adjustedTotal };
+    return { success: true as const, adjustedTotal };
   });
 
-/**
- * Completes a buy order after the buyer notifies payment.
- * Order must be in AWAITING_PAYMENT state (i.e. confirmOrderUsage was called).
- * Updates each giftcard status based on the reported issue type.
- */
-
 export const completeOrder = buyerActionClient
-  .inputSchema(z.object({ orderId: z.string(), _transactionId: z.string() }))
+  .inputSchema(completeOrderInputSchema)
+  .outputSchema(completeOrderOutputSchema)
   .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -157,21 +161,15 @@ export const completeOrder = buyerActionClient
       }
     });
     return {
-      success: true,
+      success: true as const,
       orderId: order.id,
       message: "Order completed successfully",
     };
   });
 
-/**
- * Cancels a buy order. The buyer can cancel their own PENDING orders.
- * Giftcards are NOT returned to stock (inStock stays false, status stays as-is).
- *
- * Guard: Only allows cancellation when effective amount is $0 (all cards INVALID/ALREADY_USED/DEACTIVATED
- * with zero reportedAmount).
- */
 export const cancelOrder = buyerActionClient
-  .inputSchema(z.object({ orderId: z.string() }))
+  .inputSchema(cancelOrderInputSchema)
+  .outputSchema(cancelOrderOutputSchema)
   .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -209,7 +207,7 @@ export const cancelOrder = buyerActionClient
         },
       },
     });
-    return { success: true, message: "Order cancelled successfully!" };
+    return { success: true as const, message: "Order cancelled successfully!" };
   });
 
 // Helper to compute effective total for an order's giftcards
@@ -225,12 +223,74 @@ function computeEffectiveTotal(
   return rawTotal * buyRate;
 }
 
-/**
- * Fetches a single order by exact ID for the authenticated buyer.
- * Used by the resume flow to hydrate the buy-flow store.
- */
+// Helper to serialize a giftcard for output
+function serializeGiftcard(card: {
+  claimCode: string;
+  pinCode: string | null;
+  amount: Prisma.Decimal;
+  reportedAmount: Prisma.Decimal | null;
+  status: string;
+  isConfirmed: boolean;
+  orderId: string | null;
+  brand: { name: string; icon: string; image: string | null };
+  country: { name: string; code: string } | null;
+}) {
+  let claimCode = card.claimCode;
+  let pinCode = card.pinCode ?? null;
+  try {
+    claimCode = decrypt(card.claimCode);
+  } catch {
+    /* legacy unencrypted */
+  }
+  if (card.pinCode) {
+    try {
+      pinCode = decrypt(card.pinCode);
+    } catch {
+      pinCode = card.pinCode;
+    }
+  }
+  return {
+    claimCode,
+    pinCode,
+    amount: Number(card.amount),
+    reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+    status: card.status,
+    isConfirmed: card.isConfirmed,
+    orderId: card.orderId,
+    brand: {
+      name: card.brand.name,
+      icon: card.brand.icon,
+      image: card.brand.image,
+    },
+    country: card.country,
+  };
+}
+
+// Helper to serialize a payment for output
+function serializePayment(payment: {
+  amount: Prisma.Decimal;
+  balanceAfter: Prisma.Decimal;
+  status: string;
+  transactionType: string;
+  createdAt: Date;
+}) {
+  return {
+    amount: Number(payment.amount),
+    balanceAfter: Number(payment.balanceAfter),
+    status: payment.status,
+    transactionType: payment.transactionType,
+    createdAt: payment.createdAt.toISOString(),
+  };
+}
+
+// orderShapeSchema uses the imported schemas from @/types/order/buyer-order
+// CRITICAL FIX: transactionType is now included in serializePayment output
+// and buyerOrderPaymentSchema includes it (unlike the original inline definition)
+const orderShapeSchema = buyerOrderSchema;
+
 export const getOrderById = buyerActionClient
-  .inputSchema(z.object({ orderId: z.string() }))
+  .inputSchema(getOrderByIdInputSchema)
+  .outputSchema(getOrderByIdOutputSchema)
   .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -250,59 +310,31 @@ export const getOrderById = buyerActionClient
 
     const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate.toNumber());
     return {
-      ...order,
-      createdAt: order.createdAt.toISOString(),
-      updatedAt: order.updatedAt.toISOString(),
-      total: Number(order.total),
-      adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
-      buyRate: Number(order.buyRate),
-      effectiveTotal,
-      giftcards: order.giftcards.map((card) => {
-        let claimCode = card.claimCode;
-        let pinCode = card.pinCode ?? null;
-        try {
-          claimCode = decrypt(card.claimCode);
-        } catch {
-          /* legacy unencrypted */
-        }
-        if (card.pinCode) {
-          try {
-            pinCode = decrypt(card.pinCode);
-          } catch {
-            pinCode = card.pinCode;
-          }
-        }
-        return {
-          ...card,
-          claimCode,
-          pinCode,
-          amount: Number(card.amount),
-          reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
-        };
-      }),
-      payments: order.payments.map((p) => ({
-        ...p,
-        amount: Number(p.amount),
-        balanceAfter: Number(p.balanceAfter),
-        createdAt: p.createdAt.toISOString(),
-      })),
+      success: true as const,
+      order: {
+        id: order.id,
+        status: order.status,
+        total: Number(order.total),
+        adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
+        buyRate: Number(order.buyRate),
+        effectiveTotal,
+        createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
+        giftcards: order.giftcards.map((card) => ({
+          id: card.id,
+          ...serializeGiftcard(card),
+        })),
+        payments: order.payments.map((p) => ({
+          id: p.id,
+          ...serializePayment(p),
+        })),
+      },
     };
   });
 
-/**
- * Fetches orders for the authenticated buyer, including giftcards and payments.
- * Supports pagination, filtering by status, search by order ID, and sorting.
- */
 export const getBuyerOrders = buyerActionClient
-  .inputSchema(
-    z.object({
-      page: z.number().int().positive().optional().default(1),
-      limit: z.number().int().positive().max(100).optional().default(10),
-      status: z.enum(OrderStatus).optional(),
-      search: z.string().optional(),
-      sort: z.enum(["newest", "oldest"]).optional().default("newest"),
-    }),
-  )
+  .inputSchema(getBuyerOrdersInputSchema)
+  .outputSchema(getBuyerOrdersOutputSchema)
   .action(async ({ ctx, parsedInput }) => {
     const { page, limit, status, search, sort } = parsedInput;
     const skip = (page - 1) * limit;
@@ -331,44 +363,25 @@ export const getBuyerOrders = buyerActionClient
     const totalPages = Math.ceil(totalCount / limit);
 
     return {
+      success: true as const,
       orders: orders.map((order) => {
         const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate.toNumber());
         return {
-          ...order,
-          createdAt: order.createdAt.toISOString(),
-          updatedAt: order.updatedAt.toISOString(),
+          id: order.id,
+          status: order.status,
           total: Number(order.total),
           adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
           buyRate: Number(order.buyRate),
           effectiveTotal,
-          giftcards: order.giftcards.map((card) => {
-            let claimCode = card.claimCode;
-            let pinCode = card.pinCode ?? null;
-            try {
-              claimCode = decrypt(card.claimCode);
-            } catch {
-              /* legacy unencrypted */
-            }
-            if (card.pinCode) {
-              try {
-                pinCode = decrypt(card.pinCode);
-              } catch {
-                pinCode = card.pinCode;
-              }
-            }
-            return {
-              ...card,
-              claimCode,
-              pinCode,
-              amount: Number(card.amount),
-              reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
-            };
-          }),
+          createdAt: order.createdAt.toISOString(),
+          updatedAt: order.updatedAt.toISOString(),
+          giftcards: order.giftcards.map((card) => ({
+            id: card.id,
+            ...serializeGiftcard(card),
+          })),
           payments: order.payments.map((p) => ({
-            ...p,
-            amount: Number(p.amount),
-            balanceAfter: Number(p.balanceAfter),
-            createdAt: p.createdAt.toISOString(),
+            id: p.id,
+            ...serializePayment(p),
           })),
         };
       }),

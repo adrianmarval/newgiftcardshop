@@ -1,6 +1,6 @@
 import { Giftcard } from "@/generated/prisma/client";
 import { Decimal } from "@prisma/client/runtime/client";
-import type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from "@/types/server";
+import type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from "@/types";
 
 export type { GiftcardSelectionResult };
 

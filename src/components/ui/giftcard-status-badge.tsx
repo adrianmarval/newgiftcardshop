@@ -2,13 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, Package, XCircle, AlertTriangle } from "lucide-react";
-import type { CardStatusInput } from "@/types";
-import type { OrderStatus } from "@/types";
-
-interface GiftcardStatusBadgeProps {
-  card: CardStatusInput;
-  orderStatus?: OrderStatus;
-}
+import type { GiftcardStatusBadgeProps } from "@/types";
 
 const reportLabels: Record<string, string> = {
   INVALID: "Invalid",

@@ -5,13 +5,7 @@ import { History } from "lucide-react";
 import { OrderCard } from "./order-card";
 import { UrlPagination } from "@/components/ui/url-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { BuyerOrder, BuyerOrderGiftcard, OrderStatus } from "@/types";
-
-interface OrdersListProps {
-  orders: BuyerOrder[];
-  totalPages: number;
-  onCardClick?: (card: BuyerOrderGiftcard, orderStatus: OrderStatus) => void;
-}
+import type { OrdersListProps } from "@/types";
 
 export function OrdersList({ orders, totalPages, onCardClick }: OrdersListProps) {
   if (orders.length === 0) {

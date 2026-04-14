@@ -10,45 +10,49 @@ import { Input } from "@/components/ui/input";
 import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { completeOrder } from "@/actions/order-actions";
 import { getPlatformSetting } from "@/actions/platform-actions";
+import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 
 export function PaymentStep() {
   const { setStep, orderId: storedOrderId, adjustedTotal } = useBuyFlow();
 
   const [transactionId, setTransactionId] = useState("");
-  const [isNotifying, setIsNotifying] = useState(false);
   const [notified, setNotified] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [binancePayId, setBinancePayId] = useState<string>("—");
 
   useEffect(() => {
-    getPlatformSetting().then((response) => {
-      if (!response.data) {
+    getPlatformSetting().then((result) => {
+      if (result.data?.success && result.data.settings) {
+        const binancePayIdSetting = result.data.settings.find((setting) => setting.key === "binance_pay_id");
+        if (!binancePayIdSetting) {
+          toast.error("No se encontró la configuración de Binance Pay");
+          return;
+        }
+        setBinancePayId(binancePayIdSetting.value);
+      } else if (result.serverError || result.validationErrors) {
         toast.error("Error al obtener la configuración de Binance Pay");
-        return;
       }
-      const binancePayIdSetting = response.data.find((setting) => setting.key === "binance_pay_id");
-      if (!binancePayIdSetting) {
-        toast.error("No se encontró la configuración de Binance Pay");
-        return;
-      }
-      setBinancePayId(binancePayIdSetting.value);
     });
   }, []);
 
-  const handleNotify = async () => {
-    if (!storedOrderId) return;
-    setIsNotifying(true);
-    setErrorMessage(null);
-    const result = await completeOrder({ orderId: storedOrderId, _transactionId: transactionId });
-    if (!result.data) {
-      const errorDescription = result.serverError || result.validationErrors?._errors?.join("") || "Error al completar orden";
+  const { execute: completeExecute, status: completeStatus } = useAction(completeOrder, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        setNotified(true);
+      }
+    },
+    onError: ({ error }) => {
+      const errorDescription = error.serverError || error.validationErrors?._errors?.join("") || "Error al completar orden";
       toast.error("Error al completar orden", { description: errorDescription });
       setErrorMessage(errorDescription);
-      return;
-    }
-    setNotified(true);
-    setIsNotifying(false);
+    },
+  });
+
+  const handleNotify = () => {
+    if (!storedOrderId) return;
+    setErrorMessage(null);
+    completeExecute({ orderId: storedOrderId, _transactionId: transactionId });
   };
 
   if (notified) {
@@ -140,16 +144,16 @@ export function PaymentStep() {
               variant="ghost"
               onClick={() => setStep(4)}
               className="flex-1 h-12 text-sm font-bold text-muted-foreground hover:bg-muted"
-              disabled={isNotifying}
+              disabled={completeStatus === "executing"}
             >
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </Button>
             <Button
               onClick={handleNotify}
-              disabled={!storedOrderId || isNotifying}
+              disabled={!storedOrderId || completeStatus === "executing"}
               className="flex-2 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-xl shadow-primary/30"
             >
-              {isNotifying ? (
+              {completeStatus === "executing" ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Notifying...
                 </>

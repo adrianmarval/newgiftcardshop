@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { GiftCardItem, SellFlowState } from "@/types";
+import type { SellFlowState } from "@/types";
 
 export const useSellFlow = create<SellFlowState>((set) => ({
   step: 1,

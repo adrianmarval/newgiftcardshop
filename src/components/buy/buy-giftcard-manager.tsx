@@ -9,14 +9,7 @@ import { ResultsStep } from "./steps/results-step";
 import { RedeemStep } from "./steps/redeem-step";
 import { ConfirmUsageStep } from "./steps/confirm-usage-step";
 import { PaymentStep } from "./steps/payment-step";
-import type { Brand, Country, BuyerOrder, BuyGiftcardItem, BuyGiftcardStatus } from "@/types";
-
-interface BuyGiftcardManagerProps {
-  brands: Brand[];
-  countries: Country[];
-  /** When present, hydrates the store to resume this order. When absent, resets to step 1. */
-  resumeOrder?: BuyerOrder | null;
-}
+import type { BuyGiftcardManagerProps, BuyGiftcardItem, BuyGiftcardStatus } from "@/types";
 
 export function BuyGiftcardManager({ brands, countries, resumeOrder }: BuyGiftcardManagerProps) {
   const { step } = useBuyFlow();

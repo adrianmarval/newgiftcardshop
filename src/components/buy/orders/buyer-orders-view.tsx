@@ -5,16 +5,7 @@ import { OrdersStats } from "./orders-stats";
 import { OrdersFilters } from "./orders-filters";
 import { OrdersList } from "./orders-list";
 import { CardDetailDialog } from "./card-detail-dialog";
-import type { BuyerOrder, BuyerOrderGiftcard, OrderStatus } from "@/types";
-
-interface BuyerOrdersViewProps {
-  orders: BuyerOrder[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
-  };
-}
+import type { BuyerOrdersViewProps, BuyerOrderGiftcard, OrderStatus } from "@/types";
 
 export function BuyerOrdersView({ orders, pagination }: BuyerOrdersViewProps) {
   const [selectedCard, setSelectedCard] = useState<{ card: BuyerOrderGiftcard; orderStatus: OrderStatus } | null>(null);

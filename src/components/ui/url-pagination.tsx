@@ -4,10 +4,7 @@ import { useQueryState } from "nuqs";
 import { parseAsInteger } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-interface UrlPaginationProps {
-  totalPages: number;
-}
+import type { UrlPaginationProps } from "@/types";
 
 const pageParser = parseAsInteger.withDefault(1);
 

@@ -2,10 +2,14 @@
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { authActionClient } from "@/lib/safe-action";
+import { logoutSchema, logoutOutputSchema } from "@/types/auth/actions";
 
-export const logout = async (formData: FormData) => {
-  const portal = (formData.get("portal") as string) || "buy";
-  await auth.api.signOut({ headers: await headers() });
-  redirect(`/${portal}/auth/login`);
-};
+export const logout = authActionClient
+  .inputSchema(logoutSchema)
+  .outputSchema(logoutOutputSchema)
+  .action(async function ({ parsedInput: { portal }, ctx }) {
+    const portalValue = portal ?? "buy";
+    await auth.api.signOut({ headers: await headers() });
+    return { success: true, redirectTo: `/${portalValue}/auth/login` };
+  });

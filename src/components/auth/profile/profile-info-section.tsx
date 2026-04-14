@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,29 +9,53 @@ import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, CheckCircle, User } from "lucide-react";
 import { updateProfile } from "@/actions";
-import Form from "next/form";
-import type { ProfileState, ProfileInfoSectionProps } from "@/types";
+import { useAction } from "next-safe-action/hooks";
+import type { ProfileInfoSectionProps } from "@/types";
 
 export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
-  const [state, formAction, isPending] = useActionState<ProfileState, FormData>(updateProfile, null);
+  const [nameValue, setNameValue] = useState(name);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { execute, status } = useAction(updateProfile, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        setSuccess(true);
+        setError(null);
+        // Reset success message after a delay
+        setTimeout(() => setSuccess(false), 3000);
+      }
+    },
+    onError: ({ error }) => {
+      setError(error.serverError || error.validationErrors?._errors?.[0] || "Failed to update profile");
+      setSuccess(false);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(false);
+    execute({ name: nameValue });
+  };
 
   return (
     <div className="space-y-4">
-      {state?.error && (
+      {error && (
         <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive animate-in bounce-in duration-300">
           <AlertCircle className="h-4 w-4" />
-          <span>{state.error}</span>
+          <span>{error}</span>
         </Alert>
       )}
 
-      {state?.success && (
+      {success && (
         <Alert className="border-primary/50 bg-primary/10 text-primary animate-in zoom-in duration-300">
           <CheckCircle className="h-4 w-4" />
           <span>Profile updated successfully!</span>
         </Alert>
       )}
 
-      <Form action={formAction} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-5 md:p-8 bg-card/60 backdrop-blur-sm border-border relative overflow-hidden group">
           {/* Subtle background glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 blur-3xl rounded-full" />
@@ -55,9 +79,10 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
                 id="name"
                 name="name"
                 type="text"
-                defaultValue={name}
                 required
-                disabled={isPending}
+                disabled={status === "executing"}
+                value={nameValue}
+                onChange={(e) => setNameValue(e.target.value)}
                 className="bg-muted/40 dark:bg-muted/50 border-border h-12 md:h-14 focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
               />
             </div>
@@ -84,9 +109,9 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
             <Button
               type="submit"
               className="h-12 px-10 font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 transition-all active:scale-95"
-              disabled={isPending}
+              disabled={status === "executing"}
             >
-              {isPending ? (
+              {status === "executing" ? (
                 <>
                   <Spinner className="h-4 w-4 mr-2" />
                   Saving...
@@ -97,7 +122,7 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
             </Button>
           </div>
         </Card>
-      </Form>
+      </form>
     </div>
   );
 }

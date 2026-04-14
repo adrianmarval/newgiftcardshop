@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, Check, X } from "lucide-react";
 import { register } from "@/actions";
-import Form from "next/form";
+import { useAction } from "next-safe-action/hooks";
 import type { RegisterFormProps } from "@/types";
 
 function PasswordCheckItem({ valid, label }: { valid: boolean; label: string }) {
@@ -23,9 +24,12 @@ function PasswordCheckItem({ valid, label }: { valid: boolean; label: string }) 
 }
 
 export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterFormProps) {
-  const [error, formAction, isPending] = useActionState(register, null);
+  const router = useRouter();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const checks = {
     length: password.length >= 8,
@@ -42,6 +46,23 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
   const submitLabel = portal === "buyer" ? "Create Account" : "Create Seller Account";
   const signInText = portal === "buyer" ? "Already have an account?" : "Already have a seller account?";
 
+  const { execute, status } = useAction(register, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.redirectTo) {
+        router.push(data.redirectTo);
+      }
+    },
+    onError: ({ error }) => {
+      setError(error.serverError || error.validationErrors?._errors?.[0] || "Registration failed");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    execute({ fullName, email, password, confirmPassword, portal: portalValue });
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto p-8">
       <div className="space-y-6">
@@ -57,17 +78,34 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
           </Alert>
         )}
 
-        <Form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input type="hidden" name="portal" value={portalValue} />
 
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
-            <Input id="fullName" name="fullName" placeholder="John Doe" required disabled={isPending} />
+            <Input
+              id="fullName"
+              name="fullName"
+              placeholder="John Doe"
+              required
+              disabled={status === "executing"}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="you@example.com" required disabled={isPending} />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              required
+              disabled={status === "executing"}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
@@ -78,7 +116,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
               type="password"
               placeholder="••••••••"
               required
-              disabled={isPending}
+              disabled={status === "executing"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -100,14 +138,14 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
               type="password"
               placeholder="••••••••"
               required
-              disabled={isPending}
+              disabled={status === "executing"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isPending || !passwordValid || !passwordsMatch}>
-            {isPending ? (
+          <Button type="submit" className="w-full" disabled={status === "executing" || !passwordValid || !passwordsMatch}>
+            {status === "executing" ? (
               <>
                 <Spinner className="h-4 w-4 mr-2" />
                 Creating account...
@@ -116,7 +154,7 @@ export function RegisterForm({ portal, loginUrl, title, subtitle }: RegisterForm
               submitLabel
             )}
           </Button>
-        </Form>
+        </form>
 
         <p className="text-base text-muted-foreground text-center">
           {signInText}{" "}

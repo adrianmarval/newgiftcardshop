@@ -1,11 +1,7 @@
 "use client";
 
 import { CreditCard, CheckCircle2 } from "lucide-react";
-import type { BuyerOrderPayment } from "@/types";
-
-interface TransactionListProps {
-  payments: BuyerOrderPayment[];
-}
+import type { TransactionListProps } from "@/types";
 
 export function TransactionList({ payments }: TransactionListProps) {
   if (payments.length === 0) {

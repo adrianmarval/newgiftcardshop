@@ -2,18 +2,26 @@
 
 import { findGiftcardCombination } from "@/lib/browse-giftcards";
 import prisma from "@/lib/prisma";
-import { GiftcardIssueType, Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { decrypt } from "@/lib/encryption";
 import { authorizeByRequiredRole } from "@/lib/authorization";
 import { ActionError, buyerActionClient } from "@/lib/safe-action";
-import z from "zod";
-import { BuyGiftcardItem } from "@/types";
-
-const searchGiftcardSchema = z.object({ brandId: z.string(), countryId: z.string(), amount: z.number() });
+import type { BuyGiftcardItem } from "@/types";
+import {
+  searchGiftcardSchema,
+  searchGiftcardsOutputSchema,
+  getOrderCardsInputSchema,
+  getOrderCardsOutputSchema,
+  reportGiftcardIssueSchema,
+  reportGiftcardIssueOutputSchema,
+  undoGiftcardIssueInputSchema,
+  undoGiftcardIssueOutputSchema,
+} from "@/types/giftcard/actions";
 
 export const searchGiftcards = buyerActionClient
   .inputSchema(searchGiftcardSchema)
-  .action(async ({ parsedInput: { brandId, countryId, amount } }): Promise<BuyGiftcardItem[]> => {
+  .outputSchema(searchGiftcardsOutputSchema)
+  .action(async ({ parsedInput: { brandId, countryId, amount } }) => {
     const giftcards = await prisma.giftcard.findMany({
       where: {
         brandId,
@@ -23,21 +31,21 @@ export const searchGiftcards = buyerActionClient
       },
     });
     const selectedGiftcards = findGiftcardCombination(giftcards, amount);
-    return selectedGiftcards.selectedCards.map((card) => ({
-      id: card.id,
-      brand: card.brandId,
-      amount: card.amount.toNumber(),
-      status: "UNUSED",
-    }));
+    return {
+      success: true as const,
+      giftcards: selectedGiftcards.selectedCards.map((card) => ({
+        id: card.id,
+        brand: card.brandId,
+        amount: card.amount.toNumber(),
+        status: "UNUSED" as const,
+      })),
+    };
   });
 
-/**
- * Returns giftcards WITH claimCode and pinCode for a given order.
- * Only callable by the order's owner — used to reveal codes after order creation.
- */
 export const getOrderCards = buyerActionClient
-  .inputSchema(z.object({ orderId: z.string() }))
-  .action(async ({ parsedInput: { orderId } }): Promise<BuyGiftcardItem[]> => {
+  .inputSchema(getOrderCardsInputSchema)
+  .outputSchema(getOrderCardsOutputSchema)
+  .action(async ({ parsedInput: { orderId } }) => {
     const { user } = await authorizeByRequiredRole(["BUYER", "ADMIN"]);
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -49,48 +57,40 @@ export const getOrderCards = buyerActionClient
     });
     if (!order) throw new ActionError("Order not found");
     if (order.userId !== user.id) throw new ActionError("Not authorized to view this order");
-    return order.giftcards.map((card) => {
-      let claimCode: string;
-      try {
-        claimCode = decrypt(card.claimCode);
-      } catch {
-        claimCode = card.claimCode;
-      }
-      let pinCode: string | undefined;
-      if (card.pinCode) {
+    return {
+      success: true as const,
+      giftcards: order.giftcards.map((card) => {
+        let claimCode: string;
         try {
-          pinCode = decrypt(card.pinCode);
+          claimCode = decrypt(card.claimCode);
         } catch {
-          pinCode = card.pinCode;
+          claimCode = card.claimCode;
         }
-      }
-      return {
-        id: card.id,
-        brand: card.brandId,
-        amount: card.amount.toNumber(),
-        claimCode,
-        pinCode,
-        status: (card.status as BuyGiftcardItem["status"]) ?? "UNUSED",
-        reportedAmount: card.reportedAmount ? card.reportedAmount.toNumber() : undefined,
-        sellerId: card.ownerId ?? undefined,
-      };
-    });
+        let pinCode: string | undefined;
+        if (card.pinCode) {
+          try {
+            pinCode = decrypt(card.pinCode);
+          } catch {
+            pinCode = card.pinCode;
+          }
+        }
+        return {
+          id: card.id,
+          brand: card.brandId,
+          amount: card.amount.toNumber(),
+          claimCode,
+          pinCode,
+          status: (card.status as BuyGiftcardItem["status"]) ?? "UNUSED",
+          reportedAmount: card.reportedAmount ? card.reportedAmount.toNumber() : undefined,
+          sellerId: card.ownerId ?? undefined,
+        };
+      }),
+    };
   });
 
-const reportGiftcardIssueSchema = z.object({
-  giftcardId: z.string(),
-  orderId: z.string(),
-  issueType: z.enum(GiftcardIssueType),
-  reportedAmount: z.number().optional(),
-  proofImageUrl: z.string().optional(),
-});
-
-/**
- * Reports an issue for a specific giftcard within an order.
- * Updates the giftcard status and creates a GiftcardIssue record.
- */
 export const reportGiftcardIssue = buyerActionClient
   .inputSchema(reportGiftcardIssueSchema)
+  .outputSchema(reportGiftcardIssueOutputSchema)
   .useValidated(async ({ parsedInput: { issueType, reportedAmount, orderId, giftcardId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -129,7 +129,7 @@ export const reportGiftcardIssue = buyerActionClient
       }),
     ]);
     return {
-      success: true,
+      success: true as const,
       issue: {
         id: issue.id,
         issueType: issue.issueType,
@@ -144,11 +144,9 @@ export const reportGiftcardIssue = buyerActionClient
     };
   });
 
-/**
- * Removes a previously reported issue and resets the giftcard back to UNUSED.
- */
 export const undoGiftcardIssue = buyerActionClient
-  .inputSchema(z.object({ giftcardId: z.string(), orderId: z.string() }))
+  .inputSchema(undoGiftcardIssueInputSchema)
+  .outputSchema(undoGiftcardIssueOutputSchema)
   .useValidated(async ({ parsedInput: { giftcardId, orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -172,7 +170,5 @@ export const undoGiftcardIssue = buyerActionClient
         data: { status: "UNUSED", reportedAmount: null },
       }),
     ]);
-    return {
-      success: true,
-    };
+    return { success: true as const };
   });

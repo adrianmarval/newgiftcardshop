@@ -19,6 +19,7 @@ import { useBuyFlow } from "@/hooks/use-buy-flow";
 import { getBrandById } from "@/actions/brand-actions";
 import { createOrder, getUserBuyRate } from "@/actions/order-actions";
 import { getOrderCards } from "@/actions/buyer-actions";
+import { useAction } from "next-safe-action/hooks";
 import Image from "next/image";
 import type { Brand } from "@/types";
 import { toast } from "sonner";
@@ -39,54 +40,55 @@ export function ResultsStep() {
 
   useEffect(() => {
     if (selectedBrand) {
-      getBrandById({ id: selectedBrand }).then((brand) => {
-        const brandData = brand.data;
-        if (!brandData) {
-          toast.error("Error al obtener la marca", { description: brand.serverError || brand.validationErrors?._errors });
-          return;
+      getBrandById({ id: selectedBrand }).then((result) => {
+        if (result.data?.success && result.data.brand) {
+          const brand = result.data.brand;
+          setResultsState((prev) => ({ ...prev, brandData: brand }));
+        } else if (result.serverError || result.validationErrors) {
+          toast.error("Error al obtener la marca", { description: result.serverError || result.validationErrors?._errors?.[0] });
         }
-        setResultsState((prev) => ({ ...prev, brandData }));
       });
     }
-    getUserBuyRate().then((response) => {
-      const rate = response.data;
-      if (!rate) {
-        toast.error("Error al obtener la tasa de compra", { description: response.serverError || response.validationErrors?.formErrors });
-        return;
+    getUserBuyRate().then((result) => {
+      if (result.data?.success && typeof result.data.rate === "number") {
+        const rate = result.data.rate;
+        setResultsState((prev) => ({ ...prev, buyRate: rate }));
+      } else if (result.serverError || result.validationErrors) {
+        toast.error("Error al obtener la tasa de compra", { description: result.serverError || result.validationErrors?.formErrors?.[0] });
       }
-      setResultsState((prev) => ({ ...prev, buyRate: rate }));
     });
   }, [selectedBrand]);
 
-  const handlePlaceOrder = async () => {
-    setResultsState((prev) => ({ ...prev, isConfirming: true }));
-
-    const cardIds = foundGiftcards.map((c) => c.id);
-    const result = await createOrder({ giftcardIds: cardIds });
-
-    if (!result.data) {
+  const { execute: createOrderExecute, status: createOrderStatus } = useAction(createOrder, {
+    onSuccess: ({ data }) => {
+      if (data?.success && data.orderId) {
+        setOrderId(data.orderId);
+        // Fetch cards WITH claimCodes now that the order is locked in
+        getOrderCards({ orderId: data.orderId }).then((orderCardsResult) => {
+          if (orderCardsResult.data?.success && orderCardsResult.data.giftcards) {
+            setFoundGiftcards(orderCardsResult.data.giftcards);
+            setStep(3);
+          } else if (orderCardsResult.serverError || orderCardsResult.validationErrors) {
+            toast.error("Error al obtener las tarjetas de la orden", {
+              description: orderCardsResult.serverError || orderCardsResult.validationErrors?._errors?.[0],
+            });
+          }
+          setResultsState((prev) => ({ ...prev, isConfirming: false, showConfirmDialog: false }));
+        });
+      }
+    },
+    onError: ({ error }) => {
       toast.error("Failed to create order", {
-        description: result.serverError || result.validationErrors?._errors,
+        description: error.serverError || error.validationErrors?._errors?.[0],
       });
-      return;
-    }
+      setResultsState((prev) => ({ ...prev, isConfirming: false }));
+    },
+  });
 
-    setOrderId(result.data.orderId);
-
-    // Fetch cards WITH claimCodes now that the order is locked in
-    const orderCards = await getOrderCards({ orderId: result.data.orderId });
-    const giftcards = orderCards.data;
-
-    if (!giftcards) {
-      toast.error("Error al obtener las tarjetas de la orden", {
-        description: orderCards.serverError || orderCards.validationErrors?._errors,
-      });
-      return;
-    }
-
-    setFoundGiftcards(giftcards);
-    setStep(3);
-    setResultsState((prev) => ({ ...prev, isConfirming: false, showConfirmDialog: false }));
+  const handlePlaceOrder = () => {
+    setResultsState((prev) => ({ ...prev, isConfirming: true }));
+    const cardIds = foundGiftcards.map((c) => c.id);
+    createOrderExecute({ giftcardIds: cardIds });
   };
 
   const rawTotal = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
@@ -140,7 +142,7 @@ export function ResultsStep() {
           </Button>
           <Button
             onClick={() => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }))}
-            disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0}
+            disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === "executing"}
             className="flex-2 bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 font-bold shadow-lg shadow-primary/20"
           >
             Place Order <ChevronRight className="w-4 h-4 ml-1" />
@@ -238,7 +240,7 @@ export function ResultsStep() {
                 e.preventDefault();
                 handlePlaceOrder();
               }}
-              disabled={resultsState.isConfirming}
+              disabled={createOrderStatus === "executing"}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
             >
               {resultsState.isConfirming ? (
