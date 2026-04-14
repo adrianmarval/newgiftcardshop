@@ -3,7 +3,7 @@ services:
     image: postgres:17
     restart: unless-stopped
     ports:
-      - "5444:5432"
+      - '5444:5432'
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-username}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}

@@ -1,10 +1,10 @@
-import { Suspense } from "react";
-import { RegisterForm } from "@/components/auth/register-form";
-import { Metadata } from "next";
+import { Suspense } from 'react';
+import { RegisterForm } from '@/components/auth/register-form';
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Regístrate | Solmaira Cards",
-  description: "Crea tu cuenta de comprador de Solmaira",
+  title: 'Regístrate | Solmaira Cards',
+  description: 'Crea tu cuenta de comprador de Solmaira',
 };
 
 export default function BuyerRegisterPage() {

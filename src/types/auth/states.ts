@@ -32,4 +32,4 @@ export type ResendState = { error?: string; success?: boolean } | null;
  * The three portals in the platform.
  * Used across auth components to determine redirect paths and labels.
  */
-export type Portal = "admin" | "buy" | "sell";
+export type Portal = 'admin' | 'buy' | 'sell';

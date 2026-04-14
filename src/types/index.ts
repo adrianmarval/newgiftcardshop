@@ -8,48 +8,38 @@
 
 // ── catalog/ ──────────────────────────────────────────────────────────────────
 
-export type { Brand, Country } from "./catalog/brand";
+export type { Brand, Country } from './catalog/brand';
 
 // ── giftcard/ ────────────────────────────────────────────────────────────────
 
-export type { GiftcardStatus, Giftcard, ParsedGiftCard } from "./giftcard/giftcard";
-export type { GiftcardIssue } from "./giftcard/issues";
+export type { GiftcardStatus, Giftcard, ParsedGiftCard } from './giftcard/giftcard';
+export type { GiftcardIssue } from './giftcard/issues';
 
 // ── order/ ───────────────────────────────────────────────────────────────────
 
-export type {
-  OrderStatus,
-  BuyerOrder,
-  BuyerOrderGiftcard,
-  BuyerOrderPayment,
-} from "./order/buyer-order";
+export type { OrderStatus, BuyerOrder, BuyerOrderGiftcard, BuyerOrderPayment } from './order/buyer-order';
 
-export type { Payment } from "./order/payments";
+export type { Payment } from './order/payments';
 
-export type {
-  PaginatedBuyerOrders,
-  PaginationInfo,
-  BuyerOrdersViewProps,
-  BuyerOrderEffectiveAmount,
-} from "./order/pagination";
+export type { PaginatedBuyerOrders, PaginationInfo, BuyerOrdersViewProps, BuyerOrderEffectiveAmount } from './order/pagination';
 
-export type { OrderSearchParams, OrderSearchParamsKeys } from "./order/search-params";
+export type { OrderSearchParams, OrderSearchParamsKeys } from './order/search-params';
 
-export { orderSearchParamsParsers } from "./order/search-params";
+export { orderSearchParamsParsers } from './order/search-params';
 
 // ── seller/ ─────────────────────────────────────────────────────────────────
 
-export type { SellerBatch, SellerBatchCard, SellerBatchPayment } from "./seller/batch";
+export type { SellerBatch, SellerBatchCard, SellerBatchPayment } from './seller/batch';
 
 // ── flows/ ──────────────────────────────────────────────────────────────────
 
-export type { BuyGiftcardStatus, BuyGiftcardItem, BuyFlowState } from "./flows/buy-flow";
-export type { GiftCardItem, SellFlowState } from "./flows/sell-flow";
+export type { BuyGiftcardStatus, BuyGiftcardItem, BuyFlowState } from './flows/buy-flow';
+export type { GiftCardItem, SellFlowState } from './flows/sell-flow';
 
 // ── ui/ ─────────────────────────────────────────────────────────────────────
 
-export type { NavItemIcon, NavItem, PortalSidebarProps } from "./ui/navigation";
-export type { StatsItem, EmptyStateProps, CodeDisplayProps } from "./ui/feedback";
+export type { NavItemIcon, NavItem, PortalSidebarProps } from './ui/navigation';
+export type { StatsItem, EmptyStateProps, CodeDisplayProps } from './ui/feedback';
 export type {
   CardStatusInput,
   GiftcardStatusBadgeProps,
@@ -57,11 +47,11 @@ export type {
   TransactionListProps,
   UrlPaginationProps,
   MetricCardGridProps,
-} from "./ui/cards";
+} from './ui/cards';
 
 // ── auth/ ───────────────────────────────────────────────────────────────────
 
-export type { ProfileState, ForgotPasswordState, ResendState, Portal } from "./auth/states";
+export type { ProfileState, ForgotPasswordState, ResendState, Portal } from './auth/states';
 
 export type {
   ProfileFormProps,
@@ -71,31 +61,27 @@ export type {
   SecuritySectionProps,
   ProfileInfoSectionProps,
   TwoFactorSectionProps,
-} from "./auth/props";
+} from './auth/props';
 
 // ── email/ ─────────────────────────────────────────────────────────────────
 
-export type { VerifyEmailProps, ResetPasswordProps } from "./email/templates";
+export type { VerifyEmailProps, ResetPasswordProps } from './email/templates';
 
 // ── server/ ─────────────────────────────────────────────────────────────────
 // Server-only types (Prisma/Decimal). Do NOT import in Client Components.
 
-export type {
-  GiftcardSelectionResult,
-  BatchInfo,
-  PreprocessedBatchData,
-} from "./server/batch-processing";
+export type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from './server/batch-processing';
 
 // ── Platform Settings ────────────────────────────────────────────────────────
 
-export type { PlatformSetting } from "./platform/actions";
+export type { PlatformSetting } from './platform/actions';
 
 // ── Sell component props (from original sell.ts) ─────────────────────────────
 
-import type { SellerBatch } from "./seller/batch";
-import type { Brand, Country } from "./catalog/brand";
-import type { ParsedGiftCard } from "./giftcard/giftcard";
-import type { BuyerOrder, BuyerOrderGiftcard, OrderStatus } from "./order/buyer-order";
+import type { SellerBatch } from './seller/batch';
+import type { Brand, Country } from './catalog/brand';
+import type { ParsedGiftCard } from './giftcard/giftcard';
+import type { BuyerOrder, BuyerOrderGiftcard, OrderStatus } from './order/buyer-order';
 
 export interface SellerCardsViewProps {
   batches: SellerBatch[];
@@ -142,7 +128,7 @@ export interface OrdersListProps {
 export interface OrderDetailsProps {
   order: BuyerOrder;
   canCancel: boolean;
-  onCardClick?: (card: BuyerOrderGiftcard, orderStatus: BuyerOrder["status"]) => void;
+  onCardClick?: (card: BuyerOrderGiftcard, orderStatus: BuyerOrder['status']) => void;
 }
 
 export interface CardDetailDialogProps {

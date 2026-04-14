@@ -1,20 +1,20 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { authActionClient } from "@/lib/safe-action";
-import { updateProfileSchema, updateProfileOutputSchema } from "@/types/auth/actions";
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { authActionClient } from '@/lib/safe-action';
+import { updateProfileSchema, updateProfileOutputSchema } from '@/types/auth/actions';
 
 export const updateProfile = authActionClient
   .inputSchema(updateProfileSchema)
   .outputSchema(updateProfileOutputSchema)
-  .action(async function ({ parsedInput: { name, currentPassword, newPassword, confirmPassword }, ctx }) {
+  .action(async function ({ parsedInput: { name, currentPassword, newPassword, confirmPassword } }) {
     // Validate password change fields
     if (newPassword && !currentPassword) {
-      return { error: "Current password is required to set a new password" };
+      return { error: 'Current password is required to set a new password' };
     }
     if (newPassword && newPassword !== confirmPassword) {
-      return { error: "New passwords do not match" };
+      return { error: 'New passwords do not match' };
     }
 
     try {
@@ -44,16 +44,16 @@ export const updateProfile = authActionClient
         success: true,
         user: {
           name: user?.user?.name ?? name,
-          email: user?.user?.email ?? "",
+          email: user?.user?.email ?? '',
           image: user?.user?.image ?? null,
         },
       };
     } catch (error) {
-      console.error("Update profile error:", error);
-      const message = error instanceof Error ? error.message : "Failed to update profile";
-      if (message.includes("password") || message.includes("incorrect")) {
-        return { error: "Current password is incorrect" };
+      console.error('Update profile error:', error);
+      const message = error instanceof Error ? error.message : 'Failed to update profile';
+      if (message.includes('password') || message.includes('incorrect')) {
+        return { error: 'Current password is incorrect' };
       }
-      return { error: "Failed to update profile. Please try again." };
+      return { error: 'Failed to update profile. Please try again.' };
     }
   });

@@ -1,19 +1,17 @@
-"use client";
+'use client';
 
-import { History } from "lucide-react";
-import type { EmptyStateProps } from "@/types";
+import { History } from 'lucide-react';
+import type { EmptyStateProps } from '@/types';
 
 export function EmptyState({ icon, title, description }: EmptyStateProps) {
   return (
-    <div className="pt-24 pb-24 flex flex-col items-center justify-center text-center space-y-6">
-      <div className="w-24 h-24 bg-muted/20 rounded-full flex items-center justify-center">
-        {icon || <History className="w-12 h-12 text-muted-foreground/20" />}
+    <div className="flex flex-col items-center justify-center space-y-6 pt-24 pb-24 text-center">
+      <div className="bg-muted/20 flex h-24 w-24 items-center justify-center rounded-full">
+        {icon || <History className="text-muted-foreground/20 h-12 w-12" />}
       </div>
-      <div className="space-y-1.5 max-w-sm">
-        <h3 className="text-3xl font-black italic tracking-tight uppercase">{title}</h3>
-        <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest leading-relaxed px-10">
-          {description}
-        </p>
+      <div className="max-w-sm space-y-1.5">
+        <h3 className="text-3xl font-black tracking-tight uppercase italic">{title}</h3>
+        <p className="text-muted-foreground px-10 text-sm leading-relaxed font-bold tracking-widest uppercase">{description}</p>
       </div>
     </div>
   );

@@ -1,15 +1,5 @@
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Preview,
-  Section,
-  Text,
-} from "@react-email/components";
-import type { VerifyEmailProps } from "@/types";
+import { Body, Container, Head, Heading, Hr, Html, Preview, Section, Text } from '@react-email/components';
+import type { VerifyEmailProps } from '@/types';
 
 export function VerifyEmailTemplate({ code, userName }: VerifyEmailProps) {
   return (
@@ -28,13 +18,8 @@ export function VerifyEmailTemplate({ code, userName }: VerifyEmailProps) {
           <Hr style={divider} />
 
           <Section style={content}>
-            <Text style={greeting}>
-              {userName ? `Hey ${userName},` : "Hey there,"}
-            </Text>
-            <Text style={text}>
-              Verify your email address to get started on Solmaira. Enter this
-              code in the app:
-            </Text>
+            <Text style={greeting}>{userName ? `Hey ${userName},` : 'Hey there,'}</Text>
+            <Text style={text}>Verify your email address to get started on Solmaira. Enter this code in the app:</Text>
 
             <Section style={codeContainer}>
               <Text style={codeText}>{code}</Text>
@@ -46,13 +31,8 @@ export function VerifyEmailTemplate({ code, userName }: VerifyEmailProps) {
           <Hr style={divider} />
 
           <Section style={footer}>
-            <Text style={footerText}>
-              If you didn&apos;t create a Solmaira account, you can safely
-              ignore this email.
-            </Text>
-            <Text style={footerBrand}>
-              © {new Date().getFullYear()} Solmaira. All rights reserved.
-            </Text>
+            <Text style={footerText}>If you didn&apos;t create a Solmaira account, you can safely ignore this email.</Text>
+            <Text style={footerBrand}>© {new Date().getFullYear()} Solmaira. All rights reserved.</Text>
           </Section>
         </Container>
       </Body>
@@ -62,104 +42,104 @@ export function VerifyEmailTemplate({ code, userName }: VerifyEmailProps) {
 
 // --- Styles ---
 const body = {
-  backgroundColor: "#0f172a",
-  fontFamily: "Inter, -apple-system, sans-serif",
-  margin: "0" as const,
-  padding: "40px 0",
+  backgroundColor: '#0f172a',
+  fontFamily: 'Inter, -apple-system, sans-serif',
+  margin: '0' as const,
+  padding: '40px 0',
 };
 
 const container = {
-  backgroundColor: "#1e293b",
-  borderRadius: "16px",
-  border: "1px solid #334155",
-  margin: "0 auto",
-  maxWidth: "480px",
-  padding: "0",
+  backgroundColor: '#1e293b',
+  borderRadius: '16px',
+  border: '1px solid #334155',
+  margin: '0 auto',
+  maxWidth: '480px',
+  padding: '0',
 };
 
 const header = {
-  padding: "32px 32px 0",
-  textAlign: "center" as const,
+  padding: '32px 32px 0',
+  textAlign: 'center' as const,
 };
 
 const logo = {
-  color: "#34d399",
-  fontSize: "28px",
-  fontWeight: "700" as const,
-  letterSpacing: "6px",
-  margin: "0",
+  color: '#34d399',
+  fontSize: '28px',
+  fontWeight: '700' as const,
+  letterSpacing: '6px',
+  margin: '0',
 };
 
 const tagline = {
-  color: "#94a3b8",
-  fontSize: "12px",
-  letterSpacing: "2px",
-  margin: "4px 0 0",
-  textTransform: "uppercase" as const,
+  color: '#94a3b8',
+  fontSize: '12px',
+  letterSpacing: '2px',
+  margin: '4px 0 0',
+  textTransform: 'uppercase' as const,
 };
 
 const divider = {
-  borderColor: "#334155",
-  margin: "24px 32px",
+  borderColor: '#334155',
+  margin: '24px 32px',
 };
 
 const content = {
-  padding: "0 32px",
+  padding: '0 32px',
 };
 
 const greeting = {
-  color: "#f1f5f9",
-  fontSize: "18px",
-  fontWeight: "600" as const,
-  margin: "0 0 12px",
+  color: '#f1f5f9',
+  fontSize: '18px',
+  fontWeight: '600' as const,
+  margin: '0 0 12px',
 };
 
 const text = {
-  color: "#cbd5e1",
-  fontSize: "14px",
-  lineHeight: "24px",
-  margin: "0 0 24px",
+  color: '#cbd5e1',
+  fontSize: '14px',
+  lineHeight: '24px',
+  margin: '0 0 24px',
 };
 
 const codeContainer = {
-  backgroundColor: "#0f172a",
-  border: "2px solid #34d399",
-  borderRadius: "12px",
-  margin: "0 auto 16px",
-  padding: "16px",
-  textAlign: "center" as const,
+  backgroundColor: '#0f172a',
+  border: '2px solid #34d399',
+  borderRadius: '12px',
+  margin: '0 auto 16px',
+  padding: '16px',
+  textAlign: 'center' as const,
 };
 
 const codeText = {
-  color: "#34d399",
-  fontSize: "36px",
-  fontWeight: "700" as const,
-  letterSpacing: "8px",
-  margin: "0",
+  color: '#34d399',
+  fontSize: '36px',
+  fontWeight: '700' as const,
+  letterSpacing: '8px',
+  margin: '0',
 };
 
 const expiry = {
-  color: "#64748b",
-  fontSize: "12px",
-  margin: "0 0 8px",
-  textAlign: "center" as const,
+  color: '#64748b',
+  fontSize: '12px',
+  margin: '0 0 8px',
+  textAlign: 'center' as const,
 };
 
 const footer = {
-  padding: "0 32px 32px",
+  padding: '0 32px 32px',
 };
 
 const footerText = {
-  color: "#64748b",
-  fontSize: "12px",
-  lineHeight: "20px",
-  margin: "0 0 8px",
+  color: '#64748b',
+  fontSize: '12px',
+  lineHeight: '20px',
+  margin: '0 0 8px',
 };
 
 const footerBrand = {
-  color: "#475569",
-  fontSize: "11px",
-  margin: "0",
+  color: '#475569',
+  fontSize: '11px',
+  margin: '0',
 };
 
 export default VerifyEmailTemplate;

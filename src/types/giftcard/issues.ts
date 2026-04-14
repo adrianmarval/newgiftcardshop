@@ -2,7 +2,7 @@
 // Giftcard Types — GiftcardIssue entity
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * A buyer-reported issue on a gift card within an order.
@@ -10,7 +10,7 @@ import { z } from "zod";
  */
 export const giftcardIssueSchema = z.object({
   id: z.string(),
-  issueType: z.enum(["INVALID", "ALREADY_USED", "DEACTIVATED", "WRONG_AMOUNT"]),
+  issueType: z.enum(['INVALID', 'ALREADY_USED', 'DEACTIVATED', 'WRONG_AMOUNT']),
   /** CRITICAL FIX: must be nullable + optional since buyer may not report an amount */
   reportedAmount: z.number().nullable().optional(),
   /** CRITICAL FIX: must be nullable + optional since proof image is optional */

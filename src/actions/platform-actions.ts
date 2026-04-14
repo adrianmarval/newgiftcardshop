@@ -1,8 +1,8 @@
-"use server";
+'use server';
 
-import prisma from "@/lib/prisma";
-import { adminActionClient } from "@/lib/safe-action";
-import { getPlatformSettingOutputSchema, setPlatformSettingInputSchema, setPlatformSettingOutputSchema } from "@/types/platform/actions";
+import prisma from '@/lib/prisma';
+import { adminActionClient } from '@/lib/safe-action';
+import { getPlatformSettingOutputSchema, setPlatformSettingInputSchema, setPlatformSettingOutputSchema } from '@/types/platform/actions';
 
 /**
  * Retrieves all platform settings.

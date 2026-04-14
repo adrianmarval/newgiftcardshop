@@ -34,48 +34,62 @@ Antes de comenzar, asegúrate de tener instalado:
 Sigue estos pasos para levantar el entorno de desarrollo desde cero:
 
 ### 1. Clonar el repositorio
+
 ```bash
 git clone https://github.com/tu-usuario/newgiftcardshop.git
 cd newgiftcardshop
 ```
 
 ### 2. Instalar dependencias
+
 ```bash
 npm install
 ```
+
 > **Nota:** El script `postinstall` ejecutará automáticamente `prisma generate` para generar el cliente de base de datos en `src/generated/prisma`.
 
 ### 3. Configurar variables de entorno
+
 Copia el archivo de ejemplo y ajusta los valores según sea necesario:
+
 ```bash
 cp .env.example .env
 ```
+
 Asegúrate de que tu `DATABASE_URL` coincida con la configuración de Docker (ver paso siguiente).
 
 ### 4. Levantar la Base de Datos (Docker)
+
 Este proyecto incluye un archivo `docker-compose.yml` para facilitar el despliegue de PostgreSQL de forma local.
+
 ```bash
 docker compose up -d
 ```
-*   **Host:** `localhost`
-*   **Puerto:** `5444` (mapeado al 5432 interno)
-*   **Usuario:** `username`
-*   **Password:** `password`
-*   **DB Name:** `default_database`
+
+- **Host:** `localhost`
+- **Puerto:** `5444` (mapeado al 5432 interno)
+- **Usuario:** `username`
+- **Password:** `password`
+- **DB Name:** `default_database`
 
 Tu `DATABASE_URL` en el `.env` debería verse así:
+
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5444/default_database?schema=public"
 ```
 
 ### 5. Sincronizar el Schema de Prisma
+
 Una vez que la base de datos esté corriendo, aplica el esquema:
+
 ```bash
 npx prisma db push
 ```
 
 ### 6. (Opcional) Cargar datos de prueba (Seed)
+
 Si deseas poblar la base de datos con usuarios y países iniciales:
+
 ```bash
 npx prisma db seed
 ```
@@ -96,23 +110,23 @@ La aplicación estará disponible en [http://localhost:3000](http://localhost:30
 
 ## 📂 Estructura del Proyecto
 
-*   `src/app`: Rutas y lógica de la aplicación (Next.js App Router).
-*   `src/components`: Componentes de UI reutilizables.
-*   `src/actions`: Server Actions para lógica de negocio.
-*   `src/lib`: Utilidades, configuraciones de Prisma y clientes compartidos.
-*   `prisma/`: Definición del esquema de la base de datos y scripts de seed.
-*   `public/`: Assets estáticos.
+- `src/app`: Rutas y lógica de la aplicación (Next.js App Router).
+- `src/components`: Componentes de UI reutilizables.
+- `src/actions`: Server Actions para lógica de negocio.
+- `src/lib`: Utilidades, configuraciones de Prisma y clientes compartidos.
+- `prisma/`: Definición del esquema de la base de datos y scripts de seed.
+- `public/`: Assets estáticos.
 
 ---
 
 ## 📜 Scripts Disponibles
 
-| Comando | Descripción |
-| :--- | :--- |
-| `npm run dev` | Inicia el servidor de desarrollo. |
-| `npm run build` | Compila la aplicación para producción. |
-| `npm run start` | Inicia la aplicación compilada. |
-| `npm run lint` | Ejecuta el linter para encontrar errores de código. |
+| Comando             | Descripción                                           |
+| :------------------ | :---------------------------------------------------- |
+| `npm run dev`       | Inicia el servidor de desarrollo.                     |
+| `npm run build`     | Compila la aplicación para producción.                |
+| `npm run start`     | Inicia la aplicación compilada.                       |
+| `npm run lint`      | Ejecuta el linter para encontrar errores de código.   |
 | `npx prisma studio` | Abre una interfaz web para explorar la base de datos. |
 
 ---

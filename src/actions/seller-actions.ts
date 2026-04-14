@@ -1,21 +1,21 @@
-"use server";
+'use server';
 
-import prisma from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
-import { encrypt, decrypt, hashCode } from "@/lib/encryption";
-import { ActionError, sellerActionClient } from "@/lib/safe-action";
+import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
+import { encrypt, decrypt, hashCode } from '@/lib/encryption';
+import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import {
   publishBatchSchema,
   publishBatchOutputSchema,
   getSellerBatchesOutputSchema,
   getSellerRateOutputSchema,
-} from "@/types/seller/actions";
+} from '@/types/seller/actions';
 
 export const publishBatch = sellerActionClient
   .inputSchema(publishBatchSchema)
   .outputSchema(publishBatchOutputSchema)
   .useValidated(async ({ parsedInput: { brandId, cards, countryId }, ctx, next }) => {
-    if (!brandId || !countryId) throw new ActionError("Brand and country are required");
+    if (!brandId || !countryId) throw new ActionError('Brand and country are required');
 
     const validCards = cards.filter((card) => {
       const amount = parseFloat(card.amount);
@@ -23,7 +23,7 @@ export const publishBatch = sellerActionClient
     });
 
     if (validCards.length === 0) {
-      throw new ActionError("No valid cards were provided for processing.");
+      throw new ActionError('No valid cards were provided for processing.');
     }
 
     const dbUser = await prisma.user.findUnique({
@@ -31,7 +31,7 @@ export const publishBatch = sellerActionClient
       select: { sellRate: true },
     });
 
-    if (!dbUser) throw new ActionError("User not found in the system.");
+    if (!dbUser) throw new ActionError('User not found in the system.');
 
     const hashedCodes = validCards.map((card) => hashCode(card.claimCode.trim()));
 
@@ -42,11 +42,15 @@ export const publishBatch = sellerActionClient
     const existingHashes = new Set(existingCards.map((c) => c.codeHash));
 
     const duplicates: string[] = [];
-    const uniqueCards: Array<{ amount: string; claimCode: string; pinCode?: string }> = [];
+    const uniqueCards: Array<{
+      amount: string;
+      claimCode: string;
+      pinCode?: string;
+    }> = [];
 
     validCards.forEach((card, i) => (existingHashes.has(hashedCodes[i]) ? duplicates.push(card.claimCode.trim()) : uniqueCards.push(card)));
 
-    if (uniqueCards.length === 0) throw new ActionError("All provided cards already exist in the inventory.");
+    if (uniqueCards.length === 0) throw new ActionError('All provided cards already exist in the inventory.');
 
     return next({ ctx: { uniqueCards, duplicates, dbUser } });
   })
@@ -64,14 +68,18 @@ export const publishBatch = sellerActionClient
 
     const batch = await prisma.$transaction(async (tx) => {
       const createdBatch = await tx.giftcardBatch.create({
-        data: { userId: ctx.auth.user.id, sellRate: sellRateSnapshot, isPaid: false },
+        data: {
+          userId: ctx.auth.user.id,
+          sellRate: sellRateSnapshot,
+          isPaid: false,
+        },
       });
       await tx.giftcard.createMany({
         data: encryptedCards.map((card) => ({
           ...card,
           ownerId: ctx.auth.user.id,
           inStock: true,
-          status: "UNUSED",
+          status: 'UNUSED',
           batchId: createdBatch.id,
           brandId,
           countryId,
@@ -94,7 +102,7 @@ export const getSellerBatches = sellerActionClient.outputSchema(getSellerBatches
       giftcards: { include: { brand: true, country: true } },
       payments: true,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: 'desc' },
   });
   return {
     success: true as const,
@@ -142,8 +150,8 @@ export const getSellerBatches = sellerActionClient.outputSchema(getSellerBatches
       // USED → face amount, WRONG_AMOUNT → reportedAmount, INVALID/ALREADY_USED/DEACTIVATED → $0
       const effectiveTotal = giftcards.reduce((sum, g) => {
         if (!g.isConfirmed) return sum;
-        if (g.status === "USED") return sum + g.amount;
-        if (g.status === "WRONG_AMOUNT") return sum + (g.reportedAmount || 0);
+        if (g.status === 'USED') return sum + g.amount;
+        if (g.status === 'WRONG_AMOUNT') return sum + (g.reportedAmount || 0);
         return sum;
       }, 0);
       const estimatedPayout = effectiveTotal * sellRate;
@@ -173,5 +181,8 @@ export const getSellerRate = sellerActionClient.outputSchema(getSellerRateOutput
     where: { id: ctx.auth.user.id },
     select: { sellRate: true },
   });
-  return { success: true as const, rate: dbUser?.sellRate ? dbUser.sellRate.toNumber() : 0.75 };
+  return {
+    success: true as const,
+    rate: dbUser?.sellRate ? dbUser.sellRate.toNumber() : 0.75,
+  };
 });

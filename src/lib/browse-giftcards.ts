@@ -1,6 +1,6 @@
-import { Giftcard } from "@/generated/prisma/client";
-import { Decimal } from "@prisma/client/runtime/client";
-import type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from "@/types";
+import { Giftcard } from '@/generated/prisma/client';
+import { Decimal } from '@prisma/client/runtime/client';
+import type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from '@/types';
 
 export type { GiftcardSelectionResult };
 
@@ -50,7 +50,7 @@ export function findGiftcardCombination(
 
   // Filtrar solo tarjetas disponibles/válidas
   const availableCards = cards.filter((card) => {
-    if (!card.inStock || card.status !== "UNUSED") return false;
+    if (!card.inStock || card.status !== 'UNUSED') return false;
     if (card.amount.lt(safeMinamount)) return false;
     if (maxamount && card.amount.gt(maxamount)) return false;
     if (fixedamounts.length > 0) {
@@ -103,7 +103,7 @@ function preprocessCardsByBatches(cards: Giftcard[]): PreprocessedBatchData {
 
   // Si hay demasiados lotes pequeños, agrupar por día
   if (batchMap.size > cards.length / BATCH_GROUP_BY_DAY_THRESHOLD) {
-    batchMap = buildBatchMap((card) => card.createdAt.toISOString().split("T")[0]);
+    batchMap = buildBatchMap((card) => card.createdAt.toISOString().split('T')[0]);
   }
 
   const batches: BatchInfo[] = Array.from(batchMap.entries())
@@ -140,7 +140,12 @@ function batchSequentialSelection(data: PreprocessedBatchData, target: Decimal, 
 
     // Coincidencia exacta: retornar inmediatamente
     if (total.equals(target)) {
-      return { selectedCards: selected, total, isExactMatch: true, isWithinToleranceRange: true };
+      return {
+        selectedCards: selected,
+        total,
+        isExactMatch: true,
+        isWithinToleranceRange: true,
+      };
     }
 
     // Dentro del rango de tolerancia: verificar si vale la pena continuar
@@ -155,12 +160,22 @@ function batchSequentialSelection(data: PreprocessedBatchData, target: Decimal, 
           const exactInNext = findExactInBatch(nextBatch.cards, gap);
           if (exactInNext.isExactMatch) {
             selected.push(...exactInNext.selectedCards);
-            return { selectedCards: selected, total: target, isExactMatch: true, isWithinToleranceRange: true };
+            return {
+              selectedCards: selected,
+              total: target,
+              isExactMatch: true,
+              isWithinToleranceRange: true,
+            };
           }
         }
       }
 
-      return { selectedCards: selected, total, isExactMatch: false, isWithinToleranceRange: true };
+      return {
+        selectedCards: selected,
+        total,
+        isExactMatch: false,
+        isWithinToleranceRange: true,
+      };
     }
 
     // Si total excedió el objetivo, revertir este lote y detener
@@ -199,7 +214,12 @@ function selectFromBatchWithTolerance(batchCards: Giftcard[], targetRemaining: D
       total = newTotal;
 
       if (total.equals(targetRemaining)) {
-        return { selectedCards: selected, total, isExactMatch: true, isWithinToleranceRange: true };
+        return {
+          selectedCards: selected,
+          total,
+          isExactMatch: true,
+          isWithinToleranceRange: true,
+        };
       }
 
       if (isWithinTolerance(total, targetRemaining, toleranceRange)) {
@@ -214,7 +234,12 @@ function selectFromBatchWithTolerance(batchCards: Giftcard[], targetRemaining: D
             isWithinToleranceRange: true,
           };
         }
-        return { selectedCards: selected, total, isExactMatch: false, isWithinToleranceRange: true };
+        return {
+          selectedCards: selected,
+          total,
+          isExactMatch: false,
+          isWithinToleranceRange: true,
+        };
       }
     }
   }
@@ -277,7 +302,7 @@ function canMakeExactAmount(cards: Giftcard[], amount: Decimal): boolean {
 
     return dp[targetAmount];
   } catch (error) {
-    console.error("Error en canMakeExactAmount:", {
+    console.error('Error en canMakeExactAmount:', {
       amount,
       targetAmount,
       cardsLength: cards.length,
@@ -300,7 +325,7 @@ function findExactInBatch(batchCards: Giftcard[], target: Decimal): GiftcardSele
   };
 
   if (target.lte(0) || target.gt(MAX_DP_TARGET)) {
-    console.error("findExactInBatch: target inválido", { target });
+    console.error('findExactInBatch: target inválido', { target });
     return emptyResult;
   }
 
@@ -368,7 +393,7 @@ function findExactInBatch(batchCards: Giftcard[], target: Decimal): GiftcardSele
 
     return emptyResult;
   } catch (error) {
-    console.error("Error en findExactInBatch:", {
+    console.error('Error en findExactInBatch:', {
       target,
       safeTarget,
       cardsLength: batchCards.length,
@@ -489,7 +514,13 @@ function selectBestResult(
   const r1Valid = result1.total.lte(target);
   const r2Valid = result2.total.lte(target);
 
-  if (!r1Valid && !r2Valid) return { selectedCards: [], total: new Decimal(0), isExactMatch: false, isWithinToleranceRange: false };
+  if (!r1Valid && !r2Valid)
+    return {
+      selectedCards: [],
+      total: new Decimal(0),
+      isExactMatch: false,
+      isWithinToleranceRange: false,
+    };
   if (!r1Valid) return result2;
   if (!r2Valid) return result1;
 
@@ -545,15 +576,18 @@ function isOlderCombination(combo1: Giftcard[], combo2: Giftcard[]): boolean {
  */
 export function analyzeSelection(result: GiftcardSelectionResult, target: number): void {
   if (result.selectedCards.length === 0) {
-    console.log("No se seleccionaron tarjetas");
+    console.log('No se seleccionaron tarjetas');
     return;
   }
 
   const batchAnalysis = new Map<string, { count: number; total: Decimal }>();
 
   for (const card of result.selectedCards) {
-    const batchKey = card.createdAt.toISOString().split("T")[0];
-    const existing = batchAnalysis.get(batchKey) ?? { count: 0, total: new Decimal(0) };
+    const batchKey = card.createdAt.toISOString().split('T')[0];
+    const existing = batchAnalysis.get(batchKey) ?? {
+      count: 0,
+      total: new Decimal(0),
+    };
     batchAnalysis.set(batchKey, {
       count: existing.count + 1,
       total: existing.total.add(card.amount),
@@ -562,20 +596,20 @@ export function analyzeSelection(result: GiftcardSelectionResult, target: number
 
   const targetDecimal = new Decimal(target);
 
-  console.log("=== ANÁLISIS DE SELECCIÓN ===");
+  console.log('=== ANÁLISIS DE SELECCIÓN ===');
   console.log(`Objetivo:                  $${target}`);
   console.log(`Total obtenido:            $${result.total}`);
   console.log(`Diferencia:                $${targetDecimal.sub(result.total)}`);
-  console.log(`¿Exacto?:                  ${result.isExactMatch ? "SÍ" : "NO"}`);
-  console.log(`¿En rango de tolerancia?:  ${result.isWithinToleranceRange ? "SÍ" : "NO"} (±$${TOLERANCE_RANGE})`);
+  console.log(`¿Exacto?:                  ${result.isExactMatch ? 'SÍ' : 'NO'}`);
+  console.log(`¿En rango de tolerancia?:  ${result.isWithinToleranceRange ? 'SÍ' : 'NO'} (±$${TOLERANCE_RANGE})`);
   console.log(`Tarjetas seleccionadas:    ${result.selectedCards.length}`);
 
-  console.log("\nAnálisis por lotes:");
+  console.log('\nAnálisis por lotes:');
   Array.from(batchAnalysis.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .forEach(([batch, info]) => {
       console.log(`  Lote ${batch}: ${info.count} tarjeta(s), total: $${info.total}`);
     });
 
-  console.log("=========================\n");
+  console.log('=========================\n');
 }

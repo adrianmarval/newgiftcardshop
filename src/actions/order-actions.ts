@@ -1,10 +1,10 @@
-"use server";
+'use server';
 
-import prisma from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
-import { decrypt } from "@/lib/encryption";
-import { ActionError, buyerActionClient } from "@/lib/safe-action";
-import { buyerOrderSchema } from "@/types/order/buyer-order";
+import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
+import { decrypt } from '@/lib/encryption';
+import { ActionError, buyerActionClient } from '@/lib/safe-action';
+import { buyerOrderSchema } from '@/types/order/buyer-order';
 import {
   getUserBuyRateOutputSchema,
   createOrderInputSchema,
@@ -19,14 +19,17 @@ import {
   getOrderByIdOutputSchema,
   getBuyerOrdersInputSchema,
   getBuyerOrdersOutputSchema,
-} from "@/types/order/actions";
+} from '@/types/order/actions';
 
 export const getUserBuyRate = buyerActionClient.outputSchema(getUserBuyRateOutputSchema).action(async ({ ctx }) => {
   const dbUser = await prisma.user.findUnique({
     where: { id: ctx.auth.user.id },
     select: { buyRate: true },
   });
-  return { success: true as const, rate: dbUser?.buyRate ? dbUser.buyRate.toNumber() : 85.0 };
+  return {
+    success: true as const,
+    rate: dbUser?.buyRate ? dbUser.buyRate.toNumber() : 85.0,
+  };
 });
 
 export const createOrder = buyerActionClient
@@ -38,7 +41,7 @@ export const createOrder = buyerActionClient
       prisma.giftcard.findMany({ where: { id: { in: giftcardIds } } }),
     ]);
 
-    if (!dbUser) throw new ActionError("Usuario no encontrado en la base de datos");
+    if (!dbUser) throw new ActionError('Usuario no encontrado en la base de datos');
 
     return next({
       ctx: {
@@ -59,7 +62,7 @@ export const createOrder = buyerActionClient
           userId: ctx.auth.user.id,
           total: total,
           buyRate: ctx.dbUser.buyRate,
-          status: "PENDING",
+          status: 'PENDING',
           giftcards: {
             connect: giftcardIds.map((id) => ({ id })),
           },
@@ -86,9 +89,9 @@ export const confirmOrderUsage = buyerActionClient
       include: { giftcards: true },
     });
 
-    if (!order) throw new ActionError("Orden no encontrada");
-    if (order.userId !== ctx.auth.user.id) throw new ActionError("No autorizado");
-    if (order.status !== "PENDING") throw new ActionError("La orden no puede ser confirmada en su estado actual");
+    if (!order) throw new ActionError('Orden no encontrada');
+    if (order.userId !== ctx.auth.user.id) throw new ActionError('No autorizado');
+    if (order.status !== 'PENDING') throw new ActionError('La orden no puede ser confirmada en su estado actual');
     return next({ ctx: { order } });
   })
   .action(async ({ parsedInput: { orderId }, ctx }) => {
@@ -101,7 +104,10 @@ export const confirmOrderUsage = buyerActionClient
 
     await prisma.order.update({
       where: { id: orderId },
-      data: { status: "AWAITING_PAYMENT", adjustedTotal: new Prisma.Decimal(adjustedTotal) },
+      data: {
+        status: 'AWAITING_PAYMENT',
+        adjustedTotal: new Prisma.Decimal(adjustedTotal),
+      },
     });
 
     return { success: true as const, adjustedTotal };
@@ -115,10 +121,10 @@ export const completeOrder = buyerActionClient
       where: { id: orderId },
       include: { giftcards: true },
     });
-    if (!order) throw new ActionError("Orden no encontrada");
-    if (order.userId !== ctx.auth.user.id) throw new ActionError("No estás autorizado para completar esta orden");
-    if (order.status === "COMPLETED") throw new ActionError("La orden ya ha sido completada");
-    if (order.status !== "AWAITING_PAYMENT") throw new ActionError("La orden debe ser confirmada antes de enviar el pago");
+    if (!order) throw new ActionError('Orden no encontrada');
+    if (order.userId !== ctx.auth.user.id) throw new ActionError('No estás autorizado para completar esta orden');
+    if (order.status === 'COMPLETED') throw new ActionError('La orden ya ha sido completada');
+    if (order.status !== 'AWAITING_PAYMENT') throw new ActionError('La orden debe ser confirmada antes de enviar el pago');
     return next({ ctx: { order } });
   })
   .action(async ({ parsedInput: { _transactionId }, ctx }) => {
@@ -129,22 +135,22 @@ export const completeOrder = buyerActionClient
         data: {
           amount: paymentAmount,
           balanceAfter: 0,
-          status: "COMPLETED",
-          transactionType: "DEBIT",
+          status: 'COMPLETED',
+          transactionType: 'DEBIT',
           orderId: order.id,
           transactionId: _transactionId,
         },
       });
       await tx.order.update({
         where: { id: order.id },
-        data: { status: "COMPLETED" },
+        data: { status: 'COMPLETED' },
       });
       for (const card of order.giftcards) {
-        if (card.status === "UNUSED") {
+        if (card.status === 'UNUSED') {
           // Card was used successfully with no issues
           await tx.giftcard.update({
             where: { id: card.id },
-            data: { status: "USED", isConfirmed: true },
+            data: { status: 'USED', isConfirmed: true },
           });
         } else {
           // WRONG_AMOUNT, INVALID, ALREADY_USED, DEACTIVATED: keep status as-is, mark confirmed
@@ -158,7 +164,7 @@ export const completeOrder = buyerActionClient
     return {
       success: true as const,
       orderId: order.id,
-      message: "Orden completada con éxito",
+      message: 'Orden completada con éxito',
     };
   });
 
@@ -170,19 +176,21 @@ export const cancelOrder = buyerActionClient
       where: { id: orderId },
       include: { giftcards: true },
     });
-    if (!order) throw new ActionError("Orden no encontrada en la base de datos");
+    if (!order) throw new ActionError('Orden no encontrada en la base de datos');
 
     // Cancel guard: check effective amount === 0
     const hasActiveCards = order.giftcards.some((g) => {
       // UNUSED or USED cards have value
-      if (g.status === "UNUSED" || g.status === "USED") return true;
+      if (g.status === 'UNUSED' || g.status === 'USED') return true;
       // WRONG_AMOUNT with reportedAmount > 0 has value
-      if (g.status === "WRONG_AMOUNT" && g.reportedAmount && g.reportedAmount.toNumber() > 0) return true;
+      if (g.status === 'WRONG_AMOUNT' && g.reportedAmount && g.reportedAmount.toNumber() > 0) return true;
       return false;
     });
 
     if (hasActiveCards) {
-      throw new ActionError("No se puede cancelar: la orden contiene tarjetas activas con valor. Espera a que se complete o contacta al soporte.");
+      throw new ActionError(
+        'No se puede cancelar: la orden contiene tarjetas activas con valor. Espera a que se complete o contacta al soporte.',
+      );
     }
 
     return next({ ctx: { order } });
@@ -191,7 +199,7 @@ export const cancelOrder = buyerActionClient
     await prisma.order.update({
       where: { id: ctx.order.id },
       data: {
-        status: "CANCELLED",
+        status: 'CANCELLED',
         giftcards: {
           updateMany: {
             where: {
@@ -202,18 +210,22 @@ export const cancelOrder = buyerActionClient
         },
       },
     });
-    return { success: true as const, message: "¡Orden cancelada con éxito!" };
+    return { success: true as const, message: '¡Orden cancelada con éxito!' };
   });
 
 // Helper to compute effective total for an order's giftcards
 // Uses Prisma Decimal arithmetic to avoid floating-point precision loss
 function computeEffectiveTotal(
-  giftcards: { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null }[],
+  giftcards: {
+    status: string;
+    amount: Prisma.Decimal;
+    reportedAmount: Prisma.Decimal | null;
+  }[],
   buyRate: Prisma.Decimal,
 ): number {
   const rawTotal = giftcards.reduce((sum, card) => {
-    if (card.status === "UNUSED") return sum.plus(card.amount);
-    if (card.status === "WRONG_AMOUNT") return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
+    if (card.status === 'UNUSED') return sum.plus(card.amount);
+    if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
     return sum; // INVALID, ALREADY_USED, DEACTIVATED, USED contribute $0
   }, new Prisma.Decimal(0));
   return rawTotal.mul(buyRate).toNumber();
@@ -292,12 +304,12 @@ export const getOrderById = buyerActionClient
       where: { id: orderId },
       include: {
         giftcards: { include: { brand: true, country: true } },
-        payments: { where: { status: "COMPLETED" } },
+        payments: { where: { status: 'COMPLETED' } },
       },
     });
 
-    if (!order) throw new ActionError("Orden no encontrada");
-    if (order.userId !== ctx.auth.user.id) throw new ActionError("No estás autorizado para ver esta orden");
+    if (!order) throw new ActionError('Orden no encontrada');
+    if (order.userId !== ctx.auth.user.id) throw new ActionError('No estás autorizado para ver esta orden');
 
     return next({ ctx: { order } });
   })
@@ -334,12 +346,12 @@ export const getBuyerOrders = buyerActionClient
   .action(async ({ ctx, parsedInput }) => {
     const { page, limit, status, search, sort } = parsedInput;
     const skip = (page - 1) * limit;
-    const orderBy = sort === "newest" ? { createdAt: "desc" as const } : { createdAt: "asc" as const };
+    const orderBy = sort === 'newest' ? { createdAt: 'desc' as const } : { createdAt: 'asc' as const };
 
     // Build where clause
     const where: Prisma.OrderWhereInput = { userId: ctx.auth.user.id };
     if (status) where.status = status;
-    if (search) where.id = { contains: search, mode: "insensitive" };
+    if (search) where.id = { contains: search, mode: 'insensitive' };
 
     // Parallel queries: data + count
     const [orders, totalCount] = await prisma.$transaction([
@@ -347,7 +359,7 @@ export const getBuyerOrders = buyerActionClient
         where,
         include: {
           giftcards: { include: { brand: true, country: true } },
-          payments: { where: { status: "COMPLETED" } },
+          payments: { where: { status: 'COMPLETED' } },
         },
         orderBy,
         skip,

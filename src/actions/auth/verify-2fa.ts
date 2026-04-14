@@ -1,20 +1,20 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { authActionClient } from "@/lib/safe-action";
-import { verify2FASchema, verify2FAOutputSchema } from "@/types/auth/actions";
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { actionClient } from '@/lib/safe-action';
+import { verify2FASchema, verify2FAOutputSchema } from '@/types/auth/actions';
 
 const dashboardMap = {
-  sell: "/sell/dashboard",
-  buy: "/buy/dashboard",
-  admin: "/admin/dashboard",
+  sell: '/sell/dashboard',
+  buy: '/buy/dashboard',
+  admin: '/admin/dashboard',
 } as const;
 
-export const verify2FA = authActionClient
+export const verify2FA = actionClient
   .inputSchema(verify2FASchema)
   .outputSchema(verify2FAOutputSchema)
-  .action(async function ({ parsedInput: { code, portal }, ctx }) {
+  .action(async function ({ parsedInput: { code, portal } }) {
     try {
       await auth.api.verifyTOTP({
         body: {
@@ -24,7 +24,7 @@ export const verify2FA = authActionClient
       });
       return { success: true, redirectTo: dashboardMap[portal] };
     } catch (error) {
-      console.error("2FA verification error:", error);
-      return { error: "Invalid verification code" };
+      console.error('2FA verification error:', error);
+      return { error: 'Invalid verification code' };
     }
   });

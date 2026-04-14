@@ -1,26 +1,26 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { authActionClient } from "@/lib/safe-action";
-import { loginSchema, loginOutputSchema } from "@/types/auth/actions";
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { actionClient } from '@/lib/safe-action';
+import { loginSchema, loginOutputSchema } from '@/types/auth/actions';
 
 const dashboardMap = {
-  sell: "/sell/dashboard",
-  buy: "/buy/dashboard",
-  admin: "/admin/dashboard",
+  sell: '/sell/dashboard',
+  buy: '/buy/dashboard',
+  admin: '/admin/dashboard',
 } as const;
 
 const roleMap = {
-  sell: "SELLER",
-  buy: "BUYER",
-  admin: "ADMIN",
+  sell: 'SELLER',
+  buy: 'BUYER',
+  admin: 'ADMIN',
 } as const;
 
-export const login = authActionClient
+export const login = actionClient
   .inputSchema(loginSchema)
   .outputSchema(loginOutputSchema)
-  .action(async function ({ parsedInput: { email, password, portal }, ctx }) {
+  .action(async function ({ parsedInput: { email, password, portal } }) {
     const callbackURL = dashboardMap[portal];
     const requiredRole = roleMap[portal];
 
@@ -41,7 +41,7 @@ export const login = authActionClient
           role?: string[];
         };
       };
-
+      console.log({ email, password, portal });
       if (response.twoFactorRedirect) {
         return { success: true, redirectTo: `/${portal}/auth/verify-2fa` };
       }
@@ -51,15 +51,17 @@ export const login = authActionClient
 
         if (!user.role?.includes(requiredRole)) {
           await auth.api.signOut({ headers: await headers() });
-          return { error: `Your account does not have ${requiredRole.toLowerCase()} access` };
+          return {
+            error: `Your account does not have ${requiredRole.toLowerCase()} access`,
+          };
         }
 
         return { success: true, redirectTo: callbackURL };
       }
 
-      return { error: "Invalid email or password" };
+      return { error: 'Invalid email or password' };
     } catch (error) {
-      console.error("Login error:", error);
-      return { error: "Invalid email or password" };
+      console.error('Login error:', error);
+      return { error: 'Invalid email or password' };
     }
   });

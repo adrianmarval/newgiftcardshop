@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Alert } from "@/components/ui/alert";
-import { Spinner } from "@/components/ui/spinner";
-import { AlertCircle, CheckCircle, User } from "lucide-react";
-import { updateProfile } from "@/actions";
-import { useAction } from "next-safe-action/hooks";
-import type { ProfileInfoSectionProps } from "@/types";
-import { usePathname } from "next/navigation";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
+import { Alert } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
+import { AlertCircle, CheckCircle, User } from 'lucide-react';
+import { updateProfile } from '@/actions';
+import { useAction } from 'next-safe-action/hooks';
+import type { ProfileInfoSectionProps } from '@/types';
+import { usePathname } from 'next/navigation';
 
 export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
   const pathname = usePathname();
-  const isSpanish = pathname.includes("/admin") || pathname.includes("/buy");
+  const isSpanish = pathname.includes('/admin') || pathname.includes('/buy');
   const [nameValue, setNameValue] = useState(name);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +30,7 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
       }
     },
     onError: ({ error }) => {
-      const defaultError = isSpanish ? "Error al actualizar el perfil" : "Failed to update profile";
+      const defaultError = isSpanish ? 'Error al actualizar el perfil' : 'Failed to update profile';
       setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
       setSuccess(false);
     },
@@ -46,90 +46,90 @@ export function ProfileInfoSection({ name, email }: ProfileInfoSectionProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive animate-in bounce-in duration-300">
+        <Alert variant="destructive" className="bounce-in animate-in border-destructive/20 bg-destructive/10 text-destructive duration-300">
           <AlertCircle className="h-4 w-4" />
           <span>{error}</span>
         </Alert>
       )}
 
       {success && (
-        <Alert className="border-primary/50 bg-primary/10 text-primary animate-in zoom-in duration-300">
+        <Alert className="animate-in border-primary/50 bg-primary/10 text-primary zoom-in duration-300">
           <CheckCircle className="h-4 w-4" />
-          <span>{isSpanish ? "¡Perfil actualizado con éxito!" : "Profile updated successfully!"}</span>
+          <span>{isSpanish ? '¡Perfil actualizado con éxito!' : 'Profile updated successfully!'}</span>
         </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className="p-5 md:p-8 bg-card/60 backdrop-blur-sm border-border relative overflow-hidden group">
+        <Card className="group border-border bg-card/60 relative overflow-hidden p-5 backdrop-blur-sm md:p-8">
           {/* Subtle background glow */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 blur-3xl rounded-full" />
+          <div className="bg-primary/5 absolute -top-24 -right-24 h-48 w-48 rounded-full blur-3xl" />
 
-          <div className="flex items-center gap-4 mb-8">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-              <User className="h-6 w-6 text-primary" />
+          <div className="mb-8 flex items-center gap-4">
+            <div className="border-primary/20 bg-primary/10 flex h-12 w-12 items-center justify-center rounded-xl border shadow-inner">
+              <User className="text-primary h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">
-                {isSpanish ? "Información Personal" : "Personal Information"}
-              </h2>
-              <p className="text-base text-muted-foreground">
-                {isSpanish ? "Detalles generales de tu cuenta" : "General details for your account"}
+              <h2 className="text-foreground text-2xl font-bold">{isSpanish ? 'Información Personal' : 'Personal Information'}</h2>
+              <p className="text-muted-foreground text-base">
+                {isSpanish ? 'Detalles generales de tu cuenta' : 'General details for your account'}
               </p>
             </div>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-xs md:text-sm uppercase tracking-widest font-black text-muted-foreground/80">
-                {isSpanish ? "Nombre Completo" : "Full Name"}
+              <Label htmlFor="name" className="text-muted-foreground/80 text-xs font-black tracking-widest uppercase md:text-sm">
+                {isSpanish ? 'Nombre Completo' : 'Full Name'}
               </Label>
               <Input
                 id="name"
                 name="name"
                 type="text"
                 required
-                disabled={status === "executing"}
+                disabled={status === 'executing'}
                 value={nameValue}
                 onChange={(e) => setNameValue(e.target.value)}
-                className="bg-muted/40 dark:bg-muted/50 border-border h-12 md:h-14 focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                className="border-border bg-muted/40 focus:ring-primary/20 dark:bg-muted/50 h-12 font-semibold transition-all focus:ring-2 md:h-14"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs md:text-sm uppercase tracking-widest font-black text-muted-foreground/80">
-                {isSpanish ? "Correo Electrónico" : "Email Address"}
+              <Label htmlFor="email" className="text-muted-foreground/80 text-xs font-black tracking-widest uppercase md:text-sm">
+                {isSpanish ? 'Correo Electrónico' : 'Email Address'}
               </Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 disabled
-                className="bg-muted/30 border-dashed border-border h-12 md:h-14 opacity-60 cursor-not-allowed italic font-medium"
+                className="border-border bg-muted/30 h-12 cursor-not-allowed border-dashed font-medium italic opacity-60 md:h-14"
               />
-              <p className="text-xs text-muted-foreground/50 italic px-1">
-                {isSpanish ? "Se requiere verificación para cambios" : "Verification required for changes"}
+              <p className="text-muted-foreground/50 px-1 text-xs italic">
+                {isSpanish ? 'Se requiere verificación para cambios' : 'Verification required for changes'}
               </p>
             </div>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-border flex items-center justify-between">
+          <div className="border-border mt-8 flex items-center justify-between border-t pt-8">
             <div>
-              <p className="text-sm text-muted-foreground/70">
-                {isSpanish ? "Asegúrate de que tu información esté al día." : "Ensure your information is up to date."}
+              <p className="text-muted-foreground/70 text-sm">
+                {isSpanish ? 'Asegúrate de que tu información esté al día.' : 'Ensure your information is up to date.'}
               </p>
             </div>
             <Button
               type="submit"
-              className="h-12 px-10 font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 transition-all active:scale-95"
-              disabled={status === "executing"}
+              className="shadow-primary/20 h-12 px-10 text-sm font-black tracking-widest uppercase shadow-xl transition-all active:scale-95"
+              disabled={status === 'executing'}
             >
-              {status === "executing" ? (
+              {status === 'executing' ? (
                 <>
-                  <Spinner className="h-4 w-4 mr-2" />
-                  {isSpanish ? "Guardando..." : "Saving..."}
+                  <Spinner className="mr-2 h-4 w-4" />
+                  {isSpanish ? 'Guardando...' : 'Saving...'}
                 </>
+              ) : isSpanish ? (
+                'Guardar Cambios'
               ) : (
-                isSpanish ? "Guardar Cambios" : "Save Changes"
+                'Save Changes'
               )}
             </Button>
           </div>

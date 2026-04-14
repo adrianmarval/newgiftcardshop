@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { AlertTriangle } from "lucide-react";
-import { usePathname } from "next/navigation";
-import type { GiftcardIssueAlertProps } from "@/types";
+import { AlertTriangle } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import type { GiftcardIssueAlertProps } from '@/types';
 
 export function GiftcardIssueAlert({ status }: GiftcardIssueAlertProps) {
   const pathname = usePathname();
-  const portal = (pathname?.includes("/buy") || pathname?.includes("/admin")) ? "buy" : "sell";
-  const label = status.replace("_", " ");
+  const portal = pathname?.includes('/buy') || pathname?.includes('/admin') ? 'buy' : 'sell';
+  const label = status.replace('_', ' ');
 
   const content = {
     buy: {
-      title: "Acción Requerida",
+      title: 'Acción Requerida',
       description: `ESTA TARJETA FUE REPORTADA COMO ${label}. EL COMPRADOR RECLAMÓ UN PROBLEMA DURANTE LA REDENCIÓN.`,
     },
     sell: {
-      title: "Action Required",
+      title: 'Action Required',
       description: `THIS CARD WAS REPORTED AS ${label}. AN ISSUE WAS CLAIMED DURING REDEMPTION.`,
     },
   };
@@ -23,14 +23,12 @@ export function GiftcardIssueAlert({ status }: GiftcardIssueAlertProps) {
   const current = content[portal] || content.sell;
 
   return (
-    <div className="p-5 bg-destructive/10 border border-destructive/20 rounded-2xl flex gap-4 italic relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-24 h-24 bg-destructive/5 rounded-full -mr-12 -mt-12 blur-2xl" />
-      <AlertTriangle className="w-6 h-6 text-destructive shrink-0 mt-1" />
+    <div className="border-destructive/20 bg-destructive/10 relative flex gap-4 overflow-hidden rounded-2xl border p-5 italic">
+      <div className="bg-destructive/5 absolute top-0 right-0 -mt-12 -mr-12 h-24 w-24 rounded-full blur-2xl" />
+      <AlertTriangle className="text-destructive mt-1 h-6 w-6 shrink-0" />
       <div className="space-y-1.5">
-        <p className="text-sm font-black text-destructive uppercase tracking-widest">{current.title}</p>
-        <p className="text-base text-destructive/80 font-bold leading-relaxed uppercase">
-          {current.description}
-        </p>
+        <p className="text-destructive text-sm font-black tracking-widest uppercase">{current.title}</p>
+        <p className="text-destructive/80 text-base leading-relaxed font-bold uppercase">{current.description}</p>
       </div>
     </div>
   );

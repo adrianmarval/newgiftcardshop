@@ -1,13 +1,13 @@
-"use server";
+'use server';
 
-import prisma from "@/lib/prisma";
-import { authActionClient } from "@/lib/safe-action";
-import { getBrandByIdInputSchema, getActiveBrandsOutputSchema, getBrandByIdOutputSchema } from "@/types/catalog/actions";
+import prisma from '@/lib/prisma';
+import { authActionClient } from '@/lib/safe-action';
+import { getBrandByIdInputSchema, getActiveBrandsOutputSchema, getBrandByIdOutputSchema } from '@/types/catalog/actions';
 
 export const getActiveBrands = authActionClient.outputSchema(getActiveBrandsOutputSchema).action(async () => {
   const brands = await prisma.brand.findMany({
     where: { isActive: true },
-    orderBy: { name: "asc" },
+    orderBy: { name: 'asc' },
   });
   return {
     success: true as const,

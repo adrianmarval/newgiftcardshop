@@ -2,8 +2,8 @@
 // Catalog Types — Input/Output schemas for catalog actions (brands, countries)
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
-import { brandSchema, countrySchema } from "./brand";
+import { z } from 'zod';
+import { brandSchema, countrySchema } from './brand';
 
 // ── Brand Actions ──────────────────────────────────────────────────────────────
 

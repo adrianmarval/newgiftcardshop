@@ -1,10 +1,10 @@
-import { getSession } from "@/lib/authorization";
-import { ProfileForm } from "@/components/auth/profile/profile-form";
-import { Metadata } from "next";
+import { getSession } from '@/lib/authorization';
+import { ProfileForm } from '@/components/auth/profile/profile-form';
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Profile | Seller Dashboard | Solmaira Cards",
-  description: "Manage your Solmaira seller profile settings",
+  title: 'Profile | Seller Dashboard | Solmaira Cards',
+  description: 'Manage your Solmaira seller profile settings',
 };
 
 export default async function SellerProfilePage() {

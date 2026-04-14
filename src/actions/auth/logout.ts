@@ -1,15 +1,15 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { authActionClient } from "@/lib/safe-action";
-import { logoutSchema, logoutOutputSchema } from "@/types/auth/actions";
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { authActionClient } from '@/lib/safe-action';
+import { logoutSchema, logoutOutputSchema } from '@/types/auth/actions';
 
 export const logout = authActionClient
   .inputSchema(logoutSchema)
   .outputSchema(logoutOutputSchema)
-  .action(async function ({ parsedInput: { portal }, ctx }) {
-    const portalValue = portal ?? "buy";
+  .action(async function ({ parsedInput: { portal } }) {
+    const portalValue = portal ?? 'buy';
     await auth.api.signOut({ headers: await headers() });
     return { success: true, redirectTo: `/${portalValue}/auth/login` };
   });

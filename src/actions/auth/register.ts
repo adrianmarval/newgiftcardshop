@@ -1,24 +1,24 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { authActionClient } from "@/lib/safe-action";
-import { registerSchema, registerOutputSchema } from "@/types/auth/actions";
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { actionClient } from '@/lib/safe-action';
+import { registerSchema, registerOutputSchema } from '@/types/auth/actions';
 
 const dashboardMap = {
-  sell: "/sell/dashboard",
-  buy: "/buy/dashboard",
+  sell: '/sell/dashboard',
+  buy: '/buy/dashboard',
 } as const;
 
 const roleMap = {
-  sell: "SELLER",
-  buy: "BUYER",
+  sell: 'SELLER',
+  buy: 'BUYER',
 } as const;
 
-export const register = authActionClient
+export const register = actionClient
   .inputSchema(registerSchema)
   .outputSchema(registerOutputSchema)
-  .action(async function ({ parsedInput: { fullName, email, password, portal }, ctx }) {
+  .action(async function ({ parsedInput: { fullName, email, password, portal } }) {
     const callbackURL = dashboardMap[portal];
     const role = roleMap[portal];
 
@@ -35,7 +35,9 @@ export const register = authActionClient
       });
       return { success: true, redirectTo: callbackURL };
     } catch (error) {
-      console.error("Registration error:", error);
-      return { error: "An error occurred during registration. The email may already be in use." };
+      console.error('Registration error:', error);
+      return {
+        error: 'An error occurred during registration. The email may already be in use.',
+      };
     }
   });

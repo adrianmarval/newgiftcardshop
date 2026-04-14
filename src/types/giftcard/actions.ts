@@ -2,8 +2,8 @@
 // Giftcard Types — Input/Output schemas for giftcard buyer actions
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
-import { GiftcardIssueType } from "@/generated/prisma/client";
+import { z } from 'zod';
+import { GiftcardIssueType } from '@/generated/prisma/client';
 
 // ── Search Giftcards ─────────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ export const searchGiftcardItemSchema = z.object({
   id: z.string(),
   brand: z.string(),
   amount: z.number(),
-  status: z.literal("UNUSED"),
+  status: z.literal('UNUSED'),
 });
 
 export type SearchGiftcardItem = z.infer<typeof searchGiftcardItemSchema>;
@@ -106,4 +106,6 @@ export const undoGiftcardIssueInputSchema = z.object({
 export type UndoGiftcardIssueInput = z.infer<typeof undoGiftcardIssueInputSchema>;
 
 /** Output schema for undoGiftcardIssue action */
-export const undoGiftcardIssueOutputSchema = z.object({ success: z.literal(true) });
+export const undoGiftcardIssueOutputSchema = z.object({
+  success: z.literal(true),
+});

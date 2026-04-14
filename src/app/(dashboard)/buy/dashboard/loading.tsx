@@ -1,8 +1,8 @@
-import { Spinner } from "@/components/ui/spinner";
+import { Spinner } from '@/components/ui/spinner';
 
 export default function BuyerDashboardLoading() {
   return (
-    <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="flex min-h-[50vh] items-center justify-center">
       <Spinner className="size-8" />
     </div>
   );

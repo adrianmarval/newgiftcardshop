@@ -2,7 +2,7 @@
 // Auth Types — Component prop interfaces for auth & profile flows
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Portal } from "./states";
+import type { Portal } from './states';
 
 // ── Profile Form Props ────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ export interface LoginFormProps {
  * Props for the RegisterForm component.
  */
 export interface RegisterFormProps {
-  portal: "buy" | "sell";
+  portal: 'buy' | 'sell';
   redirectTo: string;
   loginUrl: string;
   title: string;

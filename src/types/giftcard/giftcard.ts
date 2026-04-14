@@ -2,12 +2,12 @@
 // Giftcard Types — Core gift card entities
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
+import { z } from 'zod';
 
 /** String-literal mirror of the Prisma GiftcardStatus enum — safe for client components. */
-export type GiftcardStatus = "USED" | "UNUSED" | "ALREADY_USED" | "INVALID" | "DEACTIVATED" | "WRONG_AMOUNT";
+export type GiftcardStatus = 'USED' | 'UNUSED' | 'ALREADY_USED' | 'INVALID' | 'DEACTIVATED' | 'WRONG_AMOUNT';
 
-export const giftcardStatusEnum = z.enum(["USED", "UNUSED", "ALREADY_USED", "INVALID", "DEACTIVATED", "WRONG_AMOUNT"]);
+export const giftcardStatusEnum = z.enum(['USED', 'UNUSED', 'ALREADY_USED', 'INVALID', 'DEACTIVATED', 'WRONG_AMOUNT']);
 
 /**
  * A gift card as returned from server actions that include brand/country
@@ -25,7 +25,11 @@ export const giftcardSchema = z.object({
   reportedAmount: z.number().nullable().optional(),
   orderId: z.string().nullable(),
   batchId: z.string().nullable().optional(),
-  brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
+  brand: z.object({
+    name: z.string(),
+    icon: z.string(),
+    image: z.string().nullable(),
+  }),
   country: z.object({ name: z.string(), code: z.string() }).nullable(),
 });
 

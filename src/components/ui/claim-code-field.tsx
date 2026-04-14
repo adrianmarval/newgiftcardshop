@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { CodeDisplayProps } from "@/types";
+import { useState } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import type { CodeDisplayProps } from '@/types';
 
 export function ClaimCodeField({ code }: CodeDisplayProps) {
   const [copied, setCopied] = useState(false);
@@ -14,18 +14,18 @@ export function ClaimCodeField({ code }: CodeDisplayProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 w-full">
+    <div className="flex w-full items-center gap-2">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <code
               onClick={copy}
-              className="text-base font-mono bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60 cursor-pointer hover:bg-muted transition-colors font-bold tracking-tight text-foreground truncate max-w-35"
+              className="border-border/60 bg-muted/60 text-foreground hover:bg-muted max-w-35 cursor-pointer truncate rounded-lg border px-2.5 py-1 font-mono text-base font-bold tracking-tight transition-colors"
             >
               {code.slice(0, 4)}••••{code.slice(-4)}
             </code>
           </TooltipTrigger>
-          <TooltipContent className="bg-background border-border text-sm font-bold">
+          <TooltipContent className="border-border bg-background text-sm font-bold">
             <p>Click to copy: {code}</p>
           </TooltipContent>
         </Tooltip>
@@ -35,9 +35,9 @@ export function ClaimCodeField({ code }: CodeDisplayProps) {
           e.stopPropagation();
           copy();
         }}
-        className="text-sm text-primary/70 hover:text-primary transition-colors font-black uppercase tracking-widest"
+        className="text-primary/70 hover:text-primary text-sm font-black tracking-widest uppercase transition-colors"
       >
-        {copied ? "DONE!" : "COPY"}
+        {copied ? 'DONE!' : 'COPY'}
       </button>
     </div>
   );

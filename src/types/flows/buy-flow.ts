@@ -16,7 +16,7 @@
  * - ALREADY_USED → Code was already redeemed before the buyer received it.
  * - DEACTIVATED  → Card has been deactivated by the issuer.
  */
-export type BuyGiftcardStatus = "UNUSED" | "INVALID" | "ALREADY_USED" | "WRONG_AMOUNT" | "DEACTIVATED";
+export type BuyGiftcardStatus = 'UNUSED' | 'INVALID' | 'ALREADY_USED' | 'WRONG_AMOUNT' | 'DEACTIVATED';
 
 /**
  * Represents a single gift card item within the buy flow wizard.

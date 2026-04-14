@@ -2,8 +2,8 @@
 // Seller Types — Input/Output schemas for seller actions
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
-import { sellerBatchSchema } from "./batch";
+import { z } from 'zod';
+import { sellerBatchSchema } from './batch';
 
 // ── Publish Batch ─────────────────────────────────────────────────────────────
 
@@ -24,7 +24,11 @@ export type PublishBatchInput = z.infer<typeof publishBatchSchema>;
 
 /** Output schema for publishBatch action */
 export const publishBatchOutputSchema = z.union([
-  z.object({ success: z.literal(true), batchId: z.string(), duplicates: z.array(z.string()) }),
+  z.object({
+    success: z.literal(true),
+    batchId: z.string(),
+    duplicates: z.array(z.string()),
+  }),
   z.object({ error: z.string() }),
 ]);
 
@@ -39,4 +43,7 @@ export const getSellerBatchesOutputSchema = z.object({
 // ── Get Seller Rate ───────────────────────────────────────────────────────────
 
 /** Output schema for getSellerRate action */
-export const getSellerRateOutputSchema = z.object({ success: z.literal(true), rate: z.number() });
+export const getSellerRateOutputSchema = z.object({
+  success: z.literal(true),
+  rate: z.number(),
+});

@@ -2,7 +2,7 @@
 // Seller Types — SellerBatch type (moved from seller-actions.ts)
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const sellerBatchCardSchema = z.object({
   id: z.string(),
@@ -13,7 +13,11 @@ export const sellerBatchCardSchema = z.object({
   isConfirmed: z.boolean(),
   reportedAmount: z.number().nullable(),
   orderId: z.string().nullable(),
-  brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
+  brand: z.object({
+    name: z.string(),
+    icon: z.string(),
+    image: z.string().nullable(),
+  }),
   country: z.object({ name: z.string(), code: z.string() }).nullable(),
 });
 

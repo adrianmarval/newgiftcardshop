@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
 
-  requestHeaders.set("x-current-path", request.nextUrl.pathname);
+  requestHeaders.set('x-current-path', request.nextUrl.pathname);
 
   return NextResponse.next({
     request: {
@@ -14,5 +14,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/buy/dashboard/:path*", "/sell/dashboard/:path*", "/admin/dashboard/:path*"],
+  matcher: ['/buy/dashboard/:path*', '/sell/dashboard/:path*', '/admin/dashboard/:path*'],
 };

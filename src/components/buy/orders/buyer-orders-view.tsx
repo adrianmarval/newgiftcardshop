@@ -1,14 +1,17 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { OrdersStats } from "./orders-stats";
-import { OrdersFilters } from "./orders-filters";
-import { OrdersList } from "./orders-list";
-import { CardDetailDialog } from "./card-detail-dialog";
-import type { BuyerOrdersViewProps, BuyerOrderGiftcard, OrderStatus } from "@/types";
+import { useState } from 'react';
+import { OrdersStats } from './orders-stats';
+import { OrdersFilters } from './orders-filters';
+import { OrdersList } from './orders-list';
+import { CardDetailDialog } from './card-detail-dialog';
+import type { BuyerOrdersViewProps, BuyerOrderGiftcard, OrderStatus } from '@/types';
 
 export function BuyerOrdersView({ orders, pagination }: BuyerOrdersViewProps) {
-  const [selectedCard, setSelectedCard] = useState<{ card: BuyerOrderGiftcard; orderStatus: OrderStatus } | null>(null);
+  const [selectedCard, setSelectedCard] = useState<{
+    card: BuyerOrderGiftcard;
+    orderStatus: OrderStatus;
+  } | null>(null);
 
   const handleCardClick = (card: BuyerOrderGiftcard, orderStatus: OrderStatus) => {
     setSelectedCard({ card, orderStatus });

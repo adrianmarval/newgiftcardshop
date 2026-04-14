@@ -2,13 +2,16 @@
 // Order Types — Input/Output schemas for order actions
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
-import { buyerOrderSchema } from "./buyer-order";
+import { z } from 'zod';
+import { buyerOrderSchema } from './buyer-order';
 
 // ── Get User Buy Rate ─────────────────────────────────────────────────────────
 
 /** Output schema for getUserBuyRate action */
-export const getUserBuyRateOutputSchema = z.object({ success: z.literal(true), rate: z.number() });
+export const getUserBuyRateOutputSchema = z.object({
+  success: z.literal(true),
+  rate: z.number(),
+});
 
 // ── Create Order ───────────────────────────────────────────────────────────────
 
@@ -50,7 +53,11 @@ export type CompleteOrderInput = z.infer<typeof completeOrderInputSchema>;
 
 /** Output schema for completeOrder action */
 export const completeOrderOutputSchema = z.union([
-  z.object({ success: z.literal(true), orderId: z.string(), message: z.string() }),
+  z.object({
+    success: z.literal(true),
+    orderId: z.string(),
+    message: z.string(),
+  }),
   z.object({ error: z.string() }),
 ]);
 
@@ -86,9 +93,9 @@ export const getOrderByIdOutputSchema = z.union([
 export const getBuyerOrdersInputSchema = z.object({
   page: z.number().int().positive().optional().default(1),
   limit: z.number().int().positive().max(100).optional().default(10),
-  status: z.enum(["PENDING", "AWAITING_PAYMENT", "COMPLETED", "CANCELLED"]).optional(),
+  status: z.enum(['PENDING', 'AWAITING_PAYMENT', 'COMPLETED', 'CANCELLED']).optional(),
   search: z.string().optional(),
-  sort: z.enum(["newest", "oldest"]).optional().default("newest"),
+  sort: z.enum(['newest', 'oldest']).optional().default('newest'),
 });
 
 export type GetBuyerOrdersInput = z.infer<typeof getBuyerOrdersInputSchema>;

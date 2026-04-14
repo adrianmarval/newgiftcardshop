@@ -2,7 +2,7 @@
 // Order Types — Pagination types for buyer orders
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { BuyerOrder } from "./buyer-order";
+import type { BuyerOrder } from './buyer-order';
 
 export interface PaginatedBuyerOrders {
   orders: BuyerOrder[];

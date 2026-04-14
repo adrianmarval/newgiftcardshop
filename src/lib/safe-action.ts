@@ -1,13 +1,13 @@
-import { createSafeActionClient } from "next-safe-action";
-import { auth } from "./auth";
-import { betterAuth } from "@next-safe-action/adapter-better-auth";
-import { Role } from "@/generated/prisma/enums";
-import { unauthorized } from "next/navigation";
+import { createSafeActionClient } from 'next-safe-action';
+import { auth } from './auth';
+import { betterAuth } from '@next-safe-action/adapter-better-auth';
+import { Role } from '@/generated/prisma/enums';
+import { unauthorized } from 'next/navigation';
 
 export class ActionError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "ActionError";
+    this.name = 'ActionError';
   }
 }
 
@@ -15,8 +15,8 @@ export class ActionError extends Error {
 export const actionClient = createSafeActionClient({
   handleServerError(e) {
     if (e instanceof ActionError) return e.message;
-    console.error("Error de servidor:", e);
-    return "Error inesperado en el sistema.";
+    console.error('Error de servidor:', e);
+    return 'Error inesperado en el sistema.';
   },
 });
 
@@ -32,8 +32,8 @@ export const sellerActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
-      const isSeller = (authData.user.role as Role[]).includes("SELLER");
-      const isAdmin = (authData.user.role as Role[]).includes("ADMIN");
+      const isSeller = (authData.user.role as Role[]).includes('SELLER');
+      const isAdmin = (authData.user.role as Role[]).includes('ADMIN');
       if (!isSeller && !isAdmin) unauthorized();
       return next({ ctx: { auth: authData } });
     },
@@ -45,8 +45,8 @@ export const buyerActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
-      const isBuyer = (authData.user.role as Role[]).includes("BUYER");
-      const isAdmin = (authData.user.role as Role[]).includes("ADMIN");
+      const isBuyer = (authData.user.role as Role[]).includes('BUYER');
+      const isAdmin = (authData.user.role as Role[]).includes('ADMIN');
       if (!isBuyer && !isAdmin) unauthorized();
       return next({ ctx: { auth: authData } });
     },
@@ -58,7 +58,7 @@ export const adminActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
-      const isAdmin = (authData.user.role as Role[]).includes("ADMIN");
+      const isAdmin = (authData.user.role as Role[]).includes('ADMIN');
       if (!isAdmin) unauthorized();
       return next({ ctx: { auth: authData } });
     },

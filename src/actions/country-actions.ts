@@ -1,13 +1,13 @@
-"use server";
+'use server';
 
-import prisma from "@/lib/prisma";
-import { authActionClient } from "@/lib/safe-action";
-import { getCountryByIdInputSchema, getActiveCountriesOutputSchema, getCountryByIdOutputSchema } from "@/types/catalog/actions";
+import prisma from '@/lib/prisma';
+import { authActionClient } from '@/lib/safe-action';
+import { getCountryByIdInputSchema, getActiveCountriesOutputSchema, getCountryByIdOutputSchema } from '@/types/catalog/actions';
 
 export const getActiveCountries = authActionClient.outputSchema(getActiveCountriesOutputSchema).action(async () => {
   const countries = await prisma.country.findMany({
     where: { isActive: true },
-    orderBy: { name: "asc" },
+    orderBy: { name: 'asc' },
   });
   return {
     success: true as const,

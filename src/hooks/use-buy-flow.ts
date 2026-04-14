@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { create } from "zustand";
-import type { BuyFlowState } from "@/types";
+import { create } from 'zustand';
+import type { BuyFlowState } from '@/types';
 
 export const useBuyFlow = create<BuyFlowState>((set) => ({
   step: 1,
-  selectedBrand: "",
-  selectedCountry: "US",
-  targetAmount: "",
+  selectedBrand: '',
+  selectedCountry: 'US',
+  targetAmount: '',
   foundGiftcards: [],
   orderId: null,
   adjustedTotal: null,
@@ -20,25 +20,32 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   setOrderId: (id) => set({ orderId: id }),
   setAdjustedTotal: (total) => set({ adjustedTotal: total }),
 
-  removeGiftcard: (id) => set((state) => ({
-    foundGiftcards: state.foundGiftcards.filter(g => g.id !== id),
-  })),
+  removeGiftcard: (id) =>
+    set((state) => ({
+      foundGiftcards: state.foundGiftcards.filter((g) => g.id !== id),
+    })),
 
-  reportIssue: (id, status, correctedAmount) => set((state) => ({
-    foundGiftcards: state.foundGiftcards.map(g =>
-      g.id === id
-        ? { ...g, status, reportedAmount: status === "WRONG_AMOUNT" ? correctedAmount : undefined }
-        : g
-    ),
-  })),
+  reportIssue: (id, status, correctedAmount) =>
+    set((state) => ({
+      foundGiftcards: state.foundGiftcards.map((g) =>
+        g.id === id
+          ? {
+              ...g,
+              status,
+              reportedAmount: status === 'WRONG_AMOUNT' ? correctedAmount : undefined,
+            }
+          : g,
+      ),
+    })),
 
-  resetForm: () => set({
-    step: 1,
-    selectedBrand: "",
-    selectedCountry: "US",
-    targetAmount: "",
-    foundGiftcards: [],
-    orderId: null,
-    adjustedTotal: null,
-  }),
+  resetForm: () =>
+    set({
+      step: 1,
+      selectedBrand: '',
+      selectedCountry: 'US',
+      targetAmount: '',
+      foundGiftcards: [],
+      orderId: null,
+      adjustedTotal: null,
+    }),
 }));

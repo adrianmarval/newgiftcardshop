@@ -2,13 +2,13 @@
 // Order Types — BuyerOrder, BuyerOrderGiftcard, BuyerOrderPayment, OrderStatus
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
+import { z } from 'zod';
 
 // ── Order Status ──────────────────────────────────────────────────────────────
 
-export type OrderStatus = "PENDING" | "AWAITING_PAYMENT" | "COMPLETED" | "CANCELLED";
+export type OrderStatus = 'PENDING' | 'AWAITING_PAYMENT' | 'COMPLETED' | 'CANCELLED';
 
-export const orderStatusEnum = z.enum(["PENDING", "AWAITING_PAYMENT", "COMPLETED", "CANCELLED"]);
+export const orderStatusEnum = z.enum(['PENDING', 'AWAITING_PAYMENT', 'COMPLETED', 'CANCELLED']);
 
 // ── Buyer Order Giftcard ──────────────────────────────────────────────────────
 
@@ -25,7 +25,11 @@ export const buyerOrderGiftcardSchema = z.object({
   isConfirmed: z.boolean(),
   reportedAmount: z.number().nullable(),
   orderId: z.string().nullable(),
-  brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
+  brand: z.object({
+    name: z.string(),
+    icon: z.string(),
+    image: z.string().nullable(),
+  }),
   country: z.object({ name: z.string(), code: z.string() }).nullable(),
 });
 

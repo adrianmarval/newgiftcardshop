@@ -1,10 +1,10 @@
-import { Suspense } from "react";
-import { LoginForm } from "@/components/auth/login-form";
-import { Metadata } from "next";
+import { Suspense } from 'react';
+import { LoginForm } from '@/components/auth/login-form';
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Seller Sign In | Solmaira Cards",
-  description: "Sign in to your Solmaira seller account",
+  title: 'Seller Sign In | Solmaira Cards',
+  description: 'Sign in to your Solmaira seller account',
 };
 
 export default function SellerLoginPage() {

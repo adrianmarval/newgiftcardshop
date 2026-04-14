@@ -1,15 +1,15 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { authActionClient } from "@/lib/safe-action";
-import { forgotPasswordSchema, forgotPasswordOutputSchema } from "@/types/auth/actions";
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { authActionClient } from '@/lib/safe-action';
+import { forgotPasswordSchema, forgotPasswordOutputSchema } from '@/types/auth/actions';
 
 export const forgotPassword = authActionClient
   .inputSchema(forgotPasswordSchema)
   .outputSchema(forgotPasswordOutputSchema)
-  .action(async function ({ parsedInput: { email, portal }, ctx }) {
-    const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
+  .action(async function ({ parsedInput: { email, portal } }) {
+    const portalPath = portal === 'buy' ? '/buy' : `/${portal}`;
     const callbackURL = `${process.env.BETTER_AUTH_URL}${portalPath}/auth/reset-password`;
 
     try {
@@ -23,7 +23,7 @@ export const forgotPassword = authActionClient
 
       return { success: true, email };
     } catch (error) {
-      console.error("Forgot password error:", error);
+      console.error('Forgot password error:', error);
       // Always return success to prevent email enumeration
       return { success: true, email };
     }

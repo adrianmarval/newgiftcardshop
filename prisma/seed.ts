@@ -1,7 +1,7 @@
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { seedData } from "./seed-data";
-import "dotenv/config";
+import { PrismaClient } from '../src/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { seedData } from './seed-data';
+import 'dotenv/config';
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -33,13 +33,13 @@ export async function main() {
   await prisma.brand.createMany({
     data: brandData,
   });
-  console.log("Marcas creadas.");
+  console.log('Marcas creadas.');
 
   // 2. Crear países
   await prisma.country.createMany({
     data: countryData,
   });
-  console.log("Países creados.");
+  console.log('Países creados.');
 
   // 3. Crear usuarios (incluyendo batches y giftcards anidados)
   for (const u of userData) {

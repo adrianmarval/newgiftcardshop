@@ -1,0 +1,28 @@
+# Build artifacts
+.next/
+dist/
+build/
+.sdd/
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Public assets (skip to improve performance, optional)
+public/
+
+# Prisma
+prisma/migrations/
+
+# Lock files (usually don't need formatting)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

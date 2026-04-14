@@ -1,27 +1,27 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Alert } from "@/components/ui/alert";
-import { Spinner } from "@/components/ui/spinner";
-import { AlertCircle, CheckCircle, Mail } from "lucide-react";
-import { verifyEmail, resendVerification } from "@/actions";
-import { useAction } from "next-safe-action/hooks";
-import { Suspense } from "react";
-import type { Portal } from "@/types";
+import { useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Alert } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
+import { AlertCircle, CheckCircle, Mail } from 'lucide-react';
+import { verifyEmail, resendVerification } from '@/actions';
+import { useAction } from 'next-safe-action/hooks';
+import { Suspense } from 'react';
+import type { Portal } from '@/types';
 
-function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
+function VerifyEmailFormContent({ portal = 'buy' }: { portal?: Portal }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token") || "";
-  const email = searchParams.get("email") || "";
+  const token = searchParams.get('token') || '';
+  const email = searchParams.get('email') || '';
 
   const [resendSuccess, setResendSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isSpanish = portal === "buy" || portal === "admin";
+  const isSpanish = portal === 'buy' || portal === 'admin';
 
   const { execute: verifyExecute, status: verifyStatus } = useAction(verifyEmail, {
     onSuccess: ({ data }) => {
@@ -30,7 +30,7 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
       }
     },
     onError: ({ error }) => {
-      const defaultError = isSpanish ? "La verificación falló" : "Verification failed";
+      const defaultError = isSpanish ? 'La verificación falló' : 'Verification failed';
       setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
@@ -42,7 +42,7 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
       }
     },
     onError: ({ error }) => {
-      const defaultError = isSpanish ? "Error al reenviar la verificación" : "Failed to resend verification";
+      const defaultError = isSpanish ? 'Error al reenviar la verificación' : 'Failed to resend verification';
       setError(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
@@ -55,13 +55,13 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
     };
 
     return (
-      <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
+      <Card className="mx-auto w-full max-w-md border-none bg-transparent p-8 shadow-none">
         <div className="space-y-6">
           <div className="space-y-2 text-center">
-            <CheckCircle className="h-12 w-12 text-primary mx-auto" />
-            <h1 className="text-3xl font-bold">{isSpanish ? "Verifica tu Correo" : "Verify Your Email"}</h1>
-            <p className="text-base text-muted-foreground">
-              {isSpanish ? "Haz clic abajo para completar la verificación de tu correo" : "Click below to complete your email verification"}
+            <CheckCircle className="text-primary mx-auto h-12 w-12" />
+            <h1 className="text-3xl font-bold">{isSpanish ? 'Verifica tu Correo' : 'Verify Your Email'}</h1>
+            <p className="text-muted-foreground text-base">
+              {isSpanish ? 'Haz clic abajo para completar la verificación de tu correo' : 'Click below to complete your email verification'}
             </p>
           </div>
 
@@ -76,19 +76,16 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
             <input type="hidden" name="portal" value={portal} />
             <input type="hidden" name="token" value={token} />
 
-            <Button
-              type="button"
-              onClick={handleVerify}
-              className="w-full h-11 font-semibold"
-              disabled={verifyStatus === "executing"}
-            >
-              {verifyStatus === "executing" ? (
+            <Button type="button" onClick={handleVerify} className="h-11 w-full font-semibold" disabled={verifyStatus === 'executing'}>
+              {verifyStatus === 'executing' ? (
                 <>
-                  <Spinner className="h-4 w-4 mr-2" />
-                  {isSpanish ? "Verificando..." : "Verifying..."}
+                  <Spinner className="mr-2 h-4 w-4" />
+                  {isSpanish ? 'Verificando...' : 'Verifying...'}
                 </>
+              ) : isSpanish ? (
+                'Verificar Correo'
               ) : (
-                isSpanish ? "Verificar Correo" : "Verify Email"
+                'Verify Email'
               )}
             </Button>
           </div>
@@ -105,14 +102,15 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto p-8 border-none shadow-none bg-transparent">
+    <Card className="mx-auto w-full max-w-md border-none bg-transparent p-8 shadow-none">
       <div className="space-y-6">
         <div className="space-y-2 text-center">
-          <Mail className="h-12 w-12 text-primary mx-auto" />
-          <h1 className="text-3xl font-bold">{isSpanish ? "Revisa tu Correo" : "Check Your Email"}</h1>
-          <p className="text-base text-muted-foreground">
-            {isSpanish ? "Hemos enviado un enlace de verificación a" : "We've sent a verification link to"}<br />
-            {email && <span className="font-semibold text-primary">{email}</span>}
+          <Mail className="text-primary mx-auto h-12 w-12" />
+          <h1 className="text-3xl font-bold">{isSpanish ? 'Revisa tu Correo' : 'Check Your Email'}</h1>
+          <p className="text-muted-foreground text-base">
+            {isSpanish ? 'Hemos enviado un enlace de verificación a' : "We've sent a verification link to"}
+            <br />
+            {email && <span className="text-primary font-semibold">{email}</span>}
           </p>
         </div>
 
@@ -127,9 +125,9 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
           <Alert className="border-primary/50 bg-primary/5 text-primary">
             <CheckCircle className="h-4 w-4" />
             <span>
-              {isSpanish 
-                ? "¡Correo de verificación reenviado! Revisa tu bandeja de entrada." 
-                : "Verification email resent! Check your inbox."}
+              {isSpanish
+                ? '¡Correo de verificación reenviado! Revisa tu bandeja de entrada.'
+                : 'Verification email resent! Check your inbox.'}
             </span>
           </Alert>
         )}
@@ -143,16 +141,18 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
               type="button"
               variant="outline"
               onClick={handleResend}
-              className="w-full h-11 border-none bg-muted/30 hover:bg-muted/50 font-medium"
-              disabled={resendStatus === "executing"}
+              className="bg-muted/30 hover:bg-muted/50 h-11 w-full border-none font-medium"
+              disabled={resendStatus === 'executing'}
             >
-              {resendStatus === "executing" ? (
+              {resendStatus === 'executing' ? (
                 <>
-                  <Spinner className="h-4 w-4 mr-2" />
-                  {isSpanish ? "Reenviando..." : "Resending..."}
+                  <Spinner className="mr-2 h-4 w-4" />
+                  {isSpanish ? 'Reenviando...' : 'Resending...'}
                 </>
+              ) : isSpanish ? (
+                '¿No recibiste el correo? Reenviar'
               ) : (
-                isSpanish ? "¿No recibiste el correo? Reenviar" : "Didn't receive email? Resend"
+                "Didn't receive email? Resend"
               )}
             </Button>
           </div>
@@ -162,10 +162,10 @@ function VerifyEmailFormContent({ portal = "buy" }: { portal?: Portal }) {
   );
 }
 
-export function VerifyEmailForm({ portal = "buy" }: { portal?: Portal }) {
-  const isSpanish = portal === "buy" || portal === "admin";
+export function VerifyEmailForm({ portal = 'buy' }: { portal?: Portal }) {
+  const isSpanish = portal === 'buy' || portal === 'admin';
   return (
-    <Suspense fallback={<div>{isSpanish ? "Cargando..." : "Loading..."}</div>}>
+    <Suspense fallback={<div>{isSpanish ? 'Cargando...' : 'Loading...'}</div>}>
       <VerifyEmailFormContent portal={portal} />
     </Suspense>
   );

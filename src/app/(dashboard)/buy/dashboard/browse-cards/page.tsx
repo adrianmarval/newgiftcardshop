@@ -1,21 +1,13 @@
-import { BuyGiftcardManager } from "@/components/buy/buy-giftcard-manager";
-import { getActiveBrands, getActiveCountries } from "@/actions";
-import { getOrderById } from "@/actions/order-actions";
-import type { BuyerOrder } from "@/types";
+import { BuyGiftcardManager } from '@/components/buy/buy-giftcard-manager';
+import { getActiveBrands, getActiveCountries } from '@/actions';
+import { getOrderById } from '@/actions/order-actions';
+import type { BuyerOrder } from '@/types';
 
-export default async function BrowseCardsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ orderId?: string }>;
-}) {
-  const [brandsResult, countriesResult, params] = await Promise.all([
-    getActiveBrands(),
-    getActiveCountries(),
-    searchParams,
-  ]);
+export default async function BrowseCardsPage({ searchParams }: { searchParams: Promise<{ orderId?: string }> }) {
+  const [brandsResult, countriesResult, params] = await Promise.all([getActiveBrands(), getActiveCountries(), searchParams]);
 
-  if (!brandsResult.data?.success) throw new Error("Ocurrio un error al cargar las marcas");
-  if (!countriesResult.data?.success) throw new Error("Ocurrio un error al cargar los paises");
+  if (!brandsResult.data?.success) throw new Error('Ocurrio un error al cargar las marcas');
+  if (!countriesResult.data?.success) throw new Error('Ocurrio un error al cargar los paises');
 
   const brands = brandsResult.data.brands;
   const countries = countriesResult.data.countries;
@@ -28,11 +20,5 @@ export default async function BrowseCardsPage({
     }
   }
 
-  return (
-    <BuyGiftcardManager
-      brands={brands}
-      countries={countries}
-      resumeOrder={resumeOrder}
-    />
-  );
+  return <BuyGiftcardManager brands={brands} countries={countries} resumeOrder={resumeOrder} />;
 }

@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { redirect, unauthorized } from "next/navigation";
-import type { Role } from "@/generated/prisma/client";
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { redirect, unauthorized } from 'next/navigation';
+import type { Role } from '@/generated/prisma/client';
 
 export async function getSession() {
   const session = await auth.api.getSession({ headers: await headers() });

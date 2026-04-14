@@ -2,8 +2,8 @@
 // UI Types — Card and giftcard-related UI components
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { OrderStatus } from "@/types/order/buyer-order";
-import type { BuyerOrderPayment } from "@/types/order/buyer-order";
+import type { OrderStatus } from '@/types/order/buyer-order';
+import type { BuyerOrderPayment } from '@/types/order/buyer-order';
 
 // ── Card Status Badge ─────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export interface UrlPaginationProps {
 
 // ── MetricCardGrid ────────────────────────────────────────────────────────────
 
-import type { StatsItem } from "./feedback";
+import type { StatsItem } from './feedback';
 
 export interface MetricCardGridProps {
   items: StatsItem[];

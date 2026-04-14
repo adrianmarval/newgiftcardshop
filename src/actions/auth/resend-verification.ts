@@ -1,16 +1,16 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import prisma from "@/lib/prisma";
-import { authActionClient } from "@/lib/safe-action";
-import { resendVerificationSchema, resendVerificationOutputSchema } from "@/types/auth/actions";
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import prisma from '@/lib/prisma';
+import { actionClient } from '@/lib/safe-action';
+import { resendVerificationSchema, resendVerificationOutputSchema } from '@/types/auth/actions';
 
-export const resendVerification = authActionClient
+export const resendVerification = actionClient
   .inputSchema(resendVerificationSchema)
   .outputSchema(resendVerificationOutputSchema)
-  .action(async function ({ parsedInput: { email, portal }, ctx }) {
-    const portalPath = portal === "buy" ? "/buy" : `/${portal}`;
+  .action(async function ({ parsedInput: { email, portal } }) {
+    const portalPath = portal === 'buy' ? '/buy' : `/${portal}`;
     const callbackURL = `${process.env.BETTER_AUTH_URL}${portalPath}/auth/verify-email`;
 
     try {
@@ -31,7 +31,7 @@ export const resendVerification = authActionClient
 
       return { success: true };
     } catch (error) {
-      console.error("Resend verification error:", error);
-      return { error: "Failed to resend verification email." };
+      console.error('Resend verification error:', error);
+      return { error: 'Failed to resend verification email.' };
     }
   });

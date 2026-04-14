@@ -3,8 +3,8 @@
 // These MUST NOT be imported into Client Components.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Giftcard } from "@/generated/prisma/client";
-import type { Decimal } from "@prisma/client/runtime/client";
+import type { Giftcard } from '@/generated/prisma/client';
+import type { Decimal } from '@prisma/client/runtime/client';
 
 // ── browse-giftcards ──────────────────────────────────────────────────────────
 

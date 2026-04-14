@@ -2,7 +2,7 @@
 // Platform Types — Platform settings schemas
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * CRITICAL FIX: description must be nullable + optional
@@ -35,4 +35,6 @@ export const setPlatformSettingInputSchema = z.object({
 export type SetPlatformSettingInput = z.infer<typeof setPlatformSettingInputSchema>;
 
 /** Output schema for setPlatformSetting action */
-export const setPlatformSettingOutputSchema = z.object({ success: z.literal(true) });
+export const setPlatformSettingOutputSchema = z.object({
+  success: z.literal(true),
+});

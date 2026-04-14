@@ -1,10 +1,10 @@
-import { Suspense } from "react";
-import { LoginForm } from "@/components/auth/login-form";
-import { Metadata } from "next";
+import { Suspense } from 'react';
+import { LoginForm } from '@/components/auth/login-form';
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Inicio de Sesión Admin | Solmaira Cards",
-  description: "Inicia sesión en el portal de administración",
+  title: 'Inicio de Sesión Admin | Solmaira Cards',
+  description: 'Inicia sesión en el portal de administración',
 };
 
 export default function AdminLoginPage() {

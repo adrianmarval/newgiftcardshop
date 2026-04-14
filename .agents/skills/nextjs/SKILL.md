@@ -305,7 +305,7 @@ export default function PostsLayout({
 
 ```typescript
 // app/api/posts/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const posts = await getPosts();
@@ -327,7 +327,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   const post = await getPost(params.id);
 
   if (!post) {
-    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    return NextResponse.json({ error: 'Post not found' }, { status: 404 });
   }
 
   return NextResponse.json({ post });
@@ -340,20 +340,20 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 ```typescript
 // app/actions/posts.ts
-"use server";
+'use server';
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export async function createPost(formData: FormData) {
-  const title = formData.get("title") as string;
-  const content = formData.get("content") as string;
+  const title = formData.get('title') as string;
+  const content = formData.get('content') as string;
 
   const post = await db.post.create({
     data: { title, content },
   });
 
-  revalidatePath("/posts");
+  revalidatePath('/posts');
   redirect(`/posts/${post.id}`);
 }
 ```
@@ -414,13 +414,13 @@ export function PostActions({ postId }: { postId: string }) {
 ### Router Hooks
 
 ```typescript
-"use client";
+'use client';
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from 'next/navigation';
 
 const pathname = usePathname(); // /posts/123
 const searchParams = useSearchParams(); // ?q=hello
-const query = searchParams.get("q");
+const query = searchParams.get('q');
 ```
 
 ## Metadata
@@ -428,8 +428,8 @@ const query = searchParams.get("q");
 ```typescript
 // Static metadata
 export const metadata = {
-  title: "All Posts",
-  description: "Browse our collection of blog posts",
+  title: 'All Posts',
+  description: 'Browse our collection of blog posts',
 };
 
 // Dynamic metadata

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Clipboard, Trash2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useSellFlow } from "@/hooks/use-sell-flow";
-import { BulkPasteDialog } from "../bulk-paste-dialog";
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Clipboard, Trash2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { useSellFlow } from '@/hooks/use-sell-flow';
+import { BulkPasteDialog } from '../bulk-paste-dialog';
 
 export function DetailsStep() {
   const { giftcards, addGiftcard, removeGiftcard, updateGiftcard, handleBulkImport, setStep } = useSellFlow();
@@ -21,63 +21,63 @@ export function DetailsStep() {
     <>
       <BulkPasteDialog open={showBulkPasteDialog} onOpenChange={setShowBulkPasteDialog} onImport={handleBulkImport} />
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-start h-full pb-20 md:pb-0">
+      <div className="grid h-full grid-cols-1 items-start gap-4 pb-20 md:grid-cols-12 md:gap-6 md:pb-0">
         {/* Floating Action Button (Mobile Only) */}
-        <div className="fixed bottom-6 right-6 z-50 md:hidden">
+        <div className="fixed right-6 bottom-6 z-50 md:hidden">
           <Button
             onClick={addGiftcard}
             size="icon"
-            className="w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/40 border-2 border-primary/20"
+            className="border-primary/20 bg-primary text-primary-foreground shadow-primary/40 hover:bg-primary/90 h-14 w-14 rounded-full border-2 shadow-xl"
           >
-            <Plus className="w-7 h-7" />
+            <Plus className="h-7 w-7" />
           </Button>
         </div>
 
         {/* Left Column: Actions & Progress */}
-        <Card className="md:col-span-3 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 space-y-4 md:space-y-6 sticky top-0 z-20">
-          <div className="flex md:block items-center justify-between">
+        <Card className="border-border bg-card/50 sticky top-0 z-20 space-y-4 p-3 backdrop-blur-sm md:col-span-3 md:space-y-6 md:p-6">
+          <div className="flex items-center justify-between md:block">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold mb-0.5 md:mb-1">Batch Actions</h2>
+              <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Batch Actions</h2>
               <p className="text-muted-foreground text-sm md:text-base">Manage your gift cards.</p>
             </div>
             <div className="md:hidden">
-              <span className="bg-muted text-foreground px-2 py-0.5 rounded-full font-bold text-sm">{giftcards.length} Cards</span>
+              <span className="bg-muted text-foreground rounded-full px-2 py-0.5 text-sm font-bold">{giftcards.length} Cards</span>
             </div>
           </div>
 
-          <div className="hidden md:flex flex-col gap-3">
+          <div className="hidden flex-col gap-3 md:flex">
             <Button
               onClick={addGiftcard}
               variant="outline"
-              className="w-full border-border text-primary hover:bg-primary/10 hover:text-primary h-11 justify-start px-4"
+              className="border-border text-primary hover:bg-primary/10 hover:text-primary h-11 w-full justify-start px-4"
             >
-              <Plus className="w-4 h-4 mr-3" /> Add Card
+              <Plus className="mr-3 h-4 w-4" /> Add Card
             </Button>
             <Button
               onClick={() => setShowBulkPasteDialog(true)}
               variant="outline"
-              className="w-full border-border text-primary hover:bg-primary/10 hover:text-primary h-11 justify-start px-4"
+              className="border-border text-primary hover:bg-primary/10 hover:text-primary h-11 w-full justify-start px-4"
             >
-              <Clipboard className="w-4 h-4 mr-3" /> Bulk Import
+              <Clipboard className="mr-3 h-4 w-4" /> Bulk Import
             </Button>
           </div>
 
           {/* Mobile-only action row */}
-          <div className="md:hidden flex gap-2">
+          <div className="flex gap-2 md:hidden">
             <Button
               onClick={() => setShowBulkPasteDialog(true)}
               variant="outline"
               size="sm"
-              className="flex-1 border-border text-primary hover:bg-primary/10 h-9 text-sm uppercase font-bold tracking-wider"
+              className="border-border text-primary hover:bg-primary/10 h-9 flex-1 text-sm font-bold tracking-wider uppercase"
             >
-              <Clipboard className="w-3 h-3 mr-2" /> Bulk
+              <Clipboard className="mr-2 h-3 w-3" /> Bulk
             </Button>
           </div>
 
-          <div className="pt-4 md:pt-6 border-t border-slate-800 space-y-3">
-            <div className="hidden md:flex justify-between items-center text-xs">
+          <div className="space-y-3 border-t border-slate-800 pt-4 md:pt-6">
+            <div className="hidden items-center justify-between text-xs md:flex">
               <span className="text-muted-foreground font-medium">Total Cards</span>
-              <span className="bg-muted text-foreground px-2 py-0.5 rounded-full font-bold">{giftcards.length}</span>
+              <span className="bg-muted text-foreground rounded-full px-2 py-0.5 font-bold">{giftcards.length}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -85,7 +85,7 @@ export function DetailsStep() {
                 onClick={() => setStep(1)}
                 variant="outline"
                 size="sm"
-                className="border-border text-muted-foreground hover:bg-muted h-10 md:h-11 text-sm md:text-base"
+                className="border-border text-muted-foreground hover:bg-muted h-10 text-sm md:h-11 md:text-base"
               >
                 Back
               </Button>
@@ -93,7 +93,7 @@ export function DetailsStep() {
                 onClick={() => setStep(3)}
                 disabled={!isStep2Valid || giftcards.length === 0}
                 size="sm"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 md:h-11 text-sm md:text-base"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 text-sm md:h-11 md:text-base"
               >
                 Review
               </Button>
@@ -102,17 +102,15 @@ export function DetailsStep() {
         </Card>
 
         {/* Right Column: Cards List */}
-        <Card className="md:col-span-9 border-border bg-card/50 backdrop-blur-sm p-3 md:p-6 flex flex-col min-h-100 md:min-h-125">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <Label className="text-muted-foreground text-sm md:text-sm font-semibold uppercase tracking-wider">Gift Card Details</Label>
+        <Card className="border-border bg-card/50 flex min-h-100 flex-col p-3 backdrop-blur-sm md:col-span-9 md:min-h-125 md:p-6">
+          <div className="mb-3 flex items-center justify-between md:mb-4">
+            <Label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase md:text-sm">Gift Card Details</Label>
             {!isStep2Valid && (
-              <span className="text-sm md:text-sm text-amber-500 font-bold uppercase tracking-tight animate-pulse">
-                Pending fields
-              </span>
+              <span className="animate-pulse text-sm font-bold tracking-tight text-amber-500 uppercase md:text-sm">Pending fields</span>
             )}
           </div>
 
-          <div className="space-y-3 md:space-y-4 overflow-y-auto pr-1 md:pr-2 custom-scrollbar flex-1 max-h-125 md:max-h-150">
+          <div className="custom-scrollbar max-h-125 flex-1 space-y-3 overflow-y-auto pr-1 md:max-h-150 md:space-y-4 md:pr-2">
             <AnimatePresence mode="popLayout">
               {giftcards.map((card, idx) => (
                 <motion.div
@@ -121,92 +119,92 @@ export function DetailsStep() {
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
-                  className="group relative flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 items-stretch md:items-end p-3 md:p-5 bg-muted/20 border border-border rounded-xl hover:bg-muted/40 transition-all"
+                  className="group border-border bg-muted/20 hover:bg-muted/40 relative flex flex-col items-stretch gap-3 rounded-xl border p-3 transition-all md:grid md:grid-cols-12 md:items-end md:gap-4 md:p-5"
                 >
                   {/* ID Counter */}
-                  <div className="md:col-span-1 flex items-center justify-between md:flex-col md:justify-center">
-                    <span className="text-sm text-muted-foreground font-black md:mb-1">#{idx + 1}</span>
+                  <div className="flex items-center justify-between md:col-span-1 md:flex-col md:justify-center">
+                    <span className="text-muted-foreground text-sm font-black md:mb-1">#{idx + 1}</span>
                     <div className="md:hidden">
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={() => removeGiftcard(card.id)}
                         disabled={giftcards.length === 1}
-                        className="text-slate-600 hover:text-red-400 h-6 w-6"
+                        className="h-6 w-6 text-slate-600 hover:text-red-400"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
-                    <div className="hidden md:flex w-8 h-8 rounded-full bg-muted border border-border items-center justify-center text-sm font-bold text-muted-foreground">
+                    <div className="border-border bg-muted text-muted-foreground hidden h-8 w-8 items-center justify-center rounded-full border text-sm font-bold md:flex">
                       {idx + 1}
                     </div>
                   </div>
 
                   {/* Amount & PIN (Grid 2 cols on mobile) */}
-                  <div className="grid grid-cols-2 md:contents gap-3">
+                  <div className="grid grid-cols-2 gap-3 md:contents">
                     <div className="md:col-span-3">
-                      <Label className="text-sm text-slate-500 font-bold uppercase mb-1 block ml-1">Amount</Label>
+                      <Label className="mb-1 ml-1 block text-sm font-bold text-slate-500 uppercase">Amount</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-2.5 md:top-3 text-muted-foreground/50 text-sm">$</span>
+                        <span className="text-muted-foreground/50 absolute top-2.5 left-3 text-sm md:top-3">$</span>
                         <Input
                           type="number"
                           placeholder="0.00"
                           value={card.amount}
-                          onChange={(e) => updateGiftcard(card.id, "amount", e.target.value)}
-                          className="pl-7 border-border bg-muted/50 text-foreground h-10 md:h-11 focus:border-primary/50 text-base"
+                          onChange={(e) => updateGiftcard(card.id, 'amount', e.target.value)}
+                          className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-10 pl-7 text-base md:h-11"
                         />
                       </div>
                     </div>
 
                     <div className="md:col-span-3">
-                      <Label className="text-sm text-slate-500 font-bold uppercase mb-1 block ml-1">PIN</Label>
+                      <Label className="mb-1 ml-1 block text-sm font-bold text-slate-500 uppercase">PIN</Label>
                       <Input
                         type="password"
                         placeholder="Optional"
-                        value={card.pinCode || ""}
-                        onChange={(e) => updateGiftcard(card.id, "pinCode", e.target.value)}
-className="border-border bg-muted/50 text-foreground h-10 md:h-11 font-mono focus:border-primary/50 text-base"
+                        value={card.pinCode || ''}
+                        onChange={(e) => updateGiftcard(card.id, 'pinCode', e.target.value)}
+                        className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-10 font-mono text-base md:h-11"
                       />
                     </div>
                   </div>
 
                   {/* Claim Code (Full width on mobile) */}
                   <div className="md:col-span-4">
-                    <Label className="text-sm text-slate-500 font-bold uppercase mb-1 block ml-1">Claim Code</Label>
+                    <Label className="mb-1 ml-1 block text-sm font-bold text-slate-500 uppercase">Claim Code</Label>
                     <Input
                       placeholder="Enter code"
                       value={card.claimCode}
-                      onChange={(e) => updateGiftcard(card.id, "claimCode", e.target.value)}
-                      className="border-border bg-muted/50 text-foreground h-10 md:h-11 font-mono focus:border-primary/50 text-base"
+                      onChange={(e) => updateGiftcard(card.id, 'claimCode', e.target.value)}
+                      className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-10 font-mono text-base md:h-11"
                     />
                   </div>
 
                   {/* Delete Desktop */}
-                  <div className="hidden md:flex md:col-span-1 justify-end">
+                  <div className="hidden justify-end md:col-span-1 md:flex">
                     <Button
                       size="icon"
                       variant="ghost"
                       onClick={() => removeGiftcard(card.id)}
                       disabled={giftcards.length === 1}
-                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-11 w-11 rounded-lg"
+                      className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-11 w-11 rounded-lg"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
 
                   {card.amount && card.claimCode && (
-                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                    <div className="bg-primary absolute top-1/2 -left-1 h-8 w-1 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
                   )}
                 </motion.div>
               ))}
             </AnimatePresence>
 
             {giftcards.length === 0 && (
-              <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-2xl bg-muted/20">
-                <div className="p-4 bg-muted rounded-full mb-4">
-                  <Plus className="w-8 h-8 text-muted-foreground/50" />
+              <div className="border-border bg-muted/20 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12">
+                <div className="bg-muted mb-4 rounded-full p-4">
+                  <Plus className="text-muted-foreground/50 h-8 w-8" />
                 </div>
-                <h3 className="font-bold mb-1">No cards added yet</h3>
+                <h3 className="mb-1 font-bold">No cards added yet</h3>
                 <p className="text-muted-foreground text-sm">Add cards manually or use the bulk importer.</p>
               </div>
             )}
