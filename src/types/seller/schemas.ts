@@ -14,6 +14,8 @@ export const publishBatchSchema = z.object({
       amount: z.string(),
       claimCode: z.string(),
       pinCode: z.string().optional(),
+      /** Compressed JPEG as base64 — gets encrypted + stored as ProvenanceImage in transaction */
+      compressedImageData: z.string().optional(),
     }),
   ),
   brandId: z.string(),

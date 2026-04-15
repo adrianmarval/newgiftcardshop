@@ -15,6 +15,7 @@ export type { Brand, Country } from './catalog/brand';
 export { giftcardSchema, giftcardStatusEnum } from './giftcard/giftcard';
 export type { GiftcardStatus, Giftcard, ParsedGiftcard } from './giftcard/giftcard';
 export type { GiftcardIssue } from './giftcard/issues';
+export type { ClaimCodeParseResult } from './giftcard/claim-code';
 
 // ── order/ ───────────────────────────────────────────────────────────────────
 
@@ -34,10 +35,30 @@ export { orderSearchParamsParsers } from './order/search-params';
 
 export type { SellerBatch } from './seller/batch';
 
+// ── sell/ ───────────────────────────────────────────────────────────────────
+
+export { validationStateEnum, validationResultSchema } from './sell/validation';
+export type { ValidationState, ValidationResult, OCRDraftCard, OCRIngestOutput } from './sell/validation';
+export type {
+  uploadProvenanceImageInputSchema,
+  validateGiftCardImagesInputSchema,
+  validateGiftCardImagesOutputSchema,
+  extractDraftBatchInputSchema,
+  extractDraftBatchOutputSchema,
+} from './sell/validation';
+
 // ── flows/ ──────────────────────────────────────────────────────────────────
 
 export type { BuyFlowGiftcardStatus, BuyFlowGiftcard, BuyFlowState } from './flows/buy-flow';
-export type { SellFlowGiftcard, SellFlowState } from './flows/sell-flow';
+export type {
+  SellFlowGiftcard,
+  SellFlowImage,
+  SellFlowState,
+  SellFlowMode,
+  SellFlowCardEvidence,
+  SellFlowUnmatchedImage,
+  RemovedCardSnapshot,
+} from './flows/sell-flow';
 
 // ── ui/ ─────────────────────────────────────────────────────────────────────
 

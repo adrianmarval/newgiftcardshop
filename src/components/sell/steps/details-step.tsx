@@ -2,24 +2,102 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Clipboard, Trash2 } from 'lucide-react';
+import { Plus, Clipboard, Trash2, Info, Camera, Keyboard } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { BulkPasteDialog } from '@/components/sell/bulk-paste-dialog';
+import type { ParsedGiftcard } from '@/types';
 
 export function DetailsStep() {
-  const { giftcards, addGiftcard, removeGiftcard, updateGiftcard, handleBulkImport, setStep } = useSellFlow();
+  const { giftcards, addGiftcard, removeGiftcard, updateGiftcard, handleBulkImport, setStep, entryMode, setEntryMode } = useSellFlow();
 
   const [showBulkPasteDialog, setShowBulkPasteDialog] = useState(false);
+  const [storeDuplicateCount, setStoreDuplicateCount] = useState(0);
+
+  const handleImport = (cards: ParsedGiftcard[]) => {
+    const result = handleBulkImport(cards);
+    setStoreDuplicateCount(result.duplicateCount);
+  };
 
   const isStep2Valid = giftcards.every((g) => g.amount && g.claimCode);
 
+  // When no mode is set yet, show mode selector instead of card entry
+  if (!entryMode) {
+    return (
+      <div className="flex min-h-80 flex-col items-center justify-center gap-6 px-4 py-8">
+        <div className="text-center">
+          <h2 className="mb-1 text-2xl font-bold md:text-3xl">¿Cómo querés empezar?</h2>
+          <p className="text-muted-foreground text-sm md:text-base">Elegí el flujo que mejor se adapte a tus tarjetas.</p>
+        </div>
+
+        <div className="grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* OCR-first option */}
+          <button
+            onClick={() => {
+              setEntryMode('ocr-first');
+              setStep(2);
+            }}
+            className="border-border bg-card/50 hover:border-primary/50 hover:bg-primary/5 group flex flex-col items-center gap-3 rounded-2xl border-2 p-6 text-center transition-all"
+          >
+            <div className="bg-primary/10 group-hover:bg-primary/20 flex h-14 w-14 items-center justify-center rounded-full transition-colors">
+              <Camera className="text-primary h-7 w-7" />
+            </div>
+            <div>
+              <p className="mb-1 font-bold">Subir capturas primero</p>
+              <p className="text-muted-foreground text-xs">La IA extrae los códigos y montos automáticamente de tus imágenes.</p>
+            </div>
+            <span className="border-primary/30 bg-primary/10 text-primary rounded-full border px-3 py-0.5 text-xs font-semibold">OCR</span>
+          </button>
+
+          {/* Manual-first option */}
+          <button
+            onClick={() => {
+              setEntryMode('manual-first');
+              setStep(2); // symmetric with OCR-first; no-op since step is already 2
+            }}
+            className="border-border bg-card/50 hover:border-primary/50 hover:bg-primary/5 group flex flex-col items-center gap-3 rounded-2xl border-2 p-6 text-center transition-all"
+          >
+            <div className="bg-primary/10 group-hover:bg-primary/20 flex h-14 w-14 items-center justify-center rounded-full transition-colors">
+              <Keyboard className="text-primary h-7 w-7" />
+            </div>
+            <div>
+              <p className="mb-1 font-bold">Ingresar códigos manualmente</p>
+              <p className="text-muted-foreground text-xs">Tipeá o pegá los códigos. Las capturas son opcionales.</p>
+            </div>
+            <span className="rounded-full border border-slate-500/30 bg-slate-500/10 px-3 py-0.5 text-xs font-semibold text-slate-400">
+              Manual
+            </span>
+          </button>
+        </div>
+
+        <Button onClick={() => setStep(1)} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+          ← Volver al brand
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
-      <BulkPasteDialog open={showBulkPasteDialog} onOpenChange={setShowBulkPasteDialog} onImport={handleBulkImport} />
+      <BulkPasteDialog open={showBulkPasteDialog} onOpenChange={setShowBulkPasteDialog} onImport={handleImport} />
+
+      <AnimatePresence>
+        {storeDuplicateCount > 0 && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="mb-2">
+            <Alert className="border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400">
+              <Info className="h-4 w-4" />
+              <AlertDescription className="ml-2">
+                {storeDuplicateCount} duplicate code{storeDuplicateCount !== 1 ? 's were' : ' was'} already in your batch and{' '}
+                {storeDuplicateCount !== 1 ? 'were' : 'was'} not added again.
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid h-full grid-cols-1 items-start gap-4 pb-20 md:grid-cols-12 md:gap-6 md:pb-0">
         {/* Floating Action Button (Mobile Only) */}
@@ -95,7 +173,7 @@ export function DetailsStep() {
                 size="sm"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 text-sm md:h-11 md:text-base"
               >
-                Review
+                Continue
               </Button>
             </div>
           </div>

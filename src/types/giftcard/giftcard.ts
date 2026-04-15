@@ -26,6 +26,8 @@ export const giftcardSchema = z.object({
   reportedAmount: z.number().nullable().optional(),
   orderId: z.string().nullable(),
   batchId: z.string().nullable().optional(),
+  /** ID of the provenance image for this gift card */
+  provenanceImageId: z.string().nullable().optional(),
   brand: z.object({
     name: z.string(),
     icon: z.string(),
@@ -38,6 +40,7 @@ export type Giftcard = z.infer<typeof giftcardSchema>;
 
 /** A single gift-card parsed from the bulk-paste dialog. */
 export interface ParsedGiftcard {
-  amount: string;
+  /** Amount as a string, undefined when the pasted line contained no trailing amount. */
+  amount?: string;
   claimCode: string;
 }

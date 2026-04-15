@@ -35,6 +35,7 @@ const navItems = [
   { title: 'Pagos', url: '/admin/dashboard/payments', icon: IconCash },
   { title: 'Perfil', url: '/admin/dashboard/profile', icon: IconUser },
   { title: 'Ajustes', url: '/admin/dashboard/settings', icon: IconSettings },
+  { title: 'OCR', url: '/admin/dashboard/ocr', icon: IconSettings },
 ];
 
 export const AdminSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {

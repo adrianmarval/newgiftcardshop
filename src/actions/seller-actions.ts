@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
-import { encrypt, decrypt, hashCode } from '@/lib/encryption';
+import { encrypt, decrypt, hashCode, encryptBuffer } from '@/lib/encryption';
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import {
   publishBatchSchema,
@@ -10,6 +10,7 @@ import {
   getSellerBatchesOutputSchema,
   getSellerRateOutputSchema,
 } from '@/types/seller/schemas';
+import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
 
 export const publishBatch = sellerActionClient
   .inputSchema(publishBatchSchema)
@@ -26,6 +27,33 @@ export const publishBatch = sellerActionClient
       throw new ActionError('No valid cards were provided for processing.');
     }
 
+    // ── Server-side intra-request dedup ──────────────────────────────────────
+    // Normalize each claim code before hashing. Cards that share the same
+    // normalized key after stripping separators/casing are deduplicated here —
+    // first occurrence wins. This is a safety net for any client-side defect
+    // or stale-state scenario where equivalent codes arrive in one request.
+    const requestDeduped: Array<{
+      amount: string;
+      claimCode: string; // canonical formatted value used for persistence
+      pinCode?: string;
+      compressedImageData?: string;
+    }> = [];
+    const requestNormalizedSeen = new Set<string>();
+
+    for (const card of validCards) {
+      const normalized = normalizeClaimCode(card.claimCode.trim());
+      // Fall back to trimmed raw value when the code doesn't match Amazon format
+      const key = normalized ?? card.claimCode.trim().toUpperCase();
+      if (requestNormalizedSeen.has(key)) continue; // intra-request duplicate — skip
+      requestNormalizedSeen.add(key);
+      requestDeduped.push({
+        ...card,
+        // Store canonical formatted output so decrypt/display stays consistent
+        claimCode: normalized ? formatClaimCodeCanonical(normalized) : card.claimCode.trim(),
+      });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     const dbUser = await prisma.user.findUnique({
       where: { id: ctx.auth.user.id },
       select: { sellRate: true },
@@ -33,7 +61,7 @@ export const publishBatch = sellerActionClient
 
     if (!dbUser) throw new ActionError('User not found in the system.');
 
-    const hashedCodes = validCards.map((card) => hashCode(card.claimCode.trim()));
+    const hashedCodes = requestDeduped.map((card) => hashCode(card.claimCode));
 
     const existingCards = await prisma.giftcard.findMany({
       where: { codeHash: { in: hashedCodes } },
@@ -46,9 +74,10 @@ export const publishBatch = sellerActionClient
       amount: string;
       claimCode: string;
       pinCode?: string;
+      compressedImageData?: string;
     }> = [];
 
-    validCards.forEach((card, i) => (existingHashes.has(hashedCodes[i]) ? duplicates.push(card.claimCode.trim()) : uniqueCards.push(card)));
+    requestDeduped.forEach((card, i) => (existingHashes.has(hashedCodes[i]) ? duplicates.push(card.claimCode) : uniqueCards.push(card)));
 
     if (uniqueCards.length === 0) throw new ActionError('All provided cards already exist in the inventory.');
 
@@ -56,13 +85,6 @@ export const publishBatch = sellerActionClient
   })
   .action(async ({ parsedInput: { brandId, countryId }, ctx }) => {
     const { uniqueCards, duplicates, dbUser } = ctx;
-
-    const encryptedCards = uniqueCards.map((card) => ({
-      claimCode: encrypt(card.claimCode.trim()),
-      codeHash: hashCode(card.claimCode.trim()),
-      pinCode: card.pinCode && card.pinCode.trim().length > 0 ? encrypt(card.pinCode.trim()) : null,
-      amount: new Prisma.Decimal(parseFloat(card.amount)),
-    }));
 
     const sellRateSnapshot = dbUser.sellRate;
 
@@ -74,17 +96,44 @@ export const publishBatch = sellerActionClient
           isPaid: false,
         },
       });
-      await tx.giftcard.createMany({
-        data: encryptedCards.map((card) => ({
-          ...card,
-          ownerId: ctx.auth.user.id,
-          inStock: true,
-          status: 'UNUSED',
-          batchId: createdBatch.id,
-          brandId,
-          countryId,
-        })),
-      });
+
+      // Create giftcards individually to get their IDs for ProvenanceImage linking
+      for (const card of uniqueCards) {
+        // claimCode is already canonical (normalized + formatted) from the middleware step above
+        const encryptedClaimCode = encrypt(card.claimCode);
+        const codeHash = hashCode(card.claimCode);
+        const encryptedPinCode = card.pinCode && card.pinCode.trim().length > 0 ? encrypt(card.pinCode.trim()) : null;
+
+        const createdGiftcard = await tx.giftcard.create({
+          data: {
+            claimCode: encryptedClaimCode,
+            codeHash,
+            pinCode: encryptedPinCode,
+            amount: new Prisma.Decimal(parseFloat(card.amount)),
+            ownerId: ctx.auth.user.id,
+            inStock: true,
+            status: 'UNUSED',
+            batchId: createdBatch.id,
+            brandId,
+            countryId,
+          },
+        });
+
+        // Create ProvenanceImage — encrypt the compressed image before storing
+        if (card.compressedImageData) {
+          const rawBuffer = Buffer.from(card.compressedImageData, 'base64');
+          const { data: encryptedImageBuffer } = encryptBuffer(rawBuffer);
+          await tx.provenanceImage.create({
+            data: {
+              data: new Uint8Array(encryptedImageBuffer),
+              mimeType: 'image/jpeg',
+              size: rawBuffer.length, // Original size for audit
+              giftcardId: createdGiftcard.id,
+            },
+          });
+        }
+      }
+
       return createdBatch;
     });
 

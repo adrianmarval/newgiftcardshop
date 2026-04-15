@@ -59,3 +59,48 @@ export function decrypt(ciphertext: string): string {
 export function hashCode(plaintext: string): string {
   return createHash('sha256').update(plaintext, 'utf8').digest('hex');
 }
+
+// ─── Buffer-mode AES-256-GCM (for ProvenanceImage) ───────────────────────────
+
+export interface EncryptedBuffer {
+  data: Buffer; // IV (12 bytes) + authTag (16 bytes) + encrypted data
+}
+
+export function encryptBuffer(buffer: Buffer): EncryptedBuffer {
+  const key = getEncryptionKey();
+  const iv = randomBytes(IV_BYTES);
+
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+
+  const encrypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
+
+  const authTag = cipher.getAuthTag();
+
+  // Format: IV (12 bytes) + authTag (16 bytes) + encrypted data
+  const result = Buffer.concat([iv, authTag, encrypted]);
+
+  return { data: result };
+}
+
+export function decryptBuffer(encryptedBuffer: Buffer): Buffer {
+  const key = getEncryptionKey();
+
+  // Minimum size: 12 (IV) + 16 (authTag) = 28 bytes
+  if (encryptedBuffer.length < IV_BYTES + 16) {
+    throw new Error('Invalid encrypted buffer — too short');
+  }
+
+  const iv = encryptedBuffer.subarray(0, IV_BYTES);
+  const authTag = encryptedBuffer.subarray(IV_BYTES, IV_BYTES + 16);
+  const encrypted = encryptedBuffer.subarray(IV_BYTES + 16);
+
+  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+
+  try {
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    return decrypted;
+  } catch {
+    throw new Error('Buffer decryption failed — ciphertext may be corrupted or tampered');
+  }
+}
