@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform, useDragControls, animate } from 'framer-motion';
 import {
   AlertCircle,
   CheckCircle2,
@@ -20,6 +20,16 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { BulkPasteDialog } from '@/components/sell/bulk-paste-dialog';
@@ -27,7 +37,7 @@ import { ImageDropzone } from '@/components/sell/image-dropzone';
 import { useAction } from 'next-safe-action/hooks';
 import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard-validation-actions';
 import type { ParsedGiftcard } from '@/types';
-import type { SellFlowImage } from '@/types/flows/sell-flow';
+import type { SellFlowImage, SellFlowGiftcard } from '@/types/flows/sell-flow';
 import { isBlockingEvidenceState, type ValidationState } from '@/types/sell/validation';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -42,6 +52,18 @@ const INTAKE_STATUS_CONFIG: Record<ValidationState, { label: string; color: stri
   fuzzy_match: { label: 'Review code', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: HelpCircle },
   skipped: { label: 'No capture', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30', icon: MinusCircle },
   amount_not_found: { label: 'Missing amount', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: AlertCircle },
+};
+// Mapping of solid background colors for the sidebar indicator on mobile
+const STATUS_INDICATOR_COLORS: Record<ValidationState, string> = {
+  verified: 'bg-emerald-500',
+  amount_mismatch: 'bg-amber-500',
+  code_new_detected: 'bg-blue-500',
+  no_capture: 'bg-slate-500',
+  capture_mismatch: 'bg-orange-500',
+  processing_error: 'bg-red-500',
+  fuzzy_match: 'bg-purple-500',
+  skipped: 'bg-slate-500',
+  amount_not_found: 'bg-blue-500',
 };
 
 export function IntakeStep() {
@@ -68,6 +90,7 @@ export function IntakeStep() {
   const [isUploading, setIsUploading] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
+  const [cardIdToDelete, setCardIdToDelete] = useState<string | null>(null);
 
   const handleImport = (cards: ParsedGiftcard[]) => {
     const result = handleBulkImport(cards);
@@ -161,6 +184,7 @@ export function IntakeStep() {
     () => giftcards.some((card) => isBlockingEvidenceState(card.evidence?.status ?? card.validationState)),
     [giftcards],
   );
+
   const orderedGiftcards = useMemo(() => {
     return [...giftcards].sort((a, b) => {
       const statusA = a.evidence?.status ?? a.validationState;
@@ -175,6 +199,7 @@ export function IntakeStep() {
       return Number(a.id) - Number(b.id);
     });
   }, [giftcards]);
+
   const intakeSummary = useMemo(() => {
     const filledCards = giftcards.filter((card) => card.claimCode && card.amount).length;
     const cardsWithoutEvidence = giftcards.filter((card) => {
@@ -189,17 +214,7 @@ export function IntakeStep() {
       cardsWithFixes,
     };
   }, [giftcards]);
-  const cardsWithPartialCapture = useMemo(
-    () =>
-      giftcards.filter((card) => {
-        const status = card.evidence?.status ?? card.validationState;
-        const hasCapture = !!(card.evidence?.matchedImageId ?? card.matchedImageId);
-        const hasExtractedCode = !!(card.evidence?.extractedCode ?? card.extractedCode);
-        const hasExtractedAmount = !!(card.evidence?.extractedAmount ?? card.extractedAmount);
-        return hasCapture && hasExtractedCode && !hasExtractedAmount && status === 'verified';
-      }).length,
-    [giftcards],
-  );
+
   const needsManualAmount = (card: (typeof giftcards)[number]) => {
     const status = card.evidence?.status ?? card.validationState;
     const hasCapture = !!(card.evidence?.matchedImageId ?? card.matchedImageId);
@@ -207,12 +222,45 @@ export function IntakeStep() {
     const hasExtractedAmount = !!(card.evidence?.extractedAmount ?? card.extractedAmount);
 
     return (
-      (hasCapture && hasExtractedCode && !hasExtractedAmount && !card.amount && status === 'verified') ||
-      status === 'amount_not_found'
+      (hasCapture && hasExtractedCode && !hasExtractedAmount && !card.amount && status === 'verified') || status === 'amount_not_found'
     );
   };
+
   const blockingCards = orderedGiftcards.filter((card) => isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
   const readyCards = orderedGiftcards.filter((card) => !isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
+
+  const displayItems = useMemo(() => {
+    const items: (
+      | { type: 'header'; label: string; color: 'amber' | 'slate'; id: string }
+      | { type: 'card'; card: SellFlowGiftcard; idx: number; id: string }
+    )[] = [];
+
+    if (blockingCards.length > 0) {
+      items.push({ type: 'header', label: 'Require attention', color: 'amber', id: 'header-blocking' });
+      blockingCards.forEach((card, idx) => {
+        items.push({
+          type: 'card',
+          card: giftcards.find((c) => c.id === card.id) || card,
+          idx,
+          id: card.id,
+        });
+      });
+    }
+
+    if (readyCards.length > 0) {
+      items.push({ type: 'header', label: 'Ready', color: 'slate', id: 'header-ready' });
+      readyCards.forEach((card, idx) => {
+        items.push({
+          type: 'card',
+          card,
+          idx: blockingCards.length + idx,
+          id: card.id,
+        });
+      });
+    }
+
+    return items;
+  }, [blockingCards, readyCards, giftcards]);
 
   return (
     <>
@@ -342,300 +390,46 @@ export function IntakeStep() {
                 giftcards.length === 0 && 'hidden',
               )}
             >
-              {blockingCards.length > 0 && (
-                <div className="mb-2 flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-2">
-                  <div className="h-px flex-1 bg-amber-500/20" />
-                  <span className="text-[10px] font-bold tracking-[0.2em] text-amber-400 uppercase">Require attention</span>
-                  <div className="h-px flex-1 bg-amber-500/20" />
-                </div>
-              )}
-
-              <AnimatePresence mode="popLayout">
-                {blockingCards.map((card, idx) =>
-                  (() => {
-                    const liveCard = giftcards.find((current) => current.id === card.id) ?? card;
-                    const status = liveCard.evidence?.status ?? liveCard.validationState ?? 'no_capture';
-                    const config = INTAKE_STATUS_CONFIG[status];
-                    const Icon = config.icon;
-
-                    return (
-                      <motion.div
-                        key={liveCard.id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        className="group border-border bg-muted/20 hover:bg-muted/35 relative space-y-1.5 rounded-xl border p-1.5 transition-all"
+              <AnimatePresence mode="popLayout" initial={false}>
+                {displayItems.map((item) =>
+                  item.type === 'header' ? (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className={cn(
+                        'flex items-center gap-2 rounded-lg px-2',
+                        item.color === 'amber' ? 'mb-2 border border-amber-500/20 bg-amber-500/5' : 'mt-3 mb-2 border border-slate-500/20 bg-slate-500/5',
+                      )}
+                    >
+                      <div className={cn('h-px flex-1', item.color === 'amber' ? 'bg-amber-500/20' : 'bg-slate-500/20')} />
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold tracking-[0.2em] uppercase',
+                          item.color === 'amber' ? 'text-amber-400' : 'text-slate-300',
+                        )}
                       >
-                        <div className="flex flex-col gap-1.5 md:grid md:grid-cols-[auto_140px_120px_minmax(240px,1fr)_auto] md:items-center md:gap-2">
-                          {/* Row 1: Index, Status and Actions (Mobile) */}
-                          <div className="flex h-6 items-center justify-between md:contents">
-                            <div className="flex items-center gap-1.5">
-                              <div className="border-border bg-muted text-muted-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold">
-                                {idx + 1}
-                              </div>
-                              <div className="flex flex-wrap items-center gap-1 md:hidden">
-                                <Badge className={`${config.color} px-1 py-0 text-[9px]`}>
-                                  <Icon className="mr-0.5 h-2 w-2" />
-                                  {config.label}
-                                </Badge>
-                              </div>
-                              <div className="hidden flex-wrap items-center gap-1 md:flex">
-                                <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
-                                  <Icon className="mr-1 h-2.5 w-2.5" />
-                                  {config.label}
-                                </Badge>
-                              </div>
-                            </div>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => removeGiftcard(liveCard.id)}
-                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-6 w-6 md:hidden"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-
-                          {/* Inputs Row (Mobile: Horizontal, Desktop: Grid) */}
-                          <div className="grid grid-cols-[70px_70px_1fr] gap-1 md:contents">
-                            <div className="relative md:max-w-[140px]">
-                              <span className="text-muted-foreground/50 absolute top-1.5 left-1.5 text-[9px]">$</span>
-                              <Input
-                                type="number"
-                                placeholder="0.00"
-                                value={liveCard.amount}
-                                onChange={(e) => updateGiftcard(liveCard.id, 'amount', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 pl-4.5 text-[11px] md:h-8 md:pl-5 md:text-sm"
-                              />
-                            </div>
-
-                            <Input
-                              type="password"
-                              placeholder="PIN"
-                              value={liveCard.pinCode || ''}
-                              onChange={(e) => updateGiftcard(liveCard.id, 'pinCode', e.target.value)}
-                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:max-w-[120px] md:text-sm"
-                            />
-
-                            <Input
-                              placeholder="Claim code"
-                              value={liveCard.claimCode}
-                              onChange={(e) => updateGiftcard(liveCard.id, 'claimCode', e.target.value)}
-                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:text-sm"
-                            />
-                          </div>
-
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => removeGiftcard(liveCard.id)}
-                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive hidden h-7 w-7 shrink-0 rounded-lg md:flex"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-
-                        {needsManualAmount(liveCard) && (
-                          <div className="border-border mt-1 rounded-lg border bg-blue-500/10 px-3 py-2">
-                            <p className="text-sm font-semibold text-blue-300">Enter the amount manually</p>
-                            <p className="text-xs text-blue-200/80">
-                              The screenshot confirmed the code, but could not detect the amount for this card.
-                            </p>
-                          </div>
-                        )}
-
-                        {status === 'amount_mismatch' && (
-                          <div className="border-border mt-1 space-y-2 rounded-lg border bg-amber-500/10 p-2.5">
-                            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                              <div>
-                                <p className="text-xl font-semibold text-amber-300">Wrong amount detected from screenshot</p>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 md:min-w-[280px]">
-                                <div className="rounded-lg border border-amber-500/15 bg-black/10 px-3 py-2">
-                                  <p className="text-[10px] font-semibold tracking-wide text-amber-200/70 uppercase">Correct Amount</p>
-                                  <p className="mt-0.5 text-lg font-black text-amber-400">${liveCard.evidence?.extractedAmount ?? '—'}</p>
-                                </div>
-                                <div className="rounded-lg border border-slate-500/15 bg-black/10 px-3 py-2">
-                                  <p className="text-[10px] font-semibold tracking-wide text-slate-300/70 uppercase">Incorrect Amount</p>
-                                  <p className="mt-0.5 text-lg font-black text-white">${liveCard.amount || '—'}</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                              <Button
-                                size="sm"
-                                onClick={() => resolveAmountMismatch(liveCard.id, 'keep-declared')}
-                                className="h-8 bg-slate-500/20 px-3 text-xs font-bold text-slate-300 hover:bg-slate-500/30"
-                              >
-                                Keep typed amount
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => resolveAmountMismatch(liveCard.id, 'accept-extracted')}
-                                className="h-8 bg-amber-500/20 px-3 text-xs font-bold text-amber-400 hover:bg-amber-500/30"
-                              >
-                                Use screenshot amount
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-
-                        {status === 'fuzzy_match' && (
-                          <div className="border-border mt-1 space-y-2 rounded-lg border bg-purple-500/10 p-2.5">
-                            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                              <div>
-                                <p className="text-xl text-purple-200/80">
-                                  The screenshot found a code very similar to the one you loaded.
-                                </p>
-                              </div>
-                              <div className="rounded-lg border border-purple-500/15 bg-black/10 px-3 py-2 md:min-w-[280px]">
-                                <p className="text-[10px] font-semibold tracking-wide text-purple-200/70 uppercase">Code in screenshot</p>
-                                <p className="mt-0.5 font-mono text-sm font-bold break-all text-purple-300">
-                                  {liveCard.evidence?.extractedCode ?? '—'}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                              <Button
-                                size="sm"
-                                onClick={() => confirmFuzzyMatch(liveCard.id)}
-                                className="h-8 bg-purple-500/20 px-3 text-xs font-bold text-purple-400 hover:bg-purple-500/30"
-                              >
-                                Yes, it's the same code
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => rejectFuzzyMatch(liveCard.id)}
-                                className="h-8 bg-slate-500/20 px-3 text-xs font-bold text-slate-400 hover:bg-slate-500/30"
-                              >
-                                No, keep both codes
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-
-                        {liveCard.amount && liveCard.claimCode && !isBlockingEvidenceState(status) && (
-                          <div className="bg-primary absolute top-1/2 -left-1 h-8 w-1 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
-                        )}
-                      </motion.div>
-                    );
-                  })(),
+                        {item.label}
+                      </span>
+                      <div className={cn('h-px flex-1', item.color === 'amber' ? 'bg-amber-500/20' : 'bg-slate-500/20')} />
+                    </motion.div>
+                  ) : (
+                    <GiftcardCard
+                      key={item.id}
+                      card={item.card}
+                      idx={item.idx}
+                      onDeleteRequest={(id) => setCardIdToDelete(id)}
+                      updateGiftcard={updateGiftcard}
+                      needsManualAmount={needsManualAmount}
+                      resolveAmountMismatch={resolveAmountMismatch}
+                      confirmFuzzyMatch={confirmFuzzyMatch}
+                      rejectFuzzyMatch={rejectFuzzyMatch}
+                    />
+                  ),
                 )}
               </AnimatePresence>
-
-              {readyCards.length > 0 && (
-                <>
-                  <div className="mt-3 mb-2 flex items-center gap-2 rounded-lg border border-slate-500/20 bg-slate-500/5 px-2">
-                    <div className="h-px flex-1 bg-slate-500/20" />
-                    <span className="text-[10px] font-bold tracking-[0.2em] text-slate-300 uppercase">Ready</span>
-                    <div className="h-px flex-1 bg-slate-500/20" />
-                  </div>
-
-                  <AnimatePresence mode="popLayout">
-                    {readyCards.map((card, idx) => {
-                      const status = card.evidence?.status ?? card.validationState ?? 'no_capture';
-                      const config = INTAKE_STATUS_CONFIG[status];
-                      const Icon = config.icon;
-
-                      return (
-                        <motion.div
-                          key={card.id}
-                          layout
-                          initial={{ opacity: 0, scale: 0.98 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.98 }}
-                          className="group border-border bg-muted/15 hover:bg-muted/25 relative rounded-xl border p-1.5 transition-all"
-                        >
-                          <div className="flex flex-col gap-1.5 md:grid md:grid-cols-[auto_140px_120px_minmax(260px,1fr)_auto] md:items-center md:gap-2">
-                            {/* Row 1: Index, Status and Actions (Mobile) */}
-                            <div className="flex h-6 items-center justify-between md:contents">
-                              <div className="flex items-center gap-1.5">
-                                <div className="border-border bg-muted text-muted-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold">
-                                  {blockingCards.length + idx + 1}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-1 md:hidden">
-                                  <Badge className={`${config.color} px-1 py-0 text-[9px]`}>
-                                    <Icon className="mr-0.5 h-2 w-2" />
-                                    {config.label}
-                                  </Badge>
-                                </div>
-                                <div className="hidden flex-wrap items-center gap-1 md:flex">
-                                  <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
-                                    <Icon className="mr-1 h-2.5 w-2.5" />
-                                    {config.label}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => removeGiftcard(card.id)}
-                                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-6 w-6 md:hidden"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-
-                            {/* Inputs Row (Mobile: Horizontal, Desktop: Grid) */}
-                            <div className="grid grid-cols-[70px_70px_1fr] gap-1 md:contents">
-                              <div className="relative md:max-w-[140px]">
-                                <span className="text-muted-foreground/50 absolute top-1.5 left-1.5 text-[9px]">$</span>
-                                <Input
-                                  type="number"
-                                  placeholder="0.00"
-                                  value={card.amount}
-                                  onChange={(e) => updateGiftcard(card.id, 'amount', e.target.value)}
-                                  className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 pl-4.5 text-[11px] md:h-8 md:pl-5 md:text-sm"
-                                />
-                              </div>
-
-                              <Input
-                                type="password"
-                                placeholder="PIN"
-                                value={card.pinCode || ''}
-                                onChange={(e) => updateGiftcard(card.id, 'pinCode', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:max-w-[120px] md:text-sm"
-                              />
-
-                              <Input
-                                placeholder="Claim code"
-                                value={card.claimCode}
-                                onChange={(e) => updateGiftcard(card.id, 'claimCode', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:text-sm"
-                              />
-                            </div>
-
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => removeGiftcard(card.id)}
-                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive hidden h-7 w-7 shrink-0 rounded-lg md:flex"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-
-                          {needsManualAmount(card) && (
-                            <div className="border-border mt-1 rounded-lg border bg-blue-500/10 px-3 py-2">
-                              <p className="text-sm font-semibold text-blue-300">Enter the amount manually</p>
-                              <p className="text-xs text-blue-200/80">
-                                The screenshot confirmed the code, but could not detect the amount for this card.
-                              </p>
-                            </div>
-                          )}
-
-                          {card.amount && card.claimCode && !isBlockingEvidenceState(status) && (
-                            <div className="bg-primary absolute top-1/2 -left-1 h-8 w-1 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
-                          )}
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                </>
-              )}
             </CardContent>
 
             {giftcards.length === 0 && (
@@ -650,6 +444,237 @@ export function IntakeStep() {
           </Card>
         </div>
       </div>
+
+      <AlertDialog open={!!cardIdToDelete} onOpenChange={(open) => !open && setCardIdToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The gift card with code{' '}
+              <span className="text-foreground font-mono font-bold">
+                {giftcards.find((c) => c.id === cardIdToDelete)?.claimCode || '—'}
+              </span>{' '}
+              will be removed from your current batch.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (cardIdToDelete) {
+                  removeGiftcard(cardIdToDelete);
+                  setCardIdToDelete(null);
+                }
+              }}
+            >
+              Delete Card
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
+  );
+}
+
+function GiftcardCard({
+  card,
+  idx,
+  onDeleteRequest,
+  updateGiftcard,
+  needsManualAmount,
+  resolveAmountMismatch,
+  confirmFuzzyMatch,
+  rejectFuzzyMatch,
+}: {
+  card: SellFlowGiftcard;
+  idx: number;
+  onDeleteRequest: (id: string) => void;
+  updateGiftcard: (id: string, field: 'amount' | 'claimCode' | 'pinCode', value: string) => void;
+  needsManualAmount: (card: SellFlowGiftcard) => boolean;
+  resolveAmountMismatch: (id: string, choice: 'keep-declared' | 'accept-extracted' | 'remove') => void;
+  confirmFuzzyMatch: (id: string) => void;
+  rejectFuzzyMatch: (id: string) => void;
+}) {
+  const x = useMotionValue(0);
+  const dragControls = useDragControls();
+  const trashOpacity = useTransform(x, [-100, -80, 0], [1, 1, 0]);
+  const trashScale = useTransform(x, [-100, -80, 0], [1, 0.9, 0.5]);
+
+  const status = card.evidence?.status ?? card.validationState ?? 'no_capture';
+  const config = INTAKE_STATUS_CONFIG[status as ValidationState];
+  const indicatorColor = STATUS_INDICATOR_COLORS[status as ValidationState];
+  const Icon = config.icon;
+
+  const bgOpacity = useTransform(x, [-40, 0], [1, 0]);
+
+  return (
+    <div className="relative overflow-hidden rounded-xl">
+      {/* Mobile Swipe Background */}
+      <motion.div style={{ opacity: bgOpacity }} className="absolute inset-0 flex items-center justify-end bg-red-500/90 pr-6 md:hidden">
+        <motion.div style={{ opacity: trashOpacity, scale: trashScale }} className="flex flex-col items-center gap-1">
+          <Trash2 className="h-5 w-5 text-white" />
+          <span className="text-[10px] font-bold text-white uppercase">Delete</span>
+        </motion.div>
+      </motion.div>
+
+      <motion.div
+        layout
+        drag="x"
+        dragControls={dragControls}
+        dragListener={false}
+        dragConstraints={{ left: -100, right: 0 }}
+        dragElastic={{ left: 0.1, right: 0.05 }}
+        onDragEnd={(_, info) => {
+          if (info.offset.x < -80) {
+            onDeleteRequest(card.id);
+          }
+          // Snap back to original position
+          animate(x, 0, { type: 'spring', bounce: 0, duration: 0.5 });
+        }}
+        onPointerDown={(e) => dragControls.start(e)}
+        style={{ x }}
+        className="group border-border bg-card/40 hover:bg-muted/10 relative z-10 space-y-1.5 rounded-xl border p-1.5 backdrop-blur-sm transition-all touch-none select-none"
+      >
+        {/* Sidebar indicator (mobile only) */}
+        <div className={cn('absolute top-0 bottom-0 left-0 w-1 md:hidden', indicatorColor)} />
+
+        <div className="flex flex-col gap-1.5 md:grid md:grid-cols-[auto_140px_120px_minmax(240px,1fr)_auto] md:items-center md:gap-2">
+          {/* Row 1: Index and Status (Compact) */}
+          <div className="flex items-center gap-1.5 md:contents">
+            <div className="border-border bg-muted text-muted-foreground hidden h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold md:flex">
+              {idx + 1}
+            </div>
+
+            {/* Badges - Hidden on Mobile, Visible on Desktop */}
+            <div className="hidden flex-wrap items-center gap-1 md:flex">
+              <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
+                <Icon className="mr-1 h-2.5 w-2.5" />
+                {config.label}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Inputs Row */}
+          <div className="grid grid-cols-[70px_70px_1fr] gap-1 md:contents">
+            <div className="relative md:max-w-[140px]">
+              <span className="text-muted-foreground/50 absolute top-1.5 left-1.5 text-[9px]">$</span>
+              <Input
+                type="number"
+                placeholder="0.00"
+                value={card.amount}
+                onChange={(e) => updateGiftcard(card.id, 'amount', e.target.value)}
+                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 pl-4.5 text-[11px] md:h-8 md:pl-5 md:text-sm"
+              />
+            </div>
+
+            <Input
+              type="password"
+              placeholder="PIN"
+              value={card.pinCode || ''}
+              onChange={(e) => updateGiftcard(card.id, 'pinCode', e.target.value)}
+              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:max-w-[120px] md:text-sm"
+            />
+
+            <Input
+              placeholder="Claim code"
+              value={card.claimCode}
+              onChange={(e) => updateGiftcard(card.id, 'claimCode', e.target.value)}
+              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:text-sm"
+            />
+          </div>
+
+          {/* Trash Button - Desktop Only */}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => onDeleteRequest(card.id)}
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive hidden h-7 w-7 shrink-0 rounded-lg md:flex"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+
+        {/* Warning boxes */}
+        {needsManualAmount(card) && (
+          <div className="border-border mt-1 rounded-lg border bg-blue-500/10 px-3 py-2">
+            <p className="text-sm font-semibold text-blue-300">Enter the amount manually</p>
+            <p className="text-xs text-blue-200/80">The screenshot confirmed the code, but could not detect the amount for this card.</p>
+          </div>
+        )}
+
+        {status === 'amount_mismatch' && (
+          <div className="border-border mt-1 space-y-2 rounded-lg border bg-amber-500/10 p-2.5">
+            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xl font-semibold text-amber-300">Wrong amount detected from screenshot</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 md:min-w-[280px]">
+                <div className="rounded-lg border border-amber-500/15 bg-black/10 px-3 py-2">
+                  <p className="text-[10px] font-semibold tracking-wide text-amber-200/70 uppercase">Correct Amount</p>
+                  <p className="mt-0.5 text-lg font-black text-amber-400">${card.evidence?.extractedAmount ?? '—'}</p>
+                </div>
+                <div className="rounded-lg border border-slate-500/15 bg-black/10 px-3 py-2">
+                  <p className="text-[10px] font-semibold tracking-wide text-slate-300/70 uppercase">Incorrect Amount</p>
+                  <p className="mt-0.5 text-lg font-black text-white">${card.amount || '—'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              <Button
+                size="sm"
+                onClick={() => resolveAmountMismatch(card.id, 'keep-declared')}
+                className="h-8 bg-slate-500/20 px-3 text-xs font-bold text-slate-300 hover:bg-slate-500/30"
+              >
+                Keep typed amount
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => resolveAmountMismatch(card.id, 'accept-extracted')}
+                className="h-8 bg-amber-500/20 px-3 text-xs font-bold text-amber-400 hover:bg-amber-500/30"
+              >
+                Use screenshot amount
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {status === 'fuzzy_match' && (
+          <div className="border-border mt-1 space-y-2 rounded-lg border bg-purple-500/10 p-2.5">
+            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xl text-purple-200/80">The screenshot found a code very similar to the one you loaded.</p>
+              </div>
+              <div className="rounded-lg border border-purple-500/15 bg-black/10 px-3 py-2 md:min-w-[280px]">
+                <p className="text-[10px] font-semibold tracking-wide text-purple-200/70 uppercase">Code in screenshot</p>
+                <p className="mt-0.5 font-mono text-sm font-bold break-all text-purple-300">{card.evidence?.extractedCode ?? '—'}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              <Button
+                size="sm"
+                onClick={() => confirmFuzzyMatch(card.id)}
+                className="h-8 bg-purple-500/20 px-3 text-xs font-bold text-purple-400 hover:bg-purple-500/30"
+              >
+                Yes, it's the same code
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => rejectFuzzyMatch(card.id)}
+                className="h-8 bg-slate-500/20 px-3 text-xs font-bold text-slate-400 hover:bg-slate-500/30"
+              >
+                No, keep both codes
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {card.amount && card.claimCode && !isBlockingEvidenceState(status) && (
+          <div className="bg-primary absolute top-1/2 -left-1 hidden h-8 w-1 -translate-y-1/2 rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)] md:block" />
+        )}
+      </motion.div>
+    </div>
   );
 }
