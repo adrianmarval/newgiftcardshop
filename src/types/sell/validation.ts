@@ -26,6 +26,8 @@ export const validationStateEnum = z.enum([
   'fuzzy_match',
   /** Seller explicitly skipped evidence upload for this card — non-blocking */
   'skipped',
+  /** OCR matched code but could not find/extract the amount — BLOCKS progression */
+  'amount_not_found',
 ]);
 
 /**
@@ -39,6 +41,7 @@ export const BLOCKING_EVIDENCE_STATES = [
   'capture_mismatch',
   'processing_error',
   'fuzzy_match',
+  'amount_not_found',
 ] as const satisfies ReadonlyArray<z.infer<typeof validationStateEnum>>;
 
 export type BlockingEvidenceState = (typeof BLOCKING_EVIDENCE_STATES)[number];

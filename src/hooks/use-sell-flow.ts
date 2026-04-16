@@ -163,22 +163,26 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
         // new value against the originally extracted amount. If they differ,
         // set evidence.status = 'amount_mismatch' to trigger the blocking resolver.
         // If they match again (user corrects back), restore to 'verified'.
-        // This makes the spec scenario "GIVEN OCR associates a screenshot to a card
-        // but extracts a different amount than the current card amount" reachable.
-        if (field === 'amount' && g.source === 'ocr' && g.evidence.extractedAmount) {
+        // Also: if status was 'amount_not_found', clearing the amount field
+        // to a valid value restores the card to 'verified'.
+        if (field === 'amount' && g.source === 'ocr') {
           const normalizeAmt = (s: string) => parseFloat(s.replace(/[$,]/g, ''));
           const editedNum = normalizeAmt(value);
-          const extractedNum = normalizeAmt(g.evidence.extractedAmount);
           const currentEvidenceStatus = g.evidence.status;
 
-          // Only mutate evidence if the card has a valid OCR match (verified or currently amount_mismatch)
-          if (currentEvidenceStatus === 'verified' || currentEvidenceStatus === 'amount_mismatch') {
+          // Resolve amount_not_found -> verified
+          if (currentEvidenceStatus === 'amount_not_found' && !isNaN(editedNum)) {
+            updated.evidence = { ...g.evidence, status: 'verified' };
+            updated.validationState = 'verified';
+          }
+          // Handle mismatch detection if we have an extracted amount to compare against
+          else if (g.evidence.extractedAmount && (currentEvidenceStatus === 'verified' || currentEvidenceStatus === 'amount_mismatch')) {
+            const extractedNum = normalizeAmt(g.evidence.extractedAmount);
             const mismatch = !isNaN(editedNum) && !isNaN(extractedNum) && editedNum !== extractedNum;
             if (mismatch) {
               updated.evidence = { ...g.evidence, status: 'amount_mismatch' };
               updated.validationState = 'amount_mismatch';
             } else {
-              // Amounts match again — clear the mismatch
               updated.evidence = { ...g.evidence, status: 'verified' };
               updated.validationState = 'verified';
             }
@@ -266,12 +270,15 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
             const declaredAmount = parseAmount(existing.amount);
             const extractedAmount = parseAmount(draft.amount);
             const hasAmountMismatch = declaredAmount !== null && extractedAmount !== null && declaredAmount !== extractedAmount;
+            const isMissingAmount = extractedAmount === null && declaredAmount === null;
+
+            const targetStatus = hasAmountMismatch ? 'amount_mismatch' : isMissingAmount ? 'amount_not_found' : 'verified';
 
             updates.set(existing.id, {
               ...existing,
               source: existing.source,
-              evidence: buildEvidenceFromDraft(draft, hasAmountMismatch ? 'amount_mismatch' : 'verified'),
-              validationState: hasAmountMismatch ? 'amount_mismatch' : 'verified',
+              evidence: buildEvidenceFromDraft(draft, targetStatus),
+              validationState: targetStatus,
               extractedCode: draft.rawExtractedCode ?? draft.claimCode,
               extractedAmount: draft.rawExtractedAmount ?? draft.amount,
               matchedImageId: draft.imageId,
@@ -296,7 +303,13 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
         }
 
         nextId++;
-        const evidenceStatus = draft.ocrConfidence === 'high' ? 'verified' : draft.ocrConfidence === 'fuzzy' ? 'fuzzy_match' : 'no_capture';
+        const draftAmount = parseAmount(draft.amount);
+        let evidenceStatus = draft.ocrConfidence === 'high' ? 'verified' : draft.ocrConfidence === 'fuzzy' ? 'fuzzy_match' : 'no_capture';
+
+        // Override verified if amount is missing
+        if (evidenceStatus === 'verified' && draftAmount === null) {
+          evidenceStatus = 'amount_not_found';
+        }
 
         newCards.push({
           id: String(nextId),

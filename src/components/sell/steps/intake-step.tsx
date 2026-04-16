@@ -41,6 +41,7 @@ const INTAKE_STATUS_CONFIG: Record<ValidationState, { label: string; color: stri
   processing_error: { label: 'Error', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30', icon: AlertCircle },
   fuzzy_match: { label: 'Review code', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: HelpCircle },
   skipped: { label: 'No capture', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30', icon: MinusCircle },
+  amount_not_found: { label: 'Missing amount', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: AlertCircle },
 };
 
 export function IntakeStep() {
@@ -204,7 +205,11 @@ export function IntakeStep() {
     const hasCapture = !!(card.evidence?.matchedImageId ?? card.matchedImageId);
     const hasExtractedCode = !!(card.evidence?.extractedCode ?? card.extractedCode);
     const hasExtractedAmount = !!(card.evidence?.extractedAmount ?? card.extractedAmount);
-    return hasCapture && hasExtractedCode && !hasExtractedAmount && !card.amount && status === 'verified';
+
+    return (
+      (hasCapture && hasExtractedCode && !hasExtractedAmount && !card.amount && status === 'verified') ||
+      status === 'amount_not_found'
+    );
   };
   const blockingCards = orderedGiftcards.filter((card) => isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
   const readyCards = orderedGiftcards.filter((card) => !isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
