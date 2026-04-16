@@ -93,30 +93,30 @@ export const PaymentStep = () => {
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Full-width Payment Panel */}
-      <Card className="border-border bg-card/50 flex flex-col items-center space-y-6 p-4 text-center backdrop-blur-sm md:col-span-12 md:space-y-8 md:p-8">
-        <div className="max-w-2xl space-y-4">
+      <Card className="border-border bg-card/50 flex flex-col items-center space-y-4 p-4 text-center backdrop-blur-sm md:col-span-12 md:space-y-8 md:p-8">
+        <div className="max-w-2xl space-y-2 md:space-y-4">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+            className="bg-primary/10 mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full md:mb-4 md:h-16 md:w-16"
           >
-            <Wallet className="text-primary h-8 w-8" />
+            <Wallet className="text-primary h-6 w-6 md:h-8 md:w-8" />
           </motion.div>
-          <h2 className="text-3xl font-black tracking-tight uppercase italic md:text-4xl">Detalle de Binance Pay</h2>
-          <p className="text-muted-foreground text-base md:text-lg">
-            Envía el monto exacto al ID de Binance Pay a continuación para completar tu orden.
+          <h2 className="text-2xl font-black tracking-tight uppercase italic md:text-3xl">Binance Pay</h2>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Envía el monto exacto al ID a continuación.
           </p>
         </div>
 
-        <div className="group border-border bg-muted/50 relative w-full max-w-md space-y-6 overflow-hidden rounded-2xl border p-6 md:p-8">
-          <div className="relative z-10 space-y-1">
-            <div className="text-muted-foreground text-xs font-black tracking-widest uppercase">Total a Pagar</div>
-            <div className="text-primary text-4xl font-black md:text-5xl">${adjustedTotal != null ? adjustedTotal.toFixed(2) : '—'}</div>
+        <div className="group border-border bg-muted/50 relative w-full max-w-sm space-y-4 overflow-hidden rounded-2xl border p-4 md:p-8">
+          <div className="relative z-10 space-y-0.5">
+            <div className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">Total a Pagar</div>
+            <div className="text-primary text-3xl font-black md:text-5xl">${adjustedTotal != null ? adjustedTotal.toFixed(2) : '—'}</div>
           </div>
 
-          <div className="relative z-10 space-y-2">
-            <Label className="text-muted-foreground text-xs font-black uppercase">ID de Binance Pay</Label>
-            <div className="border-border bg-card flex items-center justify-center gap-2 rounded-xl border p-3 font-mono text-xl font-bold">
+          <div className="relative z-10 space-y-1.5">
+            <Label className="text-muted-foreground text-[10px] font-black uppercase">ID de Binance Pay</Label>
+            <div className="border-border bg-card flex items-center justify-center gap-2 rounded-lg border p-2 font-mono text-lg font-bold">
               {binancePayId}
               {binancePayId !== '—' && (
                 <Button
@@ -125,41 +125,39 @@ export const PaymentStep = () => {
                   className="text-primary hover:bg-primary/10 h-6 w-6"
                   onClick={() => navigator.clipboard.writeText(binancePayId)}
                 >
-                  <Clipboard className="h-3.5 w-3.5" />
+                  <Clipboard className="h-3 w-3" />
                 </Button>
               )}
             </div>
           </div>
-
-          <div className="bg-primary/5 absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full transition-transform duration-700 group-hover:scale-110" />
         </div>
 
-        <div className="w-full max-w-md space-y-4">
-          <div className="space-y-1.5 text-left">
-            <Label className="text-muted-foreground ml-1 text-xs font-black uppercase">ID de Transacción (opcional)</Label>
+        <div className="w-full max-w-sm space-y-3">
+          <div className="space-y-1 text-left">
+            <Label className="text-muted-foreground ml-1 text-[10px] font-black uppercase tracking-tight">ID de Transacción (opcional)</Label>
             <Input
-              placeholder="Ingresa el ID de la transacción de pago"
+              placeholder="ID de transacción"
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
-              className="border-border bg-card/50 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 h-12 text-center font-mono text-xl font-bold"
+              className="border-border bg-card/50 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 h-10 text-center font-mono text-lg font-bold"
             />
           </div>
 
-          {errorMessage && <p className="text-destructive text-center text-sm font-medium">{errorMessage}</p>}
+          {errorMessage && <p className="text-destructive text-center text-xs font-medium">{errorMessage}</p>}
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               variant="ghost"
               onClick={() => setStep(4)}
-              className="text-muted-foreground hover:bg-muted h-12 flex-1 text-sm font-bold"
+              className="text-muted-foreground hover:bg-muted h-10 flex-1 text-xs font-bold"
               disabled={completeStatus === 'executing'}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" /> Atrás
+              <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Atrás
             </Button>
             <Button
               onClick={handleNotify}
               disabled={!storedOrderId || completeStatus === 'executing'}
-              className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 h-12 flex-2 font-bold shadow-xl"
+              className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 h-10 flex-2 text-xs font-bold shadow-xl"
             >
               {completeStatus === 'executing' ? (
                 <>
@@ -172,11 +170,10 @@ export const PaymentStep = () => {
           </div>
         </div>
 
-        <div className="border-primary/20 bg-primary/5 flex w-full max-w-md gap-3 rounded-xl border p-4 text-left">
-          <Info className="text-primary mt-0.5 h-5 w-5" />
-          <p className="text-muted-foreground text-xs leading-relaxed italic">
-            Una vez que notifiques el pago, nuestro sistema vinculará la transacción con tu orden usando el ID proporcionado. La
-            verificación suele tardar de 1 a 5 minutos.
+        <div className="border-primary/20 bg-primary/5 flex w-full max-w-sm gap-2 rounded-xl border p-3 text-left">
+          <Info className="text-primary mt-0.5 h-4 w-4" />
+          <p className="text-muted-foreground text-[10px] leading-relaxed italic">
+            La verificación suele tardar de 1 a 5 minutos.
           </p>
         </div>
       </Card>

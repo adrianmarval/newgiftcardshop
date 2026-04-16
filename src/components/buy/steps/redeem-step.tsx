@@ -151,173 +151,160 @@ export const RedeemStep = () => {
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Left Column: Order Summary & Actions */}
-      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-4 p-4 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Redimir y Verificar</h2>
           <p className="text-muted-foreground text-xs md:text-sm">Copia tus códigos y reporta cualquier problema.</p>
         </div>
 
-        <div className="space-y-4">
-          <div className="border-border bg-muted/50 space-y-3 rounded-xl border p-3 md:p-4">
-            <div className="flex items-center justify-between text-sm md:text-base">
+        <div className="space-y-2 md:space-y-4">
+          <div className="border-border bg-muted/50 space-y-2 rounded-xl border p-2 md:p-4">
+            <div className="flex items-center justify-between text-xs md:text-base">
               <span className="text-muted-foreground">Tarjetas Activas</span>
               <span className="font-bold">
                 {foundGiftcards.length - reportedCount} / {foundGiftcards.length}
               </span>
             </div>
 
-            <div className="border-border flex items-center justify-between border-t pt-2 text-sm md:text-base">
+            <div className="border-border flex items-center justify-between border-t pt-1.5 text-xs md:text-base">
               <span className="text-muted-foreground">Total Ajustado</span>
               <div className="text-right">
-                <span className="text-primary text-2xl font-black">${totalAmount.toFixed(2)}</span>
-                <p className="text-muted-foreground mt-1 text-xs leading-none">Monto final a pagar</p>
+                <span className="text-primary text-xl font-black md:text-2xl">${totalAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>
 
-          {reportedCount > 0 && (
-            <div className="border-destructive/20 bg-destructive/10 flex items-start gap-3 rounded-xl border p-3">
-              <AlertTriangle className="text-destructive mt-0.5 h-4 w-4" />
-              <p className="text-destructive/80 text-xs leading-relaxed font-medium md:text-sm">
-                Has reportado problemas con {reportedCount} tarjeta
-                {reportedCount !== 1 ? 's' : ''}. El total ha sido ajustado automáticamente.
-              </p>
-            </div>
-          )}
-
-          <div className="border-primary/20 bg-primary/5 flex items-start gap-3 rounded-xl border p-3">
-            <Info className="text-primary mt-0.5 h-4 w-4" />
-            <p className="text-muted-foreground text-xs leading-relaxed md:text-sm">
-              Verifica cada tarjeta manualmente. Una vez que confirmes el uso, se desactivarán los reportes y se generará el pedido.
+          <div className="border-primary/20 bg-primary/5 hidden items-start gap-2 rounded-xl border p-2 md:flex">
+            <Info className="text-primary mt-0.5 h-3.5 w-3.5" />
+            <p className="text-muted-foreground text-[10px] leading-relaxed md:text-sm">
+              Verifica cada tarjeta manualmente. Una vez que confirmes el uso, se generará el pedido.
             </p>
           </div>
         </div>
 
-        <div className="border-border mt-auto flex flex-col gap-3 border-t pt-4 md:pt-6">
+        <div className="border-border mt-1 flex flex-col gap-2 border-t pt-2 md:mt-auto md:gap-3 md:pt-6">
           <Button
             onClick={() => setStep(4)}
-            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-10 w-full font-bold shadow-lg md:h-11"
+            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 w-full text-xs font-bold shadow-lg md:h-11 md:text-base"
           >
-            He verificado todas las tarjetas <ChevronRight className="ml-1 h-4 w-4" />
+            Verificado {foundGiftcards.length} tarjetas <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
           </Button>
-          <p className="text-muted-foreground text-center text-xs italic">
-            Asegúrate de que todos los reportes sean correctos antes de continuar.
-          </p>
         </div>
       </Card>
 
       {/* Right Column: Cards Reveal & Reporting */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-4 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
+      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <div className="mb-4 flex items-center justify-between">
           <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Códigos Revelados</Label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
           </div>
         </div>
 
-        <div className="space-y-3 md:space-y-4">
+        <div className="space-y-1.5 md:space-y-4">
           <AnimatePresence>
             {foundGiftcards.map((card, idx) => (
               <motion.div
                 key={card.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`relative rounded-xl border p-3 transition-all md:p-4 ${card.status === 'UNUSED' ? 'border-border bg-card/30' : 'border-destructive/30 bg-destructive/5 grayscale-[0.5]'} `}
+                className={`relative rounded-xl border p-2 transition-all md:p-4 ${card.status === 'UNUSED' ? 'border-border bg-card/30' : 'border-destructive/30 bg-destructive/5 grayscale-[0.5]'} `}
               >
-                <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg text-xs font-black ${card.status === 'UNUSED' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'} `}
+                      className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black md:h-10 md:w-10 md:text-xs ${card.status === 'UNUSED' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'} `}
                     >
                       #{idx + 1}
                     </div>
 
                     <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-xl font-black ${card.status === 'UNUSED' ? 'text-foreground' : 'text-muted-foreground line-through'}`}
+                          className={`text-lg font-black md:text-xl ${card.status === 'UNUSED' ? 'text-foreground' : 'text-muted-foreground line-through'}`}
                         >
                           ${card.amount}
                         </span>
                         {card.status !== 'UNUSED' && (
-                          <Badge variant="destructive" className="h-4 py-0 text-xs font-bold uppercase">
+                          <Badge variant="destructive" className="h-4 px-1.5 py-0 text-[10px] font-bold uppercase md:text-xs">
                             {card.status === 'INVALID'
-                              ? 'INVÁLIDA'
+                              ? 'INV.'
                               : card.status === 'ALREADY_USED'
-                                ? 'YA USADA'
+                                ? 'USADA'
                                 : card.status === 'DEACTIVATED'
-                                  ? 'DESACTIVADA'
+                                  ? 'DESACT.'
                                   : card.status === 'WRONG_AMOUNT'
-                                    ? 'MONTO INCORRECTO'
-                                    : card.status}
-                            {card.status === 'WRONG_AMOUNT' && `: $${card.reportedAmount}`}
+                                    ? 'MONTO'
+                                    : 'ERROR'}
                           </Badge>
                         )}
                       </div>
-                      <div className="mt-1 flex items-center gap-3">
+                      <div className="mt-0.5 flex items-center gap-2">
                         {card.claimCode ? (
-                          <div className="group border-border bg-muted/50 flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-xs font-bold md:text-sm">
+                          <div className="group border-border bg-muted/50 flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold md:text-sm">
                             {card.claimCode}
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="text-muted-foreground hover:text-primary h-4 w-4 transition-colors"
+                              className="text-muted-foreground hover:text-primary h-3.5 w-3.5 transition-colors"
                               onClick={() => navigator.clipboard.writeText(card.claimCode!)}
                             >
-                              <Clipboard className="h-3 w-3" />
+                              <Clipboard className="h-2.5 w-2.5" />
                             </Button>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground/50 font-mono text-sm">CÓDIGO NO DISPONIBLE</span>
+                          <span className="text-muted-foreground/30 font-mono text-[9px]">NO DISP.</span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end md:self-center">
+                  <div className="flex items-center gap-1.5 self-end md:self-center">
                     {redeemState.loadingIds.has(card.id) ? (
-                      <Spinner className="text-muted-foreground" />
+                      <Spinner size="sm" className="text-muted-foreground" />
                     ) : card.status === 'UNUSED' ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="border-destructive/30 text-destructive/80 hover:bg-destructive/10 h-8 text-xs"
+                            className="border-destructive/30 text-destructive/80 hover:bg-destructive/10 h-7 px-2 text-[10px]"
                           >
-                            Reportar problema
+                            Reportar
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="border-border bg-popover">
                           <DropdownMenuItem
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
                             onClick={() => handleReport(card.id, 'INVALID')}
                           >
                             Código inválido
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
                             onClick={() => handleReport(card.id, 'ALREADY_USED')}
                           >
                             Ya usada
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
                             onClick={() => handleReport(card.id, 'DEACTIVATED')}
                           >
                             Desactivada
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleReport(card.id, 'WRONG_AMOUNT')}>Monto incorrecto</DropdownMenuItem>
+                          <DropdownMenuItem className="text-xs" onClick={() => handleReport(card.id, 'WRONG_AMOUNT')}>
+                            Monto incorrecto
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-muted-foreground hover:bg-muted h-8 text-xs"
+                        className="text-muted-foreground hover:bg-muted h-7 px-2 text-[10px]"
                         onClick={() => handleUndoReport(card.id, card.status)}
                       >
-                        Deshacer reporte
+                        Deshacer
                       </Button>
                     )}
                   </div>

@@ -127,78 +127,78 @@ export const ResultsStep = () => {
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Left Column: Selection Summary */}
-      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-4 p-4 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Selección</h2>
           <p className="text-muted-foreground text-xs md:text-sm">Revisa las tarjetas de regalo propuestas.</p>
         </div>
 
-        <div className="space-y-4">
-          <div className="border-border bg-muted/50 space-y-3 rounded-xl border p-3 md:p-4">
-            <div className="flex items-center justify-between text-sm md:text-base">
-              <span className="text-muted-foreground">Objetivo de Búsqueda</span>
+        <div className="space-y-2 md:space-y-4">
+          <div className="border-border bg-muted/50 space-y-2 rounded-xl border p-2 md:p-4">
+            <div className="flex items-center justify-between text-xs md:text-base">
+              <span className="text-muted-foreground">Objetivo</span>
               <span className="font-bold">${targetAmount}</span>
             </div>
-            <div className="flex items-center justify-between text-sm md:text-base">
-              <span className="text-muted-foreground">Tarjetas Encontradas</span>
+            <div className="flex items-center justify-between text-xs md:text-base">
+              <span className="text-muted-foreground">Tarjetas</span>
               <span className="font-bold">{foundGiftcards.length} ítems</span>
             </div>
-            <div className="border-border flex items-center justify-between border-t pt-2 text-sm md:text-base">
-              <span className="text-muted-foreground">Total a Pagar</span>
+            <div className="border-border flex items-center justify-between border-t pt-1.5 text-xs md:text-base">
+              <span className="text-muted-foreground">Total</span>
               <div className="text-right">
-                <span className="text-primary text-2xl font-black">${discountedTotal.toFixed(2)}</span>
-                <p className="text-muted-foreground mt-1 text-xs leading-none">
+                <span className="text-primary text-xl font-black md:text-2xl">${discountedTotal.toFixed(2)}</span>
+                <p className="text-muted-foreground mt-0.5 text-[10px] leading-none md:text-xs">
                   {resultsState.buyRate < 1 ? `Tasa: ${resultsState.buyRate * 100}%` : 'Valor de la orden'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="border-primary/20 bg-primary/5 flex items-start gap-3 rounded-xl border p-3">
-            <Info className="text-primary mt-0.5 h-4 w-4" />
-            <p className="text-muted-foreground text-xs leading-relaxed md:text-sm">
+          <div className="border-primary/20 bg-primary/5 hidden items-start gap-2 rounded-xl border p-2 md:flex">
+            <Info className="text-primary mt-0.5 h-3.5 w-3.5" />
+            <p className="text-muted-foreground text-[10px] leading-relaxed md:text-sm">
               Los códigos se revelarán en el siguiente paso. Puedes eliminar las tarjetas que no quieras de la lista de la derecha.
             </p>
           </div>
         </div>
 
-        <div className="border-border mt-auto flex gap-3 border-t pt-4 md:pt-6">
+        <div className="border-border mt-1 flex gap-2 border-t pt-2 md:mt-auto md:gap-3 md:pt-6">
           <Button
             onClick={() => setStep(1)}
             variant="outline"
-            className="border-border text-muted-foreground hover:bg-muted h-10 flex-1 md:h-11"
+            className="border-border text-muted-foreground hover:bg-muted h-9 flex-1 text-xs md:h-11 md:text-sm"
           >
             Ajustar
           </Button>
           <Button
             onClick={() => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }))}
             disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === 'executing'}
-            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-10 flex-2 font-bold shadow-lg md:h-11"
+            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 flex-2 text-xs font-bold shadow-lg md:h-11 md:text-sm"
           >
-            Realizar Pedido <ChevronRight className="ml-1 h-4 w-4" />
+            Pedido <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
           </Button>
         </div>
       </Card>
 
       {/* Right Column: Cards List */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-4 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
+      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <div className="mb-4 flex items-center justify-between">
           <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Paquete Propuesto</Label>
           <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
         </div>
 
-        <div className="custom-scrollbar grid grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 md:gap-4">
+        <div className="custom-scrollbar grid grid-cols-1 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2 md:gap-4">
           {foundGiftcards.map((card, idx) => (
             <motion.div
               key={card.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              className="group border-border bg-muted/20 hover:border-primary/30 relative overflow-hidden rounded-xl border p-3 transition-all md:p-4"
+              className="group border-border bg-muted/20 hover:border-primary/30 relative overflow-hidden rounded-xl border p-2 transition-all md:p-4"
             >
-              <div className="relative z-10 flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="border-border bg-card relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border text-xl shadow-sm">
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="border-border bg-card relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border text-base shadow-sm md:h-10 md:w-10 md:text-xl">
                     {resultsState.brandData?.image ? (
                       <Image
                         src={resultsState.brandData.image}
@@ -212,9 +212,9 @@ export const ResultsStep = () => {
                     )}
                   </div>
                   <div>
-                    <div className="text-foreground text-xl font-black">${card.amount}</div>
-                    <div className="text-muted-foreground/50 font-mono text-xs tracking-tighter whitespace-nowrap uppercase">
-                      CÓDIGO: XXXX-XXXX-XXXX
+                    <div className="text-foreground text-lg font-black leading-none md:text-xl">${card.amount}</div>
+                    <div className="text-muted-foreground/50 mt-0.5 font-mono text-[9px] tracking-tighter whitespace-nowrap uppercase md:text-xs">
+                      XXXX-XXXX-XXXX
                     </div>
                   </div>
                 </div>
@@ -223,9 +223,9 @@ export const ResultsStep = () => {
                   size="icon"
                   variant="ghost"
                   onClick={() => removeGiftcard(card.id)}
-                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8 rounded-lg"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-7 w-7 rounded-lg md:h-8 md:w-8"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
 

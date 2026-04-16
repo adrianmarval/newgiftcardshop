@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, AlertCircle, ArrowLeft, XCircle, Ban } from 'lucide-react';
+import { Check, AlertCircle, ArrowLeft, XCircle, Ban, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
@@ -91,122 +91,92 @@ export const ConfirmUsageStep = () => {
 
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
-      {/* Full-width Confirmation Panel */}
-      <Card className="border-border bg-card/50 flex flex-col items-center space-y-6 p-4 text-center backdrop-blur-sm md:col-span-12 md:space-y-8 md:p-8">
-        <div className="max-w-2xl space-y-4">
+      <Card className="border-border bg-card/50 flex flex-col items-center space-y-4 p-4 text-center backdrop-blur-sm md:col-span-12 md:space-y-6 md:p-8">
+        <div className="max-w-2xl space-y-2 md:space-y-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full ${allCardsWorthless ? 'bg-destructive/10' : 'bg-primary/10'}`}
+            className={`mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full md:mb-4 md:h-20 md:w-20 ${allCardsWorthless ? 'bg-destructive/10' : 'bg-primary/10'}`}
           >
-            {allCardsWorthless ? <Ban className="text-destructive h-10 w-10" /> : <Check className="text-primary h-10 w-10" />}
+            {allCardsWorthless ? (
+              <Ban className="text-destructive h-8 w-8 md:h-10 md:w-10" />
+            ) : (
+              <Check className="text-primary h-8 w-8 md:h-10 md:w-10" />
+            )}
           </motion.div>
 
-          {allCardsWorthless ? (
-            <>
-              <h2 className="text-3xl font-black tracking-tight italic md:text-4xl">TODAS LAS TARJETAS REPORTADAS</h2>
-              <p className="text-muted-foreground text-base md:text-lg">
-                Cada tarjeta en esta orden ha sido reportada como inválida. No hay <strong>nada que pagar</strong>. Puedes cancelar esta
-                orden o volver para revisar tus reportes.
-              </p>
-            </>
-          ) : (
-            <>
-              <h2 className="text-3xl font-black tracking-tight italic md:text-4xl">CONFIRMACIÓN FINAL</h2>
-              <p className="text-muted-foreground text-base md:text-lg">
-                Estás a punto de confirmar que has usado todas las tarjetas correctamente. Una vez confirmado, procederás al pago y{' '}
-                <strong>los reportes serán desactivados</strong>.
-              </p>
-            </>
-          )}
+          <h2 className="text-2xl font-black tracking-tight uppercase italic md:text-4xl">
+            {allCardsWorthless ? 'ORDEN SIN VALOR' : '¿HAS REDIMIDO TODO?'}
+          </h2>
+          <p className="text-muted-foreground text-sm md:text-lg">
+            {allCardsWorthless
+              ? 'Todas las tarjetas fueron reportadas con problemas. No hay saldo para procesar.'
+              : 'Confirma que has redimido exitosamente los fondos en tu cuenta antes de pagar.'}
+          </p>
         </div>
 
-        <div className="grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="border-border bg-muted/50 rounded-2xl border p-4">
-            <div className="text-muted-foreground mb-1 text-xs font-black uppercase">Total Tarjetas</div>
-            <div className="text-3xl font-black">{foundGiftcards.length}</div>
-          </div>
-          <div className="border-border bg-muted/50 rounded-2xl border p-4">
-            <div className="text-muted-foreground mb-1 text-xs font-black uppercase">Problemas Reportados</div>
-            <div className={`text-3xl font-black ${reportedCards.length > 0 ? 'text-destructive' : ''}`}>{reportedCards.length}</div>
+        <div className="grid w-full max-w-2xl grid-cols-2 gap-2 md:gap-4">
+          <div className="border-border bg-muted/50 rounded-xl border p-2 md:p-4">
+            <div className="text-muted-foreground mb-0.5 text-[10px] font-black uppercase md:text-xs">Tarjetas</div>
+            <div className="text-xl font-black md:text-3xl">{foundGiftcards.length}</div>
           </div>
           <div
-            className={`rounded-2xl p-4 ${allCardsWorthless ? 'border-destructive/20 bg-destructive/10 border' : 'border-primary/20 bg-primary/10 border'}`}
+            className={`rounded-xl border p-2 md:p-4 ${allCardsWorthless ? 'border-destructive/20 bg-destructive/10' : 'border-primary/20 bg-primary/10'}`}
           >
-            <div className={`mb-1 text-xs font-black uppercase ${allCardsWorthless ? 'text-destructive' : 'text-primary'}`}>
-              Monto Final Adeudado
+            <div
+              className={`mb-0.5 text-[10px] font-black uppercase md:text-xs ${allCardsWorthless ? 'text-destructive' : 'text-primary'}`}
+            >
+              Total a Pagar
             </div>
-            <div className={`text-3xl font-black ${allCardsWorthless ? 'text-destructive' : 'text-primary'}`}>
+            <div className={`text-xl font-black md:text-3xl ${allCardsWorthless ? 'text-destructive' : 'text-primary'}`}>
               ${totalAmount.toFixed(2)}
             </div>
           </div>
         </div>
 
         {allCardsWorthless ? (
-          <div className="flex w-full max-w-lg gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-left">
-            <XCircle className="mt-0.5 h-5 w-5 text-amber-500" />
-            <div className="space-y-1">
-              <p className="text-sm font-bold text-amber-500 uppercase">No quedan tarjetas válidas</p>
-              <p className="text-muted-foreground text-sm leading-relaxed italic">
-                Todas las tarjetas han sido reportadas como inválidas, ya usadas o desactivadas. Puedes cancelar esta orden sin costo, o
-                volver para ajustar tus reportes si cometiste un error.
-              </p>
-            </div>
+          <div className="flex w-full max-w-lg gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-left md:p-4">
+            <XCircle className="mt-0.5 h-4 w-4 text-amber-500 md:h-5 md:w-5" />
+            <p className="text-muted-foreground text-[10px] leading-relaxed italic md:text-sm">
+              Todas las tarjetas han sido reportadas. Puedes cancelar esta orden o volver para revisar tus reportes.
+            </p>
           </div>
         ) : (
-          <div className="border-destructive/20 bg-destructive/5 flex w-full max-w-lg gap-3 rounded-xl border p-4 text-left">
-            <AlertCircle className="text-destructive mt-0.5 h-5 w-5" />
-            <div className="space-y-1">
-              <p className="text-destructive text-sm font-bold uppercase">Aviso Importante</p>
-              <p className="text-destructive/80 text-sm leading-relaxed italic">
-                La confirmación es irreversible. Asegúrate de tener capturas de pantalla de la redención o evidencia en video para todas las
-                tarjetas, especialmente aquellas que reportaste con problemas.
-              </p>
-            </div>
+          <div className="border-primary/20 bg-primary/5 flex w-full max-w-lg gap-3 rounded-xl border p-3 text-left md:p-4">
+            <Info className="text-primary mt-0.5 h-4 w-4 md:h-5 md:w-5" />
+            <p className="text-muted-foreground text-[10px] leading-relaxed italic md:text-sm">
+              La confirmación es irreversible. Asegúrate de haber redimido los códigos correctamente.
+            </p>
           </div>
         )}
 
-        {errorMessage && <p className="text-destructive text-sm font-medium">{errorMessage}</p>}
+        {errorMessage && <p className="text-destructive text-xs font-medium md:text-sm">{errorMessage}</p>}
 
-        <div className="flex w-full max-w-md flex-col gap-4 sm:flex-row">
+        <div className="flex w-full max-w-md flex-col gap-2 sm:flex-row md:gap-4">
           <Button
             variant="ghost"
             onClick={() => setStep(3)}
-            className="text-muted-foreground hover:bg-muted h-12 flex-1 text-sm font-bold"
+            className="text-muted-foreground hover:bg-muted h-10 flex-1 text-xs font-bold md:h-12 md:text-sm"
             disabled={confirmStatus === 'executing' || cancelStatus === 'executing'}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Revisar
+            <ArrowLeft className="mr-1 h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" /> Volver
           </Button>
 
           {allCardsWorthless ? (
             <Button
               onClick={handleCancelOrder}
               disabled={cancelStatus === 'executing' || !orderId}
-              className="bg-destructive text-destructive-foreground shadow-destructive/30 hover:bg-destructive/90 h-12 flex-2 text-base font-bold shadow-xl"
+              className="bg-destructive text-destructive-foreground shadow-destructive/30 hover:bg-destructive/90 h-10 flex-2 text-xs font-bold shadow-xl md:h-12 md:text-base"
             >
-              {cancelStatus === 'executing' ? (
-                <>
-                  <Spinner size="sm" className="mr-2" /> Cancelando...
-                </>
-              ) : (
-                <>
-                  <XCircle className="mr-2 h-4 w-4" /> Cancelar Orden
-                </>
-              )}
+              {cancelStatus === 'executing' ? <Spinner size="sm" /> : 'Cancelar Orden'}
             </Button>
           ) : (
             <Button
               onClick={handleConfirmUsage}
               disabled={confirmStatus === 'executing' || !orderId}
-              className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 h-12 flex-2 text-base font-bold shadow-xl"
+              className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 h-10 flex-2 text-xs font-bold shadow-xl md:h-12 md:text-base"
             >
-              {confirmStatus === 'executing' ? (
-                <>
-                  <Spinner size="sm" className="mr-2" /> Confirmando...
-                </>
-              ) : (
-                'Confirmar y Proceder al Pago'
-              )}
+              {confirmStatus === 'executing' ? <Spinner size="sm" /> : 'Confirmar y Pagar'}
             </Button>
           )}
         </div>

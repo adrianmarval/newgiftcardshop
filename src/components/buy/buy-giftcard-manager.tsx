@@ -53,12 +53,12 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
   }
 
   return (
-    <div className="w-full space-y-4 px-0 py-2 md:space-y-6 md:px-0 md:py-0">
+    <div className="w-full space-y-4 px-0 py-0 md:space-y-6 md:px-0 md:py-0">
       {/* Header & Progress combined */}
-      <div className="border-border bg-card/40 flex flex-col justify-between gap-4 rounded-none border-y px-3 py-4 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
+      <div className="border-border bg-card/40 flex flex-col justify-between gap-4 rounded-none border-y px-3 py-2.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col">
-          <h1 className="mb-0.5 text-3xl font-bold md:mb-1 md:text-4xl">Comprar Tarjetas de Regalo</h1>
-          <p className="text-muted-foreground text-sm md:text-base">Encuentra y compra tarjetas de regalo a las mejores tasas.</p>
+          <h1 className="mb-0.5 text-2xl font-bold md:mb-1 md:text-4xl">Comprar Tarjetas</h1>
+          <p className="text-muted-foreground hidden text-[10px] md:block md:text-base">Compra tarjetas de regalo a las mejores tasas.</p>
         </motion.div>
 
         {/* Multi-step Progress */}
@@ -67,7 +67,7 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
             <div key={s} className="flex items-center">
               <div className="group relative">
                 <motion.div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold transition-all md:h-10 md:w-10 md:text-base ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all md:h-10 md:w-10 md:text-base ${
                     s === step
                       ? 'border-primary/50 bg-primary shadow-primary/30 text-white shadow-lg'
                       : s < step
@@ -79,7 +79,7 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
                   {s < step ? <Check className="h-4 w-4 md:h-5 md:w-5" /> : s}
                 </motion.div>
                 <span
-                  className={`absolute -bottom-5 left-1/2 hidden -translate-x-1/2 text-xs font-bold tracking-wider whitespace-nowrap uppercase sm:block md:text-sm ${s === step ? 'text-primary' : 'text-muted-foreground/70'} `}
+                  className={`absolute -bottom-4 left-1/2 hidden -translate-x-1/2 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase sm:block md:text-sm ${s === step ? 'text-primary' : 'text-muted-foreground/70'} `}
                 >
                   {s === 1 ? 'Buscar' : s === 2 ? 'Seleccionar' : s === 3 ? 'Redimir' : s === 4 ? 'Uso' : 'Pagar'}
                 </span>
