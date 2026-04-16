@@ -24,7 +24,7 @@ export function BottomNav({ items, showThemeToggle = true, className }: BottomNa
   return (
     <nav
       className={cn(
-        'bg-background/95 supports-[backdrop-filter]:bg-background/60 fixed right-0 bottom-0 left-0 z-50 border-t backdrop-blur',
+        'bg-background/95 supports-backdrop-filter:bg-background/60 fixed right-0 bottom-0 left-0 z-50 border-t backdrop-blur',
         className,
       )}
     >
