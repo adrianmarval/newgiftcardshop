@@ -148,13 +148,13 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
       </Card>
 
       {/* Right Column: Brand Grid */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
-        <div className="mb-3 flex items-center justify-between md:mb-4">
+      <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
+        <div className="mb-1 flex items-center justify-between md:mb-4">
           <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Marcas Disponibles</Label>
           <span className="text-muted-foreground/50 text-xs">{filteredBrands.length} ítems</span>
         </div>
 
-        <div className="custom-scrollbar grid max-h-125 flex-1 grid-cols-2 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-3 md:max-h-150 md:gap-3 md:pr-2 lg:grid-cols-4">
+        <div className="custom-scrollbar grid max-h-125 flex-1 grid-cols-3 gap-1 overflow-y-auto pr-1 sm:grid-cols-3 md:max-h-150 md:gap-3 md:pr-2 lg:grid-cols-4">
           {filteredBrands.map((brand, idx) => (
             <motion.button
               key={brand.id}

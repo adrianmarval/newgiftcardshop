@@ -5,13 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Check, Copy, AlertTriangle, Code, Info, AlertCircle } from 'lucide-react';
@@ -75,7 +69,7 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`;
         </DialogHeader>
 
         <div className="space-y-1.5 md:space-y-4">
-          <Card className="border-none bg-card p-1 md:p-4">
+          <Card className="bg-card border-none p-1 md:p-4">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 md:gap-2">
                 <Code className="text-primary h-4 w-4 md:h-5 md:w-5" />
@@ -84,11 +78,11 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`;
               <p className="text-muted-foreground hidden text-xs md:block md:text-sm">
                 Each line must contain a code and its amount separated by a space.
               </p>
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex items-center justify-between">
                 <div className="border-border bg-muted text-foreground flex-1 rounded border p-2 font-mono text-[10px] md:p-3 md:text-base">
                   {`CODE AMOUNT
 XXXX-XXXXXX-XXXX 50.00
-YYYY-YYYYYY-YYYY 100.00`}
+`}
                 </div>
                 <Button
                   size="sm"
@@ -99,13 +93,13 @@ YYYY-YYYYYY-YYYY 100.00`}
                   <Copy className="mr-1.5 h-3 w-3 md:mr-2 md:h-4 md:w-4" /> Copy example
                 </Button>
               </div>
-              
-              <div className="space-y-2 pt-2 hidden md:block">
+
+              <div className="hidden space-y-2 pt-2 md:block">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Format Examples</span>
                   <span className="text-muted-foreground/50 text-[10px] italic">Amount is optional</span>
                 </div>
-                <div className="border-border grid grid-cols-2 gap-2 rounded-xl border bg-muted/20 p-2 font-mono text-[10px]">
+                <div className="border-border bg-muted/20 grid grid-cols-2 gap-2 rounded-xl border p-2 font-mono text-[10px]">
                   <div className="text-muted-foreground">CODE123, 50.00</div>
                   <div className="text-muted-foreground">CODE123 50.00</div>
                   <div className="text-muted-foreground">CODE123:PIN456, 100.00</div>
@@ -128,7 +122,7 @@ YYYY-YYYYYY-YYYY 100.00`}
           <AnimatePresence>
             {errors.length > 0 && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <Alert variant="destructive" className="rounded-xl border-destructive/20 bg-destructive/10">
+                <Alert variant="destructive" className="border-destructive/20 bg-destructive/10 rounded-xl">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="ml-2">
                     {errors.length === 1 ? errors[0] : `${errors.length} errors found interpreting the content`}
@@ -158,7 +152,7 @@ YYYY-YYYYYY-YYYY 100.00`}
                         {parseDuplicateCount} Duplicates
                       </Badge>
                     )}
-                    <Badge variant="outline" className="border-primary px-1 py-0 text-[9px] text-primary md:px-2 md:text-[10px]">
+                    <Badge variant="outline" className="border-primary text-primary px-1 py-0 text-[9px] md:px-2 md:text-[10px]">
                       Ready
                     </Badge>
                   </div>

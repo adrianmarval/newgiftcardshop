@@ -1,37 +1,26 @@
 'use client';
 
 import * as React from 'react';
-import { IconDashboard, IconCreditCard, IconUpload, IconShoppingCart, IconWallet, IconSettings, IconUser } from '@tabler/icons-react';
-import { Sidebar } from '@/components/ui/sidebar';
-import { PortalSidebar } from '@/components/layout/app-sidebar';
+import { IconDashboard, IconCreditCard, IconUpload, IconShoppingCart, IconWallet, IconUser } from '@tabler/icons-react';
+import { BottomNav } from '@/components/layout/bottom-nav';
 
 const navItems = [
-  { title: 'Dashboard', url: '/sell/dashboard', icon: IconDashboard },
+  { title: 'Home', url: '/sell/dashboard', icon: IconDashboard },
   {
-    title: 'My Gift Cards',
+    title: 'Cards',
     url: '/sell/dashboard/cards',
     icon: IconCreditCard,
   },
   {
-    title: 'Sell Gift Cards',
+    title: 'Sell',
     url: '/sell/dashboard/sell-cards',
     icon: IconUpload,
   },
   { title: 'Orders', url: '/sell/dashboard/orders', icon: IconShoppingCart },
-  { title: 'Payment Method', url: '/sell/dashboard/payment', icon: IconWallet },
-  { title: 'Profile', url: '/sell/dashboard/profile', icon: IconUser },
-  { title: 'Settings', url: '/sell/dashboard/settings', icon: IconSettings },
+  { title: 'Wallet', url: '/sell/dashboard/wallet', icon: IconWallet },
+  { title: 'Perfil', url: '/sell/dashboard/profile', icon: IconUser },
 ];
 
-export const SellerSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
-  return (
-    <PortalSidebar
-      navItems={navItems}
-      brandLabel="Solmaira Sell"
-      brandHref="/sell/dashboard"
-      portal="sell"
-      logoutVariant="destructive"
-      {...props}
-    />
-  );
+export const SellerSidebar = () => {
+  return <BottomNav items={navItems} />;
 };

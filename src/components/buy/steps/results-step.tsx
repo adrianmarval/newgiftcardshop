@@ -162,22 +162,7 @@ export const ResultsStep = () => {
           </div>
         </div>
 
-        <div className="border-border mt-1 flex gap-2 border-t pt-2 md:mt-auto md:gap-3 md:pt-6">
-          <Button
-            onClick={() => setStep(1)}
-            variant="outline"
-            className="border-border text-muted-foreground hover:bg-muted h-9 flex-1 text-xs md:h-11 md:text-sm"
-          >
-            Ajustar
-          </Button>
-          <Button
-            onClick={() => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }))}
-            disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === 'executing'}
-            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 flex-2 text-xs font-bold shadow-lg md:h-11 md:text-sm"
-          >
-            Pedido <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
-          </Button>
-        </div>
+
       </Card>
 
       {/* Right Column: Cards List */}
@@ -247,6 +232,23 @@ export const ResultsStep = () => {
               </Button>
             </div>
           )}
+        </div>
+
+        <div className="border-border mt-auto flex gap-2 border-t pt-4 md:gap-3 md:pt-6">
+          <Button
+            onClick={() => setStep(1)}
+            variant="outline"
+            className="border-border text-muted-foreground hover:bg-muted h-9 flex-1 text-xs md:h-11 md:text-sm"
+          >
+            Ajustar
+          </Button>
+          <Button
+            onClick={() => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }))}
+            disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === 'executing'}
+            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 flex-2 text-xs font-bold shadow-lg md:h-11 md:text-sm"
+          >
+            Pedido <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
+          </Button>
         </div>
       </Card>
 

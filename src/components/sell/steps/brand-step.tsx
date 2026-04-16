@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check, ChevronRight } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,15 +27,12 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Left Column: Filters */}
       <Card className="border-border bg-card/50 flex h-auto flex-col space-y-1.5 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
-        <div>
-          <h2 className="mb-0.5 text-lg font-bold md:mb-2 md:text-2xl">Configuración del lote</h2>
-          <p className="text-muted-foreground hidden text-xs md:block md:text-base">Elegí el país y la marca.</p>
-        </div>
-
         {/* País y Buscar - Grilla en mobile para ahorrar espacio vertical */}
         <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-1">
           <div className="space-y-1 md:space-y-2">
-            <Label className="text-muted-foreground mb-0.5 block text-[10px] font-semibold tracking-wider uppercase md:text-xs">País</Label>
+            <Label className="text-muted-foreground mb-0.5 block text-[10px] font-semibold tracking-wider uppercase md:text-xs">
+              Selecione País
+            </Label>
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
               <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 text-sm md:h-11">
                 <SelectValue placeholder="Seleccionar país..." />
@@ -65,29 +62,16 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
             </div>
           </div>
         </div>
-
-        <div className="border-border mt-1 flex flex-col gap-1 border-t pt-1.5 md:mt-auto md:gap-3 md:pt-6">
-          <div className="text-muted-foreground/70 text-[11px] italic md:text-sm">
-            {!isStep1Valid ? 'Seleccioná país y marca' : 'Listo para cargar tarjetas'}
-          </div>
-          <Button
-            onClick={() => setStep(2)}
-            disabled={!isStep1Valid}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-full text-sm font-bold transition-all md:h-11 md:text-base"
-          >
-            Continuar <ChevronRight className="ml-1 h-4 w-4 md:ml-2" />
-          </Button>
-        </div>
       </Card>
 
       {/* Columna Derecha: Grilla de Marcas */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
-        <div className="mb-3 flex items-center justify-between md:mb-4">
+      <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
+        <CardHeader className="mb-1 flex items-center justify-between md:mb-4">
           <Label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase md:text-sm">Marcas disponibles</Label>
           <span className="text-muted-foreground/50 text-sm">{filteredBrands.length} ítems</span>
-        </div>
+        </CardHeader>
 
-        <div className="custom-scrollbar grid max-h-125 flex-1 grid-cols-2 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-3 md:max-h-150 md:gap-3 md:pr-2 lg:grid-cols-4">
+        <CardContent className="custom-scrollbar grid max-h-125 flex-1 grid-cols-3 gap-1 overflow-y-auto sm:grid-cols-3 md:max-h-150 md:gap-3 md:pr-2 lg:grid-cols-4">
           <AnimatePresence mode="popLayout">
             {filteredBrands.map((brand) => (
               <motion.button
@@ -126,7 +110,16 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
               </motion.button>
             ))}
           </AnimatePresence>
-        </div>
+        </CardContent>
+        <CardFooter>
+          <Button
+            onClick={() => setStep(2)}
+            disabled={!isStep1Valid}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-full text-sm font-bold transition-all md:h-11 md:text-base"
+          >
+            Continuar <ChevronRight className="ml-1 h-4 w-4 md:ml-2" />
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

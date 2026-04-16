@@ -344,7 +344,7 @@ export function IntakeStep() {
       </AnimatePresence>
 
       <div className="grid h-full grid-cols-1 items-start gap-2 pb-20 md:grid-cols-12 md:gap-6 md:pb-0">
-        <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2.5 p-2 backdrop-blur-sm md:col-span-3 md:space-y-4 md:p-4">
+        <Card className="border-border bg-card/50 flex h-auto flex-col gap-1.5 p-2 backdrop-blur-sm md:col-span-3 md:gap-4 md:p-4">
           <div className="px-1 md:px-2">
             <h2 className="text-foreground text-lg font-bold md:text-xl">Load Cards</h2>
             <p className="text-muted-foreground hidden text-[10px] md:block md:text-xs">Load gift cards to sell them</p>
@@ -368,20 +368,12 @@ export function IntakeStep() {
               Extract from Screenshots
             </Button>
           </div>
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button onClick={() => setStep(1)} variant="outline" size="sm" className="h-8 text-xs md:h-9">
-              Back
-            </Button>
-            <Button onClick={() => setStep(3)} disabled={!canContinue || hasBlockingConflicts} size="sm" className="h-8 text-xs md:h-9">
-              Continue
-            </Button>
-          </div>
         </Card>
 
         <div className="space-y-4 md:col-span-9">
           <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:min-h-125 md:p-6">
             <CardHeader>
-              <CardTitle>Loaded cards</CardTitle>
+              <CardTitle>Card list</CardTitle>
             </CardHeader>
 
             <CardContent
@@ -443,6 +435,20 @@ export function IntakeStep() {
                 <p className="text-muted-foreground text-sm">Use OCR or import one or more cards to get started.</p>
               </div>
             )}
+
+            <div className="border-border mt-auto grid grid-cols-2 gap-2 border-t pt-4">
+              <Button onClick={() => setStep(1)} variant="outline" size="sm" className="h-9 text-sm">
+                Back
+              </Button>
+              <Button
+                onClick={() => setStep(3)}
+                disabled={!canContinue || hasBlockingConflicts}
+                size="sm"
+                className="bg-primary text-primary-foreground h-9 text-sm font-bold"
+              >
+                Continue
+              </Button>
+            </div>
           </Card>
         </div>
       </div>

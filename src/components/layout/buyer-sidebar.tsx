@@ -2,35 +2,24 @@
 
 import * as React from 'react';
 import { IconDashboard, IconSearch, IconShoppingCart, IconWallet, IconSettings, IconUser } from '@tabler/icons-react';
-import { Sidebar } from '@/components/ui/sidebar';
-import { PortalSidebar } from '@/components/layout/app-sidebar';
+import { BottomNav } from '@/components/layout/bottom-nav';
 
 const navItems = [
-  { title: 'Panel Control', url: '/buy/dashboard', icon: IconDashboard },
+  { title: 'Home', url: '/buy/dashboard', icon: IconDashboard },
   {
-    title: 'Buscar Tarjetas',
+    title: 'Buscar',
     url: '/buy/dashboard/browse-cards',
     icon: IconSearch,
   },
   {
-    title: 'Mis Órdenes',
+    title: 'Orders',
     url: '/buy/dashboard/orders',
     icon: IconShoppingCart,
   },
-  { title: 'Billetera', url: '/buy/dashboard/wallet', icon: IconWallet },
+  { title: 'Wallet', url: '/buy/dashboard/wallet', icon: IconWallet },
   { title: 'Perfil', url: '/buy/dashboard/profile', icon: IconUser },
-  { title: 'Ajustes', url: '/buy/dashboard/settings', icon: IconSettings },
 ];
 
-export const BuyerSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
-  return (
-    <PortalSidebar
-      navItems={navItems}
-      brandLabel="Solmaira Buy"
-      brandHref="/buy/dashboard"
-      portal="buy"
-      logoutVariant="destructive"
-      {...props}
-    />
-  );
+export const BuyerSidebar = () => {
+  return <BottomNav items={navItems} />;
 };
