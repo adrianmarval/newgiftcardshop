@@ -360,18 +360,18 @@ export function IntakeStep() {
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
-                        className="group border-border bg-muted/20 hover:bg-muted/35 relative space-y-2 rounded-xl border p-2 transition-all"
+                        className="group border-border bg-muted/20 hover:bg-muted/35 relative space-y-1.5 rounded-xl border p-1.5 transition-all"
                       >
-                        <div className="flex flex-col gap-2 md:grid md:grid-cols-[auto_140px_120px_minmax(240px,1fr)_auto] md:items-center md:gap-2">
-                          {/* Row 1: Index, Status (mobile) and Trash */}
-                          <div className="flex items-center justify-between md:contents">
-                            <div className="flex items-center gap-2">
-                              <div className="border-border bg-muted text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold">
+                        <div className="flex flex-col gap-1.5 md:grid md:grid-cols-[auto_140px_120px_minmax(240px,1fr)_auto] md:items-center md:gap-2">
+                          {/* Row 1: Index, Status and Actions (Mobile) */}
+                          <div className="flex h-6 items-center justify-between md:contents">
+                            <div className="flex items-center gap-1.5">
+                              <div className="border-border bg-muted text-muted-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold">
                                 {idx + 1}
                               </div>
                               <div className="flex flex-wrap items-center gap-1 md:hidden">
-                                <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
-                                  <Icon className="mr-1 h-2.5 w-2.5" />
+                                <Badge className={`${config.color} px-1 py-0 text-[9px]`}>
+                                  <Icon className="mr-0.5 h-2 w-2" />
                                   {config.label}
                                 </Badge>
                               </div>
@@ -386,22 +386,22 @@ export function IntakeStep() {
                               size="icon"
                               variant="ghost"
                               onClick={() => removeGiftcard(liveCard.id)}
-                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-7 w-7 md:hidden"
+                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-6 w-6 md:hidden"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
 
-                          {/* Inputs Grid/Stack */}
-                          <div className="grid grid-cols-2 gap-1.5 md:contents">
+                          {/* Inputs Row (Mobile: Horizontal, Desktop: Grid) */}
+                          <div className="grid grid-cols-[70px_70px_1fr] gap-1 md:contents">
                             <div className="relative md:max-w-[140px]">
-                              <span className="text-muted-foreground/50 absolute top-2 left-2 text-[10px]">$</span>
+                              <span className="text-muted-foreground/50 absolute top-1.5 left-1.5 text-[9px]">$</span>
                               <Input
                                 type="number"
                                 placeholder="0.00"
                                 value={liveCard.amount}
                                 onChange={(e) => updateGiftcard(liveCard.id, 'amount', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 pl-5 text-sm"
+                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 pl-4.5 text-[11px] md:h-8 md:pl-5 md:text-sm"
                               />
                             </div>
 
@@ -410,16 +410,14 @@ export function IntakeStep() {
                               placeholder="PIN"
                               value={liveCard.pinCode || ''}
                               onChange={(e) => updateGiftcard(liveCard.id, 'pinCode', e.target.value)}
-                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 font-mono text-sm md:max-w-[120px]"
+                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:max-w-[120px] md:text-sm"
                             />
-                          </div>
 
-                          <div className="min-w-0 md:contents">
                             <Input
                               placeholder="Claim code"
                               value={liveCard.claimCode}
                               onChange={(e) => updateGiftcard(liveCard.id, 'claimCode', e.target.value)}
-                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 font-mono text-sm"
+                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:text-sm"
                             />
                           </div>
 
@@ -544,18 +542,18 @@ export function IntakeStep() {
                           initial={{ opacity: 0, scale: 0.98 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.98 }}
-                          className="group border-border bg-muted/15 hover:bg-muted/25 relative rounded-xl border p-2 transition-all"
+                          className="group border-border bg-muted/15 hover:bg-muted/25 relative rounded-xl border p-1.5 transition-all"
                         >
-                          <div className="flex flex-col gap-2 md:grid md:grid-cols-[auto_140px_120px_minmax(260px,1fr)_auto] md:items-center md:gap-2">
-                            {/* Row 1: Index, Status (mobile) and Trash */}
-                            <div className="flex items-center justify-between md:contents">
-                              <div className="flex items-center gap-2">
-                                <div className="border-border bg-muted text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold">
+                          <div className="flex flex-col gap-1.5 md:grid md:grid-cols-[auto_140px_120px_minmax(260px,1fr)_auto] md:items-center md:gap-2">
+                            {/* Row 1: Index, Status and Actions (Mobile) */}
+                            <div className="flex h-6 items-center justify-between md:contents">
+                              <div className="flex items-center gap-1.5">
+                                <div className="border-border bg-muted text-muted-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold">
                                   {blockingCards.length + idx + 1}
                                 </div>
                                 <div className="flex flex-wrap items-center gap-1 md:hidden">
-                                  <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
-                                    <Icon className="mr-1 h-2.5 w-2.5" />
+                                  <Badge className={`${config.color} px-1 py-0 text-[9px]`}>
+                                    <Icon className="mr-0.5 h-2 w-2" />
                                     {config.label}
                                   </Badge>
                                 </div>
@@ -570,22 +568,22 @@ export function IntakeStep() {
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => removeGiftcard(card.id)}
-                                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-7 w-7 md:hidden"
+                                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-6 w-6 md:hidden"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
 
-                            {/* Inputs Grid/Stack */}
-                            <div className="grid grid-cols-2 gap-1.5 md:contents">
+                            {/* Inputs Row (Mobile: Horizontal, Desktop: Grid) */}
+                            <div className="grid grid-cols-[70px_70px_1fr] gap-1 md:contents">
                               <div className="relative md:max-w-[140px]">
-                                <span className="text-muted-foreground/50 absolute top-2 left-2 text-[10px]">$</span>
+                                <span className="text-muted-foreground/50 absolute top-1.5 left-1.5 text-[9px]">$</span>
                                 <Input
                                   type="number"
                                   placeholder="0.00"
                                   value={card.amount}
                                   onChange={(e) => updateGiftcard(card.id, 'amount', e.target.value)}
-                                  className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 pl-5 text-sm"
+                                  className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 pl-4.5 text-[11px] md:h-8 md:pl-5 md:text-sm"
                                 />
                               </div>
 
@@ -594,16 +592,14 @@ export function IntakeStep() {
                                 placeholder="PIN"
                                 value={card.pinCode || ''}
                                 onChange={(e) => updateGiftcard(card.id, 'pinCode', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 font-mono text-sm md:max-w-[120px]"
+                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:max-w-[120px] md:text-sm"
                               />
-                            </div>
 
-                            <div className="min-w-0 md:contents">
                               <Input
                                 placeholder="Claim code"
                                 value={card.claimCode}
                                 onChange={(e) => updateGiftcard(card.id, 'claimCode', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 font-mono text-sm"
+                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-7.5 px-2 font-mono text-[11px] md:h-8 md:text-sm"
                               />
                             </div>
 
