@@ -75,7 +75,7 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`;
         </DialogHeader>
 
         <div className="space-y-1.5 md:space-y-4">
-          <Card className="border-border bg-card p-2 md:p-4">
+          <Card className="border-none bg-card p-1 md:p-4">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 md:gap-2">
                 <Code className="text-primary h-4 w-4 md:h-5 md:w-5" />
@@ -100,7 +100,7 @@ YYYY-YYYYYY-YYYY 100.00`}
                 </Button>
               </div>
               
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2 pt-2 hidden md:block">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Format Examples</span>
                   <span className="text-muted-foreground/50 text-[10px] italic">Amount is optional</span>

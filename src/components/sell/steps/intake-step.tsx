@@ -536,7 +536,7 @@ function GiftcardCard({
         }}
         onPointerDown={(e) => dragControls.start(e)}
         style={{ x }}
-        className="group border-border bg-card/40 hover:bg-muted/10 relative z-10 touch-none space-y-1.5 rounded-xl border p-1.5 backdrop-blur-sm transition-all select-none"
+        className="group border-border bg-card/40 hover:bg-muted/10 relative z-10 touch-pan-y space-y-1.5 rounded-xl border p-1.5 backdrop-blur-sm transition-all select-none"
       >
         {/* Sidebar indicator (mobile only) */}
         <div className={cn('absolute top-0 bottom-0 left-0 w-1 md:hidden', indicatorColor)} />
