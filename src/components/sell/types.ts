@@ -41,7 +41,7 @@ export interface ReviewStepProps {
   brandName: string;
   countryName: string;
   sellRate: number;
-  /** The step number to go back to — varies by entry mode */
+  /** The step number to go back to from review */
   backStep?: number;
 }
 
@@ -53,12 +53,4 @@ export interface BulkPasteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImport: (cards: import('@/types').ParsedGiftcard[]) => void;
-}
-
-/**
- * Props for the ProofUploadStep component.
- * Handles provenance image upload and validation for gift cards.
- */
-export interface ProofUploadStepProps {
-  sellRate: number;
 }

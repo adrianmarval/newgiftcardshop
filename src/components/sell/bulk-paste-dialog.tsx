@@ -22,7 +22,7 @@ export function BulkPasteDialog({ open, onOpenChange, onImport }: BulkPasteDialo
 
   const handleParse = () => {
     if (!pasteContent.trim()) {
-      setErrors(['Please paste your gift card data first']);
+      setErrors(['Paste one or more cards first']);
       return;
     }
 
@@ -62,9 +62,9 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`;
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="border-border bg-card max-w-2xl min-w-md md:min-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Import Gift Cards (Bulk Paste)</DialogTitle>
+          <DialogTitle className="text-foreground">Import cards</DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Paste your gift card codes and amounts in the format shown below
+            Paste one or several cards. You can also use this dialog to load a single one manually.
           </DialogDescription>
         </DialogHeader>
 
@@ -74,9 +74,11 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`;
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Code className="text-primary h-5 w-5" />
-                <h3 className="text-foreground font-semibold">Expected Format</h3>
+                <h3 className="text-foreground font-semibold">Expected format</h3>
               </div>
-              <p className="text-muted-foreground text-base">Each line should contain a gift card code followed by the amount:</p>
+              <p className="text-muted-foreground text-base">
+                Each line must contain a code and its amount. If you want to load only one, paste a single line.
+              </p>
               <div className="border-border bg-muted text-foreground rounded border p-3 font-mono text-base">
                 {`CODE AMOUNT
 XXXX-XXXXXX-XXXX 50.00
@@ -84,14 +86,14 @@ YYYY-YYYYYY-YYYY 100.00
 ZZZZ-ZZZZZZ-ZZZZZ 75.50`}
               </div>
               <Button size="sm" variant="outline" onClick={handleCopyExample} className="border-border text-foreground hover:bg-muted mt-2">
-                <Copy className="mr-2 h-4 w-4" /> Copy Example
+                <Copy className="mr-2 h-4 w-4" /> Copy example
               </Button>
             </div>
           </Card>
 
           {/* Paste Input Area */}
           <div className="space-y-2">
-            <label className="text-foreground text-base font-medium">Paste your gift cards here:</label>
+            <label className="text-foreground text-base font-medium">Paste your cards here:</label>
             <Textarea
               placeholder={'XXXX-XXXXXX-XXXX 50.00\nYYYY-YYYYYY-YYYY 100.00\nZZZZ-ZZZZZZ-ZZZZZ 75.50'}
               value={pasteContent}
@@ -107,7 +109,7 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`}
                 <Alert className="border-destructive bg-destructive/10 text-destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription className="ml-2">
-                    {errors.length === 1 ? errors[0] : `${errors.length} errors found during parsing`}
+                    {errors.length === 1 ? errors[0] : `${errors.length} errors found interpreting the content`}
                   </AlertDescription>
                 </Alert>
               </motion.div>
@@ -126,7 +128,7 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`}
                 <div className="flex items-center justify-between">
                   <h4 className="text-foreground flex items-center gap-2 font-semibold">
                     <Check className="text-primary h-5 w-5" />
-                    Preview ({parsedCards.length} cards)
+                    Preview ({parsedCards.length} card{parsedCards.length !== 1 ? 's' : ''})
                   </h4>
                   <div className="flex items-center gap-2">
                     {parseDuplicateCount > 0 && (
@@ -145,8 +147,9 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`}
                   <Alert className="border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400">
                     <Info className="h-4 w-4" />
                     <AlertDescription className="ml-2">
-                      {parseDuplicateCount} duplicate code{parseDuplicateCount !== 1 ? 's were' : ' was'} found in your paste and{' '}
-                      {parseDuplicateCount !== 1 ? 'have' : 'has'} been ignored. Only unique codes are shown below.
+                      {parseDuplicateCount} duplicate code
+                      {parseDuplicateCount !== 1 ? 's were detected' : ' was detected'} in your content and ignored. Only unique codes are
+                      shown below.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -185,7 +188,7 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`}
               variant="outline"
               className="border-primary text-primary hover:bg-primary/10 flex-1"
             >
-              Parse & Preview
+              Review content
             </Button>
             <Button
               onClick={handleImport}

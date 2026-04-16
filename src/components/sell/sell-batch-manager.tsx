@@ -6,61 +6,47 @@ import { Check } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { publishBatch } from '@/actions/seller-actions';
 import { BrandStep } from '@/components/sell/steps/brand-step';
-import { DetailsStep } from '@/components/sell/steps/details-step';
-import { OcrEntryStep } from '@/components/sell/steps/ocr-entry-step';
-import { ProofUploadStep } from '@/components/sell/steps/proof-upload-step';
+import { IntakeStep } from '@/components/sell/steps/intake-step';
 import { ReviewStep } from '@/components/sell/steps/review-step';
 import type { SellBatchManagerProps } from './types';
 import { toast } from 'sonner';
 import { useAction } from 'next-safe-action/hooks';
 
-// ─── Step label helpers ───────────────────────────────────────────────────────
-
-type FlowMode = 'ocr-first' | 'manual-first' | null;
-
-/**
- * Returns the ordered step labels for the current mode.
- *
- * OCR-first:    Brand → Capturas → Review         (steps 1-3)
- * Manual-first: Brand → Códigos → Capturas → Review (steps 1-4)
- * No mode yet:  Brand → Modo → Capturas → Review   (generic, 4 steps)
- */
-function getStepLabels(mode: FlowMode): string[] {
-  if (mode === 'ocr-first') return ['Brand', 'OCR', 'Review'];
-  if (mode === 'manual-first') return ['Brand', 'Codes', 'Match', 'Review'];
-  return ['Brand', 'Mode', 'Match', 'Review'];
-}
+const STEP_LABELS = ['Config', 'Intake', 'Review'];
 
 // ─── SellBatchManager ─────────────────────────────────────────────────────────
 
 export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManagerProps) => {
-  const { step, resetForm, giftcards, selectedBrand, entryMode } = useSellFlow();
+  const { step, resetForm, giftcards, selectedBrand, images, selectedCountry } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [duplicates, setDuplicates] = useState<string[]>([]);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
   const { execute, status } = useAction(publishBatch, {
     onSuccess: ({ data }) => {
       if (data?.success) {
         if (data.duplicates && data.duplicates.length > 0) {
           setDuplicates(data.duplicates);
-          toast.info('Algunas tarjetas eran duplicadas', {
-            description: `${data.duplicates.length} código${data.duplicates.length !== 1 ? 's' : ''} duplicado${data.duplicates.length !== 1 ? 's' : ''}. No se agregaron al lote.`,
+          toast.info('Some cards were duplicates', {
+            description: `${data.duplicates.length} duplicate code${data.duplicates.length !== 1 ? 's' : ''}. They were not added to the batch.`,
           });
         }
         setShowSuccessDialog(true);
       }
     },
     onError: ({ error }) => {
-      toast.error('Error al publicar el lote', {
-        description: error.serverError || error.validationErrors?._errors?.[0] || 'No se pudo publicar el lote',
+      toast.error('Error publishing batch', {
+        description: error.serverError || error.validationErrors?._errors?.[0] || 'Could not publish batch',
       });
     },
   });
@@ -84,36 +70,27 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
     });
   };
 
-  // ── Step labels & progress ──────────────────────────────────────────────
-
-  const stepLabels = getStepLabels(entryMode);
-  const totalSteps = stepLabels.length;
+  const totalSteps = STEP_LABELS.length;
+  const hasInProgressData =
+    step > 1 ||
+    !!selectedBrand ||
+    !!selectedCountry ||
+    images.length > 0 ||
+    giftcards.some((card) => card.amount || card.claimCode || card.pinCode);
 
   // Build a brand map for review step
   const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
   const countryMap = Object.fromEntries(countries.map((c) => [c.id, c.name]));
-
-  // ── Step component resolver ─────────────────────────────────────────────
-  //
-  // OCR-first path:    step 1 = Brand, step 2 = OcrEntryStep, step 3 = Review
-  // Manual-first path: step 1 = Brand, step 2 = DetailsStep, step 3 = ProofUpload, step 4 = Review
-  // No mode:           step 1 = Brand, step 2 = DetailsStep (shows mode selector inside)
-
-  function getBackStep(): number {
-    if (entryMode === 'ocr-first') return Math.max(1, step - 1);
-    if (entryMode === 'manual-first') return Math.max(1, step - 1);
-    return Math.max(1, step - 1);
-  }
-
-  const reviewStep = entryMode === 'ocr-first' ? 3 : 4;
 
   return (
     <div className="w-full space-y-4 px-0 py-2 md:space-y-6 md:px-0 md:py-0">
       {/* Header & Progress combined */}
       <div className="border-border bg-card/40 flex flex-col justify-between gap-4 rounded-none border-y px-3 py-4 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-          <h1 className="mb-0.5 text-3xl font-bold md:mb-1 md:text-4xl">Vender Gift Cards</h1>
-          <p className="text-muted-foreground text-sm md:text-base">Creá un nuevo lote de tarjetas para vender.</p>
+          <h1 className="mb-0.5 text-2xl font-bold md:mb-1 md:text-4xl">Sell Gift Cards</h1>
+          <p className="text-muted-foreground text-xs md:text-base">
+            Complete the batch in this session.
+          </p>
         </motion.div>
 
         {/* Compact Progress Steps */}
@@ -124,7 +101,7 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
           className="flex justify-center md:justify-end"
         >
           <div className="flex items-center gap-1 md:gap-2">
-            {stepLabels.map((label, idx) => {
+            {STEP_LABELS.map((label, idx) => {
               const s = idx + 1;
               return (
                 <div key={s} className="flex items-center">
@@ -173,45 +150,21 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
           </motion.div>
         )}
 
-        {step === 2 && entryMode === 'ocr-first' && (
+        {step === 2 && (
           <motion.div
-            key="step-2-ocr"
+            key="step-2-intake"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <OcrEntryStep />
+            <IntakeStep />
           </motion.div>
         )}
 
-        {step === 2 && entryMode !== 'ocr-first' && (
+        {step === 3 && (
           <motion.div
-            key="step-2-manual"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <DetailsStep />
-          </motion.div>
-        )}
-
-        {step === 3 && entryMode === 'manual-first' && (
-          <motion.div
-            key="step-3-proof"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ProofUploadStep sellRate={sellRate} />
-          </motion.div>
-        )}
-
-        {step === reviewStep && (
-          <motion.div
-            key={`step-review-${reviewStep}`}
+            key="step-review"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -221,13 +174,25 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
               onPublish={handlePublish}
               isPublishing={status === 'executing'}
               brandName={brandMap[selectedBrand] || ''}
-              countryName={countryMap[useSellFlow.getState().selectedCountry] || ''}
+              countryName={countryMap[selectedCountry] || ''}
               sellRate={sellRate}
-              backStep={getBackStep()}
+              backStep={2}
             />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {hasInProgressData && !showSuccessDialog && (
+        <div className="flex justify-end px-3 md:px-0">
+          <button
+            type="button"
+            onClick={() => setShowDiscardDialog(true)}
+            className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
+          >
+            Leave and discard batch
+          </button>
+        </div>
+      )}
 
       {/* Success Dialog */}
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
@@ -243,13 +208,13 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
                 <Check className="text-primary h-10 w-10" />
               </div>
             </motion.div>
-            <AlertDialogTitle className="text-center text-3xl">¡Lote publicado con éxito!</AlertDialogTitle>
+            <AlertDialogTitle className="text-center text-3xl">Batch published successfully!</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground text-center text-xl">
-              Tu lote fue enviado para verificación.
+              Your batch was sent for verification.
               <div className="border-border my-4 border-t"></div>
               {duplicates.length > 0 && (
                 <div className="mt-4">
-                  <div className="font-semibold">Códigos duplicados:</div>
+                  <div className="font-semibold">Duplicate codes:</div>
                   <div className="mt-2">
                     {duplicates.map((code) => (
                       <div key={code}>{code}</div>
@@ -266,8 +231,30 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
             }}
             className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 h-11"
           >
-            Volver al Dashboard
+            Back to Dashboard
           </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent className="border-border bg-card">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard this batch?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This batch is not automatically saved. If you leave now, you will lose all loaded cards and screenshots.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowDiscardDialog(false);
+                resetForm();
+              }}
+            >
+              Leave and discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import type { SellFlowState, SellFlowImage, SellFlowGiftcard, SellFlowMode, SellFlowCardEvidence } from '@/types/flows/sell-flow';
+import type { SellFlowState, SellFlowImage, SellFlowGiftcard, SellFlowCardEvidence } from '@/types/flows/sell-flow';
 import { normalizeClaimCode } from '@/lib/utils/claim-code-parser';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -14,14 +14,99 @@ function makeBlankCard(id: string, source: SellFlowGiftcard['source'] = 'manual'
   return { id, amount: '', claimCode: '', pinCode: '', source, evidence: defaultEvidence() };
 }
 
+function hasCardContent(card: SellFlowGiftcard): boolean {
+  return !!(card.amount || card.claimCode || card.pinCode);
+}
+
+function parseAmount(value?: string): number | null {
+  if (!value) return null;
+  const normalized = Number.parseFloat(value.replace(/[$,]/g, ''));
+  return Number.isFinite(normalized) ? normalized : null;
+}
+
+function formatAmount(value?: string): string {
+  const parsed = parseAmount(value);
+  if (parsed === null) return value?.trim() ?? '';
+  return parsed.toFixed(2);
+}
+
+function getFuzzyCandidate(
+  extractedClaimCode: string | undefined,
+  extractedAmount: string | undefined,
+  cards: SellFlowGiftcard[],
+  usedMatches: Set<string>,
+): SellFlowGiftcard | null {
+  if (!extractedClaimCode) return null;
+  if (!extractedAmount) return null;
+
+  const extracted = normalizeClaimCode(extractedClaimCode);
+  if (!extracted) return null;
+  const extractedAmountNumber = parseAmount(extractedAmount);
+
+  let bestCard: SellFlowGiftcard | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (const card of cards) {
+    if (usedMatches.has(card.id)) continue;
+    const candidate = normalizeClaimCode(card.claimCode);
+    if (!candidate) continue;
+    if (candidate.length !== extracted.length) continue;
+
+    const candidateAmount = parseAmount(card.amount);
+    if (extractedAmountNumber !== null && candidateAmount !== null && extractedAmountNumber !== candidateAmount) {
+      continue;
+    }
+
+    let distance = 0;
+    for (let i = 0; i < extracted.length; i++) {
+      if (extracted[i] !== candidate[i]) distance++;
+      if (distance > 1) break;
+    }
+
+    if (distance <= 1 && distance < bestDistance) {
+      bestDistance = distance;
+      bestCard = card;
+    }
+  }
+
+  return bestCard;
+}
+
+function buildEvidenceFromDraft(
+  draft: { claimCode?: string; amount?: string; imageId?: string; rawExtractedCode?: string; rawExtractedAmount?: string },
+  status: SellFlowCardEvidence['status'],
+): SellFlowCardEvidence {
+  return {
+    status,
+    matchedImageId: draft.imageId,
+    extractedCode: draft.rawExtractedCode ?? draft.claimCode,
+    extractedAmount: draft.rawExtractedAmount ?? draft.amount,
+  };
+}
+
+function clearEvidence(card: SellFlowGiftcard): SellFlowGiftcard {
+  return {
+    ...card,
+    evidence: { status: 'no_capture' },
+    validationState: 'no_capture',
+    extractedCode: undefined,
+    extractedAmount: undefined,
+    matchedImageId: undefined,
+  };
+}
+
+function clearEvidenceForImage(card: SellFlowGiftcard, imageId: string): SellFlowGiftcard {
+  const matchedImageId = card.evidence?.matchedImageId ?? card.matchedImageId;
+  return matchedImageId === imageId ? clearEvidence(card) : card;
+}
+
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 export const useSellFlow = create<SellFlowState>((set, get) => ({
   step: 1,
   selectedBrand: '',
   selectedCountry: '',
-  entryMode: null,
-  giftcards: [makeBlankCard('1')],
+  giftcards: [],
   images: [],
   unmatchedImages: [],
   lastRemovedCard: null,
@@ -32,17 +117,6 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
   // ── Brand / Country ──────────────────────────────────────────────────────
   setSelectedBrand: (brand) => set({ selectedBrand: brand }),
   setSelectedCountry: (country) => set({ selectedCountry: country }),
-
-  // ── Entry mode ────────────────────────────────────────────────────────────
-  setEntryMode: (mode: SellFlowMode) =>
-    set((state) => {
-      // Immutable once cards exist and mode is already set
-      if (state.entryMode !== null) {
-        const hasCards = state.giftcards.some((g) => g.claimCode || g.amount);
-        if (hasCards) return state; // no-op
-      }
-      return { entryMode: mode };
-    }),
 
   // ── Card management ──────────────────────────────────────────────────────
   setGiftcards: (giftcards) => set({ giftcards }),
@@ -57,11 +131,13 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
   removeGiftcard: (id) =>
     set((state) => {
-      if (state.giftcards.length <= 1) return state;
       const index = state.giftcards.findIndex((g) => g.id === id);
       const card = state.giftcards[index];
+      const matchedImageId = card?.evidence?.matchedImageId ?? card?.matchedImageId;
       return {
         giftcards: state.giftcards.filter((g) => g.id !== id),
+        images: matchedImageId ? state.images.filter((img) => img.id !== matchedImageId) : state.images,
+        unmatchedImages: matchedImageId ? state.unmatchedImages.filter((img) => img.imageId !== matchedImageId) : state.unmatchedImages,
         lastRemovedCard: card ? { card, index } : state.lastRemovedCard,
       };
     }),
@@ -80,7 +156,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       giftcards: state.giftcards.map((g) => {
         if (g.id !== id) return g;
 
-        const updated = { ...g, [field]: value };
+        const updated = { ...g, [field]: field === 'amount' ? formatAmount(value) : value };
 
         // ── OCR-path amount mismatch detection ─────────────────────────────────
         // When a seller edits the amount of an OCR-ingested card, compare the
@@ -122,8 +198,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
     set((state) => {
       const maxId = Math.max(...state.giftcards.map((g) => parseInt(g.id) || 0), 0);
 
-      const existingCards =
-        state.giftcards.length === 1 && !state.giftcards[0].amount && !state.giftcards[0].claimCode ? [] : state.giftcards;
+      const existingCards = state.giftcards.filter(hasCardContent);
 
       // Build a set of normalized keys from the existing batch
       const existingNormalized = new Set<string>();
@@ -148,7 +223,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
       const newCards: SellFlowGiftcard[] = uniqueIncoming.map((card, idx) => ({
         id: String(maxId + idx + 1),
-        amount: card.amount ?? '',
+        amount: formatAmount(card.amount ?? ''),
         claimCode: card.claimCode,
         pinCode: '',
         source: 'bulk' as const,
@@ -168,49 +243,77 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
     set((state) => {
       const maxId = Math.max(...state.giftcards.map((g) => parseInt(g.id) || 0), 0);
 
-      // Keep only blank placeholder cards (empty code + amount) from existing set
-      const existingCards =
-        state.giftcards.length === 1 && !state.giftcards[0].amount && !state.giftcards[0].claimCode ? [] : state.giftcards;
+      const existingCards = state.giftcards.filter(hasCardContent);
+      const cardsByNormalizedCode = new Map<string, SellFlowGiftcard>();
+      const usedMatches = new Set<string>();
 
-      // Build set of normalized keys to deduplicate
-      const existingNormalized = new Set<string>();
-      for (const g of existingCards) {
-        const key = normalizeClaimCode(g.claimCode);
-        if (key) existingNormalized.add(key);
+      for (const card of existingCards) {
+        const key = normalizeClaimCode(card.claimCode);
+        if (key) cardsByNormalizedCode.set(key, card);
       }
 
       let nextId = maxId;
       const newCards: SellFlowGiftcard[] = [];
+      const updates = new Map<string, SellFlowGiftcard>();
 
       for (const draft of draftCards) {
         const key = draft.claimCode ? normalizeClaimCode(draft.claimCode) : null;
 
-        // Deduplicate by claim code — empty-code rows always pass through
-        if (key && existingNormalized.has(key)) continue;
-        if (key) existingNormalized.add(key);
+        if (key) {
+          const existing = cardsByNormalizedCode.get(key);
+          if (existing && !usedMatches.has(existing.id)) {
+            usedMatches.add(existing.id);
+            const declaredAmount = parseAmount(existing.amount);
+            const extractedAmount = parseAmount(draft.amount);
+            const hasAmountMismatch = declaredAmount !== null && extractedAmount !== null && declaredAmount !== extractedAmount;
+
+            updates.set(existing.id, {
+              ...existing,
+              source: existing.source,
+              evidence: buildEvidenceFromDraft(draft, hasAmountMismatch ? 'amount_mismatch' : 'verified'),
+              validationState: hasAmountMismatch ? 'amount_mismatch' : 'verified',
+              extractedCode: draft.rawExtractedCode ?? draft.claimCode,
+              extractedAmount: draft.rawExtractedAmount ?? draft.amount,
+              matchedImageId: draft.imageId,
+            });
+            continue;
+          }
+        }
+
+        const fuzzyExisting = getFuzzyCandidate(draft.claimCode, draft.amount, existingCards, usedMatches);
+        if (fuzzyExisting) {
+          usedMatches.add(fuzzyExisting.id);
+          updates.set(fuzzyExisting.id, {
+            ...fuzzyExisting,
+            source: fuzzyExisting.source,
+            evidence: buildEvidenceFromDraft(draft, 'fuzzy_match'),
+            validationState: 'fuzzy_match',
+            extractedCode: draft.rawExtractedCode ?? draft.claimCode,
+            extractedAmount: draft.rawExtractedAmount ?? draft.amount,
+            matchedImageId: draft.imageId,
+          });
+          continue;
+        }
 
         nextId++;
-
-        // Map ocrConfidence to initial evidence status
         const evidenceStatus = draft.ocrConfidence === 'high' ? 'verified' : draft.ocrConfidence === 'fuzzy' ? 'fuzzy_match' : 'no_capture';
 
         newCards.push({
           id: String(nextId),
           claimCode: draft.claimCode ?? '',
-          amount: draft.amount ?? '',
+          amount: formatAmount(draft.amount ?? ''),
           pinCode: '',
           source: 'ocr',
-          evidence: {
-            status: evidenceStatus,
-            matchedImageId: draft.imageId,
-            extractedCode: draft.claimCode,
-            extractedAmount: draft.amount,
-          },
+          evidence: buildEvidenceFromDraft(draft, evidenceStatus),
+          validationState: evidenceStatus,
+          extractedCode: draft.rawExtractedCode ?? draft.claimCode,
+          extractedAmount: draft.rawExtractedAmount ?? draft.amount,
+          matchedImageId: draft.imageId,
         });
       }
 
       return {
-        giftcards: [...existingCards, ...newCards],
+        giftcards: [...existingCards.map((card) => updates.get(card.id) ?? card), ...newCards],
       };
     }),
 
@@ -219,7 +322,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
     set((state) => ({
       giftcards: state.giftcards.map((g) => {
         if (g.id !== cardId) return g;
-        const extracted = g.evidence.extractedAmount ?? '';
+        const extracted = formatAmount(g.evidence.extractedAmount ?? '');
         return {
           ...g,
           amount: extracted,
@@ -255,6 +358,47 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       }),
     })),
 
+  rejectFuzzyMatch: (cardId) =>
+    set((state) => {
+      const card = state.giftcards.find((g) => g.id === cardId);
+      if (!card || (card.evidence?.status ?? card.validationState) !== 'fuzzy_match') {
+        return state;
+      }
+
+      const extractedCode = card.evidence?.extractedCode ?? card.extractedCode;
+      const extractedAmount = formatAmount(card.evidence?.extractedAmount ?? card.extractedAmount ?? '');
+      const matchedImageId = card.evidence?.matchedImageId ?? card.matchedImageId;
+
+      if (!extractedCode || !matchedImageId) {
+        return {
+          giftcards: state.giftcards.map((g) => (g.id === cardId ? clearEvidence(g) : g)),
+        };
+      }
+
+      const maxId = Math.max(...state.giftcards.map((g) => parseInt(g.id) || 0), 0);
+      const newCard: SellFlowGiftcard = {
+        id: String(maxId + 1),
+        claimCode: extractedCode,
+        amount: extractedAmount,
+        pinCode: '',
+        source: 'ocr',
+        evidence: {
+          status: 'verified',
+          matchedImageId,
+          extractedCode,
+          extractedAmount,
+        },
+        validationState: 'verified',
+        extractedCode,
+        extractedAmount,
+        matchedImageId,
+      };
+
+      return {
+        giftcards: [...state.giftcards.map((g) => (g.id === cardId ? clearEvidence(g) : g)), newCard],
+      };
+    }),
+
   resolveAmountMismatch: (cardId, choice) => {
     if (choice === 'remove') {
       get().removeGiftcard(cardId);
@@ -274,6 +418,8 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
   removeImage: (id) =>
     set((state) => ({
       images: state.images.filter((img) => img.id !== id),
+      unmatchedImages: state.unmatchedImages.filter((img) => img.imageId !== id),
+      giftcards: state.giftcards.map((card) => clearEvidenceForImage(card, id)),
     })),
 
   clearImages: () => set({ images: [] }),
@@ -319,28 +465,13 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       }),
     })),
 
-  resetValidation: () =>
-    set((state) => ({
-      giftcards: state.giftcards.map((g) => ({
-        ...g,
-        evidence: defaultEvidence(),
-        validationState: undefined,
-        extractedCode: undefined,
-        extractedAmount: undefined,
-        matchedImageId: undefined,
-      })),
-      images: [],
-      unmatchedImages: [],
-    })),
-
   // ── Reset ────────────────────────────────────────────────────────────────
   resetForm: () =>
     set({
       step: 1,
       selectedBrand: '',
       selectedCountry: '',
-      entryMode: null,
-      giftcards: [makeBlankCard('1')],
+      giftcards: [],
       images: [],
       unmatchedImages: [],
       lastRemovedCard: null,

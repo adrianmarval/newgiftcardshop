@@ -119,13 +119,16 @@ const matchExtractionsToCards = (
       if (existingMatch?.matchType === 'exact') continue;
 
       const match = matchClaimCode(ext.claimCode, card.claimCode, allCardCodes);
+      const extractedNorm = ext.amount ? normalizeAmount(ext.amount) : NaN;
+      const cardNorm = normalizeAmount(card.amount);
+      const amountMismatch = !isNaN(extractedNorm) && !isNaN(cardNorm) && extractedNorm !== cardNorm;
 
       if (match.exactMatch) {
         bestMatch = { cardId: card.id, matchType: 'exact' };
         break; // Exact match — stop looking
       }
 
-      if (match.fuzzyMatch && match.matchedCardId === card.id) {
+      if (match.fuzzyMatch && !amountMismatch && match.matchedCardId === card.id) {
         if (!bestMatch || bestMatch.matchType === 'fuzzy') {
           bestMatch = { cardId: card.id, matchType: 'fuzzy' };
         }

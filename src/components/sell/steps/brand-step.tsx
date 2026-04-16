@@ -26,21 +26,19 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Left Column: Filters */}
-      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-4 p-3 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-3 p-3 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
-          <h2 className="mb-1 text-xl font-bold md:mb-2 md:text-2xl">Configuration</h2>
-          <p className="text-muted-foreground text-sm md:text-base">Select region and search brands.</p>
+          <h2 className="mb-0.5 text-lg font-bold md:mb-2 md:text-2xl">Batch configuration</h2>
+          <p className="text-muted-foreground hidden text-xs md:block md:text-base">Choose country and brand.</p>
         </div>
 
         {/* Country & Search - Grid on mobile to save vertical space */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1">
           <div className="space-y-1.5 md:space-y-2">
-            <Label className="text-muted-foreground mb-1 block text-[10px] font-semibold tracking-wider uppercase md:text-xs">
-              Country
-            </Label>
+            <Label className="text-muted-foreground mb-1 block text-[10px] font-semibold tracking-wider uppercase md:text-xs">Country</Label>
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
               <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-10 text-base md:h-11">
-                <SelectValue placeholder="Select country..." />
+                <SelectValue placeholder="Select a country..." />
               </SelectTrigger>
               <SelectContent className="border-border bg-popover text-popover-foreground">
                 {countries.map((country) => (
@@ -54,7 +52,7 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
 
           <div className="space-y-1.5 md:space-y-2">
             <Label className="text-muted-foreground mb-1 block text-[10px] font-semibold tracking-wider uppercase md:text-xs">
-              Search Brand
+              Search brand
             </Label>
             <div className="relative">
               <Search className="text-muted-foreground/50 absolute top-2.5 left-3 h-3.5 w-3.5 md:top-3 md:h-4 md:w-4" />
@@ -69,13 +67,15 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
         </div>
 
         <div className="border-border mt-auto flex flex-col gap-2 border-t pt-4 md:gap-3 md:pt-6">
-          <div className="text-muted-foreground/70 text-sm italic">{!isStep1Valid ? 'Select country and brand' : 'Ready to proceed'}</div>
+          <div className="text-muted-foreground/70 text-sm italic">
+            {!isStep1Valid ? 'Select country and brand' : 'Ready to load cards'}
+          </div>
           <Button
             onClick={() => setStep(2)}
             disabled={!isStep1Valid}
             className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-full text-base font-bold transition-all md:h-11"
           >
-            Continue <ChevronRight className="ml-2 h-4 w-4" />
+            Continue to intake <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </Card>
@@ -83,7 +83,7 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
       {/* Right Column: Brand Grid */}
       <Card className="border-border bg-card/50 flex min-h-100 flex-col p-3 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <div className="mb-3 flex items-center justify-between md:mb-4">
-          <Label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase md:text-sm">Available Brands</Label>
+          <Label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase md:text-sm">Available brands</Label>
           <span className="text-muted-foreground/50 text-sm">{filteredBrands.length} items</span>
         </div>
 

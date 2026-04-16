@@ -54,7 +54,6 @@ export type {
   SellFlowGiftcard,
   SellFlowImage,
   SellFlowState,
-  SellFlowMode,
   SellFlowCardEvidence,
   SellFlowUnmatchedImage,
   RemovedCardSnapshot,

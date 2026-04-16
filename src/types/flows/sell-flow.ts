@@ -3,10 +3,6 @@
 // These are consumed by Zustand stores (use-sell-flow) and the
 // step components that participate in the sell multi-step wizard.
 //
-// Entry modes:
-//   ocr-first      — seller uploads images first; AI extracts draft card rows.
-//   manual-first   — seller types or pastes codes first; screenshots are optional.
-//
 // Screenshot / evidence semantics:
 //   Screenshots are OPTIONAL enrichment. Cards without capture publish fine.
 //   Only amount_mismatch (screenshot-backed) and unconfirmed fuzzy_match block.
@@ -14,14 +10,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ValidationState } from '@/types/sell/validation';
-
-// ── Entry mode ────────────────────────────────────────────────────────────────
-
-/**
- * How the seller chose to start card ingestion for this session.
- * Immutable once cards exist in the batch.
- */
-export type SellFlowMode = 'ocr-first' | 'manual-first';
 
 // ── Evidence sub-state per card ───────────────────────────────────────────────
 
@@ -118,19 +106,15 @@ export interface RemovedCardSnapshot {
 /**
  * Zustand store shape for the sell flow wizard.
  *
- * OCR-first step sequence:  1 (Brand) → 2 (OCR Entry) → 3 (Review)
- * Manual-first step sequence: 1 (Brand) → 2 (Details) → 3 (Proof Upload) → 4 (Review)
+ * Fixed sequence: 1 (Brand) → 2 (Intake + OCR resolution) → 3 (Review)
  */
 export interface SellFlowState {
   step: number;
   selectedBrand: string;
   selectedCountry: string;
 
-  /** Entry mode for this session — null until the seller makes a selection */
-  entryMode: SellFlowMode | null;
-
   giftcards: SellFlowGiftcard[];
-  /** Uploaded images — used for both OCR ingestion and manual-path matching */
+  /** Uploaded images — used for OCR ingestion and evidence previews */
   images: SellFlowImage[];
   /** Screenshots that did not match any card — informational only, never blocks */
   unmatchedImages: SellFlowUnmatchedImage[];
@@ -143,13 +127,6 @@ export interface SellFlowState {
   // ── Brand / Country ──────────────────────────────────────────────────────
   setSelectedBrand: (brand: string) => void;
   setSelectedCountry: (country: string) => void;
-
-  // ── Entry mode ────────────────────────────────────────────────────────────
-  /**
-   * Set entry mode for this session.
-   * No-op if mode is already set and cards exist — mode is immutable once ingestion starts.
-   */
-  setEntryMode: (mode: SellFlowMode) => void;
 
   // ── Card management ──────────────────────────────────────────────────────
   setGiftcards: (giftcards: SellFlowGiftcard[]) => void;
@@ -170,6 +147,8 @@ export interface SellFlowState {
       amount?: string;
       imageId?: string;
       ocrConfidence: 'high' | 'fuzzy' | 'manual';
+      rawExtractedCode?: string;
+      rawExtractedAmount?: string;
     }>,
   ) => void;
 
@@ -190,6 +169,11 @@ export interface SellFlowState {
    */
   confirmFuzzyMatch: (cardId: string) => void;
   /**
+   * Reject a fuzzy claim-code suggestion and keep both codes as separate cards.
+   * Restores the typed card to no_capture and creates a new OCR card from the screenshot.
+   */
+  rejectFuzzyMatch: (cardId: string) => void;
+  /**
    * Resolve amount mismatch with an explicit choice.
    * Convenience wrapper over acceptExtractedAmount / keepDeclaredAmount / removeGiftcard.
    */
@@ -201,7 +185,7 @@ export interface SellFlowState {
   clearImages: () => void;
   setUnmatchedImages: (images: SellFlowUnmatchedImage[]) => void;
 
-  // ── Validation (manual path) ──────────────────────────────────────────────
+  // ── OCR resolution in intake ──────────────────────────────────────────────
   setCardValidationResult: (
     id: string,
     state: ValidationState,
@@ -209,12 +193,8 @@ export interface SellFlowState {
     extractedAmount?: string,
     matchedImageId?: string,
   ) => void;
-  /**
-   * Marks a single card as explicitly skipped for evidence upload.
-   * Sets evidence.status to 'skipped' — non-blocking.
-   */
+  /** Marks a single card as skipped for OCR evidence — non-blocking. */
   skipCardEvidence: (id: string) => void;
-  resetValidation: () => void;
 
   // ── Reset ────────────────────────────────────────────────────────────────
   resetForm: () => void;

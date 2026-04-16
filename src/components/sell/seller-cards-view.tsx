@@ -107,46 +107,46 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="group border-border bg-card/50 hover:border-primary/50 space-y-2 p-6 backdrop-blur-sm transition-all">
           <div className="text-muted-foreground flex items-center justify-between">
-            <span className="text-sm font-black tracking-widest uppercase">Batches History</span>
+            <span className="text-[10px] font-black tracking-widest uppercase md:text-sm">Batches History</span>
             <History className="text-primary h-4 w-4" />
           </div>
-          <div className="text-4xl font-black tracking-tighter italic">{totalBatches}</div>
-          <p className="text-muted-foreground text-sm italic">{totalCardsCount} cards total</p>
+          <div className="text-3xl font-black tracking-tighter italic md:text-4xl">{totalBatches}</div>
+          <p className="text-muted-foreground text-xs italic md:text-sm">{totalCardsCount} cards total</p>
         </Card>
 
         <Card className="group border-border bg-card/50 space-y-2 p-6 backdrop-blur-sm transition-all hover:border-blue-500/50">
           <div className="text-muted-foreground flex items-center justify-between">
-            <span className="text-sm font-black tracking-widest uppercase">Pending Payout</span>
+            <span className="text-[10px] font-black tracking-widest uppercase md:text-sm">Pending Payout</span>
             <TrendingUp className="h-4 w-4 text-blue-500" />
           </div>
-          <div className="text-4xl font-black tracking-tighter text-blue-500 italic">{awaitingPayoutCount}</div>
-          <p className="text-muted-foreground text-sm italic">Batches ready for payment</p>
+          <div className="text-3xl font-black tracking-tighter text-blue-500 italic md:text-4xl">{awaitingPayoutCount}</div>
+          <p className="text-muted-foreground text-xs italic md:text-sm">Batches ready for payment</p>
         </Card>
 
         <Card className="group border-border bg-card/50 space-y-2 p-6 backdrop-blur-sm transition-all hover:border-emerald-500/50">
           <div className="text-muted-foreground flex items-center justify-between">
-            <span className="text-sm font-black tracking-widest uppercase">Total Earnings</span>
+            <span className="text-[10px] font-black tracking-widest uppercase md:text-sm">Total Earnings</span>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </div>
-          <div className="text-4xl font-black tracking-tighter text-emerald-500 italic">${totalPaid.toFixed(2)}</div>
-          <p className="text-muted-foreground text-sm italic">Sent to your wallet</p>
+          <div className="text-3xl font-black tracking-tighter text-emerald-500 italic md:text-4xl">${totalPaid.toFixed(2)}</div>
+          <p className="text-muted-foreground text-xs italic md:text-sm">Sent to your wallet</p>
         </Card>
 
         <Card className="group border-border bg-card/50 space-y-2 p-6 backdrop-blur-sm transition-all hover:border-amber-500/50">
           <div className="text-muted-foreground flex items-center justify-between">
-            <span className="text-sm font-black tracking-widest uppercase">Gross Inventory</span>
+            <span className="text-[10px] font-black tracking-widest uppercase md:text-sm">Gross Inventory</span>
             <Package className="h-4 w-4 text-amber-500" />
           </div>
-          <div className="text-4xl font-black tracking-tighter text-amber-500 italic">${totalVolume.toFixed(2)}</div>
-          <p className="text-muted-foreground text-sm italic">Total nominal value loaded</p>
+          <div className="text-3xl font-black tracking-tighter text-amber-500 italic md:text-4xl">${totalVolume.toFixed(2)}</div>
+          <p className="text-muted-foreground text-xs italic md:text-sm">Total nominal value loaded</p>
         </Card>
       </div>
 
       {/* 2. Filters & Actions */}
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h2 className="text-3xl font-black tracking-tight uppercase italic">Dashboard History</h2>
-          <p className="text-muted-foreground text-sm font-medium tracking-widest uppercase">Monitor your batches status in real-time</p>
+          <h2 className="text-2xl font-black tracking-tight uppercase italic md:text-3xl">Dashboard History</h2>
+          <p className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase md:text-sm">Monitor your batches status in real-time</p>
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
