@@ -83,9 +83,9 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
   const countryMap = Object.fromEntries(countries.map((c) => [c.id, c.name]));
 
   return (
-    <div className="w-full space-y-4 px-0 py-2 md:space-y-6 md:px-0 md:py-0">
+    <div className="w-full space-y-4 px-0 py-0 md:space-y-6 md:px-0 md:py-0">
       {/* Header & Progress combined */}
-      <div className="border-border bg-card/40 flex flex-col justify-between gap-4 rounded-none border-y px-3 py-4 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
+      <div className="border-border bg-card/40 flex flex-col justify-between gap-4 rounded-none border-y px-3 py-2.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="mb-0.5 text-2xl font-bold md:mb-1 md:text-4xl">Sell Gift Cards</h1>
           <p className="text-muted-foreground text-xs md:text-base">
