@@ -290,45 +290,43 @@ export function IntakeStep() {
         )}
       </AnimatePresence>
 
-      <div className="grid h-full grid-cols-1 items-start gap-4 pb-20 md:grid-cols-12 md:gap-6 md:pb-0">
-        <Card className="border-border bg-card/50 sticky top-0 z-20 space-y-4 p-3 backdrop-blur-sm md:col-span-3 md:space-y-6">
-          <CardHeader>
-            <CardTitle className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Load Cards</CardTitle>
-            <CardDescription>Load your gift cards to sell them on the bot</CardDescription>
-          </CardHeader>
+      <div className="grid h-full grid-cols-1 items-start gap-2 pb-20 md:grid-cols-12 md:gap-6 md:pb-0">
+        <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-2.5 p-2 backdrop-blur-sm md:col-span-3 md:space-y-4 md:p-4">
+          <div className="px-1 md:px-2">
+            <h2 className="text-foreground text-lg font-bold md:text-xl">Load Cards</h2>
+            <p className="text-muted-foreground hidden text-[10px] md:block md:text-xs">Load gift cards to sell them</p>
+          </div>
 
-          <CardContent className="flex flex-col gap-2 md:gap-3">
+          <div className="flex flex-col gap-1.5 md:gap-2">
             <Button
               onClick={() => setShowBulkPasteDialog(true)}
               variant="outline"
-              className="border-border text-primary hover:bg-primary/10 hover:text-primary h-10 w-full justify-start px-3 md:h-11 md:px-4"
+              className="border-border text-primary hover:bg-primary/10 hover:text-primary h-8 w-full justify-start px-2 text-xs md:h-9 md:px-3"
             >
-              <Clipboard className="mr-2 h-4 w-4 md:mr-3" /> Upload from Text
+              <Clipboard className="mr-2 h-3.5 w-3.5" /> Upload from Text
             </Button>
             <Button
               onClick={() => setShowOcrDialog(true)}
               disabled={isUploading || isExtracting}
               variant="outline"
-              className="border-border text-primary hover:bg-primary/10 hover:text-primary w-full justify-start px-4"
+              className="border-border text-primary hover:bg-primary/10 hover:text-primary h-8 w-full justify-start px-2 text-xs md:h-9 md:px-3"
             >
-              {isExtracting ? <Loader2 className="mr-3 h-4 w-4 animate-spin" /> : <Sparkles className="mr-3 h-4 w-4" />}
+              {isExtracting ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-2 h-3.5 w-3.5" />}
               Upload Screenshots
             </Button>
-          </CardContent>
-          <CardFooter>
-            <div className="grid w-full grid-cols-2 gap-3">
-              <Button onClick={() => setStep(1)} variant="outline" className="w-full">
-                Back
-              </Button>
-              <Button onClick={() => setStep(3)} disabled={!canContinue || hasBlockingConflicts} className="w-full">
-                Continue
-              </Button>
-            </div>
-          </CardFooter>
+          </div>
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button onClick={() => setStep(1)} variant="outline" size="sm" className="h-8 text-xs md:h-9">
+              Back
+            </Button>
+            <Button onClick={() => setStep(3)} disabled={!canContinue || hasBlockingConflicts} size="sm" className="h-8 text-xs md:h-9">
+              Continue
+            </Button>
+          </div>
         </Card>
 
         <div className="space-y-4 md:col-span-9">
-          <Card className="border-border bg-card/50 flex min-h-100 flex-col p-3 backdrop-blur-sm md:min-h-125 md:p-6">
+          <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:min-h-125 md:p-6">
             <CardHeader>
               <CardTitle>Loaded cards</CardTitle>
             </CardHeader>
@@ -340,10 +338,10 @@ export function IntakeStep() {
               )}
             >
               {blockingCards.length > 0 && (
-                <div className="mb-3 flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3">
-                  <div className="flex-1 bg-amber-500/20" />
-                  <span className="text-xs font-bold tracking-[0.2em] text-amber-400 uppercase">Require attention</span>
-                  <div className="flex-1 bg-amber-500/20" />
+                <div className="mb-2 flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-2">
+                  <div className="flex-1 bg-amber-500/20 h-[1px]" />
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-amber-400 uppercase">Require attention</span>
+                  <div className="flex-1 bg-amber-500/20 h-[1px]" />
                 </div>
               )}
 
@@ -362,24 +360,24 @@ export function IntakeStep() {
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
-                        className="group border-border bg-muted/20 hover:bg-muted/35 relative space-y-3 rounded-xl border p-3 transition-all"
+                        className="group border-border bg-muted/20 hover:bg-muted/35 relative space-y-2 rounded-xl border p-2 transition-all"
                       >
-                        <div className="flex flex-col gap-3 md:grid md:grid-cols-[auto_140px_120px_minmax(240px,1fr)_auto] md:items-center md:gap-3">
+                        <div className="flex flex-col gap-2 md:grid md:grid-cols-[auto_140px_120px_minmax(240px,1fr)_auto] md:items-center md:gap-2">
                           {/* Row 1: Index, Status (mobile) and Trash */}
                           <div className="flex items-center justify-between md:contents">
                             <div className="flex items-center gap-2">
-                              <div className="border-border bg-muted text-muted-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold">
+                              <div className="border-border bg-muted text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold">
                                 {idx + 1}
                               </div>
-                              <div className="flex flex-wrap items-center gap-1.5 md:hidden">
-                                <Badge className={`${config.color} text-[11px]`}>
-                                  <Icon className="mr-1 h-3 w-3" />
+                              <div className="flex flex-wrap items-center gap-1 md:hidden">
+                                <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
+                                  <Icon className="mr-1 h-2.5 w-2.5" />
                                   {config.label}
                                 </Badge>
                               </div>
-                              <div className="hidden flex-wrap items-center gap-1.5 md:flex">
-                                <Badge className={`${config.color} text-[11px]`}>
-                                  <Icon className="mr-1 h-3 w-3" />
+                              <div className="hidden flex-wrap items-center gap-1 md:flex">
+                                <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
+                                  <Icon className="mr-1 h-2.5 w-2.5" />
                                   {config.label}
                                 </Badge>
                               </div>
@@ -388,22 +386,22 @@ export function IntakeStep() {
                               size="icon"
                               variant="ghost"
                               onClick={() => removeGiftcard(liveCard.id)}
-                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8 md:hidden"
+                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-7 w-7 md:hidden"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
 
                           {/* Inputs Grid/Stack */}
-                          <div className="grid grid-cols-2 gap-2 md:contents">
+                          <div className="grid grid-cols-2 gap-1.5 md:contents">
                             <div className="relative md:max-w-[140px]">
-                              <span className="text-muted-foreground/50 absolute top-2 left-2.5 text-[11px]">$</span>
+                              <span className="text-muted-foreground/50 absolute top-2 left-2 text-[10px]">$</span>
                               <Input
                                 type="number"
                                 placeholder="0.00"
                                 value={liveCard.amount}
                                 onChange={(e) => updateGiftcard(liveCard.id, 'amount', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-9 pl-6 text-sm"
+                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 pl-5 text-sm"
                               />
                             </div>
 
@@ -412,7 +410,7 @@ export function IntakeStep() {
                               placeholder="PIN"
                               value={liveCard.pinCode || ''}
                               onChange={(e) => updateGiftcard(liveCard.id, 'pinCode', e.target.value)}
-                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-9 font-mono text-sm md:max-w-[120px]"
+                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 font-mono text-sm md:max-w-[120px]"
                             />
                           </div>
 
@@ -421,7 +419,7 @@ export function IntakeStep() {
                               placeholder="Claim code"
                               value={liveCard.claimCode}
                               onChange={(e) => updateGiftcard(liveCard.id, 'claimCode', e.target.value)}
-                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-9 font-mono text-sm"
+                              className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 font-mono text-sm"
                             />
                           </div>
 
@@ -429,9 +427,9 @@ export function IntakeStep() {
                             size="icon"
                             variant="ghost"
                             onClick={() => removeGiftcard(liveCard.id)}
-                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive hidden h-8 w-8 shrink-0 rounded-lg md:flex"
+                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive hidden h-7 w-7 shrink-0 rounded-lg md:flex"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
 
@@ -527,10 +525,10 @@ export function IntakeStep() {
 
               {readyCards.length > 0 && (
                 <>
-                  <div className="mt-4 mb-3 flex items-center gap-3 rounded-lg border border-slate-500/20 bg-slate-500/5 px-3">
-                    <div className="flex-1 bg-slate-500/20" />
-                    <span className="text-xs font-bold tracking-[0.2em] text-slate-300 uppercase">Ready</span>
-                    <div className="flex-1 bg-slate-500/20" />
+                  <div className="mt-3 mb-2 flex items-center gap-2 rounded-lg border border-slate-500/20 bg-slate-500/5 px-2">
+                    <div className="flex-1 bg-slate-500/20 h-[1px]" />
+                    <span className="text-[10px] font-bold tracking-[0.2em] text-slate-300 uppercase">Ready</span>
+                    <div className="flex-1 bg-slate-500/20 h-[1px]" />
                   </div>
 
                   <AnimatePresence mode="popLayout">
@@ -546,24 +544,24 @@ export function IntakeStep() {
                           initial={{ opacity: 0, scale: 0.98 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.98 }}
-                          className="group border-border bg-muted/15 hover:bg-muted/25 relative rounded-xl border px-3 py-2 transition-all"
+                          className="group border-border bg-muted/15 hover:bg-muted/25 relative rounded-xl border p-2 transition-all"
                         >
-                          <div className="flex flex-col gap-3 md:grid md:grid-cols-[auto_140px_120px_minmax(260px,1fr)_auto] md:items-center md:gap-4">
+                          <div className="flex flex-col gap-2 md:grid md:grid-cols-[auto_140px_120px_minmax(260px,1fr)_auto] md:items-center md:gap-2">
                             {/* Row 1: Index, Status (mobile) and Trash */}
                             <div className="flex items-center justify-between md:contents">
                               <div className="flex items-center gap-2">
-                                <div className="border-border bg-muted text-muted-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold">
+                                <div className="border-border bg-muted text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold">
                                   {blockingCards.length + idx + 1}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-1.5 md:hidden">
-                                  <Badge className={`${config.color} text-[11px]`}>
-                                    <Icon className="mr-1 h-3 w-3" />
+                                <div className="flex flex-wrap items-center gap-1 md:hidden">
+                                  <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
+                                    <Icon className="mr-1 h-2.5 w-2.5" />
                                     {config.label}
                                   </Badge>
                                 </div>
-                                <div className="hidden flex-wrap items-center gap-1.5 md:flex">
-                                  <Badge className={`${config.color} text-[11px]`}>
-                                    <Icon className="mr-1 h-3 w-3" />
+                                <div className="hidden flex-wrap items-center gap-1 md:flex">
+                                  <Badge className={`${config.color} px-1.5 py-0 text-[10px]`}>
+                                    <Icon className="mr-1 h-2.5 w-2.5" />
                                     {config.label}
                                   </Badge>
                                 </div>
@@ -572,22 +570,22 @@ export function IntakeStep() {
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => removeGiftcard(card.id)}
-                                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8 md:hidden"
+                                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-7 w-7 md:hidden"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
 
                             {/* Inputs Grid/Stack */}
-                            <div className="grid grid-cols-2 gap-2 md:contents">
+                            <div className="grid grid-cols-2 gap-1.5 md:contents">
                               <div className="relative md:max-w-[140px]">
-                                <span className="text-muted-foreground/50 absolute top-2 left-2.5 text-[11px]">$</span>
+                                <span className="text-muted-foreground/50 absolute top-2 left-2 text-[10px]">$</span>
                                 <Input
                                   type="number"
                                   placeholder="0.00"
                                   value={card.amount}
                                   onChange={(e) => updateGiftcard(card.id, 'amount', e.target.value)}
-                                  className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-9 pl-6 text-sm"
+                                  className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 pl-5 text-sm"
                                 />
                               </div>
 
@@ -596,7 +594,7 @@ export function IntakeStep() {
                                 placeholder="PIN"
                                 value={card.pinCode || ''}
                                 onChange={(e) => updateGiftcard(card.id, 'pinCode', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-9 font-mono text-sm md:max-w-[120px]"
+                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 font-mono text-sm md:max-w-[120px]"
                               />
                             </div>
 
@@ -605,7 +603,7 @@ export function IntakeStep() {
                                 placeholder="Claim code"
                                 value={card.claimCode}
                                 onChange={(e) => updateGiftcard(card.id, 'claimCode', e.target.value)}
-                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-9 font-mono text-sm"
+                                className="border-border bg-muted/50 text-foreground focus:border-primary/50 h-8 font-mono text-sm"
                               />
                             </div>
 
@@ -613,9 +611,9 @@ export function IntakeStep() {
                               size="icon"
                               variant="ghost"
                               onClick={() => removeGiftcard(card.id)}
-                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive hidden h-8 w-8 shrink-0 rounded-lg md:flex"
+                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive hidden h-7 w-7 shrink-0 rounded-lg md:flex"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
 
