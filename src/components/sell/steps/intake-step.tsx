@@ -241,41 +241,6 @@ export function IntakeStep() {
     return orderedGiftcards.filter((card) => card.claimCode.toLowerCase().includes(term));
   }, [orderedGiftcards, searchTerm]);
 
-  const blockingCards = filteredGiftcards.filter((card) => isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
-  const readyCards = filteredGiftcards.filter((card) => !isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
-
-  const displayItems = useMemo(() => {
-    const items: (
-      | { type: 'header'; label: string; color: 'amber' | 'slate'; id: string }
-      | { type: 'card'; card: SellFlowGiftcard; idx: number; id: string }
-    )[] = [];
-
-    if (blockingCards.length > 0) {
-      items.push({ type: 'header', label: 'Require attention', color: 'amber', id: 'header-blocking' });
-      blockingCards.forEach((card, idx) => {
-        items.push({
-          type: 'card',
-          card: giftcards.find((c) => c.id === card.id) || card,
-          idx,
-          id: card.id,
-        });
-      });
-    }
-
-    if (readyCards.length > 0) {
-      items.push({ type: 'header', label: 'Ready', color: 'slate', id: 'header-ready' });
-      readyCards.forEach((card, idx) => {
-        items.push({
-          type: 'card',
-          card,
-          idx: blockingCards.length + idx,
-          id: card.id,
-        });
-      });
-    }
-
-    return items;
-  }, [blockingCards, readyCards, giftcards]);
 
   return (
     <>
@@ -398,46 +363,19 @@ export function IntakeStep() {
               )}
             >
               <AnimatePresence mode="popLayout" initial={false}>
-                {displayItems.map((item) =>
-                  item.type === 'header' ? (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className={cn(
-                        'flex items-center gap-2 rounded-lg px-2',
-                        item.color === 'amber'
-                          ? 'mb-2 border border-amber-500/20 bg-amber-500/5'
-                          : 'mt-3 mb-2 border border-slate-500/20 bg-slate-500/5',
-                      )}
-                    >
-                      <div className={cn('h-px flex-1', item.color === 'amber' ? 'bg-amber-500/20' : 'bg-slate-500/20')} />
-                      <span
-                        className={cn(
-                          'text-[10px] font-bold tracking-[0.2em] uppercase',
-                          item.color === 'amber' ? 'text-amber-400' : 'text-slate-300',
-                        )}
-                      >
-                        {item.label}
-                      </span>
-                      <div className={cn('h-px flex-1', item.color === 'amber' ? 'bg-amber-500/20' : 'bg-slate-500/20')} />
-                    </motion.div>
-                  ) : (
-                    <GiftcardCard
-                      key={item.id}
-                      card={item.card}
-                      idx={item.idx}
-                      onDeleteRequest={(id) => setCardIdToDelete(id)}
-                      updateGiftcard={updateGiftcard}
-                      needsManualAmount={needsManualAmount}
-                      resolveAmountMismatch={resolveAmountMismatch}
-                      confirmFuzzyMatch={confirmFuzzyMatch}
-                      rejectFuzzyMatch={rejectFuzzyMatch}
-                    />
-                  ),
-                )}
+                {filteredGiftcards.map((card, idx) => (
+                  <GiftcardCard
+                    key={card.id}
+                    card={card}
+                    idx={idx}
+                    onDeleteRequest={(id) => setCardIdToDelete(id)}
+                    updateGiftcard={updateGiftcard}
+                    needsManualAmount={needsManualAmount}
+                    resolveAmountMismatch={resolveAmountMismatch}
+                    confirmFuzzyMatch={confirmFuzzyMatch}
+                    rejectFuzzyMatch={rejectFuzzyMatch}
+                  />
+                ))}
               </AnimatePresence>
             </CardContent>
 
