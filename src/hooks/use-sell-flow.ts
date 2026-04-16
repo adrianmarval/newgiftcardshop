@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import type { SellFlowState, SellFlowImage, SellFlowGiftcard, SellFlowCardEvidence } from '@/types/flows/sell-flow';
 import { normalizeClaimCode } from '@/lib/utils/claim-code-parser';
+import { ValidationState } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -304,7 +305,8 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
         nextId++;
         const draftAmount = parseAmount(draft.amount);
-        let evidenceStatus = draft.ocrConfidence === 'high' ? 'verified' : draft.ocrConfidence === 'fuzzy' ? 'fuzzy_match' : 'no_capture';
+        let evidenceStatus: ValidationState =
+          draft.ocrConfidence === 'high' ? 'verified' : draft.ocrConfidence === 'fuzzy' ? 'fuzzy_match' : 'no_capture';
 
         // Override verified if amount is missing
         if (evidenceStatus === 'verified' && draftAmount === null) {
