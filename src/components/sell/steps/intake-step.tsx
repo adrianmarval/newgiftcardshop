@@ -12,6 +12,7 @@ import {
   Loader2,
   MinusCircle,
   Sparkles,
+  Search,
   Trash2,
   Upload,
 } from 'lucide-react';
@@ -91,10 +92,18 @@ export function IntakeStep() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [cardIdToDelete, setCardIdToDelete] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleImport = (cards: ParsedGiftcard[]) => {
     const result = handleBulkImport(cards);
-    setStoreDuplicateCount(result.duplicateCount);
+    if (result.duplicateCount > 0) {
+      toast.info(
+        `${result.duplicateCount} código${result.duplicateCount !== 1 ? 's' : ''} duplicado${result.duplicateCount !== 1 ? 's' : ''}`,
+        {
+          description: `Ya se encuentran en tu lote actual.`,
+        },
+      );
+    }
   };
 
   const handleFilesUpload = async (files: FileList | File[]) => {
@@ -226,8 +235,14 @@ export function IntakeStep() {
     );
   };
 
-  const blockingCards = orderedGiftcards.filter((card) => isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
-  const readyCards = orderedGiftcards.filter((card) => !isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
+  const filteredGiftcards = useMemo(() => {
+    if (!searchTerm) return orderedGiftcards;
+    const term = searchTerm.toLowerCase();
+    return orderedGiftcards.filter((card) => card.claimCode.toLowerCase().includes(term));
+  }, [orderedGiftcards, searchTerm]);
+
+  const blockingCards = filteredGiftcards.filter((card) => isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
+  const readyCards = filteredGiftcards.filter((card) => !isBlockingEvidenceState(card.evidence?.status ?? card.validationState));
 
   const displayItems = useMemo(() => {
     const items: (
@@ -329,56 +344,56 @@ export function IntakeStep() {
         </DialogContent>
       </Dialog>
 
-      <AnimatePresence>
-        {storeDuplicateCount > 0 && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="mb-2">
-            <Alert className="border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400">
-              <Info className="h-4 w-4" />
-              <AlertDescription className="ml-2">
-                {storeDuplicateCount} duplicate code{storeDuplicateCount !== 1 ? 's were' : ' was'} already in the batch and{' '}
-                {storeDuplicateCount !== 1 ? 'were' : 'was'} not added again.
-              </AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="grid h-full grid-cols-1 items-start gap-2 pb-20 md:grid-cols-12 md:gap-6 md:pb-0">
-        <Card className="border-border bg-card/50 flex h-auto flex-col gap-1.5 p-2 backdrop-blur-sm md:col-span-3 md:gap-4 md:p-4">
+      <div className="flex h-full flex-col gap-2 md:grid md:grid-cols-12 md:items-start md:gap-6">
+        <Card className="border-border bg-card/50 flex h-auto flex-none flex-col gap-1.5 p-2 backdrop-blur-sm md:col-span-3 md:gap-4 md:p-4">
           <div className="px-1 md:px-2">
             <h2 className="text-foreground text-lg font-bold md:text-xl">Load Cards</h2>
             <p className="text-muted-foreground hidden text-[10px] md:block md:text-xs">Load gift cards to sell them</p>
           </div>
 
-          <div className="flex flex-col gap-1.5 md:gap-2">
+          <div className="grid grid-cols-2 gap-1.5 md:flex md:flex-col md:gap-2">
             <Button
               onClick={() => setShowBulkPasteDialog(true)}
               variant="outline"
-              className="border-border text-primary hover:bg-primary/10 hover:text-primary h-8 w-full justify-start px-2 text-xs md:h-9 md:px-3"
+              size="sm"
+              className="border-primary/20 bg-primary/5 hover:bg-primary/10 flex h-8 flex-col items-center justify-center gap-0.5 px-1 py-1 text-[10px] whitespace-nowrap md:h-9 md:flex-row md:gap-2 md:text-xs"
             >
-              <Clipboard className="mr-2 h-3.5 w-3.5" /> Upload from Text
+              <Clipboard className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span className="md:hidden">Bulk Paste</span>
+              <span className="hidden md:inline">Upload from Text</span>
             </Button>
             <Button
               onClick={() => setShowOcrDialog(true)}
               disabled={isUploading || isExtracting}
               variant="outline"
-              className="border-border text-primary hover:bg-primary/10 hover:text-primary h-8 w-full justify-start px-2 text-xs md:h-9 md:px-3"
+              size="sm"
+              className="border-primary/20 bg-primary/5 hover:bg-primary/10 flex h-8 flex-col items-center justify-center gap-0.5 px-1 py-1 text-[10px] whitespace-nowrap md:h-9 md:flex-row md:gap-2 md:text-xs"
             >
-              {isExtracting ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-2 h-3.5 w-3.5" />}
-              Extract from Screenshots
+              <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span className="md:hidden">AI Scan Screenshots</span>
+              <span className="hidden md:inline">Extract from Screenshots</span>
             </Button>
           </div>
         </Card>
 
-        <div className="space-y-4 md:col-span-9">
-          <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:min-h-125 md:p-6">
-            <CardHeader>
-              <CardTitle>Card list</CardTitle>
+        <div className="flex min-h-0 flex-1 flex-col md:col-span-9">
+          <Card className="border-border bg-card/50 flex min-h-0 flex-1 flex-col px-1 pt-1 pb-4 backdrop-blur-sm md:h-full md:min-h-125 md:p-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2 py-1.5 md:px-6 md:py-4">
+              <CardTitle className="text-sm font-bold md:text-base">Card list</CardTitle>
+              <div className="relative w-full max-w-[120px] md:max-w-[200px]">
+                <Search className="text-muted-foreground absolute top-2 left-2 h-3.5 w-3.5" />
+                <Input
+                  placeholder="Search code..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border-border bg-muted/50 focus:border-primary/50 h-8 pl-7 text-[10px] md:text-xs"
+                />
+              </div>
             </CardHeader>
 
             <CardContent
               className={cn(
-                'custom-scrollbar max-h-125 flex-1 space-y-3 overflow-y-auto pr-1 md:max-h-150 md:space-y-4 md:pr-2',
+                'custom-scrollbar flex-1 space-y-3 overflow-y-auto px-1 md:px-2 md:space-y-4 pr-1',
                 giftcards.length === 0 && 'hidden',
               )}
             >
@@ -436,7 +451,7 @@ export function IntakeStep() {
               </div>
             )}
 
-            <div className="border-border mt-auto grid grid-cols-2 gap-2 border-t pt-4">
+            <div className="border-border mt-auto grid grid-cols-2 gap-2 border-t pt-2">
               <Button onClick={() => setStep(1)} variant="outline" size="sm" className="h-9 text-sm">
                 Back
               </Button>
@@ -542,7 +557,7 @@ function GiftcardCard({
         }}
         onPointerDown={(e) => dragControls.start(e)}
         style={{ x }}
-        className="group border-border bg-card/40 hover:bg-muted/10 relative z-10 touch-pan-y space-y-1.5 rounded-xl border p-1.5 backdrop-blur-sm transition-all select-none"
+        className="group border-border bg-card/40 hover:bg-muted/10 relative z-10 touch-pan-y space-y-1.5 rounded-xl border p-1 backdrop-blur-sm transition-all select-none"
       >
         {/* Sidebar indicator (mobile only) */}
         <div className={cn('absolute top-0 bottom-0 left-0 w-1 md:hidden', indicatorColor)} />

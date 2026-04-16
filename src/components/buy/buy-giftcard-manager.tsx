@@ -53,7 +53,7 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
   }
 
   return (
-    <div className="w-full space-y-4 px-0 py-0 md:space-y-6 md:px-0 md:py-0">
+    <div className="flex h-full w-full flex-col space-y-1 px-0 py-0 md:p-0 md:space-y-6">
       {/* Header & Progress combined */}
       <div className="border-border bg-card/40 flex flex-col justify-between gap-4 rounded-none border-y px-1.5 py-2.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col">
@@ -93,7 +93,7 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
       </div>
 
       {/* Steps Content */}
-      <div className="relative min-h-125 md:min-h-150">
+      <div className="relative flex-1 min-h-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -101,7 +101,7 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="h-full"
+            className="h-full flex flex-col"
           >
             {step === 1 && <SearchStep brands={brands} countries={countries} />}
             {step === 2 && <ResultsStep />}

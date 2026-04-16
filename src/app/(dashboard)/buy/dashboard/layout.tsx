@@ -4,8 +4,10 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 export default async function BuyerDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
-      <div className="bg-background min-h-screen pb-20">
-        <div className="flex-1 space-y-4 px-2 py-4 md:p-8 md:pt-6">{children}</div>
+      <div className="bg-background flex h-[100dvh] flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-hidden px-2 py-4 md:p-8 md:pt-6">
+          <div className="custom-scrollbar h-full overflow-y-auto pb-20">{children}</div>
+        </div>
         <BuyerSidebar />
       </div>
     </TooltipProvider>

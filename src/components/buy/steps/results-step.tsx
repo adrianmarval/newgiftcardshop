@@ -125,9 +125,9 @@ export const ResultsStep = () => {
   const discountedTotal = rawTotal * resultsState.buyRate;
 
   return (
-    <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
+    <div className="flex flex-col gap-4 h-full md:grid md:grid-cols-12 md:items-start md:gap-6">
       {/* Left Column: Selection Summary */}
-      <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 flex flex-none h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Selección</h2>
           <p className="text-muted-foreground text-xs md:text-sm">Revisa las tarjetas de regalo propuestas.</p>
@@ -166,13 +166,13 @@ export const ResultsStep = () => {
       </Card>
 
       {/* Right Column: Cards List */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
+      <Card className="border-border bg-card/50 flex min-h-0 flex-1 flex-col px-1 py-4 backdrop-blur-sm md:col-span-8 md:h-full md:min-h-125 md:p-6">
         <div className="mb-4 flex items-center justify-between">
           <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Paquete Propuesto</Label>
           <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
         </div>
 
-        <div className="custom-scrollbar grid grid-cols-1 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2 md:gap-4">
+        <div className="custom-scrollbar grid grid-cols-1 gap-1.5 overflow-y-auto px-1 pr-1 sm:grid-cols-2 md:gap-4">
           {foundGiftcards.map((card, idx) => (
             <motion.div
               key={card.id}
