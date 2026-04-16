@@ -15,7 +15,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -401,7 +401,9 @@ export function IntakeStep() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       className={cn(
                         'flex items-center gap-2 rounded-lg px-2',
-                        item.color === 'amber' ? 'mb-2 border border-amber-500/20 bg-amber-500/5' : 'mt-3 mb-2 border border-slate-500/20 bg-slate-500/5',
+                        item.color === 'amber'
+                          ? 'mb-2 border border-amber-500/20 bg-amber-500/5'
+                          : 'mt-3 mb-2 border border-slate-500/20 bg-slate-500/5',
                       )}
                     >
                       <div className={cn('h-px flex-1', item.color === 'amber' ? 'bg-amber-500/20' : 'bg-slate-500/20')} />
@@ -534,12 +536,12 @@ function GiftcardCard({
         }}
         onPointerDown={(e) => dragControls.start(e)}
         style={{ x }}
-        className="group border-border bg-card/40 hover:bg-muted/10 relative z-10 space-y-1.5 rounded-xl border p-1.5 backdrop-blur-sm transition-all touch-none select-none"
+        className="group border-border bg-card/40 hover:bg-muted/10 relative z-10 touch-none space-y-1.5 rounded-xl border p-1.5 backdrop-blur-sm transition-all select-none"
       >
         {/* Sidebar indicator (mobile only) */}
         <div className={cn('absolute top-0 bottom-0 left-0 w-1 md:hidden', indicatorColor)} />
 
-        <div className="flex flex-col gap-1.5 md:grid md:grid-cols-[auto_140px_120px_minmax(240px,1fr)_auto] md:items-center md:gap-2">
+        <div className="flex flex-col gap-1.5 md:grid md:grid-cols-[32px_140px_110px_110px_1fr_32px] md:items-center md:gap-2">
           {/* Row 1: Index and Status (Compact) */}
           <div className="flex items-center gap-1.5 md:contents">
             <div className="border-border bg-muted text-muted-foreground hidden h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold md:flex">
