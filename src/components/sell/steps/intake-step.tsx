@@ -291,7 +291,7 @@ export function IntakeStep() {
       </AnimatePresence>
 
       <div className="grid h-full grid-cols-1 items-start gap-2 pb-20 md:grid-cols-12 md:gap-6 md:pb-0">
-        <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-2.5 p-2 backdrop-blur-sm md:col-span-3 md:space-y-4 md:p-4">
+        <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2.5 p-2 backdrop-blur-sm md:col-span-3 md:space-y-4 md:p-4">
           <div className="px-1 md:px-2">
             <h2 className="text-foreground text-lg font-bold md:text-xl">Load Cards</h2>
             <p className="text-muted-foreground hidden text-[10px] md:block md:text-xs">Load gift cards to sell them</p>
@@ -312,7 +312,7 @@ export function IntakeStep() {
               className="border-border text-primary hover:bg-primary/10 hover:text-primary h-8 w-full justify-start px-2 text-xs md:h-9 md:px-3"
             >
               {isExtracting ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-2 h-3.5 w-3.5" />}
-              Upload Screenshots
+              Extract from Screenshots
             </Button>
           </div>
           <div className="grid w-full grid-cols-2 gap-2">
@@ -339,9 +339,9 @@ export function IntakeStep() {
             >
               {blockingCards.length > 0 && (
                 <div className="mb-2 flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-2">
-                  <div className="flex-1 bg-amber-500/20 h-[1px]" />
+                  <div className="h-px flex-1 bg-amber-500/20" />
                   <span className="text-[10px] font-bold tracking-[0.2em] text-amber-400 uppercase">Require attention</span>
-                  <div className="flex-1 bg-amber-500/20 h-[1px]" />
+                  <div className="h-px flex-1 bg-amber-500/20" />
                 </div>
               )}
 
@@ -524,9 +524,9 @@ export function IntakeStep() {
               {readyCards.length > 0 && (
                 <>
                   <div className="mt-3 mb-2 flex items-center gap-2 rounded-lg border border-slate-500/20 bg-slate-500/5 px-2">
-                    <div className="flex-1 bg-slate-500/20 h-[1px]" />
+                    <div className="h-px flex-1 bg-slate-500/20" />
                     <span className="text-[10px] font-bold tracking-[0.2em] text-slate-300 uppercase">Ready</span>
-                    <div className="flex-1 bg-slate-500/20 h-[1px]" />
+                    <div className="h-px flex-1 bg-slate-500/20" />
                   </div>
 
                   <AnimatePresence mode="popLayout">

@@ -151,7 +151,7 @@ export const RedeemStep = () => {
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Left Column: Order Summary & Actions */}
-      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Redimir y Verificar</h2>
           <p className="text-muted-foreground text-xs md:text-sm">Copia tus códigos y reporta cualquier problema.</p>

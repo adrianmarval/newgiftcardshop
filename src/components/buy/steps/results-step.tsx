@@ -127,7 +127,7 @@ export const ResultsStep = () => {
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Left Column: Selection Summary */}
-      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Selección</h2>
           <p className="text-muted-foreground text-xs md:text-sm">Revisa las tarjetas de regalo propuestas.</p>
@@ -212,7 +212,7 @@ export const ResultsStep = () => {
                     )}
                   </div>
                   <div>
-                    <div className="text-foreground text-lg font-black leading-none md:text-xl">${card.amount}</div>
+                    <div className="text-foreground text-lg leading-none font-black md:text-xl">${card.amount}</div>
                     <div className="text-muted-foreground/50 mt-0.5 font-mono text-[9px] tracking-tighter whitespace-nowrap uppercase md:text-xs">
                       XXXX-XXXX-XXXX
                     </div>

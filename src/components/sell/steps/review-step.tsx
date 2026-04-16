@@ -33,7 +33,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
   return (
     <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Left Column: Summary & Info */}
-      <Card className="border-border bg-card/50 sticky top-0 z-20 flex h-auto flex-col space-y-2.5 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2.5 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <div className="mb-0.5 flex items-center gap-2">
             <h2 className="text-foreground text-lg font-bold md:text-2xl">Review and publish</h2>
@@ -47,19 +47,19 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
         <div className="hidden grid-cols-1 gap-2 md:grid md:gap-4">
           <div className="border-border bg-muted/50 space-y-2 rounded-xl border p-2 md:p-4">
             <div className="flex items-center justify-between text-xs md:text-base">
-              <span className="text-muted-foreground uppercase tracking-tight">Brand</span>
+              <span className="text-muted-foreground tracking-tight uppercase">Brand</span>
               <span className="text-foreground font-bold">{brandName}</span>
             </div>
             <div className="flex items-center justify-between text-xs md:text-base">
-              <span className="text-muted-foreground uppercase tracking-tight">Country</span>
+              <span className="text-muted-foreground tracking-tight uppercase">Country</span>
               <span className="text-foreground font-bold">{countryName}</span>
             </div>
             <div className="flex items-center justify-between text-xs md:text-base">
-              <span className="text-muted-foreground uppercase tracking-tight">Cards</span>
+              <span className="text-muted-foreground tracking-tight uppercase">Cards</span>
               <span className="text-foreground font-bold">{giftcards.length} items</span>
             </div>
             <div className="flex items-center justify-between text-xs md:text-base">
-              <span className="text-muted-foreground uppercase tracking-tight">Total</span>
+              <span className="text-muted-foreground tracking-tight uppercase">Total</span>
               <span className="text-primary font-bold">${totalAmount.toFixed(2)}</span>
             </div>
           </div>
@@ -69,9 +69,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
           {noEvidenceCount > 0 && (
             <div className="rounded-xl border border-slate-500/20 bg-slate-500/5 p-2 md:p-4">
               <p className="text-[10px] font-semibold text-slate-300 md:text-sm">Warnings</p>
-              <p className="text-[10px] text-slate-400 md:text-sm">
-                Cards without capture or unassigned captures.
-              </p>
+              <p className="text-[10px] text-slate-400 md:text-sm">Cards without capture or unassigned captures.</p>
             </div>
           )}
 
@@ -100,7 +98,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
               onClick={onPublish}
               disabled={isPublishing}
               size="sm"
-              className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 flex-[2] text-xs font-bold shadow-lg md:h-11 md:text-base"
+              className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 flex-2 text-xs font-bold shadow-lg md:h-11 md:text-base"
             >
               {isPublishing ? 'Publishing...' : 'Publish Batch'}
             </Button>
@@ -144,12 +142,12 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
                     </div>
 
                     {hasCapture ? (
-                      <Badge className="border-emerald-500/30 bg-emerald-500/20 text-emerald-400 px-1 py-0 text-[9px] md:text-xs">
+                      <Badge className="border-emerald-500/30 bg-emerald-500/20 px-1 py-0 text-[9px] text-emerald-400 md:text-xs">
                         <CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />
                         Capture
                       </Badge>
                     ) : (
-                      <Badge className="border-slate-500/30 bg-slate-500/20 text-slate-400 px-1 py-0 text-[9px] md:text-xs">
+                      <Badge className="border-slate-500/30 bg-slate-500/20 px-1 py-0 text-[9px] text-slate-400 md:text-xs">
                         <ImageIcon className="mr-0.5 h-2.5 w-2.5" />
                         No capture
                       </Badge>
@@ -159,12 +157,12 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
                   {/* Data Row: Code and PIN (Mobile: High density) */}
                   <div className="flex flex-col gap-1 md:mt-2 md:space-y-1">
                     <div className="flex items-center justify-between text-[11px] md:text-sm">
-                      <span className="text-muted-foreground uppercase tracking-tighter">Code</span>
+                      <span className="text-muted-foreground tracking-tighter uppercase">Code</span>
                       <span className="text-foreground truncate font-mono font-bold">{card.claimCode}</span>
                     </div>
                     {card.pinCode && (
                       <div className="flex items-center justify-between text-[11px] md:text-sm">
-                        <span className="text-muted-foreground uppercase tracking-tighter">PIN</span>
+                        <span className="text-muted-foreground tracking-tighter uppercase">PIN</span>
                         <span className="text-muted-foreground font-mono">{card.pinCode}</span>
                       </div>
                     )}
