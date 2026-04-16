@@ -16,7 +16,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -378,22 +378,22 @@ export function IntakeStep() {
 
         <div className="flex min-h-0 flex-1 flex-col md:col-span-9">
           <Card className="border-border bg-card/50 flex min-h-0 flex-1 flex-col px-1 pt-1 pb-4 backdrop-blur-sm md:h-full md:min-h-125 md:p-6">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2 py-1.5 md:px-6 md:py-4">
-              <CardTitle className="text-sm font-bold md:text-base">Card list</CardTitle>
-              <div className="relative w-full max-w-[120px] md:max-w-[200px]">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2 py-1 md:px-6 md:py-4">
+              <CardTitle className="hidden text-sm font-bold md:block md:text-base">Card list</CardTitle>
+              <div className="relative w-full md:max-w-[240px]">
                 <Search className="text-muted-foreground absolute top-2 left-2 h-3.5 w-3.5" />
                 <Input
-                  placeholder="Search code..."
+                  placeholder="Search by code..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-border bg-muted/50 focus:border-primary/50 h-8 pl-7 text-[10px] md:text-xs"
+                  className="border-border bg-muted/50 focus:border-primary/50 h-7.5 pl-7 text-[10px] md:h-8 md:text-xs"
                 />
               </div>
             </CardHeader>
 
             <CardContent
               className={cn(
-                'custom-scrollbar flex-1 space-y-3 overflow-y-auto px-1 md:px-2 md:space-y-4 pr-1',
+                'custom-scrollbar flex-1 space-y-3 overflow-y-auto px-1 pr-1 md:space-y-4 md:px-2',
                 giftcards.length === 0 && 'hidden',
               )}
             >
@@ -451,19 +451,19 @@ export function IntakeStep() {
               </div>
             )}
 
-            <div className="border-border mt-auto grid grid-cols-2 gap-2 border-t pt-2">
-              <Button onClick={() => setStep(1)} variant="outline" size="sm" className="h-9 text-sm">
+            <CardFooter className="border-border mt-auto grid grid-cols-2 gap-2 border-t pt-1">
+              <Button onClick={() => setStep(1)} variant="outline" size="sm" className="h-8 text-xs font-bold">
                 Back
               </Button>
               <Button
                 onClick={() => setStep(3)}
                 disabled={!canContinue || hasBlockingConflicts}
                 size="sm"
-                className="bg-primary text-primary-foreground h-9 text-sm font-bold"
+                className="bg-primary text-primary-foreground h-8 text-xs font-bold"
               >
                 Continue
               </Button>
-            </div>
+            </CardFooter>
           </Card>
         </div>
       </div>

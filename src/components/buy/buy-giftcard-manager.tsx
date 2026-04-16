@@ -55,11 +55,11 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
   return (
     <div className="flex h-full w-full flex-col space-y-1 px-0 py-0 md:p-0 md:space-y-6">
       {/* Header & Progress combined */}
-      <div className="border-border bg-card/40 flex flex-col justify-between gap-4 rounded-none border-y px-1.5 py-2.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col">
-          <h1 className="mb-0.5 text-2xl font-bold md:mb-1 md:text-4xl">Comprar Tarjetas</h1>
-          <p className="text-muted-foreground hidden text-[10px] md:block md:text-base">Compra tarjetas de regalo a las mejores tasas.</p>
-        </motion.div>
+      <div className="border-border bg-card/40 mb-2 flex flex-col justify-between gap-1.5 rounded-none border-y px-1.5 py-1.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
+        <div className="flex flex-col">
+          <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Comprar Tarjetas</h1>
+          <p className="text-muted-foreground hidden text-xs md:block md:text-sm">Encuentra los mejores precios en gift cards.</p>
+        </div>
 
         {/* Multi-step Progress */}
         <div className="no-scrollbar flex items-center gap-2 pb-2 md:gap-4 md:pb-0">

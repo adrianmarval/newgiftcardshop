@@ -87,7 +87,7 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
       {/* Header & Progress combined */}
       <div className="border-border bg-card/40 flex flex-col justify-between gap-2.5 rounded-none border-y px-1.5 py-1.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-          <h1 className="mb-0 text-xl font-bold md:mb-1 md:text-4xl">Sell Gift Cards</h1>
+          <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Sell Gift Cards</h1>
           <p className="text-muted-foreground hidden text-xs md:block md:text-base">Complete the batch in this session.</p>
         </motion.div>
 
