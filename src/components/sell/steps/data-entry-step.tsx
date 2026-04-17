@@ -2,18 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Paperclip,
-  Sparkles,
-  Loader2,
-  Upload,
-  X,
-  Plus,
-  Code,
-  ChevronDown,
-  ChevronUp,
-  ImageIcon,
-} from 'lucide-react';
+import { Paperclip, Sparkles, Loader2, Upload, X, Plus, Code, ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,17 +40,10 @@ const STAGE_PROGRESS: Record<ProcessingStage, number> = {
 // ─── DataEntryStep ──────────────────────────────────────────────────────────
 
 export function DataEntryStep() {
-  const {
-    addImage,
-    clearImages,
-    setGiftcards,
-    handleBulkImport,
-    ingestOCRDraft,
-    setStep,
-    giftcards,
-  } = useSellFlow();
+  const { addImage, clearImages, setGiftcards, handleBulkImport, ingestOCRDraft, setStep, giftcards } = useSellFlow();
 
   const [pasteContent, setPasteContent] = useState('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [localImages, setLocalImages] = useState<Array<{ file: File; previewUrl: string }>>([]);
   const [stage, setStage] = useState<ProcessingStage>('idle');
   const [showFormatHelp, setShowFormatHelp] = useState(false);
@@ -72,49 +54,49 @@ export function DataEntryStep() {
 
   // ── File handling ─────────────────────────────────────────────────────────
 
-  const handleFilesSelected = useCallback((files: FileList | File[]) => {
-    const filesArray = Array.from(files).filter((f) => f.type.startsWith('image/'));
-    if (filesArray.length === 0) {
-      toast.error('Select valid images');
-      return;
-    }
-
-    // Deduplication logic: check by name, size, and lastModified
-    const uniqueFiles: File[] = [];
-    let duplicateCount = 0;
-
-    for (const f of filesArray) {
-      const isDuplicate = localImages.some(local => 
-        local.file.name === f.name && 
-        local.file.size === f.size && 
-        local.file.lastModified === f.lastModified
-      ) || uniqueFiles.some(u => 
-        u.name === f.name && u.size === f.size && u.lastModified === f.lastModified
-      );
-
-      if (isDuplicate) {
-        duplicateCount++;
-      } else {
-        uniqueFiles.push(f);
+  const handleFilesSelected = useCallback(
+    (files: FileList | File[]) => {
+      const filesArray = Array.from(files).filter((f) => f.type.startsWith('image/'));
+      if (filesArray.length === 0) {
+        toast.error('Select valid images');
+        return;
       }
-    }
 
-    if (uniqueFiles.length === 0 && filesArray.length > 0) {
-      toast.info('Selected images are already attached');
-      return;
-    }
+      // Deduplication logic: check by name, size, and lastModified
+      const uniqueFiles: File[] = [];
+      let duplicateCount = 0;
 
-    if (duplicateCount > 0) {
-      toast.info(`${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} skipped`);
-    }
+      for (const f of filesArray) {
+        const isDuplicate =
+          localImages.some(
+            (local) => local.file.name === f.name && local.file.size === f.size && local.file.lastModified === f.lastModified,
+          ) || uniqueFiles.some((u) => u.name === f.name && u.size === f.size && u.lastModified === f.lastModified);
 
-    const newImages = uniqueFiles.map((file) => ({
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
+        if (isDuplicate) {
+          duplicateCount++;
+        } else {
+          uniqueFiles.push(f);
+        }
+      }
 
-    setLocalImages((prev) => [...prev, ...newImages]);
-  }, [localImages]);
+      if (uniqueFiles.length === 0 && filesArray.length > 0) {
+        toast.info('Selected images are already attached');
+        return;
+      }
+
+      if (duplicateCount > 0) {
+        toast.info(`${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} skipped`);
+      }
+
+      const newImages = uniqueFiles.map((file) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+
+      setLocalImages((prev) => [...prev, ...newImages]);
+    },
+    [localImages],
+  );
 
   const removeLocalImage = useCallback((index: number) => {
     setLocalImages((prev) => {
@@ -137,14 +119,18 @@ export function DataEntryStep() {
     onSuccess: ({ data }) => {
       if (data?.success) {
         setStage('ingesting');
-        console.log(`[AI-OCR-BATCH] Extraction successful. Found ${data.cards.length} cards and ${data.ignoredImages.length} empty images.`);
-        
+        console.log(
+          `[AI-OCR-BATCH] Extraction successful. Found ${data.cards.length} cards and ${data.ignoredImages.length} empty images.`,
+        );
+
         if (data.cards.length > 0) {
-          console.table(data.cards.map(c => ({
-            code: c.claimCode,
-            amount: c.amount,
-            confidence: c.ocrConfidence
-          })));
+          console.table(
+            data.cards.map((c) => ({
+              code: c.claimCode,
+              amount: c.amount,
+              confidence: c.ocrConfidence,
+            })),
+          );
         }
 
         ingestOCRDraft(data.cards);
@@ -189,6 +175,8 @@ export function DataEntryStep() {
       return;
     }
 
+    setValidationErrors([]);
+
     // ── Phase 0: Wipe store for clean re-processing ──────────────────────
     // Capture local files BEFORE clearing (they'll be uploaded fresh)
     const filesToUpload = [...localImages];
@@ -202,6 +190,16 @@ export function DataEntryStep() {
 
     if (pasteContent.trim()) {
       const { parsed, errors, duplicateCount } = parseClaimCodes(pasteContent);
+
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        // Hard block: user must fix ALL errors before proceeding
+        toast.error('Formatting errors found', {
+          description: 'Please correct or remove the highlighted lines before proceeding.',
+        });
+        setStage('idle');
+        return;
+      }
 
       if (parsed.length > 0) {
         const result = handleBulkImport(parsed);
@@ -330,12 +328,7 @@ export function DataEntryStep() {
   const hasExistingCards = giftcards.length > 0;
 
   return (
-    <div
-      className="flex h-full flex-col gap-2 md:gap-6"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div className="flex h-full flex-col gap-2 md:gap-6" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       {/* Main Compose Card */}
       <Card
         className={cn(
@@ -382,9 +375,9 @@ export function DataEntryStep() {
                   One card per line: <span className="text-foreground font-mono font-bold">CODE AMOUNT</span>
                 </p>
                 <div className="text-muted-foreground/70 font-mono text-[10px] md:text-xs">
-                  <div>XXXX-XXXXXX-XXXX 50.00</div>
-                  <div>YYYY-YYYYYY-YYYY 100.00</div>
-                  <div>CODE123:PIN456 75.50</div>
+                  <div>HPGE-JV9RR4-8SA9 30.00</div>
+                  <div>XXBS-7W4HDV-D2AN 30.00</div>
+                  <div>ZART-GWX7EB-ZVAR 5.60</div>
                 </div>
                 <p className="text-muted-foreground/50 text-[10px] italic">Amount is optional.</p>
               </div>
@@ -393,16 +386,46 @@ export function DataEntryStep() {
         </AnimatePresence>
 
         {/* Textarea — the compose area */}
-        <Textarea
-          placeholder="Paste your gift card codes here…"
-          value={pasteContent}
-          onChange={(e) => setPasteContent(e.target.value)}
-          disabled={isProcessing}
-          className={cn(
-            'border-border bg-muted/20 focus-visible:ring-primary min-h-32 flex-1 resize-none rounded-xl font-mono text-xs transition-all md:min-h-48 md:text-sm',
-            isDragOver && 'border-primary',
-          )}
-        />
+        <div className="flex min-h-32 flex-1 flex-col gap-2 md:min-h-48">
+          <Textarea
+            placeholder="Paste your gift card codes here… (optional step)"
+            value={pasteContent}
+            onChange={(e) => {
+              setPasteContent(e.target.value);
+              if (validationErrors.length > 0) setValidationErrors([]);
+            }}
+            disabled={isProcessing}
+            className={cn(
+              'border-border bg-muted/20 focus-visible:ring-primary h-full w-full resize-none rounded-xl font-mono text-xs transition-all md:text-sm',
+              isDragOver && 'border-primary',
+              validationErrors.length > 0 && 'border-destructive/50 ring-destructive/20 ring-1',
+            )}
+          />
+
+          <AnimatePresence>
+            {validationErrors.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="border-destructive/20 bg-destructive/5 rounded-xl border p-3"
+              >
+                <div className="mb-2 flex items-center gap-2">
+                  <div className="bg-destructive h-1.5 w-1.5 animate-pulse rounded-full" />
+                  <p className="text-destructive text-[10px] font-bold tracking-wider uppercase">Format Errors Detected</p>
+                </div>
+                <div className="custom-scrollbar max-h-32 space-y-1 overflow-y-auto pr-2">
+                  {validationErrors.map((err, idx) => (
+                    <div key={idx} className="flex gap-2 text-[10px] md:text-xs">
+                      <span className="text-destructive/50 font-mono">•</span>
+                      <p className="text-destructive/80 font-mono leading-relaxed">{err}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Attachments strip */}
         <AnimatePresence>
@@ -443,11 +466,7 @@ export function DataEntryStep() {
                         className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border md:h-20 md:w-20"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={preview.previewUrl}
-                          alt="Screenshot"
-                          className="h-full w-full object-cover"
-                        />
+                        <img src={preview.previewUrl} alt="Screenshot" className="h-full w-full object-cover" />
                         {!isProcessing && (
                           <button
                             type="button"

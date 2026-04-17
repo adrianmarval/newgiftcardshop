@@ -14,12 +14,12 @@
 import type { ParsedGiftcard } from '@/types/giftcard/giftcard';
 import type { ClaimCodeParseResult } from '@/types/giftcard/claim-code';
 
-// Matches a sequence of alphanumeric chars + hyphens totalling 12, 14, or 15
+// Matches a sequence of alphanumeric chars + hyphens totalling 14 or 15
 // alphanumeric chars after stripping the separators.
 // Space is intentionally excluded from the middle character class so that
 // the amount token that follows a code (e.g. "HPGE-JV9RR4-8SA9 30") is not
 // consumed into the candidate match.
-const CANDIDATE_RE = /[A-Z0-9][A-Z0-9-]{10,17}[A-Z0-9]/gi;
+const CANDIDATE_RE = /[A-Z0-9][A-Z0-9-]{12,17}[A-Z0-9]/gi;
 
 // Amount: optional leading $ or currency symbol, decimal number
 const AMOUNT_RE = /\$?\s*(\d+(?:\.\d{1,2})?)/;
@@ -28,26 +28,21 @@ const AMOUNT_RE = /\$?\s*(\d+(?:\.\d{1,2})?)/;
  * Normalises an Amazon claim code string:
  * - Uppercases letters
  * - Removes spaces and hyphens
- * - Returns the 12-, 14-, or 15-char body, or null if invalid
+ * - Returns the 14- or 15-char body, or null if invalid
  */
 export function normalizeClaimCode(input: string): string | null {
   const stripped = input.toUpperCase().replace(/[ -]/g, '');
   if (!/^[A-Z0-9]+$/.test(stripped)) return null;
-  if (stripped.length !== 12 && stripped.length !== 14 && stripped.length !== 15) return null;
+  if (stripped.length !== 14 && stripped.length !== 15) return null;
   return stripped;
 }
 
 /**
- * Formats a normalized (12, 14, or 15 char alphanumeric) claim code for display.
- * 12-char → XXXX-XXXX-XXXX      (4-4-4)
+ * Formats a normalized (14 or 15 char alphanumeric) claim code for display.
  * 14-char → XXXX-XXXXXX-XXXX    (4-6-4)
  * 15-char → XXXX-XXXXXX-XXXXX   (4-6-5)
  */
 export function formatClaimCodeCanonical(normalized: string): string {
-  if (normalized.length === 12) {
-    // 4-4-4
-    return `${normalized.slice(0, 4)}-${normalized.slice(4, 8)}-${normalized.slice(8)}`;
-  }
   // 4-6-remainder (covers 14 and 15 chars)
   const part1 = normalized.slice(0, 4);
   const part2 = normalized.slice(4, 10);
