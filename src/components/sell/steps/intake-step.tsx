@@ -138,7 +138,7 @@ export function IntakeStep() {
 
     setIsUploading(false);
     if (uploaded > 0) {
-      toast.success(`${uploaded} image${uploaded > 1 ? 's' : ''} uploaded`);
+      toast.success(`${uploaded} image${uploaded > 1 ? 's' : ''} uploaded`, { position: 'top-center' });
     }
   };
 
@@ -240,7 +240,6 @@ export function IntakeStep() {
     const term = searchTerm.toLowerCase();
     return orderedGiftcards.filter((card) => card.claimCode.toLowerCase().includes(term));
   }, [orderedGiftcards, searchTerm]);
-
 
   return (
     <>
@@ -380,12 +379,12 @@ export function IntakeStep() {
             </CardContent>
 
             {giftcards.length === 0 && (
-              <div className="bg-muted/20 mt-3 flex flex-col items-center justify-center rounded-2xl p-12">
+              <div className="bg-muted/20 mt-3 flex flex-col items-center justify-center rounded-2xl">
                 <div className="bg-muted mb-4 rounded-full p-4">
                   <Upload className="text-muted-foreground/50 h-8 w-8" />
                 </div>
                 <h3 className="mb-1 font-bold">You haven't loaded any cards yet</h3>
-                <p className="text-muted-foreground text-sm">Use OCR or import one or more cards to get started.</p>
+                <p className="text-muted-foreground text-xs">Use OCR or import one or more cards to get started.</p>
               </div>
             )}
 
@@ -605,7 +604,7 @@ function GiftcardCard({
           <div className="border-border mt-1 space-y-2 rounded-lg border bg-purple-500/10 p-2.5">
             <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xl text-purple-200/80">The screenshot found a code very similar to the one you loaded.</p>
+                <p className="text-xs text-purple-200/80">The screenshot found a code very similar to the one you loaded.</p>
               </div>
               <div className="rounded-lg border border-purple-500/15 bg-black/10 px-3 py-2 md:min-w-[280px]">
                 <p className="text-[10px] font-semibold tracking-wide text-purple-200/70 uppercase">Code in screenshot</p>
