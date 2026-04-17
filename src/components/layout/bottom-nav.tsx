@@ -46,7 +46,7 @@ export function BottomNav({ items, showThemeToggle = true, className }: BottomNa
           );
         })}
         {showThemeToggle && (
-          <div className="flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-2">
+          <div className="flex flex-col items-center justify-center gap-1 rounded-lg">
             <ThemeToggle />
           </div>
         )}

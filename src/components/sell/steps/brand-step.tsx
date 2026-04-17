@@ -24,40 +24,43 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
   const isStep1Valid = selectedBrand && selectedCountry;
 
   return (
-    <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
+    <div className="grid grid-cols-1 items-start gap-1 md:grid-cols-12 md:gap-6">
       {/* Left Column: Filters */}
-      <Card className="border-border bg-card/50 flex h-auto flex-col space-y-1.5 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
-        {/* País y Buscar - Grilla en mobile para ahorrar espacio vertical */}
-        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-1">
-          <div className="space-y-1 md:space-y-2">
-            <Label className="text-muted-foreground mb-0.5 block text-[10px] font-semibold tracking-wider uppercase md:text-xs">
-              Selecione País
+      <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
+        <div className="space-y-1">
+          {/* País y Buscar - Grilla en mobile para ahorrar espacio vertical */}
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+              1. Select Country
             </Label>
-            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-              <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 text-sm md:h-11">
-                <SelectValue placeholder="Seleccionar país..." />
-              </SelectTrigger>
-              <SelectContent className="border-border bg-popover text-popover-foreground">
-                {countries.map((country) => (
-                  <SelectItem key={country.id} value={country.id}>
-                    {country.name} ({country.code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="w-40 md:w-64">
+              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 w-full text-sm md:h-11 md:text-base">
+                  <SelectValue placeholder="Select Country" />
+                </SelectTrigger>
+                <SelectContent className="border-border bg-popover text-popover-foreground">
+                  {countries.map((country) => (
+                    <SelectItem key={country.id} value={country.id}>
+                      {country.name} ({country.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="hidden space-y-1 md:block md:space-y-2">
-            <Label className="text-muted-foreground mb-0.5 block text-[10px] font-semibold tracking-wider uppercase md:text-xs">
-              Buscar marca
+          {/* Search Brand */}
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+              2. Select a Brand
             </Label>
-            <div className="relative">
-              <Search className="text-muted-foreground/50 absolute top-2.5 left-3 h-3.5 w-3.5 md:top-3 md:h-4 md:w-4" />
+            <div className="relative w-40 md:w-64">
+              <Search className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
               <Input
-                placeholder="Buscar..."
+                placeholder="Search Brand"
                 value={searchBrand}
                 onChange={(e) => setSearchBrand(e.target.value)}
-                className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 pl-9 text-sm md:h-11 md:pl-10 md:text-base"
+                className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-9 text-sm md:pl-10"
               />
             </div>
           </div>
@@ -65,13 +68,8 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
       </Card>
 
       {/* Columna Derecha: Grilla de Marcas */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
-        <CardHeader className="mb-1 flex items-center justify-between md:mb-4">
-          <Label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase md:text-sm">Marcas disponibles</Label>
-          <span className="text-muted-foreground/50 text-sm">{filteredBrands.length} ítems</span>
-        </CardHeader>
-
-        <CardContent className="custom-scrollbar grid max-h-125 flex-1 grid-cols-3 gap-1 overflow-y-auto sm:grid-cols-3 md:max-h-150 md:gap-3 md:pr-2 lg:grid-cols-4">
+      <Card className="border-border bg-card/50 flex h-[calc(100vh-330px)] flex-col gap-1.5 px-1 py-1 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-2">
+        <CardContent className="custom-scrollbar grid flex-1 grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
           <AnimatePresence mode="popLayout">
             {filteredBrands.map((brand) => (
               <motion.button
@@ -111,7 +109,7 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
             ))}
           </AnimatePresence>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="p-0">
           <Button
             onClick={() => setStep(2)}
             disabled={!isStep1Valid}

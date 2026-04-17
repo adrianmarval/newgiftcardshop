@@ -85,7 +85,7 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
   return (
     <div className="flex h-full w-full flex-col space-y-1 px-0 py-0 md:space-y-6 md:px-0 md:py-0">
       {/* Header & Progress combined */}
-      <div className="border-border bg-card/40 flex flex-col justify-between gap-2.5 rounded-none border-y px-1.5 py-1.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
+      <div className="border-border bg-card/40 flex flex-row items-center justify-between gap-2.5 rounded-none border-y px-1.5 py-1.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Sell Gift Cards</h1>
           <p className="text-muted-foreground hidden text-xs md:block md:text-base">Complete the batch in this session.</p>
@@ -152,7 +152,7 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
         {step === 2 && (
           <motion.div
             key="step-2-intake"
-            className="flex-1 h-full min-h-0"
+            className="h-full min-h-0 flex-1"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
