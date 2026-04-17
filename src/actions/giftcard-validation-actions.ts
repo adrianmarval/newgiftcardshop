@@ -14,6 +14,13 @@ import {
 } from '@/types/sell/validation';
 import type { ValidationResult, ImageExtractionResult } from '@/types/sell/validation';
 
+/**
+ * Split an array into chunks of a given size.
+ */
+const chunk = <T>(arr: T[], size: number): T[][] => {
+  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size));
+};
+
 // ─── Upload Provenance Image ─────────────────────────────────────────────────
 
 /**
@@ -68,23 +75,32 @@ interface ExtractionWithId {
  * Images arrive as compressed base64 — sent directly to AI vision.
  */
 const extractFromImages = async (images: Array<{ id: string; compressedData: string }>): Promise<ExtractionWithId[]> => {
-  return Promise.all(
-    images.map(async (image) => {
-      try {
-        // compressedData is already a base64 JPEG — send directly to AI
-        const extraction = await extractGiftCardData(image.compressedData, 'image/jpeg');
-        return {
-          imageId: image.id,
-          claimCode: extraction.claimCode,
-          amount: extraction.amount,
-          error: false,
-        };
-      } catch (error) {
-        console.error(`Error extracting from image ${image.id}:`, error);
-        return { imageId: image.id, claimCode: null, amount: null, error: true };
-      }
-    }),
-  );
+  const chunks = chunk(images, 10);
+  const results: ExtractionWithId[] = [];
+
+  for (const batch of chunks) {
+    const batchResults = await Promise.all(
+      batch.map(async (image) => {
+        try {
+          // compressedData is already a base64 JPEG — send directly to AI
+          // (Internal retry logic in extractGiftCardData handles transient errors)
+          const extraction = await extractGiftCardData(image.compressedData, 'image/jpeg');
+          return {
+            imageId: image.id,
+            claimCode: extraction.claimCode,
+            amount: extraction.amount,
+            error: false,
+          };
+        } catch (error) {
+          console.error(`Error extracting from image ${image.id}:`, error);
+          return { imageId: image.id, claimCode: null, amount: null, error: true };
+        }
+      }),
+    );
+    results.push(...batchResults);
+  }
+
+  return results;
 };
 
 /**
@@ -281,6 +297,8 @@ export const extractDraftBatch = sellerActionClient
 
       for (const ext of extractions) {
         if (ext.error || !ext.claimCode) {
+          // If AI fails or finds nothing, it stays in ignoredImages
+          // so it shows up in "Unmatched Screenshots" gallery instead of creating a blank card
           ignoredImages.push({ imageId: ext.imageId, reason: ext.error ? 'unreadable' : 'unmatched' });
           continue;
         }

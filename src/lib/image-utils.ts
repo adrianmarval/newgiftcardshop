@@ -3,7 +3,7 @@
 
 import sharp from 'sharp';
 
-const MAX_DIMENSION = 1200;
+const MAX_DIMENSION = 1024;
 const JPEG_QUALITY = 80;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB before compression
 

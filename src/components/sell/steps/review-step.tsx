@@ -322,7 +322,8 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
           {sortedGiftcards.map((card, idx) => {
             const matchedImageId = card.evidence?.matchedImageId ?? card.matchedImageId;
             const evidenceStatus = card.evidence?.status ?? card.validationState;
-            const hasCapture = !!matchedImageId && evidenceStatus !== 'skipped' && evidenceStatus !== 'no_capture';
+            // A card has capture if there is a linked image ID, regardless of AI extraction success
+            const hasCapture = !!matchedImageId;
 
             const config = STATUS_CONFIG[evidenceStatus as ValidationState] || STATUS_CONFIG.no_capture;
             const Icon = config.icon;
@@ -366,7 +367,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
                       {hasCapture ? (
                         <Badge className={cn('px-1 py-0 text-[10px]', config.color)}>
                           <Icon className="mr-1 h-3 w-3" />
-                          {config.label}
+                          {evidenceStatus === 'no_capture' ? 'Manual review' : config.label}
                         </Badge>
                       ) : (
                         <Badge className="border-slate-500/30 bg-slate-500/20 px-1 py-0 text-[10px] text-slate-400">

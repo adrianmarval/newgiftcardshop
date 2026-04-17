@@ -150,6 +150,7 @@ export interface SellFlowState {
       rawExtractedCode?: string;
       rawExtractedAmount?: string;
     }>,
+    ignoredImages?: Array<{ imageId: string; reason: 'unreadable' | 'unmatched' }>,
   ) => void;
 
   // ── Correction actions ────────────────────────────────────────────────────

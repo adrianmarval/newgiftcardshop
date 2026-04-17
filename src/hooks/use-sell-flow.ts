@@ -195,6 +195,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
   handleBulkImport: (cards) => {
     if (cards.length === 0) return { importedCount: 0, duplicateCount: 0 };
 
+    console.group(`[INGEST-BULK] Processing ${cards.length} pasted cards`);
     let importedCount = 0;
     let duplicateCount = 0;
 
@@ -238,11 +239,18 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       };
     });
 
+    console.log(`[INGEST-BULK] Result: ${importedCount} imported, ${duplicateCount} duplicates skipped`);
+    console.groupEnd();
+
     return { importedCount, duplicateCount };
   },
 
-  ingestOCRDraft: (draftCards) =>
+  ingestOCRDraft: (draftCards, ignoredImages = []) =>
     set((state) => {
+      console.group(`[INGEST-OCR] Processing ${draftCards.length} AI draft results`);
+      if (ignoredImages.length > 0) {
+        console.log(`[INGEST-OCR] ${ignoredImages.length} images were unreadable/unmatched and will go to gallery.`);
+      }
       const maxId = Math.max(...state.giftcards.map((g) => parseInt(g.id) || 0), 0);
 
       const existingCards = state.giftcards.filter(hasCardContent);
@@ -278,6 +286,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
         const dk = draft.claimCode ? normalizeClaimCode(draft.claimCode) : null;
         if (!dk) return true; // no code to dedup → keep (will be handled downstream)
         if (seenDraftCodes.has(dk)) {
+          console.log(`[INGEST-OCR] Skipping duplicate draft code: ${dk} (Image: ${draft.imageId})`);
           if (draft.imageId) discardedImageIds.push(draft.imageId);
           return false; // duplicate → skip
         }
@@ -302,6 +311,8 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
             // Auto-fill: user didn't declare amount but OCR found one → adopt it
             const resolvedAmount = declaredAmount === null && extractedAmount !== null ? formatAmount(draft.amount ?? '') : existing.amount;
 
+            console.log(`[INGEST-OCR] Match Found! Code ${key} linked to card ${existing.id} (Status: ${targetStatus})`);
+
             updates.set(existing.id, {
               ...existing,
               amount: resolvedAmount,
@@ -318,6 +329,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
         const fuzzyExisting = getFuzzyCandidate(draft.claimCode, draft.amount, existingCards, usedMatches);
         if (fuzzyExisting) {
+          console.log(`[INGEST-OCR] Fuzzy Match! Extracted ${draft.claimCode} matched with card ${fuzzyExisting.id} (${fuzzyExisting.claimCode})`);
           usedMatches.add(fuzzyExisting.id);
           updates.set(fuzzyExisting.id, {
             ...fuzzyExisting,
@@ -341,6 +353,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
           evidenceStatus = 'amount_not_found';
         }
 
+        console.log(`[INGEST-OCR] No match found for extraction ${draft.claimCode || 'Manual'}. Creating NEW card ${nextId}`);
         newCards.push({
           id: String(nextId),
           claimCode: draft.claimCode ?? '',
@@ -355,10 +368,14 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
         });
       }
 
+      console.groupEnd();
+
       return {
         giftcards: [...existingCards.map((card) => updates.get(card.id) ?? card), ...newCards],
         // Clean up images that belonged to rejected duplicate drafts
-        images: state.images.filter(img => !discardedImageIds.includes(img.id)),
+        images: state.images.filter((img) => !discardedImageIds.includes(img.id)),
+        // Populate unmatched gallery
+        unmatchedImages: ignoredImages.map((img) => ({ imageId: img.imageId, reason: img.reason })),
       };
     }),
 

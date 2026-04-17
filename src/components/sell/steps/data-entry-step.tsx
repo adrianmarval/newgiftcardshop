@@ -263,10 +263,27 @@ export function DataEntryStep() {
     const storeImages = useSellFlow.getState().images;
     if (storeImages.length > 0) {
       setStage('extracting');
-      runExtraction({
-        images: storeImages.map((img) => ({ id: img.id, compressedData: img.compressedData })),
-      });
-      // runExtraction callbacks handle the rest (ingesting + step change)
+      try {
+        console.log(`[PROCESS-START] Processing ${storeImages.length} images...`);
+        const result = await extractDraftBatch({
+          images: storeImages.map((img) => ({ id: img.id, compressedData: img.compressedData })),
+        });
+
+        if (result?.data?.success && result.data.cards) {
+          console.log(`[PROCESS-RESULT] AI extraction complete. Found ${result.data.cards.length} potentials.`, result.data.cards);
+          // Pass both successfully extracted cards and ignored images to the store
+          ingestOCRDraft(result.data.cards, result.data.ignoredImages);
+          setStep(3);
+        } else if (result?.data?.error) {
+          console.error('[PROCESS-ERROR] Extraction logic error:', result.data.error);
+          toast.error('AI Processing error', { description: result.data.error });
+        }
+      } catch (error) {
+        console.error('[PROCESS-ERROR] Fatal extraction error:', error);
+        toast.error('AI Processing failed. Please try again.');
+      } finally {
+        setStage('done');
+      }
     } else {
       // No images — go directly to review
       if (parsedCount > 0 || useSellFlow.getState().giftcards.length > 0) {

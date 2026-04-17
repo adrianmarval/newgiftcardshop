@@ -82,7 +82,7 @@ export function levenshtein(a: string, b: string): number {
 
 export function buildVisionProvider(): AIProvider {
   const providerName = (process.env.PROVENANCE_PROVIDER || 'openrouter') as ProviderName;
-  const model = process.env.PROVENANCE_MODEL || 'google/gemini-2.5-flash-preview-03-25';
+  const model = process.env.PROVENANCE_MODEL || 'google/gemini-2.0-flash-001';
 
   const config: AIProviderConfig = {
     apiKey: process.env.OPENROUTER_API_KEY || process.env.AI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY,
@@ -114,30 +114,65 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
   const provider = buildVisionProvider();
   const imageUrl = `data:${mimeType};base64,${imageBase64}`;
 
-  const { text } = await provider.complete(
-    [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: VISION_USER_PROMPT },
-          { type: 'image_url', image_url: { url: imageUrl } },
-        ],
-      },
-    ],
-    VISION_SYSTEM_PROMPT,
-    true // Enable JSON mode for structured output
-  );
+  // Retry with exponential backoff
+  const maxAttempts = 3;
+  let lastError: any;
 
-  try {
-    const parsed = JSON.parse(text);
-    return {
-      claimCode: parsed.claim_code || null,
-      amount: parsed.amount || null,
-    };
-  } catch (err) {
-    console.error('Failed to parse (even with jsonMode):', text);
-    return { claimCode: null, amount: null };
+  // Extract a truly unique identifier from the end of the base64 (entropy is highest there)
+  const imgId = imageBase64.slice(-10);
+  const modelName = (provider as any).model || 'default';
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      if (attempt === 1) {
+        console.log(`[AI-VISION] [${imgId}] Starting extraction using model ${modelName}`);
+      } else {
+        console.log(`[AI-VISION] [${imgId}] 🔄 [RETRY ${attempt}/${maxAttempts}] Re-attempting extraction...`);
+      }
+
+      const { text } = await provider.complete(
+        [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: VISION_USER_PROMPT },
+              { type: 'image_url', image_url: { url: imageUrl } },
+            ],
+          },
+        ],
+        VISION_SYSTEM_PROMPT,
+        true, // Enable JSON mode for structured output
+      );
+
+      console.log(`[AI-VISION] [${imgId}] Raw response:`, text);
+
+      const parsed = JSON.parse(text);
+      const claimCode = parsed.claim_code || null;
+      
+      // If AI returns null for claim code, it might be a transient failure/hesitation.
+      // Force a retry if we have attempts left.
+      if (!claimCode && attempt < maxAttempts) {
+        throw new Error('AI returned empty claim_code (Null-Retry triggered)');
+      }
+
+      console.log(`[AI-VISION] [${imgId}] ✅ Extraction successful.`);
+      return {
+        claimCode,
+        amount: parsed.amount || null,
+      };
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxAttempts) {
+        const delay = Math.pow(2, attempt) * 1000;
+        console.log(`[AI-VISION] [${imgId}] ⚠️ Attempt ${attempt} failed: ${err instanceof Error ? err.message : 'Unknown error'}. Retrying in ${delay}ms...`);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+      console.error(`[AI-VISION] [${imgId}] ❌ Final failure after ${maxAttempts} attempts:`, err);
+    }
   }
+
+  throw lastError || new Error('Extraction failed after retries');
 }
 
 // ─── matchClaimCode ───────────────────────────────────────────────────────────

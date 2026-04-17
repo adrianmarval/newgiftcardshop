@@ -151,7 +151,7 @@ export function IntakeStep() {
       setIsExtracting(false);
       setOcrProgress(100);
       if (data?.success) {
-        ingestOCRDraft(data.cards);
+        ingestOCRDraft(data.cards, data.ignoredImages);
         const ignored = data.ignoredImages.length;
         if (ignored > 0) {
           toast.info(`${ignored} image${ignored > 1 ? 's' : ''} without readable code`, {
