@@ -184,6 +184,13 @@ export interface SellFlowState {
   removeImage: (id: string) => void;
   clearImages: () => void;
   setUnmatchedImages: (images: SellFlowUnmatchedImage[]) => void;
+  /** Agregar imagen a tarjeta específica con validación OCR */
+  addImageToCard: (
+    cardId: string,
+    imageData: { imageId: string; compressedData: string; previewUrl: string },
+    extractedClaimCode: string | null,
+    extractedAmount: string | null,
+  ) => void;
 
   // ── OCR resolution in intake ──────────────────────────────────────────────
   setCardValidationResult: (

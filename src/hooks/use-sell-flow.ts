@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import type { SellFlowState, SellFlowImage, SellFlowGiftcard, SellFlowCardEvidence } from '@/types/flows/sell-flow';
-import { normalizeClaimCode } from '@/lib/utils/claim-code-parser';
+import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
 import { ValidationState } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -38,7 +38,11 @@ function getFuzzyCandidate(
   usedMatches: Set<string>,
 ): SellFlowGiftcard | null {
   if (!extractedClaimCode) return null;
-  if (!extractedAmount) return null;
+  // NOTE: Do NOT bail if extractedAmount is missing.
+  // The loop's amount filter (line 57) only rejects when BOTH amounts
+  // are present AND they differ — which is the correct "monto matching"
+  // behavior described in the skill.  When the OCR can't read the amount
+  // we still want fuzzy code matching to fire (Scenario #4).
 
   const extracted = normalizeClaimCode(extractedClaimCode);
   if (!extracted) return null;
@@ -159,34 +163,28 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
         const updated = { ...g, [field]: field === 'amount' ? formatAmount(value) : value };
 
-        // ── OCR-path amount mismatch detection ─────────────────────────────────
-        // When a seller edits the amount of an OCR-ingested card, compare the
-        // new value against the originally extracted amount. If they differ,
-        // set evidence.status = 'amount_mismatch' to trigger the blocking resolver.
-        // If they match again (user corrects back), restore to 'verified'.
-        // Also: if status was 'amount_not_found', clearing the amount field
-        // to a valid value restores the card to 'verified'.
-        if (field === 'amount' && g.source === 'ocr') {
+        // ── Validation state sync on amount edit ───────────────────────────────
+        // When a seller edits the amount of a card that has evidence, we must
+        // re-validate the state against any available OCR data.
+        if (field === 'amount') {
           const normalizeAmt = (s: string) => parseFloat(s.replace(/[$,]/g, ''));
           const editedNum = normalizeAmt(value);
-          const currentEvidenceStatus = g.evidence.status;
+          const evidence = g.evidence;
+          const currentStatus = evidence.status;
 
-          // Resolve amount_not_found -> verified
-          if (currentEvidenceStatus === 'amount_not_found' && !isNaN(editedNum)) {
-            updated.evidence = { ...g.evidence, status: 'verified' };
+          // 1. Resolve amount_not_found -> verified (regardless of source)
+          if (currentStatus === 'amount_not_found' && !isNaN(editedNum)) {
+            updated.evidence = { ...evidence, status: 'verified' };
             updated.validationState = 'verified';
           }
-          // Handle mismatch detection if we have an extracted amount to compare against
-          else if (g.evidence.extractedAmount && (currentEvidenceStatus === 'verified' || currentEvidenceStatus === 'amount_mismatch')) {
-            const extractedNum = normalizeAmt(g.evidence.extractedAmount);
+          // 2. Handle mismatch detection if we have an extracted amount to compare against
+          else if (evidence.extractedAmount && (currentStatus === 'verified' || currentStatus === 'amount_mismatch')) {
+            const extractedNum = normalizeAmt(evidence.extractedAmount);
             const mismatch = !isNaN(editedNum) && !isNaN(extractedNum) && editedNum !== extractedNum;
-            if (mismatch) {
-              updated.evidence = { ...g.evidence, status: 'amount_mismatch' };
-              updated.validationState = 'amount_mismatch';
-            } else {
-              updated.evidence = { ...g.evidence, status: 'verified' };
-              updated.validationState = 'verified';
-            }
+            
+            const targetStatus = mismatch ? 'amount_mismatch' : 'verified';
+            updated.evidence = { ...evidence, status: targetStatus };
+            updated.validationState = targetStatus;
           }
         }
 
@@ -243,7 +241,6 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
     return { importedCount, duplicateCount };
   },
 
-  // ── OCR ingestion ────────────────────────────────────────────────────────
   ingestOCRDraft: (draftCards) =>
     set((state) => {
       const maxId = Math.max(...state.giftcards.map((g) => parseInt(g.id) || 0), 0);
@@ -261,7 +258,34 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       const newCards: SellFlowGiftcard[] = [];
       const updates = new Map<string, SellFlowGiftcard>();
 
-      for (const draft of draftCards) {
+      // Deduplicate incoming drafts by normalized code — if two images
+      // produce the same code, keep only the first draft and DISCARD the second image
+      // (prevents duplicate cards and orphaned images from redundant screenshots).
+      const seenDraftCodes = new Set<string>();
+      const discardedImageIds: string[] = [];
+
+      // Pre-populate seen codes with cards that already have a matched image
+      // from previous ingestion batches (prevents redundant screenshots
+      // from different files showing up as Unmatched).
+      for (const card of state.giftcards) {
+        const k = normalizeClaimCode(card.claimCode);
+        if (k && card.matchedImageId) {
+          seenDraftCodes.add(k);
+        }
+      }
+
+      const uniqueDrafts = draftCards.filter((draft) => {
+        const dk = draft.claimCode ? normalizeClaimCode(draft.claimCode) : null;
+        if (!dk) return true; // no code to dedup → keep (will be handled downstream)
+        if (seenDraftCodes.has(dk)) {
+          if (draft.imageId) discardedImageIds.push(draft.imageId);
+          return false; // duplicate → skip
+        }
+        seenDraftCodes.add(dk);
+        return true;
+      });
+
+      for (const draft of uniqueDrafts) {
         const key = draft.claimCode ? normalizeClaimCode(draft.claimCode) : null;
 
         if (key) {
@@ -275,8 +299,12 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
             const targetStatus = hasAmountMismatch ? 'amount_mismatch' : isMissingAmount ? 'amount_not_found' : 'verified';
 
+            // Auto-fill: user didn't declare amount but OCR found one → adopt it
+            const resolvedAmount = declaredAmount === null && extractedAmount !== null ? formatAmount(draft.amount ?? '') : existing.amount;
+
             updates.set(existing.id, {
               ...existing,
+              amount: resolvedAmount,
               source: existing.source,
               evidence: buildEvidenceFromDraft(draft, targetStatus),
               validationState: targetStatus,
@@ -329,6 +357,8 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
       return {
         giftcards: [...existingCards.map((card) => updates.get(card.id) ?? card), ...newCards],
+        // Clean up images that belonged to rejected duplicate drafts
+        images: state.images.filter(img => !discardedImageIds.includes(img.id)),
       };
     }),
 
@@ -365,8 +395,14 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
     set((state) => ({
       giftcards: state.giftcards.map((g) => {
         if (g.id !== cardId) return g;
+        // Adopt the code from the photo when the user confirms it is correct
+        const extracted = g.evidence.extractedCode || g.extractedCode;
+        const normalized = extracted ? normalizeClaimCode(extracted) : null;
+        const finalCode = normalized ? formatClaimCodeCanonical(normalized) : g.claimCode;
+
         return {
           ...g,
+          claimCode: finalCode,
           evidence: { ...g.evidence, status: 'verified', fuzzyConfirmed: true },
           validationState: 'verified',
         };
@@ -440,6 +476,76 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
   clearImages: () => set({ images: [] }),
 
   setUnmatchedImages: (images) => set({ unmatchedImages: images }),
+
+  // ── Agregar imagen a tarjeta específica con validación OCR ──────────────────
+  addImageToCard: (
+    cardId: string,
+    imageData: { imageId: string; compressedData: string; previewUrl: string },
+    extractedClaimCode: string | null,
+    extractedAmount: string | null,
+  ) =>
+    set((state) => {
+      const card = state.giftcards.find((g) => g.id === cardId);
+      if (!card) return state;
+
+      // Determinar estado basado en matching
+      let status: ValidationState = 'no_capture';
+      const normalizedCardCode = normalizeClaimCode(card.claimCode);
+      const normalizedExtractedCode = extractedClaimCode ? normalizeClaimCode(extractedClaimCode) : null;
+
+      if (normalizedCardCode && normalizedExtractedCode) {
+        if (normalizedCardCode === normalizedExtractedCode) {
+          const cardAmount = parseAmount(card.amount);
+          const extractedAmt = extractedAmount ? parseAmount(extractedAmount) : null;
+          status = extractedAmt !== null && cardAmount !== null && extractedAmt !== cardAmount ? 'amount_mismatch' : 'verified';
+        } else {
+          // Fuzzy match check (dist <= 1)
+          let distance = 0;
+          for (let i = 0; i < normalizedCardCode.length && i < normalizedExtractedCode.length; i++) {
+            if (normalizedCardCode[i] !== normalizedExtractedCode[i]) distance++;
+            if (distance > 1) break;
+          }
+          if (distance <= 1 && normalizedCardCode.length === normalizedExtractedCode.length) {
+            status = 'fuzzy_match';
+          } else {
+            status = 'capture_mismatch';
+          }
+        }
+      } else {
+        status = 'capture_mismatch';
+      }
+
+      // NO agregamos la imagen al store ni actualizamos la tarjeta si hay mismatch total según el usuario
+      // (pero el store debe permitirlo si el componente decide llamar a esta función).
+      // El componente "ReviewStep" se encargará de NO llamar a esta función si status === 'capture_mismatch'
+      // o de manejar el error. Pero para ser consistentes, si se llama, actualizamos.
+
+      const newImage: SellFlowImage = {
+        id: imageData.imageId,
+        compressedData: imageData.compressedData,
+        previewUrl: imageData.previewUrl,
+      };
+
+      return {
+        images: [...state.images, newImage],
+        giftcards: state.giftcards.map((g) => {
+          if (g.id !== cardId) return g;
+          return {
+            ...g,
+            evidence: {
+              status,
+              matchedImageId: imageData.imageId,
+              extractedCode: extractedClaimCode ?? undefined,
+              extractedAmount: extractedAmount ?? undefined,
+            },
+            validationState: status,
+            matchedImageId: imageData.imageId,
+            extractedCode: extractedClaimCode ?? undefined,
+            extractedAmount: extractedAmount ?? undefined,
+          };
+        }),
+      };
+    }),
 
   // ── Validation (manual path / legacy) ────────────────────────────────────
   setCardValidationResult: (id, state, extractedCode, extractedAmount, matchedImageId) =>

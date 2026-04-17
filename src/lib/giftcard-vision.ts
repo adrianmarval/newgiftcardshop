@@ -125,16 +125,17 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
       },
     ],
     VISION_SYSTEM_PROMPT,
+    true // Enable JSON mode for structured output
   );
 
   try {
-    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    const parsed = JSON.parse(text);
     return {
       claimCode: parsed.claim_code || null,
       amount: parsed.amount || null,
     };
-  } catch {
-    console.error('Failed to parse vision AI response:', text);
+  } catch (err) {
+    console.error('Failed to parse (even with jsonMode):', text);
     return { claimCode: null, amount: null };
   }
 }

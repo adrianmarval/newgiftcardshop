@@ -31,13 +31,13 @@ export interface AIProviderConfig {
 }
 
 export interface AIProvider {
-  complete(messages: AIMessage[], system?: string): Promise<AIResponse>;
+  complete(messages: AIMessage[], system?: string, jsonMode?: boolean): Promise<AIResponse>;
 }
 
 // ─── Anthropic ────────────────────────────────────────────────────────────────
 export function createAnthropicProvider(config: AIProviderConfig): AIProvider {
   return {
-    async complete(messages, system) {
+    async complete(messages, system, jsonMode) {
       // Convert vision messages to Anthropic format
       const anthropicMessages = messages.map((m) => {
         if (typeof m.content === 'string') {
@@ -98,7 +98,7 @@ export function createOpenAICompatibleProvider(config: AIProviderConfig): AIProv
   const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
   const isOpenRouter = baseUrl.includes('openrouter.ai');
   return {
-    async complete(messages, system) {
+    async complete(messages, system, jsonMode) {
       // When content is a string, wrap in standard message format
       // When content is an array (vision), pass through as-is
       const allMessages = system ? [{ role: 'system', content: system }, ...messages] : messages;
@@ -111,10 +111,15 @@ export function createOpenAICompatibleProvider(config: AIProviderConfig): AIProv
         headers['HTTP-Referer'] = config.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
         headers['X-Title'] = config.appName || 'NewGiftCardShop';
       }
+      const body: any = { model: config.model, messages: allMessages };
+      if (jsonMode) {
+        body.response_format = { type: 'json_object' };
+      }
+
       const response = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ model: config.model, messages: allMessages }),
+        body: JSON.stringify(body),
       });
       if (!response.ok) {
         const errorBody = await response.text().catch(() => '');
@@ -129,7 +134,7 @@ export function createOpenAICompatibleProvider(config: AIProviderConfig): AIProv
 // ─── Gemini ───────────────────────────────────────────────────────────────────
 export function createGeminiProvider(config: AIProviderConfig): AIProvider {
   return {
-    async complete(messages, system) {
+    async complete(messages, system, jsonMode) {
       const contents = messages.map((m) => {
         if (typeof m.content === 'string') {
           return {
@@ -169,6 +174,9 @@ export function createGeminiProvider(config: AIProviderConfig): AIProvider {
       if (system) {
         body.systemInstruction = { parts: [{ text: system }] };
       }
+      if (jsonMode) {
+        body.generationConfig = { responseMimeType: 'application/json' };
+      }
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
       const response = await fetch(url, {
         method: 'POST',
@@ -186,12 +194,17 @@ export function createGeminiProvider(config: AIProviderConfig): AIProvider {
 export function createOllamaProvider(config: AIProviderConfig): AIProvider {
   const baseUrl = config.baseUrl || 'http://localhost:11434';
   return {
-    async complete(messages, system) {
+    async complete(messages, system, jsonMode) {
       const allMessages = system ? [{ role: 'system', content: system }, ...messages] : messages;
+      const body: any = { model: config.model, messages: allMessages, stream: false };
+      if (jsonMode) {
+        body.format = 'json';
+      }
+
       const response = await fetch(`${baseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: config.model, messages: allMessages, stream: false, format: 'json' }),
+        body: JSON.stringify(body),
       });
       if (!response.ok) {
         const errorText = await response.text();

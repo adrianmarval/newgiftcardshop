@@ -16,13 +16,13 @@ import {
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { publishBatch } from '@/actions/seller-actions';
 import { BrandStep } from '@/components/sell/steps/brand-step';
-import { IntakeStep } from '@/components/sell/steps/intake-step';
+import { DataEntryStep } from '@/components/sell/steps/data-entry-step';
 import { ReviewStep } from '@/components/sell/steps/review-step';
 import type { SellBatchManagerProps } from './types';
 import { toast } from 'sonner';
 import { useAction } from 'next-safe-action/hooks';
 
-const STEP_LABELS = ['Config', 'Intake', 'Review'];
+const STEP_LABELS = ['Config', 'Load', 'Review'];
 
 // ─── SellBatchManager ─────────────────────────────────────────────────────────
 
@@ -151,14 +151,14 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
 
         {step === 2 && (
           <motion.div
-            key="step-2-intake"
+            key="step-2-load"
             className="h-full min-h-0 flex-1"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <IntakeStep />
+            <DataEntryStep />
           </motion.div>
         )}
 
