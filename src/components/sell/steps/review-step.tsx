@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo, useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, HelpCircle, ImageIcon, ImageOff, Loader2, MinusCircle, Trash2, X, Camera } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';

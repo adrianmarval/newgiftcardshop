@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Check, Copy, AlertTriangle, Code, Info, AlertCircle } from 'lucide-react';
+import { Check, Copy, Code, Info, AlertCircle } from 'lucide-react';
 import type { ParsedGiftcard } from '@/types';
 import { parseClaimCodes } from '@/lib/utils/claim-code-parser';
 import type { BulkPasteDialogProps } from './types';

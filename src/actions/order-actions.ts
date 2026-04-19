@@ -4,7 +4,6 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { buyerOrderSchema } from '@/types/order/buyer-order';
 import type { OrderStatus } from '@/types/order/buyer-order';
 import type { Giftcard, GiftcardStatus } from '@/types/giftcard/giftcard';
 import type { Payment, PaymentStatus } from '@/types/order/payments';
