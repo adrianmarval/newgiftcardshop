@@ -55,8 +55,7 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
     const storeImages = useSellFlow.getState().images;
     execute({
       cards: giftcards.map((g) => {
-        // Use evidence.matchedImageId (new) with fallback to legacy matchedImageId
-        const matchedImageId = g.evidence?.matchedImageId ?? g.matchedImageId;
+        const matchedImageId = g.evidence?.matchedImageId;
         const matchedImage = matchedImageId ? storeImages.find((img) => img.id === matchedImageId) : null;
         return {
           amount: g.amount,

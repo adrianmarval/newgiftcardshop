@@ -148,7 +148,7 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
 
       const parsed = JSON.parse(text);
       const claimCode = parsed.claim_code || null;
-      
+
       // If AI returns null for claim code, it might be a transient failure/hesitation.
       // Force a retry if we have attempts left.
       if (!claimCode && attempt < maxAttempts) {
@@ -164,7 +164,9 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
       lastError = err;
       if (attempt < maxAttempts) {
         const delay = Math.pow(2, attempt) * 1000;
-        console.log(`[AI-VISION] [${imgId}] ⚠️ Attempt ${attempt} failed: ${err instanceof Error ? err.message : 'Unknown error'}. Retrying in ${delay}ms...`);
+        console.log(
+          `[AI-VISION] [${imgId}] ⚠️ Attempt ${attempt} failed: ${err instanceof Error ? err.message : 'Unknown error'}. Retrying in ${delay}ms...`,
+        );
         await new Promise((r) => setTimeout(r, delay));
         continue;
       }

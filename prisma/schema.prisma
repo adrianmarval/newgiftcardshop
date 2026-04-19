@@ -132,10 +132,11 @@ model Giftcard {
 
   issues GiftcardIssue[]
 
-  provenanceImage ProvenanceImage?
+  provenanceImage ProvenanceImage? @relation(fields: [provenanceImageId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  provenanceImageId String?
 
   @@map("giftcard")
 }
@@ -206,13 +207,14 @@ model GiftcardBatch {
 }
 
 model ProvenanceImage {
-  id         String   @id @default(cuid())
-  data       Bytes    // AES-256-GCM encrypted image buffer
-  mimeType   String   // "image/jpeg" post-compression
-  size       Int      // Original file size for audit
-  giftcardId String   @unique
-  giftcard   Giftcard @relation(fields: [giftcardId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+  id         String     @id @default(cuid())
+  data       Bytes // AES-256-GCM encrypted image buffer
+  mimeType   String // "image/jpeg" post-compression
+  size       Int // Original file size for audit
+  giftcardId String? // Puede ser null si no se linked
+  batchId    String? // Todas las imágenes van al batch
+  createdAt  DateTime   @default(now())
+  giftcards  Giftcard[]
 
   @@map("provenance_image")
 }

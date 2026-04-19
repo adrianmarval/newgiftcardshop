@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import { Lock } from 'lucide-react';
 import type { SecuritySectionProps } from '@/types';
 import { usePathname } from 'next/navigation';
@@ -16,25 +15,27 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   return (
-    <Card className="border-border bg-card/60 relative overflow-hidden p-5 backdrop-blur-sm md:p-8">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="rounded-2xl border border-slate-700/30 bg-slate-800/20 p-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="border-primary/20 bg-primary/10 flex h-12 w-12 items-center justify-center rounded-xl border shadow-inner">
-            <Lock className="text-primary h-6 w-6" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
+            <Lock className="h-5 w-5 text-emerald-400" />
           </div>
           <div>
-            <h2 className="text-foreground text-2xl font-bold">{isSpanish ? 'Seguridad' : 'Security'}</h2>
-            <p className="text-muted-foreground text-base">{isSpanish ? 'Gestión de acceso' : 'Access management'}</p>
+            <h2 className="text-lg font-medium text-white">{isSpanish ? 'Seguridad' : 'Security'}</h2>
+            <p className="text-sm text-slate-400">{isSpanish ? 'Gestiona tu contraseña' : 'Manage your password'}</p>
           </div>
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className={`border-border px-4 text-xs font-bold tracking-wider uppercase transition-all ${showPasswordFields ? 'border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'bg-muted/40 hover:bg-muted/60'}`}
+          className={`h-9 rounded-lg border-slate-700/50 bg-slate-800/30 text-xs font-medium text-slate-300 hover:bg-slate-800/50 ${
+            showPasswordFields ? 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20' : ''
+          }`}
           onClick={() => setShowPasswordFields(!showPasswordFields)}
         >
-          {showPasswordFields ? (isSpanish ? 'Cancelar' : 'Cancel') : isSpanish ? 'Modificar Contraseña' : 'Modify Password'}
+          {showPasswordFields ? (isSpanish ? 'Cancelar' : 'Cancel') : isSpanish ? 'Cambiar' : 'Change'}
         </Button>
       </div>
 
@@ -44,11 +45,11 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="space-y-6 overflow-hidden"
+            className="space-y-4 overflow-hidden"
           >
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword" className="text-muted-foreground/80 text-xs font-black tracking-widest uppercase">
-                {isSpanish ? 'Contraseña Actual' : 'Current Password'}
+            <div className="space-y-3">
+              <Label htmlFor="currentPassword" className="text-sm font-medium text-slate-300">
+                {isSpanish ? 'Contraseña actual' : 'Current password'}
               </Label>
               <Input
                 id="currentPassword"
@@ -56,14 +57,14 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
                 type="password"
                 placeholder="••••••••"
                 disabled={isPending}
-                className="border-border bg-muted/40 focus:ring-primary/20 dark:bg-muted/50 h-12 focus:ring-2"
+                className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50"
               />
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-muted-foreground/80 text-xs font-black tracking-widest uppercase">
-                  {isSpanish ? 'Nueva Contraseña' : 'New Password'}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-3">
+                <Label htmlFor="newPassword" className="text-sm font-medium text-slate-300">
+                  {isSpanish ? 'Nueva contraseña' : 'New password'}
                 </Label>
                 <Input
                   id="newPassword"
@@ -71,13 +72,13 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
                   type="password"
                   placeholder="••••••••"
                   disabled={isPending}
-                  className="border-border bg-muted/40 focus:ring-primary/20 dark:bg-muted/50 h-12 focus:ring-2"
+                  className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-muted-foreground/80 text-xs font-black tracking-widest uppercase">
-                  {isSpanish ? 'Confirmar Contraseña' : 'Confirm Password'}
+              <div className="space-y-3">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-300">
+                  {isSpanish ? 'Confirmar' : 'Confirm'}
                 </Label>
                 <Input
                   id="confirmPassword"
@@ -85,29 +86,21 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
                   type="password"
                   placeholder="••••••••"
                   disabled={isPending}
-                  className="border-border bg-muted/40 focus:ring-primary/20 dark:bg-muted/50 h-12 focus:ring-2"
+                  className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50"
                 />
               </div>
             </div>
 
-            <div className="pt-2">
-              <p className="text-muted-foreground/50 text-xs italic">
-                {isSpanish
-                  ? 'La contraseña debe tener al menos 8 caracteres con números y símbolos.'
-                  : 'Password must be at least 8 characters long with numbers and symbols.'}
-              </p>
-            </div>
+            <p className="text-xs text-slate-500">
+              {isSpanish ? 'Mínimo 8 caracteres con números y símbolos' : 'At least 8 characters with numbers and symbols'}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
 
       {!showPasswordFields && (
-        <div className="flex h-6 items-center">
-          <p className="text-muted-foreground/40 text-sm italic">
-            {isSpanish ? 'Los campos de contraseña están ocultos para tu protección.' : 'Password fields are hidden for your protection.'}
-          </p>
-        </div>
+        <p className="text-xs text-slate-500">{isSpanish ? 'Los campos están ocultos por seguridad' : 'Fields are hidden for security'}</p>
       )}
-    </Card>
+    </div>
   );
 };

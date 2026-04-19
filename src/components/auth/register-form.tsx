@@ -7,21 +7,18 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { Check, X } from 'lucide-react';
 import { register } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import type { RegisterFormProps } from '@/types';
 
-const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => {
-  return (
-    <div className="flex items-center gap-2 text-base">
-      {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="text-muted-foreground h-4 w-4" />}
-      <span className={valid ? 'text-green-600' : 'text-muted-foreground'}>{label}</span>
-    </div>
-  );
-};
+const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
+  <div className="flex items-center gap-2 text-xs">
+    {valid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-slate-600" />}
+    <span className={valid ? 'text-emerald-400' : 'text-slate-500'}>{label}</span>
+  </div>
+);
 
 export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterFormProps) => {
   const router = useRouter();
@@ -39,12 +36,11 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
   };
 
   const passwordValid = Object.values(checks).every(Boolean);
-  const passwordsMatch = password === confirmPassword;
+  const passwordsMatch = password === confirmPassword && password.length > 0;
 
   const isSpanish = portal === 'buy';
   const portalValue = portal;
-  const submitLabel = isSpanish ? 'Crear Cuenta' : portal === 'sell' ? 'Create Seller Account' : 'Create Account';
-  const signInText = isSpanish ? '¿Ya tienes una cuenta?' : 'Already have an account?';
+  const submitLabel = isSpanish ? 'Crear Cuenta' : portal === 'sell' ? 'Create Account' : 'Create Account';
 
   const { execute, status } = useAction(register, {
     onSuccess: ({ data }) => {
@@ -61,108 +57,123 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    execute({
-      fullName,
-      email,
-      password,
-      confirmPassword,
-      portal: portalValue,
-    });
+    execute({ fullName, email, password, confirmPassword, portal: portalValue });
   };
 
   return (
-    <Card className="mx-auto w-full max-w-md p-8">
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">{title}</h1>
-          <p className="text-muted-foreground text-base">{subtitle}</p>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-medium tracking-tight text-white">{title}</h1>
+        <p className="text-sm text-slate-400">{subtitle}</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <input type="hidden" name="portal" value={portalValue} />
+
+        <div className="space-y-3">
+          <Label htmlFor="fullName" className="text-sm font-medium text-slate-300">
+            {isSpanish ? 'Nombre completo' : 'Full Name'}
+          </Label>
+          <Input
+            id="fullName"
+            name="fullName"
+            placeholder="John Doe"
+            required
+            disabled={status === 'executing'}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="hidden" name="portal" value={portalValue} />
+        <div className="space-y-3">
+          <Label htmlFor="email" className="text-sm font-medium text-slate-300">
+            {isSpanish ? 'Correo electrónico' : 'Email'}
+          </Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            required
+            disabled={status === 'executing'}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="fullName">{isSpanish ? 'Nombre completo' : 'Full Name'}</Label>
-            <Input
-              id="fullName"
-              name="fullName"
-              placeholder="John Doe"
-              required
-              disabled={status === 'executing'}
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">{isSpanish ? 'Correo electrónico' : 'Email'}</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              required
-              disabled={status === 'executing'}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">{isSpanish ? 'Contraseña' : 'Password'}</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              disabled={status === 'executing'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <div className="bg-muted mt-2 space-y-2 rounded-md p-3">
-              <p className="text-sm font-medium">{isSpanish ? 'Requisitos de contraseña:' : 'Password requirements:'}</p>
-              <PasswordCheckItem valid={checks.length} label={isSpanish ? 'Al menos 8 caracteres' : 'At least 8 characters'} />
-              <PasswordCheckItem valid={checks.uppercase} label={isSpanish ? 'Letra mayúscula' : 'Uppercase letter'} />
-              <PasswordCheckItem valid={checks.lowercase} label={isSpanish ? 'Letra minúscula' : 'Lowercase letter'} />
-              <PasswordCheckItem valid={checks.number} label={isSpanish ? 'Un número' : 'Number'} />
-              <PasswordCheckItem valid={checks.special} label={isSpanish ? 'Carácter especial' : 'Special character'} />
+        <div className="space-y-3">
+          <Label htmlFor="password" className="text-sm font-medium text-slate-300">
+            {isSpanish ? 'Contraseña' : 'Password'}
+          </Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            required
+            disabled={status === 'executing'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+          />
+          {password && (
+            <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-3">
+              <p className="mb-2 text-xs font-medium text-slate-500 uppercase">{isSpanish ? 'Requisitos' : 'Requirements'}</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <PasswordCheckItem valid={checks.length} label={isSpanish ? '8+ caracteres' : '8+ chars'} />
+                <PasswordCheckItem valid={checks.uppercase} label={isSpanish ? 'Mayúscula' : 'Uppercase'} />
+                <PasswordCheckItem valid={checks.lowercase} label={isSpanish ? 'Minúscula' : 'Lowercase'} />
+                <PasswordCheckItem valid={checks.number} label={isSpanish ? 'Número' : 'Number'} />
+                <PasswordCheckItem valid={checks.special} label={isSpanish ? 'Especial' : 'Special'} />
+              </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">{isSpanish ? 'Confirmar contraseña' : 'Confirm Password'}</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              required
-              disabled={status === 'executing'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
+        <div className="space-y-3">
+          <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-300">
+            {isSpanish ? 'Confirmar contraseña' : 'Confirm Password'}
+          </Label>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            required
+            disabled={status === 'executing'}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+          />
+          {confirmPassword && !passwordsMatch && (
+            <p className="text-xs text-red-400">{isSpanish ? 'Las contraseñas no coinciden' : 'Passwords do not match'}</p>
+          )}
+        </div>
 
-          <Button type="submit" className="w-full" disabled={status === 'executing' || !passwordValid || !passwordsMatch}>
-            {status === 'executing' ? (
-              <>
-                <Spinner size="sm" className="mr-2" />
-                {isSpanish ? 'Creando cuenta...' : 'Creating account...'}
-              </>
-            ) : (
-              submitLabel
-            )}
-          </Button>
-        </form>
+        <Button
+          type="submit"
+          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold text-white hover:bg-emerald-400 focus:ring-emerald-500/50"
+          disabled={status === 'executing' || !passwordValid || !passwordsMatch}
+        >
+          {status === 'executing' ? (
+            <span className="flex items-center gap-2">
+              <Spinner size="sm" className="text-white" />
+              {isSpanish ? 'Creando...' : 'Creating...'}
+            </span>
+          ) : (
+            submitLabel
+          )}
+        </Button>
+      </form>
 
-        <p className="text-muted-foreground text-center text-base">
-          {signInText}{' '}
-          <Link href={loginUrl} className="text-primary font-medium hover:underline">
-            {isSpanish ? 'Iniciar sesión' : 'Sign in'}
-          </Link>
-        </p>
-      </div>
-    </Card>
+      <p className="text-center text-sm text-slate-400">
+        {isSpanish ? '¿Ya tienes cuenta?' : 'Already have an account?'}{' '}
+        <Link href={loginUrl} className="font-medium text-emerald-400 hover:text-emerald-300">
+          {isSpanish ? 'Iniciar sesión' : 'Sign in'}
+        </Link>
+      </p>
+    </div>
   );
 };

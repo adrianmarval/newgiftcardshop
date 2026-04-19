@@ -50,14 +50,7 @@ export type {
 // ── flows/ ──────────────────────────────────────────────────────────────────
 
 export type { BuyFlowGiftcardStatus, BuyFlowGiftcard, BuyFlowState } from './flows/buy-flow';
-export type {
-  SellFlowGiftcard,
-  SellFlowImage,
-  SellFlowState,
-  SellFlowCardEvidence,
-  SellFlowUnmatchedImage,
-  RemovedCardSnapshot,
-} from './flows/sell-flow';
+export type { SellFlowGiftcard, SellFlowImage, SellFlowState, SellFlowCardEvidence, SellFlowUnmatchedImage } from './flows/sell-flow';
 
 // ── ui/ ─────────────────────────────────────────────────────────────────────
 

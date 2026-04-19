@@ -7,16 +7,15 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, Check, X } from 'lucide-react';
+import { AlertCircle, Check, X, ArrowLeft } from 'lucide-react';
 import { resetPassword } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 
 const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
-  <div className="flex items-center gap-2 text-base">
-    {valid ? <Check className="h-4 w-4 text-green-600" /> : <X className="text-muted-foreground h-4 w-4" />}
-    <span className={valid ? 'text-primary font-medium' : 'text-muted-foreground'}>{label}</span>
+  <div className="flex items-center gap-2 text-xs">
+    {valid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-slate-600" />}
+    <span className={valid ? 'text-emerald-400' : 'text-slate-500'}>{label}</span>
   </div>
 );
 
@@ -51,6 +50,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: { portal?: 'admin' | 'buy'
   };
 
   const allValid = Object.values(passwordChecks).every(Boolean);
+  const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
 
   const portalPath = portal === 'buy' ? '/buy' : `/${portal}`;
   const authPath = `${portalPath}/auth`;
@@ -62,7 +62,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: { portal?: 'admin' | 'buy'
       }
     },
     onError: ({ error }) => {
-      const defaultError = isSpanish ? 'Error al restablecer la contraseña' : 'Failed to reset password';
+      const defaultError = isSpanish ? 'Error al restablecer' : 'Failed to reset';
       toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
@@ -74,109 +74,117 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: { portal?: 'admin' | 'buy'
 
   if (!token) {
     return (
-      <Card className="mx-auto w-full max-w-md border-none bg-transparent p-8 shadow-none">
-        <div className="space-y-4 text-center">
-          <AlertCircle className="text-destructive mx-auto h-12 w-12" />
-          <h1 className="text-3xl font-bold">{isSpanish ? 'Enlace Inválido' : 'Invalid Reset Link'}</h1>
-          <p className="text-muted-foreground text-base">
-            {isSpanish
-              ? 'Este enlace de restablecimiento es inválido o ha expirado.'
-              : 'This password reset link is invalid or has expired.'}
-          </p>
-          <Link href={`${authPath}/forgot-password`} className="text-primary text-base font-semibold hover:underline">
-            {isSpanish ? 'Solicita un nuevo enlace' : 'Request a new reset link'}
-          </Link>
+      <div className="space-y-6 text-center">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-red-500/10 p-4">
+            <AlertCircle className="h-8 w-8 text-red-400" />
+          </div>
         </div>
-      </Card>
+        <div className="space-y-2">
+          <h1 className="text-xl font-medium tracking-tight text-white">{isSpanish ? 'Enlace Inválido' : 'Invalid Link'}</h1>
+          <p className="text-sm text-slate-400">
+            {isSpanish ? 'Este enlace es inválido o ha expirado.' : 'This reset link is invalid or has expired.'}
+          </p>
+        </div>
+        <Link
+          href={`${authPath}/forgot-password`}
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-500 px-6 text-sm font-semibold text-white hover:bg-emerald-400"
+        >
+          {isSpanish ? 'Solicitar nuevo enlace' : 'Request new link'}
+        </Link>
+      </div>
     );
   }
 
   return (
-    <Card className="mx-auto w-full max-w-md border-none bg-transparent p-8 shadow-none">
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">{isSpanish ? 'Restablecer Contraseña' : 'Reset Password'}</h1>
-          <p className="text-muted-foreground text-base">
-            {isSpanish ? 'Crea una nueva contraseña para tu cuenta' : 'Create a new password for your account'}
-          </p>
-        </div>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-medium tracking-tight text-white">{isSpanish ? 'Nueva Contraseña' : 'New Password'}</h1>
+        <p className="text-sm text-slate-400">{isSpanish ? 'Crea una contraseña segura' : 'Create a secure password'}</p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="hidden" name="portal" value={portal} />
-          <input type="hidden" name="token" value={token} />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <input type="hidden" name="portal" value={portal} />
+        <input type="hidden" name="token" value={token} />
 
-          <div className="space-y-2">
-            <Label htmlFor="newPassword" className="text-sm font-semibold tracking-wider uppercase opacity-70">
-              {isSpanish ? 'Nueva Contraseña' : 'New Password'}
-            </Label>
-            <Input
-              id="newPassword"
-              name="newPassword"
-              type="password"
-              placeholder="••••••••"
-              value={newPassword}
-              onChange={handlePasswordChange}
-              required
-              disabled={status === 'executing'}
-              className="bg-muted/50 h-11 border-none"
-            />
-            <div className="bg-muted/30 mt-2 space-y-2 rounded-lg p-3">
-              <p className="text-sm font-semibold uppercase opacity-60">{isSpanish ? 'Requisitos:' : 'Requirements:'}</p>
-              <div className="grid grid-cols-1 gap-1">
-                <PasswordCheckItem valid={passwordChecks.length} label={isSpanish ? 'Al menos 8 caracteres' : 'At least 8 characters'} />
-                <PasswordCheckItem valid={passwordChecks.uppercase} label={isSpanish ? 'Una letra mayúscula' : 'Uppercase letter'} />
-                <PasswordCheckItem valid={passwordChecks.lowercase} label={isSpanish ? 'Una letra minúscula' : 'Lowercase letter'} />
-                <PasswordCheckItem valid={passwordChecks.number} label={isSpanish ? 'Un número' : 'Number'} />
-                <PasswordCheckItem valid={passwordChecks.special} label={isSpanish ? 'Un carácter especial' : 'Special character'} />
+        <div className="space-y-3">
+          <Label htmlFor="newPassword" className="text-sm font-medium text-slate-300">
+            {isSpanish ? 'Nueva contraseña' : 'New Password'}
+          </Label>
+          <Input
+            id="newPassword"
+            name="newPassword"
+            type="password"
+            placeholder="••••••••"
+            value={newPassword}
+            onChange={handlePasswordChange}
+            required
+            disabled={status === 'executing'}
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+          />
+          {newPassword && (
+            <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-3">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <PasswordCheckItem valid={passwordChecks.length} label={isSpanish ? '8+ caracteres' : '8+ chars'} />
+                <PasswordCheckItem valid={passwordChecks.uppercase} label={isSpanish ? 'Mayúscula' : 'Uppercase'} />
+                <PasswordCheckItem valid={passwordChecks.lowercase} label={isSpanish ? 'Minúscula' : 'Lowercase'} />
+                <PasswordCheckItem valid={passwordChecks.number} label={isSpanish ? 'Número' : 'Number'} />
+                <PasswordCheckItem valid={passwordChecks.special} label={isSpanish ? 'Especial' : 'Special'} />
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-sm font-semibold tracking-wider uppercase opacity-70">
-              {isSpanish ? 'Confirmar Contraseña' : 'Confirm Password'}
-            </Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              required
-              disabled={status === 'executing'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="bg-muted/50 h-11 border-none"
-            />
-          </div>
+        <div className="space-y-3">
+          <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-300">
+            {isSpanish ? 'Confirmar contraseña' : 'Confirm Password'}
+          </Label>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            required
+            disabled={status === 'executing'}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+          />
+          {confirmPassword && !passwordsMatch && <p className="text-xs text-red-400">{isSpanish ? 'No coinciden' : 'Do not match'}</p>}
+        </div>
 
-          <Button type="submit" className="h-11 w-full font-semibold" disabled={status === 'executing' || !allValid}>
-            {status === 'executing' ? (
-              <>
-                <Spinner size="sm" className="mr-2" />
-                {isSpanish ? 'Restableciendo...' : 'Resetting...'}
-              </>
-            ) : isSpanish ? (
-              'Restablecer Contraseña'
-            ) : (
-              'Reset Password'
-            )}
-          </Button>
-        </form>
+        <Button
+          type="submit"
+          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold text-white hover:bg-emerald-400 focus:ring-emerald-500/50"
+          disabled={status === 'executing' || !allValid || !passwordsMatch}
+        >
+          {status === 'executing' ? (
+            <span className="flex items-center gap-2">
+              <Spinner size="sm" className="text-white" />
+              {isSpanish ? 'Restableciendo...' : 'Resetting...'}
+            </span>
+          ) : isSpanish ? (
+            'Cambiar Contraseña'
+          ) : (
+            'Change Password'
+          )}
+        </Button>
+      </form>
 
-        <p className="text-muted-foreground text-center text-base">
-          <Link href={`${authPath}/login`} className="text-primary font-semibold hover:underline">
-            {isSpanish ? 'Volver al Inicio de Sesión' : 'Back to Sign In'}
-          </Link>
-        </p>
+      <div className="flex items-center justify-center">
+        <Link href={`${authPath}/login`} className="flex items-center gap-2 text-sm font-medium text-emerald-400 hover:text-emerald-300">
+          <ArrowLeft className="h-4 w-4" />
+          {isSpanish ? 'Volver al inicio' : 'Back to sign in'}
+        </Link>
       </div>
-    </Card>
+    </div>
   );
 };
 
 export const ResetPasswordForm = ({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) => {
   const isSpanish = portal === 'buy' || portal === 'admin';
   return (
-    <Suspense fallback={<div>{isSpanish ? 'Cargando...' : 'Loading...'}</div>}>
+    <Suspense fallback={<div className="text-center text-slate-400">{isSpanish ? 'Cargando...' : 'Loading...'}</div>}>
       <ResetPasswordFormContent portal={portal} />
     </Suspense>
   );

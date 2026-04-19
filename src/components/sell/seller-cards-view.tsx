@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Image from 'next/image';
 import { useQueryState } from 'nuqs';
@@ -146,7 +146,9 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="text-2xl font-black tracking-tight uppercase italic md:text-3xl">Dashboard History</h2>
-          <p className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase md:text-sm">Monitor your batches status in real-time</p>
+          <p className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase md:text-sm">
+            Monitor your batches status in real-time
+          </p>
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
@@ -426,6 +428,7 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
         <DialogContent className="border-border bg-card rounded-3xl sm:max-w-106.25">
           <DialogHeader>
             <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic">Card Details</DialogTitle>
+            <DialogDescription>View detailed information about this gift card</DialogDescription>
           </DialogHeader>
           {selectedCard && (
             <div className="space-y-8 pt-4">

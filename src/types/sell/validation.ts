@@ -4,51 +4,34 @@
 import { z } from 'zod';
 
 // ─── Validation State ─────────────────────────────────────────────────────────
+// Nuevo flujo simplificado: OCR silencioso + preguntar solo en monto mismatch
 
 export const validationStateEnum = z.enum([
   'verified',
   'amount_mismatch',
-  /**
-   * @deprecated Kept for legacy data compatibility.
-   * The OCR-first redesign no longer generates this state.
-   * New code should treat it like 'skipped' (non-blocking, neutral).
-   */
-  'code_new_detected',
-  /** No screenshot was matched or provided — optional evidence absent, NOT a failure */
+  'amount_required',
   'no_capture',
+  'code_new_detected',
   'capture_mismatch',
   'processing_error',
-  /**
-   * OCR found a claim code within Levenshtein distance ≤ 2 of a card.
-   * Blocks until the seller explicitly confirms with confirmFuzzyMatch().
-   * Alias intent: `fuzzy_pending` — the status name is preserved for wire-compat.
-   */
   'fuzzy_match',
-  /** Seller explicitly skipped evidence upload for this card — non-blocking */
   'skipped',
-  /** OCR matched code but could not find/extract the amount — BLOCKS progression */
   'amount_not_found',
+  'error',
 ]);
 
 /**
- * States that block progression.
- * Evidence-absent states (`no_capture`, `skipped`) are intentionally NOT included.
- * `code_new_detected` is deprecated and intentionally removed from blocking list
- * so legacy records don't hard-block the new flow.
+ * Estados que bloquean publicación.
+ * Solo amount_mismatch bloquea.
  */
-export const BLOCKING_EVIDENCE_STATES = [
-  'amount_mismatch',
-  'capture_mismatch',
-  'processing_error',
-  'fuzzy_match',
-  'amount_not_found',
-] as const satisfies ReadonlyArray<z.infer<typeof validationStateEnum>>;
+export const BLOCKING_EVIDENCE_STATES = ['amount_mismatch', 'amount_required'] as const satisfies ReadonlyArray<
+  z.infer<typeof validationStateEnum>
+>;
 
 export type BlockingEvidenceState = (typeof BLOCKING_EVIDENCE_STATES)[number];
 
 /**
- * Returns true if the card's evidence state blocks continuation / publishing.
- * Missing evidence (`no_capture`, `skipped`, or undefined) is non-blocking.
+ * Returns true si el estado bloquea publicación.
  */
 export function isBlockingEvidenceState(state: z.infer<typeof validationStateEnum> | undefined): boolean {
   if (!state) return false;
@@ -98,9 +81,7 @@ export const validationResultSchema = z.object({
   state: validationStateEnum,
   extractedCode: z.string().optional(),
   extractedAmount: z.string().optional(),
-  suggestedMatch: z.string().optional(), // cardId for fuzzy_match
-  suggestedAmount: z.string().optional(), // for amount_mismatch
-  /** ID of the image that matched this card (from the images input array) */
+  suggestedAmount: z.string().optional(),
   matchedImageId: z.string().optional(),
 });
 

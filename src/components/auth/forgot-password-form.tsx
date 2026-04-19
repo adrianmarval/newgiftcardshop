@@ -6,9 +6,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, ArrowLeft } from 'lucide-react';
 import { forgotPassword } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 
@@ -27,11 +26,7 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: { portal?: 'admin' | 'buy
       }
     },
     onError: ({ error }) => {
-      toast.error(
-        error.serverError ||
-          error.validationErrors?._errors?.[0] ||
-          (isSpanish ? 'Error al enviar el enlace de restablecimiento' : 'Failed to send reset link'),
-      );
+      toast.error(error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al enviar' : 'Failed to send'));
     },
   });
 
@@ -41,69 +36,67 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: { portal?: 'admin' | 'buy
   };
 
   return (
-    <Card className="mx-auto w-full max-w-md border-none bg-transparent p-8 shadow-none">
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">{isSpanish ? 'Olvidé mi Contraseña' : 'Forgot Password'}</h1>
-          <p className="text-muted-foreground text-base">
-            {isSpanish
-              ? 'Ingresa tu correo para recibir un enlace de restablecimiento de contraseña'
-              : 'Enter your email to receive a password reset link'}
-          </p>
-        </div>
-
-        {success && (
-          <Card className="border-primary/50 bg-primary/5 text-primary p-4">
-            <CheckCircle className="mb-2 h-4 w-4" />
-            <span>
-              {isSpanish
-                ? 'Si existe una cuenta con ese correo, se ha enviado un enlace de restablecimiento. Revisa tu bandeja de entrada.'
-                : 'If an account exists with that email, a reset link has been sent. Check your inbox.'}
-            </span>
-          </Card>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="hidden" name="portal" value={portal} />
-
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-semibold tracking-wider uppercase opacity-70">
-              {isSpanish ? 'Dirección de Correo' : 'Email Address'}
-            </Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              required
-              disabled={status === 'executing' || success}
-              className="bg-muted/50 h-11 border-none"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <Button type="submit" className="h-11 w-full font-semibold" disabled={status === 'executing' || success}>
-            {status === 'executing' ? (
-              <>
-                <Spinner size="sm" className="mr-2" />
-                {isSpanish ? 'Enviando...' : 'Sending...'}
-              </>
-            ) : isSpanish ? (
-              'Enviar Enlace'
-            ) : (
-              'Send Reset Link'
-            )}
-          </Button>
-        </form>
-
-        <p className="text-muted-foreground text-center text-base">
-          {isSpanish ? '¿Recordaste tu contraseña?' : 'Remember your password?'}{' '}
-          <Link href={`${authPath}/login`} className="text-primary font-semibold hover:underline">
-            {isSpanish ? 'Iniciar sesión' : 'Sign in'}
-          </Link>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-medium tracking-tight text-white">{isSpanish ? 'Recuperar Contraseña' : 'Reset Password'}</h1>
+        <p className="text-sm text-slate-400">
+          {isSpanish ? 'Ingresa tu correo para recibir un enlace de recuperación' : 'Enter your email to receive a reset link'}
         </p>
       </div>
-    </Card>
+
+      {success && (
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <CheckCircle className="h-5 w-5 shrink-0 text-emerald-400" />
+          <p className="text-sm text-emerald-300">
+            {isSpanish ? 'Si existe una cuenta, recibirás un enlace en tu correo.' : 'If an account exists, you will receive a reset link.'}
+          </p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <input type="hidden" name="portal" value={portal} />
+
+        <div className="space-y-3">
+          <Label htmlFor="email" className="text-sm font-medium text-slate-300">
+            {isSpanish ? 'Correo electrónico' : 'Email'}
+          </Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            required
+            disabled={status === 'executing' || success}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+          />
+        </div>
+
+        <Button
+          type="submit"
+          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold text-white hover:bg-emerald-400 focus:ring-emerald-500/50"
+          disabled={status === 'executing' || success}
+        >
+          {status === 'executing' ? (
+            <span className="flex items-center gap-2">
+              <Spinner size="sm" className="text-white" />
+              {isSpanish ? 'Enviando...' : 'Sending...'}
+            </span>
+          ) : isSpanish ? (
+            'Enviar Enlace'
+          ) : (
+            'Send Reset Link'
+          )}
+        </Button>
+      </form>
+
+      <div className="flex items-center justify-center">
+        <Link href={`${authPath}/login`} className="flex items-center gap-2 text-sm font-medium text-emerald-400 hover:text-emerald-300">
+          <ArrowLeft className="h-4 w-4" />
+          {isSpanish ? 'Volver a iniciar sesión' : 'Back to sign in'}
+        </Link>
+      </div>
+    </div>
   );
 };

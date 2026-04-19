@@ -4,9 +4,8 @@ import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
-import { CheckCircle, Mail } from 'lucide-react';
+import { CheckCircle, Mail, RefreshCw } from 'lucide-react';
 import { verifyEmail, resendVerification } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import type { Portal } from '@/types';
@@ -40,114 +39,104 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: Portal }) => {
       }
     },
     onError: ({ error }) => {
-      const defaultError = isSpanish ? 'Error al reenviar la verificación' : 'Failed to resend verification';
+      const defaultError = isSpanish ? 'Error al reenviar' : 'Failed to resend';
       toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 
-  // If we have a token, show verify button
   if (token) {
     const handleVerify = () => {
       verifyExecute({ portal, token });
     };
 
     return (
-      <Card className="mx-auto w-full max-w-md border-none bg-transparent p-8 shadow-none">
-        <div className="space-y-6">
-          <div className="space-y-2 text-center">
-            <CheckCircle className="text-primary mx-auto h-12 w-12" />
-            <h1 className="text-3xl font-bold">{isSpanish ? 'Verifica tu Correo' : 'Verify Your Email'}</h1>
-            <p className="text-muted-foreground text-base">
-              {isSpanish ? 'Haz clic abajo para completar la verificación de tu correo' : 'Click below to complete your email verification'}
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <input type="hidden" name="portal" value={portal} />
-            <input type="hidden" name="token" value={token} />
-
-            <Button type="button" onClick={handleVerify} className="h-11 w-full font-semibold" disabled={verifyStatus === 'executing'}>
-              {verifyStatus === 'executing' ? (
-                <>
-                  <Spinner size="sm" className="mr-2" />
-                  {isSpanish ? 'Verificando...' : 'Verifying...'}
-                </>
-              ) : isSpanish ? (
-                'Verificar Correo'
-              ) : (
-                'Verify Email'
-              )}
-            </Button>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  // If no token, show pending verification state with resend option
-  const handleResend = () => {
-    setResendSuccess(false);
-    resendExecute({ portal, email });
-  };
-
-  return (
-    <Card className="mx-auto w-full max-w-md border-none bg-transparent p-8 shadow-none">
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="space-y-2 text-center">
-          <Mail className="text-primary mx-auto h-12 w-12" />
-          <h1 className="text-3xl font-bold">{isSpanish ? 'Revisa tu Correo' : 'Check Your Email'}</h1>
-          <p className="text-muted-foreground text-base">
-            {isSpanish ? 'Hemos enviado un enlace de verificación a' : "We've sent a verification link to"}
-            <br />
-            {email && <span className="text-primary font-semibold">{email}</span>}
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
+            <CheckCircle className="h-8 w-8 text-emerald-400" />
+          </div>
+          <h1 className="text-xl font-medium tracking-tight text-white">{isSpanish ? 'Verifica tu Correo' : 'Verify Your Email'}</h1>
+          <p className="text-sm text-slate-400">
+            {isSpanish ? 'Haz clic abajo para completar la verificación' : 'Click below to complete verification'}
           </p>
         </div>
 
-        {resendSuccess && (
-          <Card className="border-primary/50 bg-primary/5 text-primary p-4">
-            <CheckCircle className="mb-2 h-4 w-4" />
-            <span>
-              {isSpanish
-                ? '¡Correo de verificación reenviado! Revisa tu bandeja de entrada.'
-                : 'Verification email resent! Check your inbox.'}
+        <Button
+          type="button"
+          onClick={handleVerify}
+          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold text-white hover:bg-emerald-400 focus:ring-emerald-500/50"
+          disabled={verifyStatus === 'executing'}
+        >
+          {verifyStatus === 'executing' ? (
+            <span className="flex items-center gap-2">
+              <Spinner size="sm" className="text-white" />
+              {isSpanish ? 'Verificando...' : 'Verifying...'}
             </span>
-          </Card>
-        )}
+          ) : isSpanish ? (
+            'Verificar Correo'
+          ) : (
+            'Verify Email'
+          )}
+        </Button>
+      </div>
+    );
+  }
 
+  return (
+    <div className="space-y-8">
+      <div className="space-y-2 text-center">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
+          <Mail className="h-8 w-8 text-emerald-400" />
+        </div>
+        <h1 className="text-xl font-medium tracking-tight text-white">{isSpanish ? 'Revisa tu Correo' : 'Check Your Email'}</h1>
         {email && (
-          <div>
-            <input type="hidden" name="portal" value={portal} />
-            <input type="hidden" name="email" value={email} />
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleResend}
-              className="bg-muted/30 hover:bg-muted/50 h-11 w-full border-none font-medium"
-              disabled={resendStatus === 'executing'}
-            >
-              {resendStatus === 'executing' ? (
-                <>
-                  <Spinner size="sm" className="mr-2" />
-                  {isSpanish ? 'Reenviando...' : 'Resending...'}
-                </>
-              ) : isSpanish ? (
-                '¿No recibiste el correo? Reenviar'
-              ) : (
-                "Didn't receive email? Resend"
-              )}
-            </Button>
-          </div>
+          <p className="text-sm text-slate-400">
+            {isSpanish ? 'Enviamos un enlace a' : 'We sent a link to'} <span className="font-medium text-emerald-400">{email}</span>
+          </p>
         )}
       </div>
-    </Card>
+
+      {resendSuccess && (
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <CheckCircle className="h-5 w-5 shrink-0 text-emerald-400" />
+          <p className="text-sm text-emerald-300">
+            {isSpanish ? '¡Correo reenviado! Revisa tu bandeja.' : 'Email resent! Check your inbox.'}
+          </p>
+        </div>
+      )}
+
+      {email && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setResendSuccess(false);
+            resendExecute({ portal, email });
+          }}
+          className="h-12 w-full rounded-xl border-slate-700/50 bg-slate-800/30 text-sm font-medium text-slate-300 hover:bg-slate-800/50"
+          disabled={resendStatus === 'executing'}
+        >
+          {resendStatus === 'executing' ? (
+            <span className="flex items-center gap-2">
+              <Spinner size="sm" className="text-slate-300" />
+              {isSpanish ? 'Reenviando...' : 'Resending...'}
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              {isSpanish ? 'Reenviar Correo' : 'Resend Email'}
+            </span>
+          )}
+        </Button>
+      )}
+    </div>
   );
 };
 
 export const VerifyEmailForm = ({ portal = 'buy' }: { portal?: Portal }) => {
   const isSpanish = portal === 'buy' || portal === 'admin';
   return (
-    <Suspense fallback={<div>{isSpanish ? 'Cargando...' : 'Loading...'}</div>}>
+    <Suspense fallback={<div className="text-center text-slate-400">{isSpanish ? 'Cargando...' : 'Loading...'}</div>}>
       <VerifyEmailFormContent portal={portal} />
     </Suspense>
   );

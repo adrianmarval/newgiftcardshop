@@ -119,29 +119,44 @@ export function DataEntryStep() {
     onSuccess: ({ data }) => {
       if (data?.success) {
         setStage('ingesting');
-        console.log(
-          `[AI-OCR-BATCH] Extraction successful. Found ${data.cards.length} cards and ${data.ignoredImages.length} empty images.`,
-        );
 
-        if (data.cards.length > 0) {
-          console.table(
-            data.cards.map((c) => ({
-              code: c.claimCode,
-              amount: c.amount,
-              confidence: c.ocrConfidence,
-            })),
-          );
+        //Deduplicar: si hay mismo claimCode, preferir el que tiene monto
+        const seen = new Map<string, (typeof data.cards)[0]>();
+        for (const card of data.cards) {
+          const key = card.claimCode?.toUpperCase().replace(/[^A-Z0-9]/g, '') ?? '';
+          if (!key) continue;
+          const existing = seen.get(key);
+          if (!existing) {
+            seen.set(key, card);
+          } else {
+            //Si ambos tienen monto, keep existing
+            //Si existing no tiene monto pero card sí, replace
+            if (!existing.amount && card.amount) {
+              seen.set(key, card);
+            }
+          }
         }
 
-        ingestOCRDraft(data.cards);
-        const ignored = data.ignoredImages.length;
-        if (ignored > 0) {
-          toast.info(`${ignored} image${ignored > 1 ? 's' : ''} without readable code`, {
-            description: "They won't be linked to any card.",
-          });
+        const deduped = Array.from(seen.values());
+        console.log(`[AI-OCR-BATCH] Extraction: ${deduped.length} cards (after dedup)`);
+
+        if (deduped.length > 0) {
+          console.table(deduped.map((c) => ({ code: c.claimCode, amount: c.amount, confidence: c.ocrConfidence })));
         }
-        if (data.cards.length > 0) {
-          toast.success(`${data.cards.length} card${data.cards.length > 1 ? 's' : ''} extracted from screenshots`);
+
+        //Solo vincular a las já creadas del texto - no crear nuevas tarjetas desde OCR
+        //Las imágenes sin match se ignoran silenciosamente
+        const onlyMatchExisting = deduped.filter((c) => {
+          //Verificar si este claimCode ya existe en las giftcards creadas del texto
+          const normCode = c.claimCode?.toUpperCase().replace(/[^A-Z0-9]/g, '') ?? '';
+          const existing = useSellFlow.getState().giftcards.filter((g) => g.claimCode.toUpperCase().replace(/[^A-Z0-9]/g, '') === normCode);
+          return existing.length > 0;
+        });
+
+        ingestOCRDraft(onlyMatchExisting, []);
+
+        if (onlyMatchExisting.length > 0) {
+          toast.success(`${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`);
         }
         setStage('done');
         setTimeout(() => setStep(3), 600);
@@ -189,18 +204,15 @@ export function DataEntryStep() {
     let parsedCount = 0;
 
     if (pasteContent.trim()) {
+      let allErrors: string[] = [];
       const { parsed, errors, duplicateCount } = parseClaimCodes(pasteContent);
 
+      //Collect parse errors
       if (errors.length > 0) {
-        setValidationErrors(errors);
-        // Hard block: user must fix ALL errors before proceeding
-        toast.error('Formatting errors found', {
-          description: 'Please correct or remove the highlighted lines before proceeding.',
-        });
-        setStage('idle');
-        return;
+        allErrors = [...errors];
       }
 
+      //If no parse errors, process cards and check for missing amounts
       if (parsed.length > 0) {
         const result = handleBulkImport(parsed);
         parsedCount = result.importedCount;
@@ -209,12 +221,21 @@ export function DataEntryStep() {
           const totalDupes = result.duplicateCount + duplicateCount;
           toast.info(`${totalDupes} duplicate${totalDupes !== 1 ? 's' : ''} skipped`);
         }
+
+        //After importing, check for cards without amount
+        const allGiftcards = useSellFlow.getState().giftcards;
+        const missingAmountErrors = allGiftcards
+          .filter((g) => !g.amount || g.amount.trim() === '')
+          .map((g) => `Line ${g.id}: Missing amount for claim code ${g.claimCode}`);
+
+        if (missingAmountErrors.length > 0) {
+          allErrors = [...allErrors, ...missingAmountErrors];
+        }
       }
 
-      if (errors.length > 0 && parsed.length === 0) {
-        toast.error('Could not parse any codes', {
-          description: errors[0],
-        });
+      //If there are ANY errors (parse or missing amount), show them and block
+      if (allErrors.length > 0) {
+        setValidationErrors(allErrors);
         setStage('idle');
         return;
       }
@@ -271,8 +292,20 @@ export function DataEntryStep() {
 
         if (result?.data?.success && result.data.cards) {
           console.log(`[PROCESS-RESULT] AI extraction complete. Found ${result.data.cards.length} potentials.`, result.data.cards);
-          // Pass both successfully extracted cards and ignored images to the store
           ingestOCRDraft(result.data.cards, result.data.ignoredImages);
+
+          //Validate all cards have amount
+          const allGiftcards = useSellFlow.getState().giftcards;
+          const cardsWithoutAmount = allGiftcards.filter((g) => !g.amount || g.amount.trim() === '');
+
+          const newErrors = cardsWithoutAmount.map((c) => `Line ${c.id}: Missing amount for claim code ${c.claimCode}`);
+
+          if (newErrors.length > 0) {
+            setValidationErrors(newErrors);
+            setStage('idle');
+            return;
+          }
+
           setStep(3);
         } else if (result?.data?.error) {
           console.error('[PROCESS-ERROR] Extraction logic error:', result.data.error);
@@ -285,8 +318,19 @@ export function DataEntryStep() {
         setStage('done');
       }
     } else {
-      // No images — go directly to review
-      if (parsedCount > 0 || useSellFlow.getState().giftcards.length > 0) {
+      // No images — go directly to review but first validate all have amount
+      const allGiftcards = useSellFlow.getState().giftcards;
+      const cardsWithoutAmount = allGiftcards.filter((g) => !g.amount || g.amount.trim() === '');
+
+      const newErrors = cardsWithoutAmount.map((c) => `Line ${c.id}: Missing amount for claim code ${c.claimCode}`);
+
+      if (newErrors.length > 0) {
+        setValidationErrors(newErrors);
+        setStage('idle');
+        return;
+      }
+
+      if (parsedCount > 0 || allGiftcards.length > 0) {
         setStage('done');
         setTimeout(() => setStep(3), 400);
       } else {

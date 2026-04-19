@@ -19,17 +19,15 @@ import type { ValidationState } from '@/types/sell/validation';
  * can read deterministic state from the store (not ephemeral component state).
  */
 export interface SellFlowCardEvidence {
-  /** Current evidence status — drives blocking logic */
+  /** Estado: verified, amount_mismatch, no_capture, image_only, error */
   status: ValidationState;
-  /** ID of the uploaded SellFlowImage matched to this card */
+  /** ID de imagen vinculada (si aplica) */
   matchedImageId?: string;
-  /** Claim code as extracted from the matched image */
+  /** Código extraído de la imagen */
   extractedCode?: string;
-  /** Amount extracted from the matched image */
+  /** Monto extraído de la imagen */
   extractedAmount?: string;
-  /** True when the seller explicitly confirmed a fuzzy match */
-  fuzzyConfirmed?: boolean;
-  /** Seller decision for amount mismatch */
+  /** Decisión del usuario en amount_mismatch */
   amountDecision?: 'accept-extracted' | 'keep-declared';
 }
 
@@ -41,8 +39,6 @@ export interface SellFlowCardEvidence {
  */
 export interface SellFlowUnmatchedImage {
   imageId: string;
-  extractedCode?: string;
-  extractedAmount?: string;
 }
 
 // ── Sell Flow item types ───────────────────────────────────────────────────────
@@ -57,27 +53,12 @@ export interface SellFlowGiftcard {
   amount: string;
   claimCode: string;
   pinCode?: string;
-
-  /** How this card row entered the batch */
-  source: 'manual' | 'bulk' | 'ocr';
-
-  /**
-   * Per-card evidence state. Always present; defaults to { status: 'no_capture' }.
-   * replaces the old flat validationState / extractedCode / extractedAmount / matchedImageId fields.
-   */
   evidence: SellFlowCardEvidence;
-
-  // ── Legacy flat fields — kept for backward-compat during transition ──────
-  // Components that haven't been migrated yet may read these.
-  // They shadow evidence.* and will be removed after UI cutover.
-  /** @deprecated Use evidence.status */
-  validationState?: ValidationState;
-  /** @deprecated Use evidence.extractedCode */
+  validationState?: string;
   extractedCode?: string;
-  /** @deprecated Use evidence.extractedAmount */
   extractedAmount?: string;
-  /** @deprecated Use evidence.matchedImageId */
   matchedImageId?: string;
+  source?: string;
 }
 
 /**
@@ -94,13 +75,6 @@ export interface SellFlowImage {
   previewUrl: string;
 }
 
-// ── Removed-card snapshot (single-step undo) ─────────────────────────────────
-
-export interface RemovedCardSnapshot {
-  card: SellFlowGiftcard;
-  index: number;
-}
-
 // ── Sell Flow State ───────────────────────────────────────────────────────────
 
 /**
@@ -112,35 +86,17 @@ export interface SellFlowState {
   step: number;
   selectedBrand: string;
   selectedCountry: string;
-
   giftcards: SellFlowGiftcard[];
-  /** Uploaded images — used for OCR ingestion and evidence previews */
   images: SellFlowImage[];
-  /** Screenshots that did not match any card — informational only, never blocks */
   unmatchedImages: SellFlowUnmatchedImage[];
-  /** Last removed card — single-step undo support */
-  lastRemovedCard: RemovedCardSnapshot | null;
 
-  // ── Navigation ────────────────────────────────────────────────────────────
   setStep: (step: number) => void;
-
-  // ── Brand / Country ──────────────────────────────────────────────────────
   setSelectedBrand: (brand: string) => void;
   setSelectedCountry: (country: string) => void;
-
-  // ── Card management ──────────────────────────────────────────────────────
   setGiftcards: (giftcards: SellFlowGiftcard[]) => void;
-  addGiftcard: () => void;
   removeGiftcard: (id: string) => void;
-  undoRemoveCard: () => void;
   updateGiftcard: (id: string, field: keyof Pick<SellFlowGiftcard, 'amount' | 'claimCode' | 'pinCode'>, value: string) => void;
   handleBulkImport: (cards: { amount?: string; claimCode: string }[]) => { importedCount: number; duplicateCount: number };
-
-  // ── OCR ingestion ────────────────────────────────────────────────────────
-  /**
-   * Merge a batch of OCR-extracted draft cards into the store.
-   * Deduplicates by claimCode (normalized). Empty-code rows are always added.
-   */
   ingestOCRDraft: (
     draftCards: Array<{
       claimCode?: string;
@@ -152,58 +108,20 @@ export interface SellFlowState {
     }>,
     ignoredImages?: Array<{ imageId: string; reason: 'unreadable' | 'unmatched' }>,
   ) => void;
-
-  // ── Correction actions ────────────────────────────────────────────────────
-  /**
-   * Accept the amount extracted from the screenshot instead of the declared amount.
-   * Clears the amount_mismatch block.
-   */
   acceptExtractedAmount: (cardId: string) => void;
-  /**
-   * Keep the amount declared by the seller — dismiss the extracted amount mismatch.
-   * Clears the amount_mismatch block.
-   */
   keepDeclaredAmount: (cardId: string) => void;
-  /**
-   * Confirm a fuzzy claim-code match — marks evidence.status as 'verified' and sets fuzzyConfirmed.
-   * Clears the fuzzy_match block.
-   */
   confirmFuzzyMatch: (cardId: string) => void;
-  /**
-   * Reject a fuzzy claim-code suggestion and keep both codes as separate cards.
-   * Restores the typed card to no_capture and creates a new OCR card from the screenshot.
-   */
   rejectFuzzyMatch: (cardId: string) => void;
-  /**
-   * Resolve amount mismatch with an explicit choice.
-   * Convenience wrapper over acceptExtractedAmount / keepDeclaredAmount / removeGiftcard.
-   */
   resolveAmountMismatch: (cardId: string, choice: 'accept-extracted' | 'keep-declared' | 'remove') => void;
-
-  // ── Image management ─────────────────────────────────────────────────────
   addImage: (image: SellFlowImage) => void;
   removeImage: (id: string) => void;
   clearImages: () => void;
   setUnmatchedImages: (images: SellFlowUnmatchedImage[]) => void;
-  /** Agregar imagen a tarjeta específica con validación OCR */
   addImageToCard: (
     cardId: string,
     imageData: { imageId: string; compressedData: string; previewUrl: string },
     extractedClaimCode: string | null,
     extractedAmount: string | null,
   ) => void;
-
-  // ── OCR resolution in intake ──────────────────────────────────────────────
-  setCardValidationResult: (
-    id: string,
-    state: ValidationState,
-    extractedCode?: string,
-    extractedAmount?: string,
-    matchedImageId?: string,
-  ) => void;
-  /** Marks a single card as skipped for OCR evidence — non-blocking. */
-  skipCardEvidence: (id: string) => void;
-
-  // ── Reset ────────────────────────────────────────────────────────────────
   resetForm: () => void;
 }
