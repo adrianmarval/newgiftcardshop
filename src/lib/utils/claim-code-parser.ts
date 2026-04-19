@@ -68,8 +68,10 @@ export function parseClaimCodes(raw: string): ClaimCodeParseResult {
   const parsed: ParsedGiftcard[] = [];
   const errors: string[] = [];
   let duplicateCount = 0;
+  const duplicates: string[] = [];
 
   const seen = new Set<string>();
+  const seenLines = new Map<string, number>();
 
   const lines = raw.split('\n');
 
@@ -102,6 +104,7 @@ export function parseClaimCodes(raw: string): ClaimCodeParseResult {
     // Deduplicate within this paste
     if (seen.has(foundCode)) {
       duplicateCount++;
+      duplicates.push(`Line ${lineIdx + 1}: ${foundCode}`);
       continue;
     }
 
@@ -122,5 +125,5 @@ export function parseClaimCodes(raw: string): ClaimCodeParseResult {
     errors.push('No valid gift card codes found. Expected format: CODE AMOUNT (one per line)');
   }
 
-  return { parsed, errors, duplicateCount };
+  return { parsed, errors, duplicateCount, duplicates };
 }

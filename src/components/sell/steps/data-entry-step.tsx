@@ -40,7 +40,8 @@ const STAGE_PROGRESS: Record<ProcessingStage, number> = {
 // ─── DataEntryStep ──────────────────────────────────────────────────────────
 
 export function DataEntryStep() {
-  const { addImage, clearImages, setGiftcards, handleBulkImport, ingestOCRDraft, setStep, giftcards } = useSellFlow();
+  const { addImage, clearImages, setGiftcards, handleBulkImport, ingestOCRDraft, setStep, giftcards, selectedBrand, selectedCountry } =
+    useSellFlow();
 
   const [pasteContent, setPasteContent] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -205,22 +206,22 @@ export function DataEntryStep() {
 
     if (pasteContent.trim()) {
       let allErrors: string[] = [];
-      const { parsed, errors, duplicateCount } = parseClaimCodes(pasteContent);
+      const { parsed, errors, duplicateCount, duplicates } = parseClaimCodes(pasteContent);
 
       //Collect parse errors
       if (errors.length > 0) {
         allErrors = [...errors];
       }
 
+      //Add duplicates as errors so they show in red box
+      if (duplicates.length > 0) {
+        allErrors = [...allErrors, ...duplicates];
+      }
+
       //If no parse errors, process cards and check for missing amounts
       if (parsed.length > 0) {
         const result = handleBulkImport(parsed);
         parsedCount = result.importedCount;
-
-        if (result.duplicateCount > 0 || duplicateCount > 0) {
-          const totalDupes = result.duplicateCount + duplicateCount;
-          toast.info(`${totalDupes} duplicate${totalDupes !== 1 ? 's' : ''} skipped`);
-        }
 
         //After importing, check for cards without amount
         const allGiftcards = useSellFlow.getState().giftcards;

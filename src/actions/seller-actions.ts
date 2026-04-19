@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { encrypt, decrypt, hashCode, encryptBuffer } from '@/lib/encryption';
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
+import { z } from 'zod';
 import {
   publishBatchSchema,
   publishBatchOutputSchema,
@@ -27,30 +28,45 @@ export const publishBatch = sellerActionClient
       throw new ActionError('No valid cards were provided for processing.');
     }
 
-    // ── Server-side intra-request dedup ──────────────────────────────────────
-    // Normalize each claim code before hashing. Cards that share the same
-    // normalized key after stripping separators/casing are deduplicated here —
-    // first occurrence wins. This is a safety net for any client-side defect
-    // or stale-state scenario where equivalent codes arrive in one request.
+    // ── Normalize codes for DB check ───────────────────────────────────────
+    const normalizedCards = validCards.map((card) => {
+      const normalized = normalizeClaimCode(card.claimCode.trim());
+      return {
+        ...card,
+        claimCode: normalized ? formatClaimCodeCanonical(normalized) : card.claimCode.trim().toUpperCase(),
+      };
+    });
+
+    // ── Check for existing codes in DB (by hash) ─────────────────────────────
+    const codeHashes = normalizedCards.map((c) => hashCode(c.claimCode.toUpperCase()));
+    const existingInDb = await prisma.giftcard.findMany({
+      where: {
+        codeHash: { in: codeHashes },
+        brandId,
+        countryId,
+        status: { notIn: ['INVALID', 'DEACTIVATED'] },
+      },
+      select: { codeHash: true, status: true },
+    });
+
+    if (existingInDb.length > 0) {
+      throw new ActionError(`${existingInDb.length} code(s) already exist in inventory with this brand/country`);
+    }
+
+    // ── Server-side intra-request dedup ───────────────────────────────────���──
     const requestDeduped: Array<{
       amount: string;
-      claimCode: string; // canonical formatted value used for persistence
+      claimCode: string;
       pinCode?: string;
       compressedImageData?: string;
     }> = [];
     const requestNormalizedSeen = new Set<string>();
 
-    for (const card of validCards) {
-      const normalized = normalizeClaimCode(card.claimCode.trim());
-      // Fall back to trimmed raw value when the code doesn't match Amazon format
-      const key = normalized ?? card.claimCode.trim().toUpperCase();
-      if (requestNormalizedSeen.has(key)) continue; // intra-request duplicate — skip
+    for (const card of normalizedCards) {
+      const key = card.claimCode.toUpperCase();
+      if (requestNormalizedSeen.has(key)) continue;
       requestNormalizedSeen.add(key);
-      requestDeduped.push({
-        ...card,
-        // Store canonical formatted output so decrypt/display stays consistent
-        claimCode: normalized ? formatClaimCodeCanonical(normalized) : card.claimCode.trim(),
-      });
+      requestDeduped.push(card);
     }
     // ─────────────────────────────────────────────────────────────────────────
 

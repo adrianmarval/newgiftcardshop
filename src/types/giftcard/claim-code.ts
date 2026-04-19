@@ -15,4 +15,5 @@ export interface ClaimCodeParseResult {
   parsed: ParsedGiftcard[];
   errors: string[];
   duplicateCount: number;
+  duplicates: string[];
 }

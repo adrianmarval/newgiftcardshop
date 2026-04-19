@@ -197,19 +197,21 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
               </div>
             </motion.div>
             <AlertDialogTitle className="text-center text-3xl">Batch published successfully!</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground text-center text-xl">
-              Your batch was sent for verification.
-              <div className="border-border my-4 border-t"></div>
-              {duplicates.length > 0 && (
-                <div className="mt-4">
-                  <div className="font-semibold">Duplicate codes:</div>
-                  <div className="mt-2">
-                    {duplicates.map((code) => (
-                      <div key={code}>{code}</div>
-                    ))}
+            <AlertDialogDescription asChild>
+              <div className="text-center text-xl">
+                <span className="text-muted-foreground">Your batch was sent for verification.</span>
+                <div className="border-border my-4 border-t"></div>
+                {duplicates.length > 0 && (
+                  <div className="mt-4 text-left">
+                    <div className="font-semibold">Duplicate codes:</div>
+                    <div className="mt-2">
+                      {duplicates.map((code) => (
+                        <div key={code}>{code}</div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogAction
