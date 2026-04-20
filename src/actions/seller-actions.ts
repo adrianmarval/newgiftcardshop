@@ -4,7 +4,6 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { encrypt, decrypt, hashCode, encryptBuffer } from '@/lib/encryption';
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
 import {
   publishBatchSchema,
   publishBatchOutputSchema,

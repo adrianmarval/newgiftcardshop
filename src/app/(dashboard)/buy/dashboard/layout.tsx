@@ -1,7 +1,9 @@
 import { BuyerSidebar } from '@/components/layout/buyer-sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { authorizeByRequiredRole } from '@/lib/authorization';
 
 export default async function BuyerDashboardLayout({ children }: { children: React.ReactNode }) {
+  await authorizeByRequiredRole(['BUYER', 'ADMIN']);
   return (
     <TooltipProvider>
       <div className="bg-background flex h-dvh flex-col overflow-hidden">

@@ -1,7 +1,9 @@
 import { AdminSidebar } from '@/components/layout/admin-sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { authorizeByRequiredRole } from '@/lib/authorization';
 
 export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+  await authorizeByRequiredRole(['ADMIN']);
   return (
     <TooltipProvider>
       <div className="bg-background min-h-screen pb-20">

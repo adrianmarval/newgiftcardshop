@@ -1,7 +1,9 @@
 import { SellerSidebar } from '@/components/layout/seller-sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { authorizeByRequiredRole } from '@/lib/authorization';
 
 export default async function SellerDashboardLayout({ children }: { children: React.ReactNode }) {
+  await authorizeByRequiredRole(['SELLER', 'ADMIN']);
   return (
     <TooltipProvider>
       <nav className="grid h-svh w-full grid-cols-1 grid-rows-[1fr_auto] gap-1 p-1 md:gap-4 md:p-4">
