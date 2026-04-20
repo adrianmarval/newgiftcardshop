@@ -1,9 +1,11 @@
 'use client';
 
 import { useQueryStates, debounce } from 'nuqs';
-import { Search, Filter } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { orderSearchParamsParsers } from '@/components/buy/orders/orders-search-params';
 import type { OrdersFiltersProps } from './types';
 
@@ -12,14 +14,6 @@ export const OrdersFilters = ({ onSearchChange }: OrdersFiltersProps) => {
     shallow: false,
     limitUrlUpdates: debounce(400),
   });
-
-  const handleStatusChange = (value: string) => {
-    setParams({ status: value as typeof status, page: 1 });
-  };
-
-  const handleSortChange = (value: 'newest' | 'oldest') => {
-    setParams({ sort: value, page: 1 });
-  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearch = e.target.value;
@@ -34,46 +28,86 @@ export const OrdersFilters = ({ onSearchChange }: OrdersFiltersProps) => {
     setParams({ search, page: 1 });
   };
 
-  return (
-    <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-      <div>
-        <h2 className="text-3xl font-black tracking-tight uppercase italic">Historial de Órdenes</h2>
-        <p className="text-muted-foreground text-sm font-medium tracking-widest uppercase">Rastrea tus compras en tiempo real</p>
-      </div>
+  const handleClearFilters = () => {
+    setParams({ status: 'ALL', search: '', sort: 'newest', page: 1 });
+  };
 
-      <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-        <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-64">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+  const hasActiveFilters = status !== 'ALL' || search || sort !== 'newest';
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="relative flex-1">
+        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+        <form onSubmit={handleSearchSubmit}>
           <Input
-            placeholder="Buscar ID de orden..."
+            placeholder="Buscar orden..."
             value={search}
             onChange={handleSearchChange}
-            className="border-border bg-muted/20 h-10 pl-10 font-medium"
+            className="border-border bg-muted/20 h-8 pr-3 pl-9 text-xs md:h-10 md:text-sm"
           />
         </form>
-        <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="border-border bg-muted/20 h-10 w-full text-sm font-bold uppercase sm:w-44">
-            <Filter className="mr-2 h-3 w-3" />
-            <SelectValue placeholder="ESTADO" />
-          </SelectTrigger>
-          <SelectContent className="border-border bg-popover text-popover-foreground">
-            <SelectItem value="ALL">TODAS</SelectItem>
-            <SelectItem value="PENDING">PENDIENTE</SelectItem>
-            <SelectItem value="AWAITING_PAYMENT">ESPERANDO PAGO</SelectItem>
-            <SelectItem value="COMPLETED">COMPLETADA</SelectItem>
-            <SelectItem value="CANCELLED">CANCELADA</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={handleSortChange}>
-          <SelectTrigger className="border-border bg-muted/20 h-10 w-full text-sm font-bold uppercase sm:w-36">
-            <SelectValue placeholder="ORDENAR" />
-          </SelectTrigger>
-          <SelectContent className="border-border bg-popover text-popover-foreground">
-            <SelectItem value="newest">MÁS NUEVAS</SelectItem>
-            <SelectItem value="oldest">MÁS VIEJAS</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
+
+      {/* Filters Popover */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-9 md:gap-2 md:px-3">
+            <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4" />
+            <span className="hidden md:inline">Filtros</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-4" align="end">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Filtros</span>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-7 text-xs">
+                  <X className="mr-1 h-3 w-3" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
+
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <label className="text-muted-foreground text-xs font-medium">Estado</label>
+              <Select value={status} onValueChange={(value) => setParams({ status: value as typeof status, page: 1 })}>
+                <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todos</SelectItem>
+                  <SelectItem value="PENDING">Pendiente</SelectItem>
+                  <SelectItem value="AWAITING_PAYMENT">Esperando</SelectItem>
+                  <SelectItem value="COMPLETED">Completada</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort Filter */}
+            <div className="space-y-2">
+              <label className="text-muted-foreground text-xs font-medium">Orden</label>
+              <Select value={sort} onValueChange={(value) => setParams({ sort: value as typeof sort, page: 1 })}>
+                <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
+                  <SelectValue placeholder="Mas nuevas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Mas nuevas</SelectItem>
+                  <SelectItem value="oldest">Mas viejas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {/* Clear Filters (visible only on mobile when filters active) */}
+      {hasActiveFilters && (
+        <Button variant="ghost" size="icon" onClick={handleClearFilters} className="h-9 w-9 md:hidden">
+          <X className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };

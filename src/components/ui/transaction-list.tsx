@@ -13,29 +13,17 @@ export const TransactionList = ({ payments }: TransactionListProps) => {
   }
 
   return (
-    <div className="relative mt-8 overflow-hidden rounded-3xl border border-emerald-500/10 bg-emerald-500/5 p-6">
-      <div className="absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full bg-emerald-500/5 blur-3xl" />
-      <h4 className="mb-4 inline-flex items-center gap-2 text-sm font-black tracking-[0.2em] text-emerald-500 uppercase">
-        <CreditCard className="h-3 w-3" /> {isSpanish ? 'Información de Pago' : 'Payment Information'}
-      </h4>
-      <div className="space-y-2.5">
+    <div className="mt-3 flex flex-col gap-1.5 md:mt-4">
+      <div className="flex items-center gap-2">
+        <CreditCard className="h-3 w-3 text-emerald-500 md:h-4 md:w-4" />
+        <span className="text-muted-foreground text-[10px] font-medium uppercase md:text-xs">{isSpanish ? 'Pagos' : 'Payments'}:</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5 md:gap-2">
         {payments.map((p) => (
-          <div
-            key={p.id}
-            className="bg-background/50 flex items-center justify-between rounded-xl border border-emerald-500/10 px-2 py-2 text-sm"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20">
-                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-foreground font-mono font-black tracking-tighter uppercase">
-                  TRX ID: {p.id.slice(-8).toUpperCase()}
-                </span>
-                <span className="text-muted-foreground text-sm font-bold">{new Date(p.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-            <div className="text-xl font-black text-emerald-500 italic">+${p.amount.toFixed(2)}</div>
+          <div key={p.id} className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5">
+            <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 md:h-3 md:w-3" />
+            <span className="font-mono text-[10px] font-medium text-emerald-500 md:text-xs">{p.id.toUpperCase()}</span>
+            <span className="text-[10px] text-emerald-500/70 md:text-xs">+${p.amount.toFixed(2)}</span>
           </div>
         ))}
       </div>
