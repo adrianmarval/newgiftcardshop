@@ -234,6 +234,11 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
                                       ${card.amount.toFixed(2)}
                                     </span>
                                   )}
+                                  {card.orderId && !card.isConfirmed && (
+                                    <span className="animate-pulse text-[9px] font-bold tracking-tight text-blue-500 md:text-xs">
+                                      Taken (Pending)
+                                    </span>
+                                  )}
                                   {card.status && card.status !== 'USED' && card.status !== 'WRONG_AMOUNT' && (
                                     <span className="text-[9px] font-medium text-red-400 md:text-xs">{card.status.replace('_', ' ')}</span>
                                   )}

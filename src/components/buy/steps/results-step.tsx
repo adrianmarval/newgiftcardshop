@@ -125,9 +125,9 @@ export const ResultsStep = () => {
   const discountedTotal = rawTotal * resultsState.buyRate;
 
   return (
-    <div className="flex flex-col gap-4 h-full md:grid md:grid-cols-12 md:items-start md:gap-6">
+    <div className="flex h-full flex-col gap-4 md:grid md:grid-cols-12 md:items-start md:gap-6">
       {/* Left Column: Selection Summary */}
-      <Card className="border-border bg-card/50 flex flex-none h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 flex h-auto flex-none flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Selección</h2>
           <p className="text-muted-foreground text-xs md:text-sm">Revisa las tarjetas de regalo propuestas.</p>
@@ -161,8 +161,6 @@ export const ResultsStep = () => {
             </p>
           </div>
         </div>
-
-
       </Card>
 
       {/* Right Column: Cards List */}
@@ -247,7 +245,7 @@ export const ResultsStep = () => {
             disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === 'executing'}
             className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-8 flex-2 text-[10px] font-bold shadow-lg md:h-11 md:text-sm"
           >
-            Pedido <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
+            Realizar Pedido <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
           </Button>
         </div>
       </Card>

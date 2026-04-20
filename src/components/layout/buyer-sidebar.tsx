@@ -1,22 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { IconDashboard, IconSearch, IconShoppingCart, IconWallet, IconSettings, IconUser } from '@tabler/icons-react';
+import { IconDashboard, IconSearch, IconShoppingCart, IconWallet, IconSettings, IconUser, IconHistory } from '@tabler/icons-react';
 import { BottomNav } from '@/components/layout/bottom-nav';
 
 const navItems = [
-  { title: 'Home', url: '/buy/dashboard', icon: IconDashboard },
+  { title: 'Inicio', url: '/buy/dashboard', icon: IconDashboard },
   {
-    title: 'Buscar',
+    title: 'Comprar',
     url: '/buy/dashboard/browse-cards',
     icon: IconSearch,
   },
   {
-    title: 'Orders',
+    title: 'Historial',
     url: '/buy/dashboard/orders',
-    icon: IconShoppingCart,
+    icon: IconHistory,
   },
-  { title: 'Wallet', url: '/buy/dashboard/wallet', icon: IconWallet },
   { title: 'Perfil', url: '/buy/dashboard/profile', icon: IconUser },
 ];
 
