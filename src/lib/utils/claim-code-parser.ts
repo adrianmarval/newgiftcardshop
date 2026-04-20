@@ -104,7 +104,7 @@ export function parseClaimCodes(raw: string): ClaimCodeParseResult {
     // Deduplicate within this paste
     if (seen.has(foundCode)) {
       duplicateCount++;
-      duplicates.push(`Line ${lineIdx + 1}: ${foundCode}`);
+      duplicates.push(`Duplicate card on line ${lineIdx + 1}`);
       continue;
     }
 

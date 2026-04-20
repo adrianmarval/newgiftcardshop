@@ -49,3 +49,20 @@ export const getSellerRateOutputSchema = z.object({
   success: z.literal(true),
   rate: z.number(),
 });
+
+// ── Check Existing Codes ─────────────────────────────────────────────────────────
+
+/** Input schema for checkExistingCodes action */
+export const checkExistingCodesSchema = z.object({
+  codes: z.array(z.string()),
+  brandId: z.string(),
+  countryId: z.string(),
+});
+
+export type CheckExistingCodesInput = z.infer<typeof checkExistingCodesSchema>;
+
+/** Output schema for checkExistingCodes action */
+export const checkExistingCodesOutputSchema = z.object({
+  success: z.literal(true),
+  existingCodes: z.array(z.string()),
+});

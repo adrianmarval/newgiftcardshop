@@ -9,6 +9,8 @@ import {
   publishBatchOutputSchema,
   getSellerBatchesOutputSchema,
   getSellerRateOutputSchema,
+  checkExistingCodesSchema,
+  checkExistingCodesOutputSchema,
 } from '@/types/seller/schemas';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
 
@@ -36,20 +38,21 @@ export const publishBatch = sellerActionClient
       };
     });
 
-    // ── Check for existing codes in DB (by hash) ─────────────────────────────
-    const codeHashes = normalizedCards.map((c) => hashCode(c.claimCode.toUpperCase()));
+    // ── Check for existing codes in DB ─────────────────────────────────────────
+    const codesToCheck = normalizedCards.map((c) => c.claimCode);
+    const codeHashes = codesToCheck.map((c) => hashCode(c.toUpperCase()));
+
     const existingInDb = await prisma.giftcard.findMany({
       where: {
         codeHash: { in: codeHashes },
         brandId,
         countryId,
-        status: { notIn: ['INVALID', 'DEACTIVATED'] },
       },
-      select: { codeHash: true, status: true },
+      select: { codeHash: true },
     });
 
     if (existingInDb.length > 0) {
-      throw new ActionError(`${existingInDb.length} code(s) already exist in inventory with this brand/country`);
+      throw new ActionError(`${existingInDb.length} code(s) already exist in inventory`);
     }
 
     // ── Server-side intra-request dedup ───────────────────────────────────���──
@@ -250,3 +253,48 @@ export const getSellerRate = sellerActionClient.outputSchema(getSellerRateOutput
     rate: dbUser?.sellRate ? dbUser.sellRate.toNumber() : 0.75,
   };
 });
+
+export const checkExistingCodes = sellerActionClient
+  .inputSchema(checkExistingCodesSchema)
+  .outputSchema(checkExistingCodesOutputSchema)
+  .useValidated(async ({ parsedInput: { codes, brandId, countryId }, next }) => {
+    if (codes.length === 0) {
+      return next({ ctx: { existingCodes: [] } });
+    }
+
+    // Normalize and format codes the same way as publishBatch
+    const formattedCodes = codes.map((code) => {
+      const normalized = normalizeClaimCode(code.trim());
+      return normalized ? formatClaimCodeCanonical(normalized) : code.trim().toUpperCase();
+    });
+
+    const codeHashes = formattedCodes.map((c) => hashCode(c.toUpperCase()));
+
+    const existingInDb = await prisma.giftcard.findMany({
+      where: {
+        codeHash: { in: codeHashes },
+        brandId,
+        countryId,
+      },
+      select: { claimCode: true },
+    });
+
+    const existingCodes: string[] = [];
+    for (const dbCard of existingInDb) {
+      try {
+        const decrypted = decrypt(dbCard.claimCode);
+        existingCodes.push(decrypted);
+      } catch {
+        // Legacy unencrypted data
+        existingCodes.push(dbCard.claimCode);
+      }
+    }
+
+    return next({ ctx: { existingCodes } });
+  })
+  .action(async ({ ctx }) => {
+    return {
+      success: true as const,
+      existingCodes: ctx.existingCodes,
+    };
+  });

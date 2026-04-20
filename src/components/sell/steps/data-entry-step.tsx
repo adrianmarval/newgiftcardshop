@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { useAction } from 'next-safe-action/hooks';
 import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard-validation-actions';
-import { parseClaimCodes } from '@/lib/utils/claim-code-parser';
+import { checkExistingCodes } from '@/actions/seller-actions';
+import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
 import type { SellFlowImage } from '@/types/flows/sell-flow';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -45,10 +46,13 @@ export function DataEntryStep() {
 
   const [pasteContent, setPasteContent] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [dbBlockedCodes, setDbBlockedCodes] = useState<string[]>([]);
   const [localImages, setLocalImages] = useState<Array<{ file: File; previewUrl: string }>>([]);
   const [stage, setStage] = useState<ProcessingStage>('idle');
   const [showFormatHelp, setShowFormatHelp] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingDbCheckRef = useRef<(() => void) | null>(null);
+  const pendingCodeToLineMapRef = useRef<Map<string, number>>(new Map());
 
   const isProcessing = stage !== 'idle' && stage !== 'done';
   const hasContent = pasteContent.trim().length > 0 || localImages.length > 0;
@@ -114,6 +118,38 @@ export function DataEntryStep() {
     });
   }, []);
 
+  // ── DB check action ──────────────────────────────────────────────────────
+
+  const { execute: runCheckExistingCodes } = useAction(checkExistingCodes, {
+    onSuccess: ({ data }) => {
+      console.log('[DB-CHECK] onSuccess callback fired', { data });
+      if (data?.success && data.existingCodes && data.existingCodes.length > 0) {
+        console.log('[DB-CHECK] Found existing codes, blocking:', data.existingCodes);
+        const codeToLineMap = pendingCodeToLineMapRef.current;
+        const existingErrors = (data.existingCodes as string[]).map((code) => {
+          const normalizedCode = code.replace(/[^A-Z0-9]/g, '').toUpperCase();
+          const line = codeToLineMap.get(normalizedCode);
+          if (line) {
+            return `Line ${line}: Code ${code} already exists in inventory`;
+          }
+          return `Code ${code} already exists in inventory`;
+        });
+        setValidationErrors(existingErrors);
+        setDbBlockedCodes(data.existingCodes as string[]);
+        setStage('idle');
+        return;
+      }
+      console.log('[DB-CHECK] No existing codes found, proceeding');
+      // No existing codes - proceed to image upload
+      pendingDbCheckRef.current?.();
+    },
+    onError: ({ error }) => {
+      console.error('[DB-CHECK] Error checking existing codes:', error.serverError);
+      // On error, proceed anyway
+      pendingDbCheckRef.current?.();
+    },
+  });
+
   // ── OCR extraction action ─────────────────────────────────────────────────
 
   const { execute: runExtraction } = useAction(extractDraftBatch, {
@@ -145,10 +181,9 @@ export function DataEntryStep() {
           console.table(deduped.map((c) => ({ code: c.claimCode, amount: c.amount, confidence: c.ocrConfidence })));
         }
 
-        //Solo vincular a las já creadas del texto - no crear nuevas tarjetas desde OCR
+        //Solo vincular a las já criadas del texto - no criar novas tarjetas desde OCR
         //Las imágenes sin match se ignoran silenciosamente
         const onlyMatchExisting = deduped.filter((c) => {
-          //Verificar si este claimCode ya existe en las giftcards creadas del texto
           const normCode = c.claimCode?.toUpperCase().replace(/[^A-Z0-9]/g, '') ?? '';
           const existing = useSellFlow.getState().giftcards.filter((g) => g.claimCode.toUpperCase().replace(/[^A-Z0-9]/g, '') === normCode);
           return existing.length > 0;
@@ -159,6 +194,24 @@ export function DataEntryStep() {
         if (onlyMatchExisting.length > 0) {
           toast.success(`${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`);
         }
+
+        // Phase 3.5: Check DB for existing codes (text codes only, not OCR)
+        const textCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
+        console.log('[DB-CHECK] Checking text codes after OCR:', { textCodes, brandId: selectedBrand, countryId: selectedCountry });
+        if (textCodes.length > 0) {
+          pendingDbCheckRef.current = () => {
+            setStage('done');
+            setTimeout(() => setStep(3), 600);
+          };
+          pendingCodeToLineMapRef.current = new Map();
+          runCheckExistingCodes({
+            codes: textCodes,
+            brandId: selectedBrand,
+            countryId: selectedCountry,
+          });
+          return;
+        }
+
         setStage('done');
         setTimeout(() => setStep(3), 600);
       } else if (data?.error) {
@@ -185,6 +238,79 @@ export function DataEntryStep() {
   // After uploading, localImages are cleared so they don't show as duplicates
   // of the newly-created store images.
 
+  const proceedToImageUpload = useCallback(
+    (filesToUpload: Array<{ file: File; previewUrl: string }>, parsedCount: number) => {
+      if (filesToUpload.length > 0) {
+        setStage('uploading');
+        (async () => {
+          let uploaded = 0;
+
+          for (const localImg of filesToUpload) {
+            try {
+              console.log(`[UPLOAD] Uploading image ${localImg.file.name}...`);
+              const result = await uploadProvenanceImage({ file: localImg.file });
+              if (result.data?.success && result.data.compressedData) {
+                const imageId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+                const newImage: SellFlowImage = {
+                  id: imageId,
+                  compressedData: result.data.compressedData,
+                  previewUrl: localImg.previewUrl,
+                };
+                addImage(newImage);
+                uploaded++;
+                console.log(`[UPLOAD] Success for ${localImg.file.name} (ID: ${imageId})`);
+              } else {
+                console.error(`[UPLOAD] Failed for ${localImg.file.name}:`, result.data?.error);
+                toast.error(`Error with ${localImg.file.name}`, {
+                  description: result.data?.error || 'Upload failed',
+                });
+              }
+            } catch (error) {
+              console.error(`[UPLOAD] Fatal error for ${localImg.file.name}:`, error);
+              toast.error(`Error with ${localImg.file.name}`);
+            }
+          }
+
+          setLocalImages([]);
+
+          if (uploaded > 0) {
+            toast.success(`${uploaded} screenshot${uploaded > 1 ? 's' : ''} uploaded`);
+          }
+
+          // Phase 3: Run OCR to associate images with existing text codes
+          const storeImages = useSellFlow.getState().images;
+          if (storeImages.length > 0) {
+            setStage('extracting');
+            runExtraction({
+              images: storeImages.map((img) => ({ id: img.id, compressedData: img.compressedData })),
+            });
+          } else {
+            // No images — go directly to review
+            const allGiftcards = useSellFlow.getState().giftcards;
+            if (parsedCount > 0 || allGiftcards.length > 0) {
+              setStage('done');
+              setTimeout(() => setStep(3), 400);
+            } else {
+              toast.info('No cards to process');
+              setStage('idle');
+            }
+          }
+        })();
+      } else {
+        // No images — go directly to review
+        const allGiftcards = useSellFlow.getState().giftcards;
+        if (parsedCount > 0 || allGiftcards.length > 0) {
+          setStage('done');
+          setTimeout(() => setStep(3), 400);
+        } else {
+          toast.info('No cards to process');
+          setStage('idle');
+        }
+      }
+    },
+    [addImage, setStep, setLocalImages, setStage, runExtraction],
+  );
+
   const handleProcessCards = async () => {
     if (!hasContent) {
       toast.info('Paste codes or attach screenshots first');
@@ -194,7 +320,6 @@ export function DataEntryStep() {
     setValidationErrors([]);
 
     // ── Phase 0: Wipe store for clean re-processing ──────────────────────
-    // Capture local files BEFORE clearing (they'll be uploaded fresh)
     const filesToUpload = [...localImages];
 
     setGiftcards([]);
@@ -206,24 +331,37 @@ export function DataEntryStep() {
 
     if (pasteContent.trim()) {
       let allErrors: string[] = [];
-      const { parsed, errors, duplicateCount, duplicates } = parseClaimCodes(pasteContent);
+      const { parsed, errors, duplicates } = parseClaimCodes(pasteContent);
 
-      //Collect parse errors
       if (errors.length > 0) {
         allErrors = [...errors];
       }
 
-      //Add duplicates as errors so they show in red box
       if (duplicates.length > 0) {
         allErrors = [...allErrors, ...duplicates];
       }
 
-      //If no parse errors, process cards and check for missing amounts
+      // Build code-to-line map before handleBulkImport clears the store
+      const codeToLineMap = new Map<string, number>();
+      const lines = pasteContent.split('\n');
+      for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+        const line = lines[lineIdx];
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
+        const candidateRe = /[A-Z0-9][A-Z0-9-]{13,17}[A-Z0-9]/gi;
+        const match = trimmedLine.match(candidateRe);
+        if (match) {
+          const normalized = normalizeClaimCode(match[0]);
+          if (normalized) {
+            codeToLineMap.set(normalized, lineIdx + 1);
+          }
+        }
+      }
+
       if (parsed.length > 0) {
         const result = handleBulkImport(parsed);
         parsedCount = result.importedCount;
 
-        //After importing, check for cards without amount
         const allGiftcards = useSellFlow.getState().giftcards;
         const missingAmountErrors = allGiftcards
           .filter((g) => !g.amount || g.amount.trim() === '')
@@ -234,111 +372,29 @@ export function DataEntryStep() {
         }
       }
 
-      //If there are ANY errors (parse or missing amount), show them and block
       if (allErrors.length > 0) {
         setValidationErrors(allErrors);
         setStage('idle');
         return;
       }
-    }
 
-    // Phase 2: Upload screenshots (from localImages captured before clearing)
-    if (filesToUpload.length > 0) {
-      setStage('uploading');
-      let uploaded = 0;
-
-      for (const localImg of filesToUpload) {
-        try {
-          console.log(`[AI-OCR-BATCH] Uploading image ${localImg.file.name}...`);
-          const result = await uploadProvenanceImage({ file: localImg.file });
-          if (result.data?.success && result.data.compressedData) {
-            const imageId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-            const newImage: SellFlowImage = {
-              id: imageId,
-              compressedData: result.data.compressedData,
-              previewUrl: localImg.previewUrl,
-            };
-            addImage(newImage);
-            uploaded++;
-            console.log(`[AI-OCR-BATCH] Upload success for ${localImg.file.name} (ID: ${imageId})`);
-          } else {
-            console.error(`[AI-OCR-BATCH] Upload failed for ${localImg.file.name}:`, result.data?.error);
-            toast.error(`Error with ${localImg.file.name}`, {
-              description: result.data?.error || 'Upload failed',
-            });
-          }
-        } catch (error) {
-          console.error(`[AI-OCR-BATCH] Fatal upload error for ${localImg.file.name}:`, error);
-          toast.error(`Error with ${localImg.file.name}`);
-        }
-      }
-
-      // Clear local previews — they're now in the store, no duplication
-      setLocalImages([]);
-
-      if (uploaded > 0) {
-        toast.success(`${uploaded} screenshot${uploaded > 1 ? 's' : ''} uploaded`);
-      }
-    }
-
-    // Phase 3: Run OCR extraction on all store images
-    const storeImages = useSellFlow.getState().images;
-    if (storeImages.length > 0) {
-      setStage('extracting');
-      try {
-        console.log(`[PROCESS-START] Processing ${storeImages.length} images...`);
-        const result = await extractDraftBatch({
-          images: storeImages.map((img) => ({ id: img.id, compressedData: img.compressedData })),
+      // Phase 1.5: Check DB for existing codes BEFORE processing images
+      const allCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
+      console.log('[DB-CHECK] Initiating check', { allCodes, brandId: selectedBrand, countryId: selectedCountry });
+      if (allCodes.length > 0) {
+        pendingDbCheckRef.current = () => proceedToImageUpload(filesToUpload, parsedCount);
+        pendingCodeToLineMapRef.current = codeToLineMap;
+        runCheckExistingCodes({
+          codes: allCodes,
+          brandId: selectedBrand,
+          countryId: selectedCountry,
         });
-
-        if (result?.data?.success && result.data.cards) {
-          console.log(`[PROCESS-RESULT] AI extraction complete. Found ${result.data.cards.length} potentials.`, result.data.cards);
-          ingestOCRDraft(result.data.cards, result.data.ignoredImages);
-
-          //Validate all cards have amount
-          const allGiftcards = useSellFlow.getState().giftcards;
-          const cardsWithoutAmount = allGiftcards.filter((g) => !g.amount || g.amount.trim() === '');
-
-          const newErrors = cardsWithoutAmount.map((c) => `Line ${c.id}: Missing amount for claim code ${c.claimCode}`);
-
-          if (newErrors.length > 0) {
-            setValidationErrors(newErrors);
-            setStage('idle');
-            return;
-          }
-
-          setStep(3);
-        } else if (result?.data?.error) {
-          console.error('[PROCESS-ERROR] Extraction logic error:', result.data.error);
-          toast.error('AI Processing error', { description: result.data.error });
-        }
-      } catch (error) {
-        console.error('[PROCESS-ERROR] Fatal extraction error:', error);
-        toast.error('AI Processing failed. Please try again.');
-      } finally {
-        setStage('done');
-      }
-    } else {
-      // No images — go directly to review but first validate all have amount
-      const allGiftcards = useSellFlow.getState().giftcards;
-      const cardsWithoutAmount = allGiftcards.filter((g) => !g.amount || g.amount.trim() === '');
-
-      const newErrors = cardsWithoutAmount.map((c) => `Line ${c.id}: Missing amount for claim code ${c.claimCode}`);
-
-      if (newErrors.length > 0) {
-        setValidationErrors(newErrors);
-        setStage('idle');
         return;
       }
-
-      if (parsedCount > 0 || allGiftcards.length > 0) {
-        setStage('done');
-        setTimeout(() => setStep(3), 400);
-      } else {
-        toast.info('No cards to process');
-        setStage('idle');
-      }
     }
+
+    // No codes to check — proceed directly to image upload
+    proceedToImageUpload(filesToUpload, parsedCount);
   };
 
   // ── Drag & Drop ───────────────────────────────────────────────────────────
@@ -454,7 +510,10 @@ export function DataEntryStep() {
             value={pasteContent}
             onChange={(e) => {
               setPasteContent(e.target.value);
-              if (validationErrors.length > 0) setValidationErrors([]);
+              if (validationErrors.length > 0 || dbBlockedCodes.length > 0) {
+                setValidationErrors([]);
+                setDbBlockedCodes([]);
+              }
             }}
             disabled={isProcessing}
             className={cn(

@@ -17,9 +17,9 @@ import { GiftcardStatusBadge } from '@/components/ui/giftcard-status-badge';
 
 const StatCard = ({ label, value, subtext, color }: { label: string; value: string; subtext: string; color: string }) => (
   <div className="rounded-xl border border-slate-700/30 bg-slate-800/20 p-3">
-    <span className="text-[10px] font-medium text-slate-400 uppercase">{label}</span>
-    <p className={`text-xl font-semibold ${color}`}>{value}</p>
-    <span className="text-[10px] text-slate-500">{subtext}</span>
+    <span className="text-[10px] font-medium text-slate-400 uppercase md:text-sm">{label}</span>
+    <p className={`text-xl font-semibold md:text-2xl ${color}`}>{value}</p>
+    <span className="text-[10px] text-slate-500 md:text-xs">{subtext}</span>
   </div>
 );
 
@@ -154,18 +154,18 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
                       <Package className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs font-medium text-white">#{batch.id.slice(-6).toUpperCase()}</span>
-                      <span className="text-[10px] text-slate-500">{new Date(batch.createdAt).toLocaleDateString()}</span>
+                      <span className="text-xs font-medium text-white md:text-base">Batch #{batch.id.slice(-6).toUpperCase()}</span>
+                      <span className="text-[10px] text-slate-500 md:text-sm">{new Date(batch.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <div className="flex flex-col items-end">
-                      <span className="text-sm font-semibold text-white">${batchTotal.toFixed(0)}</span>
-                      <span className="text-[10px] text-slate-500">→ ${estimatedPayout.toFixed(0)}</span>
+                      <span className="text-sm font-semibold text-white md:text-lg">${batchTotal.toFixed(0)}</span>
+                      <span className="text-[10px] text-slate-500 md:text-sm">→ ${estimatedPayout.toFixed(0)}</span>
                     </div>
                     {hasReport && <AlertTriangle className="h-4 w-4 text-red-400" />}
-                    <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px]`}>
+                    <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>
                       {status.icon}
                       {status.label}
                     </Badge>
@@ -196,7 +196,7 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
                     >
                       <div className="border-t border-slate-700/30 p-3">
                         <div className="mb-3 flex items-center justify-between">
-                          <span className="text-xs font-medium text-slate-400">{totalItems} cards confirmed</span>
+                          <span className="text-xs font-medium text-slate-400 md:text-base">{totalItems} cards confirmed</span>
                           {batch.payments.length > 0 && (
                             <Badge className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-400">
                               <CreditCard className="mr-1 h-3 w-3" />
@@ -216,27 +216,29 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
                                     <span className="text-xs">{card.brand.icon}</span>
                                   )}
                                 </div>
-                                <span className="max-w-[100px] truncate font-mono text-xs text-slate-400">{card.claimCode}</span>
+                                <span className="font-mono text-xs text-slate-400 md:max-w-[150px] md:text-sm">{card.claimCode}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <div className="flex flex-col items-end gap-0.5">
                                   {card.status === 'WRONG_AMOUNT' && card.reportedAmount != null ? (
                                     <div className="flex items-center gap-1">
-                                      <span className="text-xs text-slate-500 line-through">${card.amount.toFixed(2)}</span>
-                                      <span className="text-xs font-medium text-amber-400">${card.reportedAmount.toFixed(2)}</span>
+                                      <span className="text-xs text-slate-500 line-through md:text-sm">${card.amount.toFixed(2)}</span>
+                                      <span className="text-xs font-medium text-amber-400 md:text-sm">
+                                        ${card.reportedAmount.toFixed(2)}
+                                      </span>
                                     </div>
                                   ) : (
                                     <span
-                                      className={`text-xs font-medium ${card.isConfirmed && card.status !== 'USED' ? 'text-red-400 line-through' : 'text-emerald-400'}`}
+                                      className={`text-xs font-medium md:text-sm ${card.isConfirmed && card.status !== 'USED' ? 'text-red-400 line-through' : 'text-emerald-400'}`}
                                     >
                                       ${card.amount.toFixed(2)}
                                     </span>
                                   )}
                                   {card.status && card.status !== 'USED' && card.status !== 'WRONG_AMOUNT' && (
-                                    <span className="text-[9px] font-medium text-red-400">{card.status.replace('_', ' ')}</span>
+                                    <span className="text-[9px] font-medium text-red-400 md:text-xs">{card.status.replace('_', ' ')}</span>
                                   )}
                                   {card.status === 'WRONG_AMOUNT' && (
-                                    <span className="text-[9px] font-medium text-amber-400">WRONG AMOUNT</span>
+                                    <span className="text-[9px] font-medium text-amber-400 md:text-xs">WRONG AMOUNT</span>
                                   )}
                                 </div>
                                 <Button
@@ -284,39 +286,39 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
       <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
         <DialogContent className="max-w-sm rounded-2xl border border-slate-700/50 bg-[#0d1117] p-4">
           <DialogHeader>
-            <DialogTitle className="text-lg font-medium text-white">Card Details</DialogTitle>
-            <DialogDescription className="text-sm text-slate-400">Gift card information</DialogDescription>
+            <DialogTitle className="text-lg font-medium text-white md:text-xl">Card Details</DialogTitle>
+            <DialogDescription className="text-sm text-slate-400 md:text-base">Gift card information</DialogDescription>
           </DialogHeader>
           {selectedCard && (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-slate-700/50 bg-slate-800">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-slate-700/50 bg-slate-800 md:h-14 md:w-14">
                   {selectedCard.brand.image ? (
                     <Image src={selectedCard.brand.image} alt={selectedCard.brand.name} fill className="object-contain" unoptimized />
                   ) : (
-                    <span className="text-xl">{selectedCard.brand.icon}</span>
+                    <span className="text-xl md:text-2xl">{selectedCard.brand.icon}</span>
                   )}
                 </div>
                 <div>
-                  <p className="font-medium text-white">{selectedCard.brand.name}</p>
-                  <p className="text-xs text-slate-400">{selectedCard.country?.name || 'Global'}</p>
+                  <p className="font-medium text-white md:text-lg">{selectedCard.brand.name}</p>
+                  <p className="text-xs text-slate-400 md:text-sm">{selectedCard.country?.name || 'Global'}</p>
                 </div>
                 <div className="ml-auto text-right">
-                  <p className="text-lg font-semibold text-white">${selectedCard.amount.toFixed(2)}</p>
+                  <p className="text-lg font-semibold text-white md:text-2xl">${selectedCard.amount.toFixed(2)}</p>
                   <GiftcardStatusBadge card={selectedCard} />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-400">Code</label>
+                <label className="text-xs font-medium text-slate-400 md:text-sm">Code</label>
                 <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
-                  <code className="text-xs text-white">{selectedCard.claimCode}</code>
+                  <code className="text-xs text-white md:text-sm">{selectedCard.claimCode}</code>
                 </div>
                 {selectedCard.pinCode && (
                   <>
-                    <label className="text-xs font-medium text-slate-400">PIN</label>
+                    <label className="text-xs font-medium text-slate-400 md:text-sm">PIN</label>
                     <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 px-3 py-2">
-                      <code className="text-xs text-white">{selectedCard.pinCode}</code>
+                      <code className="text-xs text-white md:text-sm">{selectedCard.pinCode}</code>
                     </div>
                   </>
                 )}
@@ -324,7 +326,7 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
 
               <Button
                 onClick={() => setSelectedCard(null)}
-                className="h-10 w-full rounded-lg bg-slate-700 text-sm font-medium text-white hover:bg-slate-600"
+                className="h-10 w-full rounded-lg bg-slate-700 text-sm font-medium text-white hover:bg-slate-600 md:h-12 md:text-base"
               >
                 Close
               </Button>
