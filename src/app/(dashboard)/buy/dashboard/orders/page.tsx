@@ -1,5 +1,5 @@
 import { getBuyerOrders } from '@/actions/order-actions';
-import { BuyerOrdersView } from '@/components/buy/orders/buyer-orders-view';
+import { BuyerOrdersView } from '@/components/buy/giftcard-orders';
 import { searchParamsCache } from '@/lib/search-params-cache';
 import type { Metadata } from 'next';
 

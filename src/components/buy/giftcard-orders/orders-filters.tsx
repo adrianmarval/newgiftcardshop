@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { orderSearchParamsParsers } from '@/components/buy/orders/orders-search-params';
+import { orderSearchParamsParsers } from '@/components/buy/giftcard-orders/orders-search-params';
 import type { OrdersFiltersProps } from './types';
 
 export const OrdersFilters = ({ onSearchChange }: OrdersFiltersProps) => {

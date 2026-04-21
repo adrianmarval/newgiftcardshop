@@ -16,28 +16,27 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
   const hasReport = batch.giftcards.some((g) => g.isConfirmed && g.status !== 'USED');
   const batchTotal = batch.giftcards.reduce((sum, g) => sum + g.amount, 0);
 
-  const getStatus = (): { label: string; color: string; icon: React.ReactNode } => {
+  const getStatus = (): { label: string; color: string } => {
     if (isPaid) {
-      return {
-        label: 'PAID',
-        color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-        icon: <span className="h-3 w-3" />,
-      };
+      return { label: 'PAID', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
     }
     if (allConfirmed) {
-      return { label: 'CONFIRMED', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20', icon: <span className="h-3 w-3" /> };
+      return { label: 'CONFIRMED', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' };
     }
-    return {
-      label: `PROCESSING (${confirmedCount}/${totalItems})`,
-      color: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-      icon: <span className="h-3 w-3" />,
-    };
+    return { label: `PROCESSING (${confirmedCount}/${totalItems})`, color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' };
   };
 
   const status = getStatus();
 
   return (
-    <Card className={`border-border bg-card overflow-hidden rounded-xl transition-all ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}>
+    <Card
+      className={`border-border bg-card relative overflow-hidden rounded-xl transition-all ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+    >
+      {hasReport && (
+        <div className="absolute top-2 right-2 z-20">
+          <AlertTriangle className="text-destructive fill-destructive/20 h-5 w-5 drop-shadow-md" />
+        </div>
+      )}
       <div onClick={onToggle} className="flex cursor-pointer items-center justify-between p-3">
         <div className="flex items-center gap-3">
           <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${status.color}`}>
@@ -54,7 +53,6 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
             <span className="text-foreground text-sm font-semibold md:text-lg">${batchTotal.toFixed(0)}</span>
             <span className="text-muted-foreground text-[10px] md:text-sm">→ ${batch.estimatedPayout.toFixed(0)}</span>
           </div>
-          {hasReport && <AlertTriangle className="text-destructive h-4 w-4" />}
           <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>{status.label}</Badge>
           <ChevronDown className={`text-muted-foreground h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
         </div>

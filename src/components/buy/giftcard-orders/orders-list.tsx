@@ -2,7 +2,7 @@
 
 import { AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
-import { OrderCard } from '@/components/buy/orders/order-card';
+import { OrderCard } from '@/components/buy/giftcard-orders/order-card';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { OrdersListProps } from './types';

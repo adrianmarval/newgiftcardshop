@@ -1,1 +1,1 @@
-export { BuyerOrdersView } from './orders/buyer-orders-view';
+export { BuyerOrdersView } from './giftcard-orders/buyer-orders-view';

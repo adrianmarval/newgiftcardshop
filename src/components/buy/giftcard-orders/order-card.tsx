@@ -3,14 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Package, AlertTriangle, RotateCcw, XCircle } from 'lucide-react';
+import { ChevronDown, Package, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import Image from 'next/image';
 import { toast } from 'sonner';
-import { OrderDetails } from '@/components/buy/orders/order-details';
+import { OrderDetails } from '@/components/buy/giftcard-orders/order-details';
 import { cancelOrder } from '@/actions/order-actions';
 import { Spinner } from '@/components/ui/spinner';
 import type { OrderCardProps } from './types';
