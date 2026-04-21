@@ -1,20 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Sell Component Props — Moved from @/types barrel
+// Sell Component Props — Wizard and Dialog types only
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { SellerBatch, Brand, Country } from '@/types';
-
-/**
- * Props for the SellerCardsView component.
- * Displays a list of seller batches with filtering and expansion.
- */
-export interface SellerCardsViewProps {
-  batches: SellerBatch[];
-}
-
-export interface SellerStatsProps {
-  batches: SellerBatch[];
-}
+import type { Brand, Country } from '@/types';
 
 /**
  * Props for the SellBatchManager component.

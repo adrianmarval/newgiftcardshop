@@ -70,12 +70,6 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
   };
 
   const totalSteps = STEP_LABELS.length;
-  const hasInProgressData =
-    step > 1 ||
-    !!selectedBrand ||
-    !!selectedCountry ||
-    images.length > 0 ||
-    giftcards.some((card) => card.amount || card.claimCode || card.pinCode);
 
   // Build a brand map for review step
   const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));

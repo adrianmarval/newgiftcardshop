@@ -1,4 +1,4 @@
-import { SellBatchManager } from '@/components/sell/sell-batch-manager';
+import { SellBatchManager } from '@/components/sell/sell-flow';
 import { getActiveBrands } from '@/actions/brand-actions';
 import { getActiveCountries } from '@/actions/country-actions';
 import { getSellerRate } from '@/actions/seller-actions';

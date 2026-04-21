@@ -1,5 +1,5 @@
 import { getSellerBatches } from '@/actions/seller-actions';
-import { SellerCardsView } from '@/components/sell/seller-cards-view';
+import { SellerBatchesView } from '@/components/sell/giftcard-batches';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default async function SellerCardsPage() {
         <p className="text-muted-foreground text-base md:text-lg">Track your inventory, sales status, and payment reports.</p>
       </div>
 
-      <SellerCardsView batches={batches} />
+      <SellerBatchesView batches={batches} />
     </div>
   );
 }

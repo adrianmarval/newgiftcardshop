@@ -2,9 +2,9 @@
 
 import { Package, CheckCircle2, CreditCard, TrendingUp } from 'lucide-react';
 import { StatCard } from '@/components/ui/stat-card';
-import type { SellerStatsProps } from './types';
+import type { BatchesStatsProps } from './types';
 
-export function SellerStats({ batches }: SellerStatsProps) {
+export function BatchesStats({ batches }: BatchesStatsProps) {
   const totalBatches = batches.length;
   const totalCardsCount = batches.reduce((acc, b) => acc + b.giftcards.length, 0);
   const totalVolume = batches.reduce((acc, b) => acc + b.giftcards.reduce((sum, g) => sum + g.amount, 0), 0);
