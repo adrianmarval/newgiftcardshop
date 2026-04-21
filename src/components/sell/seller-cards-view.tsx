@@ -2,12 +2,25 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronDown, CreditCard, Clock, CheckCircle2, AlertTriangle, Eye, History, Package } from 'lucide-react';
+import {
+  Search,
+  ChevronDown,
+  CreditCard,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  Eye,
+  History,
+  Package,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { useQueryState } from 'nuqs';
@@ -97,28 +110,60 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
         <StatCard label="Volume" value={`$${totalVolume.toFixed(0)}`} subtext="Total" color="text-amber-500" />
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border-input bg-background text-foreground placeholder:text-muted-foreground h-10 rounded-lg pl-9 text-sm"
+            className="border-border bg-muted/20 h-8 pr-3 pl-9 text-xs md:h-10 md:text-sm"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="border-input bg-background h-10 rounded-lg text-sm">
-            <SelectValue placeholder="Filter" />
-          </SelectTrigger>
-          <SelectContent className="border-input bg-popover rounded-lg">
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="confirmed">Confirmed</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="reported">Reported</SelectItem>
-          </SelectContent>
-        </Select>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant={statusFilter !== 'all' ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-9 md:gap-2 md:px-3">
+              <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span className="hidden md:inline">Filters</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[280px] p-4" align="end">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Filters</span>
+                {statusFilter !== 'all' && (
+                  <Button variant="ghost" size="sm" onClick={() => setStatusFilter('all')} className="h-7 text-xs">
+                    <X className="mr-1 h-3 w-3" />
+                    Clear
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-muted-foreground text-xs font-medium">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="reported">Reported</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {statusFilter !== 'all' && (
+          <Button variant="ghost" size="icon" onClick={() => setStatusFilter('all')} className="h-9 w-9 md:hidden">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="space-y-2">

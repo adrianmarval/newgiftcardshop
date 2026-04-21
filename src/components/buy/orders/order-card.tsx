@@ -92,151 +92,44 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
   const isActionable = order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT';
 
   return (
-    <Card
-      className={`border-border overflow-hidden transition-all duration-300 ${isExpanded ? 'bg-background ring-primary/20 ring-2' : 'bg-card/40 hover:border-primary/30'}`}
-    >
-      {/* Order Header */}
-      <div
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="group relative flex cursor-pointer flex-col justify-between gap-3 p-2 md:flex-row md:items-center md:p-4"
-      >
-        {/* Progress Bar background */}
-        <div className="bg-primary/10 absolute top-0 left-0 h-1 w-full">
-          <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} className="bg-primary/40 h-full" />
-        </div>
-
-        <div className="flex items-center gap-3 md:gap-4">
-          <div
-            className={`rounded-xl p-2.5 md:p-3 ${status.color.includes('emerald') ? 'bg-emerald-500/10 text-emerald-500' : status.color.includes('amber') ? 'bg-amber-500/10 text-amber-500' : status.color.includes('blue') ? 'bg-blue-500/10 text-blue-500' : status.color.includes('destructive') ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'} shadow-sm transition-colors`}
-          >
-            <Package className="h-4 w-4 md:h-5 md:w-5" />
+    <Card className={`border-border bg-card overflow-hidden rounded-xl transition-all ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}>
+      <div onClick={() => setIsExpanded(!isExpanded)} className="flex cursor-pointer items-center justify-between p-3">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${status.color}`}>
+            <Package className="h-4 w-4" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground/50 text-sm font-medium uppercase md:text-base">ID</span>
-              <span className="font-mono text-sm font-bold md:text-base">{order.id.slice(-8).toUpperCase()}</span>
-            </div>
-            <div className="text-muted-foreground font-mono text-sm md:text-base">
-              {new Date(order.createdAt).toLocaleDateString()} A LAS{' '}
-              {new Date(order.createdAt)
-                .toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })
-                .toUpperCase()}
-            </div>
+          <div className="flex flex-col">
+            <span className="text-foreground text-xs font-medium md:text-base">Order #{order.id.slice(-8).toUpperCase()}</span>
+            <span className="text-muted-foreground text-[10px] md:text-sm">{new Date(order.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 md:gap-6">
-          <div className="text-right">
-            <div className="text-muted-foreground mb-0.5 text-sm font-medium uppercase md:text-base">Tarjetas</div>
-            <div className="text-base font-semibold md:text-lg">
-              {confirmedCount}/{totalItems} Conf.
-            </div>
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end">
+            <span className="text-foreground text-sm font-semibold md:text-lg">${(order.adjustedTotal ?? order.total).toFixed(2)}</span>
+            <span className="text-muted-foreground text-[10px] md:text-sm">
+              {confirmedCount}/{totalItems} cards
+            </span>
           </div>
-          <div className="text-right">
-            <div className="text-muted-foreground mb-0.5 text-sm font-medium uppercase md:text-base">Total</div>
-            <div className="text-primary text-base font-semibold md:text-lg">${(order.adjustedTotal ?? order.total).toFixed(2)}</div>
-          </div>
-
-          {/* Brand icons */}
-          <div className="hidden items-center gap-1 md:flex">
-            {brandIcons.map((brand, idx) => (
-              <div
-                key={idx}
-                className="border-border/60 relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg border bg-white shadow-sm"
-              >
-                {brand.image ? (
-                  <Image src={brand.image} alt={brand.name} fill className="object-contain p-0.5" loading="eager" />
-                ) : (
-                  <span className="text-sm">{brand.icon}</span>
-                )}
-              </div>
-            ))}
-            {extraBrands > 0 && (
-              <div className="bg-muted flex h-7 w-7 items-center justify-center rounded-lg text-xs font-medium">+{extraBrands}</div>
-            )}
-          </div>
-
-          {/* Action buttons - always visible */}
-          {isActionable && (
-            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      onClick={handleResumeOrder}
-                      className="bg-primary text-primary-foreground hover:bg-primary/90 h-7 px-2 text-xs font-medium md:h-9 md:px-4 md:text-sm"
-                    >
-                      <RotateCcw className="mr-1 h-2.5 w-2.5 md:mr-2 md:h-3.5 md:w-3.5" />
-                      <span className="hidden sm:inline">Reanudar</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-popover text-popover-foreground p-2 text-xs font-medium">
-                    <p>Continuar con esta orden</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCancelOrder}
-                        disabled={!canCancel || isCancelling}
-                        className="border-destructive/50 text-destructive hover:bg-destructive/10 h-7 px-1.5 text-xs font-medium md:h-9 md:px-3 md:text-sm"
-                      >
-                        {isCancelling ? (
-                          <Spinner size="sm" className="mr-0.5 md:mr-1" />
-                        ) : (
-                          <XCircle className="mr-1 h-2.5 w-2.5 md:mr-2 md:h-3.5 md:w-3.5" />
-                        )}
-                        <span className="hidden sm:inline">Cancelar</span>
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {!canCancel && (
-                    <TooltipContent className="bg-destructive text-destructive-foreground p-2 text-xs font-medium">
-                      <p>No se puede cancelar: la orden tiene tarjetas con valor</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            {hasIssues && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="bg-destructive/10 text-destructive flex animate-pulse items-center gap-1 rounded p-1 px-1.5">
-                      <AlertTriangle className="h-3 w-3" />
-                      <span className="text-sm font-medium md:text-base">PROBLEMA</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-destructive text-destructive-foreground p-2 text-xs font-medium">
-                    <p>Algunas tarjetas en esta orden han sido reportadas</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-sm font-medium md:text-base`}>{status.label}</Badge>
-
-            <div className={`bg-muted/20 rounded-full p-1 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-              <ChevronDown className="text-muted-foreground group-hover:text-primary h-3.5 w-3.5 md:h-4 md:w-4" />
-            </div>
-          </div>
+          {hasIssues && <AlertTriangle className="text-destructive h-4 w-4" />}
+          <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>{status.label}</Badge>
+          <ChevronDown className={`text-muted-foreground h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
         </div>
       </div>
 
-      {/* Expanded Content (Order Details) */}
+      <div className="bg-muted flex h-1 overflow-hidden rounded-full">
+        {order.status === 'COMPLETED' ? (
+          <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className="h-full bg-emerald-500" />
+        ) : order.status === 'CANCELLED' ? (
+          <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className="bg-destructive h-full" />
+        ) : (
+          <>
+            <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} className="bg-primary h-full" />
+            <div className="flex-1 bg-amber-400" />
+          </>
+        )}
+      </div>
+
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -244,9 +137,11 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="border-border bg-muted/5 border-t font-medium"
+            className="overflow-hidden"
           >
-            <OrderDetails order={order} canCancel={canCancel} onCardClick={onCardClick} />
+            <div className="border-border border-t p-3">
+              <OrderDetails order={order} canCancel={canCancel} onCardClick={onCardClick} />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
