@@ -31,12 +31,6 @@ export interface UrlPaginationProps {
   totalPages: number;
 }
 
-// ── MetricCardGrid ────────────────────────────────────────────────────────────
-
-export interface MetricCardGridProps {
-  items: StatsItem[];
-}
-
 // ── Empty State ───────────────────────────────────────────────────────────────
 
 export interface EmptyStateProps {

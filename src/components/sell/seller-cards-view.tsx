@@ -27,37 +27,13 @@ import { useQueryState } from 'nuqs';
 import type { SellerBatch, Giftcard } from '@/types';
 import type { SellerCardsViewProps } from './types';
 import { GiftcardStatusBadge } from '@/components/ui/giftcard-status-badge';
-
-const StatCard = ({ label, value, subtext, color }: { label: string; value: string; subtext: string; color: string }) => (
-  <div className="border-border bg-card rounded-xl border p-3 shadow-sm">
-    <span className="text-muted-foreground text-[10px] font-medium uppercase md:text-sm">{label}</span>
-    <p className={`text-xl font-semibold md:text-2xl ${color}`}>{value}</p>
-    <span className="text-muted-foreground text-[10px] md:text-xs">{subtext}</span>
-  </div>
-);
+import { SellerStats } from '@/components/sell/seller-stats';
 
 export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useQueryState('search', { defaultValue: '' });
   const [statusFilter, setStatusFilter] = useQueryState('status', { defaultValue: 'all' });
   const [selectedCard, setSelectedCard] = useState<Giftcard | null>(null);
-
-  const totalBatches = batches.length;
-  const totalCardsCount = batches.reduce((acc, b) => acc + b.giftcards.length, 0);
-  const totalVolume = batches.reduce((acc, b) => acc + b.giftcards.reduce((sum, g) => sum + g.amount, 0), 0);
-
-  const totalPaid = batches.reduce((acc, b) => {
-    const paymentTotal = b.payments.filter((p) => p.status === 'COMPLETED').reduce((sum, p) => sum + p.amount, 0);
-    if (paymentTotal > 0) return acc + paymentTotal;
-    if (b.isPaid) return acc + b.estimatedPayout;
-    return acc;
-  }, 0);
-
-  const awaitingPayoutCount = batches.filter((b) => {
-    const allConfirmed = b.giftcards.every((g) => g.isConfirmed);
-    const notPaid = !b.isPaid && !b.payments.some((p) => p.status === 'COMPLETED');
-    return allConfirmed && notPaid && b.giftcards.length > 0;
-  }).length;
 
   const filteredBatches = batches.filter((batch) => {
     const matchesSearch = batch.giftcards.some(
@@ -103,12 +79,7 @@ export const SellerCardsView = ({ batches }: SellerCardsViewProps) => {
 
   return (
     <div className="space-y-4 pb-8">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-        <StatCard label="Batches" value={String(totalBatches)} subtext={`${totalCardsCount} cards`} color="text-foreground" />
-        <StatCard label="Confirmed" value={String(awaitingPayoutCount)} subtext="Awaiting" color="text-blue-500" />
-        <StatCard label="Earned" value={`$${totalPaid.toFixed(0)}`} subtext="Paid" color="text-emerald-500" />
-        <StatCard label="Volume" value={`$${totalVolume.toFixed(0)}`} subtext="Total" color="text-amber-500" />
-      </div>
+      <SellerStats batches={batches} />
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1">

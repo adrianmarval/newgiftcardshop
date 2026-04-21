@@ -12,6 +12,10 @@ export interface SellerCardsViewProps {
   batches: SellerBatch[];
 }
 
+export interface SellerStatsProps {
+  batches: SellerBatch[];
+}
+
 /**
  * Props for the SellBatchManager component.
  * Manages the multi-step sell flow wizard.
