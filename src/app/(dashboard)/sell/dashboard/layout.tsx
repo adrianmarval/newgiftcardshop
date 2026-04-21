@@ -1,4 +1,4 @@
-import { SellerSidebar } from '@/components/layout/seller-sidebar';
+import { SellerSidebar } from '@/components/layout/seller-nav';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { authorizeByRequiredRole } from '@/lib/authorization';
 
@@ -8,7 +8,7 @@ export default async function SellerDashboardLayout({ children }: { children: Re
     <TooltipProvider>
       <nav className="grid h-svh w-full grid-cols-1 grid-rows-[1fr_auto] gap-1 p-1 md:gap-4 md:p-4">
         {/* 2: CONTENT - Full width always */}
-        <main className="bg-muted/20 relative col-span-1 overflow-hidden rounded-lg shadow-inner md:col-span-1">
+        <main className="bg-background relative col-span-1 overflow-hidden rounded-lg md:col-span-1">
           <div className="custom-scrollbar text-muted-foreground h-full overflow-y-auto italic md:p-2">{children}</div>
         </main>
 

@@ -37,17 +37,6 @@ export interface MetricCardGridProps {
   items: StatsItem[];
 }
 
-// ── PortalSidebar ─────────────────────────────────────────────────────────────
-
-export interface PortalSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  navItems: NavItem[];
-  brandLabel: string;
-  brandHref: string;
-  groupLabel?: string;
-  portal: string;
-  logoutVariant?: 'destructive' | 'ghost' | 'default' | 'outline' | 'secondary' | 'link';
-}
-
 // ── Empty State ───────────────────────────────────────────────────────────────
 
 export interface EmptyStateProps {

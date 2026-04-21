@@ -1,4 +1,4 @@
-import { BuyerSidebar } from '@/components/layout/buyer-sidebar';
+import { BuyerSidebar } from '@/components/layout/buyer-nav';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { authorizeByRequiredRole } from '@/lib/authorization';
 

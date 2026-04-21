@@ -1,7 +1,6 @@
 'use client';
 
-import * as React from 'react';
-import { IconDashboard, IconSearch, IconShoppingCart, IconWallet, IconSettings, IconUser, IconHistory } from '@tabler/icons-react';
+import { IconDashboard, IconSearch, IconUser, IconHistory } from '@tabler/icons-react';
 import { BottomNav } from '@/components/layout/bottom-nav';
 
 const navItems = [

@@ -1,4 +1,4 @@
-import { AdminSidebar } from '@/components/layout/admin-sidebar';
+import { AdminSidebar } from '@/components/layout/admin-nav';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { authorizeByRequiredRole } from '@/lib/authorization';
 
