@@ -1,4 +1,4 @@
-import { BuyGiftcardManager } from '@/components/buy/buy-flow';
+import { BuyGiftcardManager } from '@/components/buy/buy-flow-manager';
 import { getActiveBrands, getActiveCountries } from '@/actions';
 import { getOrderById } from '@/actions/order-actions';
 import type { BuyerOrder } from '@/types';
