@@ -113,10 +113,10 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground/50 text-xs font-medium uppercase md:text-sm">ID</span>
-              <span className="font-mono text-xs font-bold md:text-sm">{order.id.slice(-8).toUpperCase()}</span>
+              <span className="text-muted-foreground/50 text-sm font-medium uppercase md:text-base">ID</span>
+              <span className="font-mono text-sm font-bold md:text-base">{order.id.slice(-8).toUpperCase()}</span>
             </div>
-            <div className="text-muted-foreground font-mono text-xs md:text-sm">
+            <div className="text-muted-foreground font-mono text-sm md:text-base">
               {new Date(order.createdAt).toLocaleDateString()} A LAS{' '}
               {new Date(order.createdAt)
                 .toLocaleTimeString([], {
@@ -130,14 +130,14 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
 
         <div className="flex flex-wrap items-center gap-3 md:gap-6">
           <div className="text-right">
-            <div className="text-muted-foreground mb-0.5 text-xs font-medium uppercase md:text-sm">Tarjetas</div>
-            <div className="text-sm font-semibold md:text-base">
+            <div className="text-muted-foreground mb-0.5 text-sm font-medium uppercase md:text-base">Tarjetas</div>
+            <div className="text-base font-semibold md:text-lg">
               {confirmedCount}/{totalItems} Conf.
             </div>
           </div>
           <div className="text-right">
-            <div className="text-muted-foreground mb-0.5 text-xs font-medium uppercase md:text-sm">Total</div>
-            <div className="text-primary text-sm font-semibold md:text-base">${(order.adjustedTotal ?? order.total).toFixed(2)}</div>
+            <div className="text-muted-foreground mb-0.5 text-sm font-medium uppercase md:text-base">Total</div>
+            <div className="text-primary text-base font-semibold md:text-lg">${(order.adjustedTotal ?? order.total).toFixed(2)}</div>
           </div>
 
           {/* Brand icons */}
@@ -217,7 +217,7 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
                   <TooltipTrigger asChild>
                     <div className="bg-destructive/10 text-destructive flex animate-pulse items-center gap-1 rounded p-1 px-1.5">
                       <AlertTriangle className="h-3 w-3" />
-                      <span className="text-xs font-medium md:text-sm">PROBLEMA</span>
+                      <span className="text-sm font-medium md:text-base">PROBLEMA</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent className="bg-destructive text-destructive-foreground p-2 text-xs font-medium">
@@ -227,7 +227,7 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
               </TooltipProvider>
             )}
 
-            <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-xs font-medium md:text-sm`}>{status.label}</Badge>
+            <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-sm font-medium md:text-base`}>{status.label}</Badge>
 
             <div className={`bg-muted/20 rounded-full p-1 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
               <ChevronDown className="text-muted-foreground group-hover:text-primary h-3.5 w-3.5 md:h-4 md:w-4" />

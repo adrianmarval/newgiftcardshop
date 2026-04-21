@@ -11,14 +11,20 @@ export default async function SellerProfilePage() {
   const session = await getSession();
 
   return (
-    <ProfileForm
-      user={{
-        name: session.user.name,
-        email: session.user.email,
-        image: session.user.image,
-        twoFactorEnabled: !!session.user.twoFactorEnabled,
-      }}
-      portal="sell"
-    />
+    <div className="flex flex-1 flex-col gap-4 py-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-5xl font-black tracking-tighter italic md:text-7xl">MY PROFILE</h1>
+        <p className="text-muted-foreground text-base md:text-lg">Manage your account information.</p>
+      </div>
+      <ProfileForm
+        user={{
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+          twoFactorEnabled: !!session.user.twoFactorEnabled,
+        }}
+        portal="sell"
+      />
+    </div>
   );
 }
