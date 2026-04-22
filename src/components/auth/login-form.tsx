@@ -33,6 +33,8 @@ export const LoginForm = ({
     onSuccess: ({ data }) => {
       if (data?.success && data.redirectTo) {
         router.push(data.redirectTo);
+      } else if (data?.error) {
+        toast.error(data.error);
       }
     },
     onError: ({ error }) => {
