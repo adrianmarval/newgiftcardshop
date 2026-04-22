@@ -80,11 +80,11 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
       <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
         <div className="space-y-1">
           {/* País Selector */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
               1. Selecciona un País
             </Label>
-            <div className="w-40 md:w-64">
+            <div className="w-40 md:w-full">
               <Select value={selectedCountry} onValueChange={setSelectedCountry} disabled={searchState.loading}>
                 <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 w-full text-sm md:h-11 md:text-base">
                   <SelectValue placeholder={searchState.loading ? '...' : 'País'} />
@@ -101,11 +101,11 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
           </div>
 
           {/* Monto Input */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
-              2. Escribe el monto a consultar
+              2. Escribe el monto
             </Label>
-            <div className="relative w-40 md:w-64">
+            <div className="relative w-40 md:w-full">
               <DollarSign className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
               <Input
                 type="number"
@@ -118,11 +118,11 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
           </div>
 
           {/* Search Brand */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
               3. Busca o selecciona una marca
             </Label>
-            <div className="relative w-40 md:w-64">
+            <div className="relative w-40 md:w-full">
               <Search className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
               <Input
                 placeholder="Search Brand"
