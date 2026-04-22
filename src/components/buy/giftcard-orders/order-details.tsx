@@ -1,47 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { toast } from 'sonner';
-import { cancelOrder } from '@/actions/order-actions';
-import { GiftcardStatusBadge } from '@/components/ui/giftcard-status-badge';
 import { TransactionList } from '@/components/ui/transaction-list';
-import { Spinner } from '@/components/ui/spinner';
 import type { OrderDetailsProps } from './types';
 
-export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProps) {
-  const router = useRouter();
-  const [isCancelling, setIsCancelling] = useState(false);
-
-  const handleCancelOrder = async () => {
-    setIsCancelling(true);
-    try {
-      const result = await cancelOrder({ orderId: order.id });
-      if (result.serverError || result.validationErrors) {
-        toast.error('Error al cancelar la orden', {
-          description: (result.serverError || result.validationErrors?._errors) as string,
-        });
-      } else {
-        toast.success('Orden cancelada con exito');
-        router.refresh();
-      }
-    } catch (error) {
-      toast.error('Error al cancelar la orden', {
-        description: error instanceof Error ? error.message : 'Error desconocido',
-      });
-    } finally {
-      setIsCancelling(false);
-    }
-  };
-
-  const handleResumeOrder = () => {
-    router.push(`/buy/dashboard/browse-cards?orderId=${order.id}`);
-  };
-
+export function OrderDetails({ order, onCardClick }: OrderDetailsProps) {
   return (
     <div className="space-y-3">
       <div className="space-y-1">
@@ -99,28 +65,6 @@ export function OrderDetails({ order, canCancel, onCardClick }: OrderDetailsProp
       </div>
 
       {order.payments.length > 0 && <TransactionList payments={order.payments} />}
-
-      {(order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT') && (
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            onClick={handleResumeOrder}
-            size="sm"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 text-xs md:h-9 md:px-4 md:text-sm"
-          >
-            Resume
-          </Button>
-          <Button
-            onClick={handleCancelOrder}
-            disabled={!canCancel || isCancelling}
-            variant="outline"
-            size="sm"
-            className="border-destructive/50 text-destructive hover:bg-destructive/10 h-8 px-2 text-xs md:h-9 md:px-3 md:text-sm"
-          >
-            {isCancelling ? <Spinner size="sm" className="mr-1" /> : null}
-            Cancel
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

@@ -30,7 +30,6 @@ export interface OrdersListProps {
  */
 export interface OrderDetailsProps {
   order: BuyerOrder;
-  canCancel: boolean;
   onCardClick?: (card: Giftcard, orderStatus: OrderStatus) => void;
 }
 
