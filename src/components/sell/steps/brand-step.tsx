@@ -68,7 +68,7 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
       </Card>
 
       {/* Columna Derecha: Grilla de Marcas */}
-      <Card className="border-border bg-card/50 flex h-[calc(100vh-330px)] flex-col gap-1.5 px-1 py-1 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-2">
+      <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <CardContent className="custom-scrollbar grid flex-1 grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
           <AnimatePresence mode="popLayout">
             {filteredBrands.map((brand) => (

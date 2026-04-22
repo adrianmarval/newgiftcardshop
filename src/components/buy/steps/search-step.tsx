@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ChevronRight, Check } from 'lucide-react';
+import { Search, ChevronRight, Check, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,39 +77,42 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Left Column: Filters */}
-      <Card className="border-border bg-card/50 flex h-auto flex-col space-y-1.5 p-1.5 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
-        <div>
-          <h2 className="mb-0.5 text-lg font-bold md:mb-2 md:text-2xl">Configuración</h2>
-          <p className="text-muted-foreground hidden text-xs md:block md:text-base">¿Qué estás buscando?</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-4">
-          <div className="space-y-0.5 md:space-y-2">
-            <Label className="text-muted-foreground block text-[10px] font-semibold tracking-wider uppercase md:text-sm">País</Label>
-            <Select value={selectedCountry} onValueChange={setSelectedCountry} disabled={searchState.loading}>
-              <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 text-[11px] md:h-11 md:text-sm">
-                <SelectValue placeholder={searchState.loading ? '...' : 'País'} />
-              </SelectTrigger>
-              <SelectContent className="border-border bg-popover text-popover-foreground">
-                {searchState.country.map((country) => (
-                  <SelectItem key={country.id} value={country.id}>
-                    {country.name} ({country.code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
+        <div className="space-y-1">
+          {/* País Selector */}
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+              Selecciona un País
+            </Label>
+            <div className="w-40 md:w-64">
+              <Select value={selectedCountry} onValueChange={setSelectedCountry} disabled={searchState.loading}>
+                <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 w-full text-sm md:h-11 md:text-base">
+                  <SelectValue placeholder={searchState.loading ? '...' : 'País'} />
+                </SelectTrigger>
+                <SelectContent className="border-border bg-popover text-popover-foreground">
+                  {searchState.country.map((country) => (
+                    <SelectItem key={country.id} value={country.id}>
+                      {country.name} ({country.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-0.5 md:space-y-2">
-            <Label className="text-muted-foreground block text-[10px] font-semibold tracking-wider uppercase md:text-sm">Monto</Label>
-            <div className="relative">
-              <span className="text-muted-foreground/50 absolute top-1.5 left-2 text-[11px] md:top-3 md:left-3 md:text-sm">$</span>
+          {/* Monto Input */}
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+              Monto
+            </Label>
+            <div className="relative w-40 md:w-64">
+              <DollarSign className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
               <Input
                 type="number"
                 placeholder="500"
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
-                className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-5 text-[11px] md:h-11 md:pl-7 md:text-base"
+                className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-9 text-sm md:pl-10"
               />
             </div>
           </div>
