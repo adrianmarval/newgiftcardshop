@@ -117,14 +117,15 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
             </div>
           </div>
 
-          <div className="hidden space-y-1 md:block md:space-y-2">
-            <Label className="text-muted-foreground mb-0.5 block text-[10px] font-semibold tracking-wider uppercase md:text-sm">
-              Buscar Marca
+          {/* Search Brand */}
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+              3. Busca o selecciona una marca
             </Label>
-            <div className="relative">
-              <Search className="text-muted-foreground/50 absolute top-2.5 left-3 h-3.5 w-3.5 md:top-3 md:h-4 md:w-4" />
+            <div className="relative w-40 md:w-64">
+              <Search className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
               <Input
-                placeholder="Buscar..."
+                placeholder="Search Brand"
                 value={searchState.searchBrand}
                 onChange={(e) =>
                   setSearchState((prev) => ({
@@ -132,7 +133,7 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
                     searchBrand: e.target.value,
                   }))
                 }
-                className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 pl-9 text-sm md:h-11 md:pl-10 md:text-base"
+                className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-9 text-sm md:pl-10"
               />
             </div>
           </div>
@@ -141,11 +142,6 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
 
       {/* Right Column: Brand Grid */}
       <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
-        <div className="mb-1 flex items-center justify-between md:mb-4">
-          <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">3. Selecciona una Marca</Label>
-          <span className="text-muted-foreground/50 text-xs">{filteredBrands.length} ítems</span>
-        </div>
-
         <CardContent className="custom-scrollbar grid flex-1 grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
           {filteredBrands.map((brand, idx) => (
             <motion.button
