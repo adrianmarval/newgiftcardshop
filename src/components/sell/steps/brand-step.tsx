@@ -52,7 +52,7 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
           {/* Search Brand */}
           <div className="flex items-center justify-between gap-4">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
-              2. Select a Brand
+              2. Search or Select a Brand
             </Label>
             <div className="relative w-40 md:w-64">
               <Search className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
