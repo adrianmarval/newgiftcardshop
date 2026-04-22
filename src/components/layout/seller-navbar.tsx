@@ -18,6 +18,6 @@ const navItems = [
   { title: 'Profile', url: '/sell/dashboard/profile', icon: IconUser },
 ];
 
-export const SellerSidebar = () => {
+export const SellerNavbar = () => {
   return <BottomNav items={navItems} />;
 };

@@ -1,4 +1,4 @@
-import { SellerSidebar } from '@/components/layout/seller-nav';
+import { SellerNavbar } from '@/components/layout/seller-navbar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { authorizeByRequiredRole } from '@/lib/authorization';
 
@@ -16,7 +16,7 @@ export default async function SellerDashboardLayout({ children }: { children: Re
         <footer className="bg-card/80 col-span-1 flex items-center justify-center rounded-lg border p-3 shadow-lg backdrop-blur-xl md:col-span-1">
           <div className="flex w-full max-w-md justify-around">
             <div className="bg-primary/5 hover:bg-primary/10 border-primary/10 rounded-lg-xl flex h-10 w-10 cursor-pointer items-center justify-center border transition-colors">
-              <SellerSidebar />
+              <SellerNavbar />
             </div>
           </div>
         </footer>

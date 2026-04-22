@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ChevronRight, Check, DollarSign } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -75,14 +75,14 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
   const isValid = selectedBrand && selectedCountry && targetAmount && parseFloat(targetAmount) > 0;
 
   return (
-    <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
+    <div className="grid grid-cols-1 items-start gap-1 md:grid-cols-12 md:gap-6">
       {/* Left Column: Filters */}
       <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
         <div className="space-y-1">
           {/* País Selector */}
           <div className="flex items-center justify-between gap-4">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
-              Selecciona un País
+              1. Selecciona un País
             </Label>
             <div className="w-40 md:w-64">
               <Select value={selectedCountry} onValueChange={setSelectedCountry} disabled={searchState.loading}>
@@ -103,7 +103,7 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
           {/* Monto Input */}
           <div className="flex items-center justify-between gap-4">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
-              Monto
+              2. Escribe el monto a consultar
             </Label>
             <div className="relative w-40 md:w-64">
               <DollarSign className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
@@ -137,27 +137,16 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
             </div>
           </div>
         </div>
-
-        <div className="border-border mt-0.5 flex flex-col border-t pt-1.5 md:mt-auto md:gap-3 md:pt-6">
-          <Button
-            onClick={handleSearch}
-            disabled={!isValid || status === 'executing'}
-            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-8 w-full text-xs font-bold shadow-lg transition-all md:h-11 md:text-base"
-          >
-            {searchState.isSearching ? '...' : 'Consultar Disponibilidad'}
-            {!searchState.isSearching && <ChevronRight className="ml-1 h-3 w-3 md:ml-2 md:h-4 md:w-4" />}
-          </Button>
-        </div>
       </Card>
 
       {/* Right Column: Brand Grid */}
       <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <div className="mb-1 flex items-center justify-between md:mb-4">
-          <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Marcas Disponibles</Label>
+          <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">3. Selecciona una Marca</Label>
           <span className="text-muted-foreground/50 text-xs">{filteredBrands.length} ítems</span>
         </div>
 
-        <div className="custom-scrollbar grid max-h-125 flex-1 grid-cols-3 gap-1 overflow-y-auto pr-1 sm:grid-cols-3 md:max-h-150 md:gap-3 md:pr-2 lg:grid-cols-4">
+        <CardContent className="custom-scrollbar grid flex-1 grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
           {filteredBrands.map((brand, idx) => (
             <motion.button
               key={brand.id}
@@ -189,7 +178,17 @@ export function SearchStep({ brands, countries }: SearchStepProps) {
               )}
             </motion.button>
           ))}
-        </div>
+        </CardContent>
+        <CardFooter>
+          <Button
+            onClick={handleSearch}
+            disabled={!isValid || status === 'executing'}
+            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-8 w-full text-xs font-bold shadow-lg transition-all md:h-11 md:text-base"
+          >
+            {searchState.isSearching ? '...' : 'Consultar Disponibilidad'}
+            {!searchState.isSearching && <ChevronRight className="ml-1 h-3 w-3 md:ml-2 md:h-4 md:w-4" />}
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );
