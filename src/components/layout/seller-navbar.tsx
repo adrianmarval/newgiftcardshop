@@ -1,7 +1,8 @@
 'use client';
 
-import { IconDashboard, IconCreditCard, IconUpload, IconUser } from '@tabler/icons-react';
+import { IconDashboard, IconCreditCard, IconUser } from '@tabler/icons-react';
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { CircleDollarSign } from 'lucide-react';
 
 const navItems = [
   { title: 'Home', url: '/sell/dashboard', icon: IconDashboard },
@@ -13,7 +14,7 @@ const navItems = [
   {
     title: 'Sell Cards',
     url: '/sell/dashboard/sell-cards',
-    icon: IconUpload,
+    icon: CircleDollarSign,
   },
   { title: 'Profile', url: '/sell/dashboard/profile', icon: IconUser },
 ];

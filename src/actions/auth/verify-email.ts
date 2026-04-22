@@ -2,10 +2,10 @@
 
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { actionClient } from '@/lib/safe-action';
+import { authActionClient } from '@/lib/safe-action';
 import { verifyEmailSchema, verifyEmailOutputSchema } from '@/types/auth/schemas';
 
-export const verifyEmail = actionClient
+export const verifyEmail = authActionClient
   .inputSchema(verifyEmailSchema)
   .outputSchema(verifyEmailOutputSchema)
   .action(async function ({ parsedInput: { token, portal } }) {
