@@ -241,8 +241,8 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
         </div>
 
         {noEvidenceCount > 0 && (
-          <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 px-2">
-            <span className="text-[10px] text-amber-300">Missing Screenshots</span>
+          <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-2">
+            <span className="text-xs text-amber-300">Missing Screenshots</span>
             <span className="text-xs font-semibold text-amber-300">{noEvidenceCount}</span>
           </div>
         )}

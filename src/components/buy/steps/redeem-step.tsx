@@ -146,10 +146,8 @@ export const RedeemStep = () => {
 
   const totalAmount = rawTotal * redeemState.buyRate;
 
-  const reportedCount = foundGiftcards.filter((c) => c.status !== 'UNUSED').length;
-
   return (
-    <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
+    <div className="grid h-full grid-cols-1 items-start gap-2 md:grid-cols-12 md:gap-6">
       {/* Left Column: Order Summary & Actions */}
       <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
@@ -159,17 +157,20 @@ export const RedeemStep = () => {
 
         <div className="space-y-2 md:space-y-4">
           <div className="border-border bg-muted/50 space-y-2 rounded-xl border p-2 md:p-4">
-            <div className="flex items-center justify-between text-xs md:text-base">
-              <span className="text-muted-foreground">Tarjetas Activas</span>
+            <div className="text-md flex items-center justify-between md:text-base">
+              <span className="text-muted-foreground">Monto en Giftcards</span>
               <span className="font-bold">
-                {foundGiftcards.length - reportedCount} / {foundGiftcards.length}
+                {/* {foundGiftcards.length - reportedCount} / {foundGiftcards.length} */}
+                {rawTotal.toFixed(2)}
               </span>
             </div>
 
-            <div className="border-border flex items-center justify-between border-t pt-1.5 text-xs md:text-base">
-              <span className="text-muted-foreground">Total Ajustado</span>
-              <div className="text-right">
+            <div className="border-border text-md flex items-center justify-between border-t pt-1.5 md:text-base">
+              <span className="text-muted-foreground">Monto a pagar</span>
+              <div className="flex flex-col text-right">
                 <span className="text-primary text-xl font-black md:text-2xl">${totalAmount.toFixed(2)}</span>
+                {/* show buyerRate */}
+                <span className="text-muted-foreground text-[10px] md:text-sm">Rate ({redeemState.buyRate * 100}%)</span>
               </div>
             </div>
           </div>
@@ -186,7 +187,7 @@ export const RedeemStep = () => {
       {/* Right Column: Cards Reveal & Reporting */}
       <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <CardHeader>
-          <CardTitle className="mb-4 flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between">
             <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Códigos Revelados</Label>
             <div className="flex items-center gap-1.5 md:gap-2">
               <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
@@ -234,7 +235,7 @@ export const RedeemStep = () => {
                       </div>
                       <div className="mt-0.5 flex items-center gap-2">
                         {card.claimCode ? (
-                          <div className="group border-border bg-muted/50 flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold md:text-sm">
+                          <div className="group border-border bg-muted/50 text-md flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono font-bold md:text-sm">
                             {card.claimCode}
                             <Button
                               size="icon"
@@ -357,7 +358,7 @@ export const RedeemStep = () => {
             onClick={() => setStep(4)}
             className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 w-full text-xs font-bold shadow-lg md:h-11 md:text-base"
           >
-            Verificado {foundGiftcards.length} tarjetas <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
+            Confirmar uso/reportes <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
           </Button>
         </CardFooter>
       </Card>

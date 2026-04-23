@@ -144,8 +144,8 @@ export const ConfirmUsageStep = () => {
         ) : (
           <div className="border-primary/20 bg-primary/5 flex w-full max-w-lg gap-3 rounded-xl border p-3 text-left md:p-4">
             <Info className="text-primary mt-0.5 h-4 w-4 md:h-5 md:w-5" />
-            <p className="text-muted-foreground text-[10px] leading-relaxed italic md:text-sm">
-              La confirmación es irreversible. Asegúrate de haber redimido los códigos correctamente.
+            <p className="text-muted-foreground text-md leading-relaxed italic md:text-sm">
+              La confirmación es irreversible. Asegúrate de haber redimido o reportado los códigos correctamente.
             </p>
           </div>
         )}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, ChevronRight, Info } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -168,13 +168,16 @@ export const ResultsStep = () => {
       </Card>
 
       {/* Right Column: Cards List */}
-      <Card className="border-border bg-card/50 flex flex-col px-1 py-4 backdrop-blur-sm md:col-span-8 md:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Combinación Encontrada</Label>
-          <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
-        </div>
+      <Card className="bg-card/50 flex flex-col px-1 backdrop-blur-sm md:col-span-8 md:p-6">
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">
+            Combinación Encontrada
+          </CardTitle>
 
-        <div className="custom-scrollbar flex flex-col gap-3 overflow-y-auto px-1 pr-2">
+          <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
+        </CardHeader>
+
+        <CardContent className="custom-scrollbar overflow-y-auto">
           {foundGiftcards.map((card, idx) => (
             <motion.div
               key={card.id}
@@ -222,22 +225,20 @@ export const ResultsStep = () => {
           ))}
 
           {foundGiftcards.length === 0 && (
-            <div className="border-border bg-muted/20 col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 text-center">
-              <div className="bg-muted mb-4 rounded-full p-4">
+            <div className="border-border bg-muted/20 col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 px-12 text-center">
+              <div className="bg-muted rounded-full">
                 <Trash2 className="text-muted-foreground/50 h-8 w-8" />
               </div>
-              <h3 className="mb-1 text-xl font-bold">El paquete está vacío</h3>
-              <p className="text-muted-foreground mx-auto max-w-xs text-base">
-                Vuelve a la búsqueda o ajusta tus criterios para encontrar más tarjetas.
-              </p>
-              <Button variant="outline" onClick={() => setStep(1)} className="border-primary/50 text-primary hover:bg-primary/10 mt-6">
+              <h3 className="mb-1 text-xl font-bold">No hay tarjetas disponibles</h3>
+              <p className="text-muted-foreground mx-auto max-w-xs text-base">Reintentalo más tarde.</p>
+              <Button variant="outline" onClick={() => setStep(1)} className="border-primary/50 text-primary hover:bg-primary/10">
                 Volver a Buscar
               </Button>
             </div>
           )}
-        </div>
+        </CardContent>
 
-        <div className="border-border mt-auto flex gap-2 border-t pt-2 md:gap-3 md:pt-6">
+        <CardFooter className="flex gap-2">
           <Button
             onClick={() => setStep(1)}
             variant="outline"
@@ -252,7 +253,7 @@ export const ResultsStep = () => {
           >
             Realizar Pedido <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
           </Button>
-        </div>
+        </CardFooter>
       </Card>
 
       {/* Confirmation Dialog */}

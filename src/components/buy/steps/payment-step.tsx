@@ -168,7 +168,7 @@ export const PaymentStep = () => {
 
         <div className="border-primary/20 bg-primary/5 flex w-full max-w-sm gap-2 rounded-xl border p-3 text-left">
           <Info className="text-primary mt-0.5 h-4 w-4" />
-          <p className="text-muted-foreground text-[10px] leading-relaxed italic">La verificación suele tardar de 1 a 5 minutos.</p>
+          <p className="text-muted-foreground text-md leading-relaxed italic">La verificación es instantanea.</p>
         </div>
       </Card>
     </div>
