@@ -22,7 +22,7 @@ import { paymentSchema } from '@/types/domain/payment/Payment';
  */
 export const sellerBatchSchema = z.object({
   /** ID único del batch. */
-  id: z.string(),
+  id: z.number(),
   /** ID del usuario owner (null si fue eliminado). */
   userId: z.string().nullable(),
   /** Tasa de cambio del seller al momento de crear el batch. Fija para todo el batch. */

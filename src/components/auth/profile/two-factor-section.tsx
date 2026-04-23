@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, ShieldCheck, Copy, RefreshCw } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authClient } from '@/lib/auth-client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { QRCodeSVG } from 'qrcode.react';
@@ -134,17 +135,17 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
 
   return (
     <>
-      <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-3 md:rounded-xl md:p-5">
-        <div className="flex items-center justify-between">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div className="flex items-center gap-2">
             <div
-              className={`flex h-7 w-7 items-center justify-center rounded-md md:h-9 md:w-9 ${is2FAEnabled ? 'bg-emerald-500/10' : 'bg-slate-700/30'}`}
+              className={`flex h-7 w-7 items-center justify-center rounded-md md:h-9 md:w-9 ${is2FAEnabled ? 'bg-emerald-500/10' : 'bg-muted'}`}
             >
-              <ShieldCheck className={`h-3.5 w-3.5 md:h-4 md:w-4 ${is2FAEnabled ? 'text-emerald-400' : 'text-slate-400'}`} />
+              <ShieldCheck className={`h-3.5 w-3.5 md:h-4 md:w-4 ${is2FAEnabled ? 'text-emerald-400' : 'text-muted-foreground'}`} />
             </div>
             <div>
-              <h2 className="text-sm font-medium text-white md:text-lg">2FA</h2>
-              <p className="hidden text-xs text-slate-400 md:block md:text-sm">
+              <CardTitle className="text-sm md:text-lg">2FA</CardTitle>
+              <p className="hidden text-xs text-muted-foreground md:block md:text-sm">
                 {isSpanish ? 'Verificación en dos pasos' : 'Two-factor authentication'}
               </p>
             </div>
@@ -154,7 +155,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
             <Button
               variant="destructive"
               size="sm"
-              className="h-7 rounded-md border border-red-500/20 bg-red-500/10 text-xs font-medium text-red-400 hover:bg-red-500/20 md:h-8"
+              className="h-7 rounded-md text-xs font-medium md:h-8"
               onClick={() => setShowDisableDialog(true)}
               disabled={is2FAPending}
             >
@@ -170,38 +171,39 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
               {isSpanish ? 'Activar' : 'Enable'}
             </Button>
           )}
-        </div>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-0">
+          {is2FAEnabled && (
+            <div className="flex items-center justify-between border-t border-border pt-2 md:pt-3">
+              <p className="text-xs text-emerald-400 md:text-sm">{isSpanish ? 'Protegida' : 'Protected'}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 rounded-md text-xs font-medium md:h-7 md:text-sm"
+                onClick={() => {
+                  setShow2FADialog(true);
+                  setTwoStepEnable(false);
+                  setShowBackupCodes(false);
+                }}
+              >
+                <RefreshCw className="mr-1 h-2.5 w-2.5" />
+                {isSpanish ? 'Códigos' : 'Codes'}
+              </Button>
+            </div>
+          )}
 
-        {is2FAEnabled && (
-          <div className="mt-2 flex items-center justify-between border-t border-slate-700/30 pt-2 md:mt-4 md:pt-3">
-            <p className="text-xs text-emerald-400 md:text-sm">{isSpanish ? 'Protegida' : 'Protected'}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-6 rounded-md border-slate-700/50 bg-slate-800/30 text-xs font-medium text-slate-300 hover:bg-slate-800/50 md:h-7 md:text-sm"
-              onClick={() => {
-                setShow2FADialog(true);
-                setTwoStepEnable(false);
-                setShowBackupCodes(false);
-              }}
-            >
-              <RefreshCw className="mr-1 h-2.5 w-2.5" />
-              {isSpanish ? 'Códigos' : 'Codes'}
-            </Button>
-          </div>
-        )}
-
-        {!is2FAEnabled && (
-          <p className="mt-2 text-xs text-slate-500 md:mt-4 md:text-sm">
-            {isSpanish ? 'Habilita 2FA para mayor seguridad' : 'Enable 2FA for better security'}
-          </p>
-        )}
-      </div>
+          {!is2FAEnabled && (
+            <p className="text-xs text-muted-foreground md:text-sm">
+              {isSpanish ? 'Habilita 2FA para mayor seguridad' : 'Enable 2FA for better security'}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={show2FADialog} onOpenChange={handleClose2FADialog}>
-        <DialogContent className="max-w-sm rounded-lg border border-slate-700/50 bg-[#0d1117] p-4 md:rounded-xl md:p-5">
+        <DialogContent className="max-w-sm rounded-lg p-4 md:rounded-xl md:p-5">
           <DialogHeader>
-            <DialogTitle className="text-base font-medium text-white md:text-lg">
+            <DialogTitle className="text-base font-medium md:text-lg">
               {showBackupCodes
                 ? isSpanish
                   ? 'Códigos de Respaldo'
@@ -214,7 +216,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                     ? 'Escanear QR'
                     : 'Scan QR Code'}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-400 md:text-sm">
+            <DialogDescription className="text-xs text-muted-foreground md:text-sm">
               {showBackupCodes
                 ? isSpanish
                   ? 'Guarda estos códigos en un lugar seguro'
@@ -235,22 +237,22 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10">
                   <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 </div>
-                <p className="text-xs text-slate-400 md:text-sm">
+                <p className="text-xs text-muted-foreground md:text-sm">
                   {isSpanish ? 'Cada código se usa solo una vez' : 'Each code can be used once'}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-1 rounded-md border border-slate-700/30 bg-slate-800/20 p-2 font-mono text-xs md:gap-1.5 md:p-2.5 md:text-sm">
+              <div className="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted/50 p-2 font-mono text-xs md:gap-1.5 md:p-2.5 md:text-sm">
                 {backupCodes.map((code, i) => (
                   <div key={i} className="flex items-center justify-between p-0.5">
-                    <span className="text-slate-300">{code}</span>
+                    <span>{code}</span>
                   </div>
                 ))}
               </div>
 
               <Button
                 variant="outline"
-                className="h-8 w-full rounded-md border-slate-700/50 bg-slate-800/30 text-xs font-medium text-slate-300 hover:bg-slate-800/50 md:h-9 md:text-sm"
+                className="h-8 w-full rounded-md text-xs font-medium md:h-9 md:text-sm"
                 onClick={() => navigator.clipboard.writeText(backupCodes.join('\n'))}
               >
                 <Copy className="mr-1 h-2.5 w-2.5" />
@@ -270,10 +272,10 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
           ) : !twoStepEnable ? (
             <div className="space-y-3">
               <div className="flex flex-col items-center justify-center gap-2 text-center">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700/30">
-                  <ShieldCheck className="h-4 w-4 text-slate-300" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                  <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <p className="text-xs text-slate-400 md:text-sm">
+                <p className="text-xs text-muted-foreground md:text-sm">
                   {is2FAEnabled
                     ? isSpanish
                       ? 'Verifica tu contraseña para generar nuevos códigos'
@@ -292,7 +294,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="setupPassword" className="text-xs font-medium text-slate-300 md:text-sm">
+                <Label htmlFor="setupPassword" className="text-xs font-medium md:text-sm">
                   {isSpanish ? 'Contraseña' : 'Password'}
                 </Label>
                 <Input
@@ -301,7 +303,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-9 rounded-md border border-slate-700/50 bg-slate-800/30 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/50 md:h-10 md:rounded-lg md:text-base"
+                  className="h-9 md:h-10 text-sm md:text-base"
                 />
               </div>
 
@@ -331,7 +333,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
             <div className="space-y-3">
               <div className="flex flex-col items-center justify-center gap-2">
                 <div className="rounded-md bg-white p-2">{qrCodeData && <QRCodeSVG value={qrCodeData} size={120} />}</div>
-                <p className="text-xs break-all text-slate-400 md:text-sm">{qrCodeData}</p>
+                <p className="text-xs break-all text-muted-foreground md:text-sm">{qrCodeData}</p>
               </div>
 
               {twoFactorError && (
@@ -342,7 +344,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="totpCode" className="text-xs font-medium text-slate-300 md:text-sm">
+                <Label htmlFor="totpCode" className="text-xs font-medium md:text-sm">
                   {isSpanish ? 'Código' : 'Code'}
                 </Label>
                 <Input
@@ -351,7 +353,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                   onChange={(e) => setTotpCode(e.target.value)}
                   placeholder="000000"
                   maxLength={6}
-                  className="h-10 rounded-md border border-slate-700/50 bg-slate-800/30 text-center font-mono text-base tracking-[0.25em] text-white placeholder:text-slate-500 focus:border-emerald-500/50 md:text-lg"
+                  className="h-10 text-center font-mono text-base tracking-[0.25em] md:text-lg"
                 />
               </div>
 
@@ -376,19 +378,19 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
       </Dialog>
 
       <Dialog open={showDisableDialog} onOpenChange={(open) => setShowDisableDialog(open)}>
-        <DialogContent className="max-w-sm rounded-lg border border-slate-700/50 bg-[#0d1117] p-4 md:rounded-xl md:p-5">
+        <DialogContent className="max-w-sm rounded-lg p-4 md:rounded-xl md:p-5">
           <DialogHeader>
-            <DialogTitle className="text-sm font-medium text-white md:text-base">
+            <DialogTitle className="text-sm font-medium md:text-base">
               {isSpanish ? 'Deshabilitar 2FA' : 'Disable 2FA'}
             </DialogTitle>
-            <DialogDescription className="text-[10px] text-slate-400 md:text-xs">
+            <DialogDescription className="text-[10px] text-muted-foreground md:text-xs">
               {isSpanish ? '¿Estás seguro? Tu cuenta será menos segura.' : 'Are you sure? Your account will be less secure.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="disablePassword" className="text-[10px] font-medium text-slate-300 md:text-xs">
+              <Label htmlFor="disablePassword" className="text-[10px] font-medium md:text-xs">
                 {isSpanish ? 'Contraseña' : 'Password'}
               </Label>
               <Input
@@ -397,7 +399,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-9 rounded-md border border-slate-700/50 bg-slate-800/30 text-xs text-white placeholder:text-slate-500 focus:border-emerald-500/50 md:h-10 md:rounded-lg"
+                className="h-9 md:h-10 text-xs md:text-sm"
               />
             </div>
 

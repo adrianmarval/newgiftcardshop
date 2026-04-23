@@ -51,7 +51,7 @@ export function serializeGiftcard(card: {
     isConfirmed: card.isConfirmed,
     reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
     orderId: card.orderId,
-    batchId: card.batchId ?? undefined,
+    batchId: card.batchId ? Number(card.batchId) : null,
     brand: {
       name: card.brand.name,
       icon: card.brand.icon,

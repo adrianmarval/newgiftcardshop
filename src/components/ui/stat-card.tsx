@@ -12,7 +12,7 @@ interface StatCardProps {
 
 export function StatCard({ label, value, description, icon, color }: StatCardProps) {
   return (
-    <div className="border-border bg-card rounded-xl border p-3 shadow-sm">
+    <div className="border-border bg-card rounded-xl border p-1 shadow-sm">
       <div className="flex items-center gap-2">
         {icon && <div className={color ?? 'text-primary'}>{icon}</div>}
         <div className="flex flex-col">

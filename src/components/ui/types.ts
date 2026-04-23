@@ -19,12 +19,6 @@ export interface GiftcardIssueAlertProps {
   status: string;
 }
 
-// ── TransactionList ───────────────────────────────────────────────────────────
-
-export interface TransactionListProps {
-  payments: Payment[];
-}
-
 // ── UrlPagination ─────────────────────────────────────────────────────────────
 
 export interface UrlPaginationProps {

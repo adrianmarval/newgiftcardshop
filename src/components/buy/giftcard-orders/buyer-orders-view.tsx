@@ -19,7 +19,7 @@ export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) =>
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-2">
       <OrdersStats orders={orders} totalCount={pagination.totalCount} />
       <OrdersFilters />
       <OrdersList orders={orders} totalPages={pagination.totalPages} onCardClick={handleCardClick} />

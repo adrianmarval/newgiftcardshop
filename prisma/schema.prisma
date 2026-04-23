@@ -127,7 +127,7 @@ model Giftcard {
   orderId String?
   order   Order?  @relation(fields: [orderId], references: [id])
 
-  batchId String?
+  batchId Int?
   batch   GiftcardBatch? @relation(fields: [batchId], references: [id])
 
   issues GiftcardIssue[]
@@ -190,7 +190,7 @@ model Order {
 }
 
 model GiftcardBatch {
-  id       String  @id @default(cuid())
+  id       Int     @id @default(autoincrement())
   sellRate Decimal @db.Decimal(10, 4)
   isPaid   Boolean @default(false)
 
@@ -230,7 +230,7 @@ model Payment {
   orderId String?
   order   Order?  @relation(fields: [orderId], references: [id])
 
-  batchId String?
+  batchId Int?
   batch   GiftcardBatch? @relation(fields: [batchId], references: [id])
 
   createdAt DateTime @default(now())

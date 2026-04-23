@@ -38,9 +38,9 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
           <AlertTriangle className="text-destructive fill-destructive/20 h-5 w-5 drop-shadow-md" />
         </div>
       )}
-      <div onClick={onToggle} className="flex cursor-pointer items-center justify-between p-3">
+      <div onClick={onToggle} className="flex cursor-pointer items-center justify-between p-1">
         <div className="flex items-center gap-3">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${status.color}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${status.color}`}>
             <Image
               src={batch.giftcards[0].brand.image || '/'}
               alt={batch.giftcards[0].brand.name}
@@ -50,18 +50,22 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-foreground text-xs font-medium md:text-base">Batch #{batch.id.slice(-6).toUpperCase()}</span>
-            <span className="text-muted-foreground text-[10px] md:text-sm">{new Date(batch.createdAt).toLocaleDateString()}</span>
+            <span className="text-foreground text-md font-medium md:text-base">Batch #{batch.id}</span>
+            <span className="text-muted-foreground text-sm md:text-sm">{new Date(batch.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-end">
-            <span className="text-foreground text-sm font-semibold md:text-lg">${batchTotal.toFixed(0)}</span>
-            <span className="text-muted-foreground text-[10px] md:text-sm">→ ${batch.estimatedPayout.toFixed(0)}</span>
+            <span className="text-foreground text-md font-semibold md:text-lg">${batchTotal.toFixed(0)}</span>
+            <span className="text-muted-foreground text-sm md:text-sm">You get: ${batch.estimatedPayout.toFixed(0)}</span>
           </div>
-          <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>{status.label}</Badge>
-          <ChevronDown className={`text-muted-foreground h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+          <div className="flex flex-col items-end">
+            <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>{status.label}</Badge>
+            <ChevronDown
+              className={`text-muted-foreground flex h-4 w-full items-center justify-center transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            />
+          </div>
         </div>
       </div>
 

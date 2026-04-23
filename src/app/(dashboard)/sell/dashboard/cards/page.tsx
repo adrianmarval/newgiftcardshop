@@ -26,7 +26,7 @@ export default async function SellerCardsPage({ searchParams }: { searchParams: 
   const { items, pagination } = result.data;
 
   return (
-    <div className="container mx-auto space-y-8 py-6">
+    <div className="container mx-auto space-y-4 py-2">
       <div className="flex flex-col gap-1">
         <h1 className="text-5xl font-black tracking-tighter italic md:text-7xl">MY CARDS</h1>
         <p className="text-muted-foreground text-base md:text-lg">Track your inventory, sales status, and payment reports.</p>

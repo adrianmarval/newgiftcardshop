@@ -7,7 +7,7 @@ import { CircleDollarSign } from 'lucide-react';
 const navItems = [
   { title: 'Home', url: '/sell/dashboard', icon: IconDashboard },
   {
-    title: 'Card History',
+    title: 'History',
     url: '/sell/dashboard/cards',
     icon: IconCreditCard,
   },

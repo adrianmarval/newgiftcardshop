@@ -60,7 +60,7 @@ export const giftcardSchema = z.object({
   /** ID de la orden de compra asociada (null si no fue comprada). */
   orderId: z.string().nullable(),
   /** ID del batch al que pertenece este card. */
-  batchId: z.string().nullable().optional(),
+  batchId: z.number().nullable().optional(),
   /** ID de la imagen de procedencia (OCR screenshot). */
   provenanceImageId: z.string().nullable().optional(),
   /** Sub-selection de brand (solo campos necesarios para UI). */

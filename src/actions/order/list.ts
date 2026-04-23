@@ -9,16 +9,19 @@ import type { Giftcard, GiftcardStatus } from '@/types/domain/giftcard';
 import type { Payment, PaymentStatus } from '@/types/domain/payment';
 import { getBuyerOrdersInputSchema, getBuyerOrdersOutputSchema } from '@/types/domain/order';
 
-function computeEffectiveTotal(
+function computeTotals(
   giftcards: { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null }[],
   buyRate: Prisma.Decimal,
-): number {
-  const rawTotal = giftcards.reduce((sum, card) => {
-    if (card.status === 'UNUSED') return sum.plus(card.amount);
+) {
+  const faceValueTotal = giftcards.reduce((sum, card) => {
+    if (card.status === 'UNUSED' || card.status === 'USED') return sum.plus(card.amount);
     if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
     return sum;
   }, new Prisma.Decimal(0));
-  return rawTotal.mul(buyRate).toNumber();
+  return {
+    faceValueTotal: faceValueTotal.toNumber(),
+    effectiveTotal: faceValueTotal.mul(buyRate).toNumber(),
+  };
 }
 
 export const getBuyerOrders = buyerActionClient
@@ -52,7 +55,7 @@ export const getBuyerOrders = buyerActionClient
     return {
       success: true as const,
       items: orders.map((order) => {
-        const effectiveTotal = computeEffectiveTotal(order.giftcards, order.buyRate);
+        const totals = computeTotals(order.giftcards, order.buyRate);
         const giftcards: Giftcard[] = order.giftcards.map((card) => {
           let claimCode = card.claimCode;
           let pinCode = card.pinCode ?? null;
@@ -99,7 +102,8 @@ export const getBuyerOrders = buyerActionClient
           total: Number(order.total),
           adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
           buyRate: Number(order.buyRate),
-          effectiveTotal,
+          effectiveTotal: totals.effectiveTotal,
+          faceValueTotal: totals.faceValueTotal,
           createdAt: order.createdAt.toISOString(),
           updatedAt: order.updatedAt.toISOString(),
           giftcards,

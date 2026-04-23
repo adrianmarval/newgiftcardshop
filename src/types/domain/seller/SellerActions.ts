@@ -36,7 +36,7 @@ export type PublishBatchInput = z.infer<typeof publishBatchSchema>;
 export const publishBatchOutputSchema = z.union([
   z.object({
     success: z.literal(true),
-    batchId: z.string(),
+    batchId: z.number(),
     /** Códigos que ya existían en la base de datos (fueron ignorados). */
     duplicates: z.array(z.string()),
   }),

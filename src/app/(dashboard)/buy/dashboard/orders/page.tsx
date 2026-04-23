@@ -29,7 +29,7 @@ export default async function BuyerOrdersPage({ searchParams }: { searchParams: 
   const { items, pagination } = result.data;
 
   return (
-    <div className="container mx-auto space-y-8 py-6">
+    <div className="container mx-auto space-y-4 py-2">
       <div className="flex flex-col gap-1">
         <h1 className="text-5xl font-black tracking-tighter italic md:text-7xl">MIS ÓRDENES</h1>
         <p className="text-muted-foreground text-base md:text-lg">Rastrea tus compras y gestiona órdenes pendientes.</p>

@@ -60,6 +60,12 @@ export const buyerOrderSchema = z.object({
    * - Cards INVALID/ALREADY_USED/DEACTIVATED → $0
    */
   effectiveTotal: z.number(),
+  /**
+   * Valor nominal total (face value) de las tarjetas incluidas.
+   * Suma el valor original de UNUSED/USED y el reportado de WRONG_AMOUNT.
+   * Resta a 0 el valor de las tarjetas rechazadas o inválidas.
+   */
+  faceValueTotal: z.number(),
 });
 
 /** Tipo TypeScript para BuyerOrder. */

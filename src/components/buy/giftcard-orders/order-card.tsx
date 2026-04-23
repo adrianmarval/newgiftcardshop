@@ -57,10 +57,12 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
   };
 
   return (
-    <Card className={`border-border bg-card overflow-hidden rounded-xl transition-all ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}>
-      <div onClick={() => setIsExpanded(!isExpanded)} className="flex cursor-pointer items-center justify-between p-3">
+    <Card
+      className={`border-border bg-card relative overflow-hidden rounded-xl transition-all ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+    >
+      <div onClick={() => setIsExpanded(!isExpanded)} className="flex cursor-pointer items-center justify-between p-1">
         <div className="flex items-center gap-3">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${status.color}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${status.color}`}>
             <Image
               src={order.giftcards[0].brand.image || '/'}
               alt={order.giftcards[0].brand.name}
@@ -70,21 +72,22 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-foreground text-xs font-medium md:text-base">Order #{order.id.slice(-8).toUpperCase()}</span>
-            <span className="text-muted-foreground text-[10px] md:text-sm">{new Date(order.createdAt).toLocaleDateString()}</span>
+            <span className="text-foreground text-md font-medium md:text-base">Order #{order.id.slice(-8).toUpperCase()}</span>
+            <span className="text-muted-foreground text-sm md:text-sm">{new Date(order.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-end">
-            <span className="text-foreground text-sm font-semibold md:text-lg">${(order.adjustedTotal ?? order.total).toFixed(2)}</span>
-            <span className="text-muted-foreground text-[10px] md:text-sm">
-              {confirmedCount}/{totalItems} cards
-            </span>
+            <span className="text-foreground text-md font-semibold md:text-lg">${order.faceValueTotal.toFixed(0)}</span>
+            <span className="text-muted-foreground text-sm md:text-sm">${order.effectiveTotal.toFixed(2)}</span>
           </div>
-          {order.giftcards.some((g) => g.isConfirmed && g.status !== 'USED') && <AlertTriangle className="text-destructive h-4 w-4" />}
-          <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>{status.label}</Badge>
-          <ChevronDown className={`text-muted-foreground h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+          <div className="flex flex-col items-end">
+            <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>{status.label}</Badge>
+            <ChevronDown
+              className={`text-muted-foreground flex h-4 w-full items-center justify-center transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            />
+          </div>
         </div>
       </div>
 

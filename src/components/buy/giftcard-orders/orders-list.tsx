@@ -20,7 +20,7 @@ export const OrdersList = ({ orders, totalPages, onCardClick }: OrdersListProps)
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-2">
         <AnimatePresence mode="popLayout">
           {orders.map((order) => (
             <OrderCard key={order.id} order={order} onCardClick={onCardClick} />

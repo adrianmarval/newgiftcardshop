@@ -15,7 +15,7 @@ export const getSellerBatches = sellerActionClient
     const orderBy = sort === 'newest' ? { createdAt: 'desc' as const } : { createdAt: 'asc' as const };
 
     const where: Prisma.GiftcardBatchWhereInput = { userId: ctx.auth.user.id };
-    if (search) where.id = { contains: search, mode: 'insensitive' };
+    if (search) where.id = { equals: Number(search) };
 
     const [batches, totalCount] = await prisma.$transaction([
       prisma.giftcardBatch.findMany({
@@ -75,10 +75,9 @@ export const getSellerBatches = sellerActionClient
           };
         });
         const effectiveTotal = giftcards.reduce((sum, g) => {
-          if (!g.isConfirmed) return sum;
-          if (g.status === 'USED') return sum + g.amount;
-          if (g.status === 'WRONG_AMOUNT') return sum + (g.reportedAmount || 0);
-          return sum;
+          // if (!g.isConfirmed) return sum;
+          // if (g.status === 'USED') return sum + g.amount;
+          return g.status === 'WRONG_AMOUNT' ? sum + (g.reportedAmount || 0) : sum + g.amount;
         }, 0);
         const estimatedPayout = effectiveTotal * sellRate;
         return {

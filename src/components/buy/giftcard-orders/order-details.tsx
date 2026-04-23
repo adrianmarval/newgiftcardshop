@@ -1,24 +1,30 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Eye } from 'lucide-react';
+import { CheckCircle2, CreditCard, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ClaimCodeField } from '@/components/ui/claim-code-field';
 import Image from 'next/image';
-import { TransactionList } from '@/components/ui/transaction-list';
 import type { OrderDetailsProps } from './types';
+import { Badge } from '@/components/ui/badge';
 
 export function OrderDetails({ order, onCardClick }: OrderDetailsProps) {
   return (
     <div className="space-y-3">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-muted-foreground text-xs font-medium md:text-base">{order.giftcards.length} cards confirmed</span>
+        <span className="text-muted-foreground text-xs font-medium md:text-base">Order Rate: {order.buyRate * 100}%</span>
+      </div>
+
       <div className="space-y-1">
         {order.giftcards.map((card) => (
           <motion.div
             key={card.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-muted/50 flex items-center justify-between rounded-lg px-2 py-2"
+            className="bg-muted/50 flex items-start justify-between gap-2 rounded-lg px-2 py-2 md:items-center"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <div className="border-border bg-background relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded border md:h-8 md:w-8">
                 {card.brand.image ? (
                   <Image src={card.brand.image} alt={card.brand.name} fill className="object-contain p-0.5" loading="eager" />
@@ -26,10 +32,12 @@ export function OrderDetails({ order, onCardClick }: OrderDetailsProps) {
                   <span className="text-xs md:text-lg">{card.brand.icon}</span>
                 )}
               </div>
-              <span className="text-muted-foreground font-mono text-xs md:max-w-[150px]">{card.claimCode}</span>
+              <div className="min-w-0 flex-1">
+                <ClaimCodeField code={card.claimCode} variant="visible" showCopyButton={false} />
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <div className="flex flex-col items-end gap-0.5">
                 {card.status === 'WRONG_AMOUNT' && card.reportedAmount != null ? (
                   <div className="flex items-center gap-1">
@@ -63,8 +71,6 @@ export function OrderDetails({ order, onCardClick }: OrderDetailsProps) {
           </motion.div>
         ))}
       </div>
-
-      {order.payments.length > 0 && <TransactionList payments={order.payments} />}
     </div>
   );
 }

@@ -21,14 +21,14 @@ export function BatchesList({ batches, onCardClick }: BatchesListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <AnimatePresence mode="popLayout">
         {batches.map((batch) => (
           <BatchCard
             key={batch.id}
             batch={batch}
-            isExpanded={expandedBatch === batch.id}
-            onToggle={() => setExpandedBatch(expandedBatch === batch.id ? null : batch.id)}
+            isExpanded={expandedBatch === batch.id.toString()}
+            onToggle={() => setExpandedBatch(expandedBatch === batch.id.toString() ? null : batch.id.toString())}
             onCardClick={onCardClick}
           />
         ))}

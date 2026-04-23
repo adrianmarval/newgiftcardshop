@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Eye, CreditCard, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ClaimCodeField } from '@/components/ui/claim-code-field';
 import Image from 'next/image';
 import type { BatchDetailsProps } from './types';
 
@@ -14,12 +15,7 @@ export function BatchDetails({ batch, onCardClick }: BatchDetailsProps) {
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-muted-foreground text-xs font-medium md:text-base">{totalItems} cards confirmed</span>
-        {batch.payments.length > 0 && (
-          <Badge className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-500">
-            <CreditCard className="mr-1 h-3 w-3" />
-            {batch.payments.length} payment(s)
-          </Badge>
-        )}
+        <span className="text-muted-foreground text-xs font-medium md:text-base">Batch Rate: {batch.sellRate * 100}%</span>
       </div>
 
       <div className="space-y-1">
@@ -28,11 +24,11 @@ export function BatchDetails({ batch, onCardClick }: BatchDetailsProps) {
             key={card.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-muted/50 flex items-center justify-between rounded-lg px-2 py-2"
+            className="bg-muted/50 flex items-start justify-between gap-2 rounded-lg px-2 py-2 md:items-center"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               {card.orderId && !card.isConfirmed && (
-                <span className="animate-pulse text-[9px] font-bold tracking-tight text-blue-500 md:text-xs">Taken</span>
+                <span className="shrink-0 animate-pulse text-[9px] font-bold tracking-tight text-blue-500 md:text-xs">Taken</span>
               )}
               <div className="border-border bg-background relative h-6 w-6 shrink-0 overflow-hidden rounded border md:h-8 md:w-8">
                 {card.brand.image ? (
@@ -41,10 +37,12 @@ export function BatchDetails({ batch, onCardClick }: BatchDetailsProps) {
                   <span className="text-xs md:text-lg">{card.brand.icon}</span>
                 )}
               </div>
-              <span className="text-muted-foreground font-mono text-xs md:max-w-[150px]">{card.claimCode}</span>
+              <div className="min-w-0 flex-1">
+                <ClaimCodeField code={card.claimCode} variant="visible" showCopyButton={false} />
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <div className="flex flex-col items-end gap-0.5">
                 {card.status === 'WRONG_AMOUNT' && card.reportedAmount != null ? (
                   <div className="flex items-center gap-1">
