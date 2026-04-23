@@ -1,12 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// UI Types — Navigation data shapes
+// UI — Navigation
+// Tipos para componentes de navegación (sidebar, menú).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type * as React from 'react';
 
 /**
- * Icon component type used in navigation items.
- * Accepts optional `size` and `className` props, compatible with Lucide icons.
+ * Tipo para el componente de icon en items de navegación.
+ * Acepta props opcionales `size` y `className`, compatible con Lucide icons.
  */
 export type NavItemIcon = React.ComponentType<{
   size?: number | string;
@@ -14,10 +15,13 @@ export type NavItemIcon = React.ComponentType<{
 }>;
 
 /**
- * A single navigation item rendered in the portal sidebar menu.
+ * Item individual de navegación renderizado en el sidebar del portal.
  */
 export interface NavItem {
+  /** Texto del item (ej: "Mis Órdenes", "My Cards"). */
   title: string;
+  /** URL de destino del link. */
   url: string;
+  /** Componente Icon a mostrar. */
   icon: NavItemIcon;
 }

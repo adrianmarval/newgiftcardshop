@@ -2,7 +2,9 @@
 // Sell Batches Component Props
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { SellerBatch, Giftcard } from '@/types';
+import type { SellerBatch } from '@/types/domain/seller';
+import type { Giftcard } from '@/types/domain/giftcard';
+import type { PaginationMeta } from '@/types/application/shared';
 
 /**
  * Props for the BatchesStats component.
@@ -46,6 +48,7 @@ export interface BatchDetailsProps {
  */
 export interface BatchesListProps {
   batches: SellerBatch[];
+  totalPages?: number;
   onCardClick: (card: Giftcard) => void;
 }
 
@@ -55,4 +58,5 @@ export interface BatchesListProps {
  */
 export interface SellerBatchesViewProps {
   batches: SellerBatch[];
+  pagination?: PaginationMeta;
 }

@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BatchDetails } from './batch-details';
 import type { BatchCardProps } from './types';
+import Image from 'next/image';
 
 export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCardProps) {
   const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
@@ -40,7 +41,13 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
       <div onClick={onToggle} className="flex cursor-pointer items-center justify-between p-3">
         <div className="flex items-center gap-3">
           <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${status.color}`}>
-            <Package className="h-4 w-4" />
+            <Image
+              src={batch.giftcards[0].brand.image || '/'}
+              alt={batch.giftcards[0].brand.name}
+              width={20}
+              height={20}
+              className="w-auto"
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-foreground text-xs font-medium md:text-base">Batch #{batch.id.slice(-6).toUpperCase()}</span>

@@ -8,9 +8,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { CheckCircle, Mail, RefreshCw } from 'lucide-react';
 import { verifyEmail, resendVerification } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
-import type { Portal } from '@/types';
+import type { AppSection } from '@/types';
 
-const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: Portal }) => {
+const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
@@ -133,7 +133,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: Portal }) => {
   );
 };
 
-export const VerifyEmailForm = ({ portal = 'buy' }: { portal?: Portal }) => {
+export const VerifyEmailForm = ({ portal = 'buy' }: { portal?: AppSection }) => {
   const isSpanish = portal === 'buy' || portal === 'admin';
   return (
     <Suspense fallback={<div className="text-center text-slate-400">{isSpanish ? 'Cargando...' : 'Loading...'}</div>}>

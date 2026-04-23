@@ -18,9 +18,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
-import { getBrandById } from '@/actions/brand-actions';
-import { createOrder, getUserBuyRate } from '@/actions/order-actions';
-import { getOrderCards } from '@/actions/buyer-actions';
+import { getBrandById } from '@/actions/catalog/get-brand-by-id';
+import { createOrder, getUserBuyRate } from '@/actions/order';
+import { getOrderCards } from '@/actions/giftcard/get-order-cards';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { Brand } from '@/types';
@@ -125,7 +125,7 @@ export const ResultsStep = () => {
   const discountedTotal = rawTotal * resultsState.buyRate;
 
   return (
-    <div className="flex h-full flex-col gap-4 md:grid md:grid-cols-12 md:items-start md:gap-6">
+    <div className="flex flex-col gap-4 md:grid md:h-full md:grid-cols-12 md:items-start md:gap-6">
       {/* Left Column: Selection Summary */}
       <Card className="border-border bg-card/50 flex h-auto flex-none flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
@@ -134,7 +134,7 @@ export const ResultsStep = () => {
         </div>
 
         <div className="space-y-2 md:space-y-4">
-          <div className="border-border bg-muted/50 space-y-2 rounded-xl border p-2 md:p-4">
+          <div className="border-border bg-muted/50 space-y-2 rounded-xl border p-2 md:space-y-3 md:p-4">
             <div className="flex items-center justify-between text-xs md:text-base">
               <span className="text-muted-foreground">Objetivo</span>
               <span className="font-bold">${targetAmount}</span>
@@ -143,12 +143,16 @@ export const ResultsStep = () => {
               <span className="text-muted-foreground">Tarjetas</span>
               <span className="font-bold">{foundGiftcards.length} ítems</span>
             </div>
+            <div className="border-border/50 flex items-center justify-between border-t border-dashed pt-1.5 text-xs md:text-base">
+              <span className="text-foreground font-semibold">Disponible</span>
+              <span className="text-foreground text-lg font-bold md:text-xl">${rawTotal.toFixed(2)}</span>
+            </div>
             <div className="border-border flex items-center justify-between border-t pt-1.5 text-xs md:text-base">
-              <span className="text-muted-foreground">Total</span>
+              <span className="text-primary">Total a Pagar</span>
               <div className="text-right">
                 <span className="text-primary text-xl font-black md:text-2xl">${discountedTotal.toFixed(2)}</span>
                 <p className="text-muted-foreground mt-0.5 text-[10px] leading-none md:text-xs">
-                  {resultsState.buyRate < 1 ? `Tasa: ${resultsState.buyRate * 100}%` : 'Valor de la orden'}
+                  Tasa: {resultsState.buyRate * 100}% · Ahorrás ${(rawTotal - discountedTotal).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -164,40 +168,41 @@ export const ResultsStep = () => {
       </Card>
 
       {/* Right Column: Cards List */}
-      <Card className="border-border bg-card/50 flex min-h-0 flex-1 flex-col px-1 py-4 backdrop-blur-sm md:col-span-8 md:h-full md:min-h-125 md:p-6">
+      <Card className="border-border bg-card/50 flex flex-col px-1 py-4 backdrop-blur-sm md:col-span-8 md:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Paquete Propuesto</Label>
+          <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Combinación Encontrada</Label>
           <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
         </div>
 
-        <div className="custom-scrollbar grid grid-cols-1 gap-1.5 overflow-y-auto px-1 pr-1 sm:grid-cols-2 md:gap-4">
+        <div className="custom-scrollbar flex flex-col gap-3 overflow-y-auto px-1 pr-2">
           {foundGiftcards.map((card, idx) => (
             <motion.div
               key={card.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              className="group border-border bg-muted/20 hover:border-primary/30 relative overflow-hidden rounded-xl border p-2 transition-all md:p-4"
+              className="group border-border bg-muted/20 hover:border-primary/30 relative overflow-hidden rounded-xl border p-3 transition-all md:p-5"
             >
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="border-border bg-card relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border text-base shadow-sm md:h-10 md:w-10 md:text-xl">
+              <div className="relative z-10 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="border-border bg-card relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border shadow-sm md:h-14 md:w-14">
                     {resultsState.brandData?.image ? (
                       <Image
                         src={resultsState.brandData.image}
                         alt={resultsState.brandData.name}
                         fill
-                        className="object-contain p-1"
+                        className="object-contain p-1.5"
                         loading="eager"
                       />
                     ) : (
                       resultsState.brandData?.icon
                     )}
                   </div>
-                  <div>
-                    <div className="text-foreground text-lg leading-none font-black md:text-xl">${card.amount}</div>
-                    <div className="text-muted-foreground/50 mt-0.5 font-mono text-[9px] tracking-tighter whitespace-nowrap uppercase md:text-xs">
-                      XXXX-XXXX-XXXX
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] tracking-wider uppercase md:text-xs">Valor Nominal</span>
+                    <div className="text-foreground text-xl leading-none font-black md:text-2xl">${card.amount.toFixed(2)}</div>
+                    <div className="text-muted-foreground/50 mt-0.5 font-mono text-[9px] tracking-wider uppercase md:text-xs">
+                      ···· ···· ···· ···· {/* show as masked placeholder for card code */}
                     </div>
                   </div>
                 </div>
@@ -206,13 +211,13 @@ export const ResultsStep = () => {
                   size="icon"
                   variant="ghost"
                   onClick={() => removeGiftcard(card.id)}
-                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-7 w-7 rounded-lg md:h-8 md:w-8"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8 shrink-0 rounded-lg md:h-10 md:w-10"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </div>
 
-              <div className="bg-primary/5 absolute top-0 right-0 -mt-6 -mr-6 h-12 w-12 rounded-full transition-transform duration-500 group-hover:scale-150" />
+              <div className="bg-primary/5 absolute top-0 right-0 -mt-8 -mr-8 h-16 w-16 rounded-full transition-transform duration-500 group-hover:scale-150" />
             </motion.div>
           ))}
 

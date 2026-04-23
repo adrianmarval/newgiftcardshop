@@ -8,7 +8,7 @@ import { CardDetailDialog } from './card-detail-dialog';
 import type { SellerBatchesViewProps } from './types';
 import type { Giftcard } from '@/types';
 
-export function SellerBatchesView({ batches }: SellerBatchesViewProps) {
+export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProps) {
   const [selectedCard, setSelectedCard] = useState<Giftcard | null>(null);
 
   const handleCardClick = (card: Giftcard) => {
@@ -19,7 +19,7 @@ export function SellerBatchesView({ batches }: SellerBatchesViewProps) {
     <div className="space-y-8 pb-10">
       <BatchesStats batches={batches} />
       <BatchesFilters />
-      <BatchesList batches={batches} onCardClick={handleCardClick} />
+      <BatchesList batches={batches} totalPages={pagination?.totalPages} onCardClick={handleCardClick} />
       <CardDetailDialog
         card={selectedCard}
         open={!!selectedCard}

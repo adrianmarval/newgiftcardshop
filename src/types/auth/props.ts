@@ -1,15 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Auth Types — Component prop interfaces for auth & profile flows
+// Auth — Props de componentes
+// Interfaces de props para componentes de autenticación y perfil.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Portal } from './states';
+import type { AppSection } from '@/types/application/shared/AppSection';
 
 // ── Profile Form Props ────────────────────────────────────────────────────────
 
 /**
- * Props for the ProfileForm component.
- * The `user` object contains only the fields that the profile form displays
- * and mutates — it is intentionally narrower than the full Prisma User model.
+ * Props para ProfileForm.
+ * El objeto `user` contiene solo los campos que el form muestra y muta —
+ * es intencionalmente más angosto que el modelo Prisma completo.
  */
 export interface ProfileFormProps {
   user: {
@@ -18,24 +19,18 @@ export interface ProfileFormProps {
     image?: string | null;
     twoFactorEnabled: boolean;
   };
-  portal: Portal;
+  /** Sección de la app (para redirect post-update). */
+  portal: AppSection;
 }
 
-/**
- * Props for the Verify2FAForm component.
- * The portal determines which dashboard to redirect to on success.
- */
+/** Props para Verify2FAForm. El portal determina el dashboard de redirect post-2FA. */
 export interface Verify2FAFormProps {
-  portal: Portal;
+  portal: AppSection;
 }
 
-// ── Auth Form Props ───────────────────────────────────────────────────────────
-
-/**
- * Props for the LoginForm component.
- */
+/** Props para LoginForm. */
 export interface LoginFormProps {
-  portal: Portal;
+  portal: AppSection;
   title: string;
   subtitle: string;
   forgotPasswordUrl: string;
@@ -46,7 +41,8 @@ export interface LoginFormProps {
 }
 
 /**
- * Props for the RegisterForm component.
+ * Props para RegisterForm.
+ * Solo permite 'buy' y 'sell' (admin no se registra vía este form).
  */
 export interface RegisterFormProps {
   portal: 'buy' | 'sell';
@@ -56,24 +52,18 @@ export interface RegisterFormProps {
   subtitle: string;
 }
 
-/**
- * Props for the SecuritySection component in the profile page.
- */
+/** Props para SecuritySection en la página de profile. */
 export interface SecuritySectionProps {
   isPending?: boolean;
 }
 
-/**
- * Props for the ProfileInfoSection component in the profile page.
- */
+/** Props para ProfileInfoSection en la página de profile. */
 export interface ProfileInfoSectionProps {
   name: string;
   email: string;
 }
 
-/**
- * Props for the TwoFactorSection component in the profile page.
- */
+/** Props para TwoFactorSection en la página de profile. */
 export interface TwoFactorSectionProps {
   initialEnabled: boolean;
 }

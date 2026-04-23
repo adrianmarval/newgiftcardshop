@@ -4,8 +4,8 @@
 
 import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
-import type { Giftcard, GiftcardStatus } from '@/types/giftcard/giftcard';
-import type { Payment, PaymentStatus } from '@/types/order/payments';
+import type { Giftcard, GiftcardStatus } from '@/types/domain/giftcard';
+import type { Payment, PaymentStatus } from '@/types/domain/payment';
 
 /**
  * Serializes a giftcard for client output.

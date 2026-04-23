@@ -1,6 +1,6 @@
 import { BuyGiftcardManager } from '@/components/buy/buy-flow-manager';
 import { getActiveBrands, getActiveCountries } from '@/actions';
-import { getOrderById } from '@/actions/order-actions';
+import { getOrderById } from '@/actions/order/get-order-by-id';
 import type { BuyerOrder } from '@/types';
 
 export default async function BrowseCardsPage({ searchParams }: { searchParams: Promise<{ orderId?: string }> }) {

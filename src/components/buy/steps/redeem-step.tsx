@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clipboard, AlertTriangle, ChevronRight, X, Info } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
-import { getUserBuyRate } from '@/actions/order-actions';
-import { reportGiftcardIssue, undoGiftcardIssue } from '@/actions/buyer-actions';
+import { getUserBuyRate } from '@/actions/order/get-user-buy-rate';
+import { reportGiftcardIssue, undoGiftcardIssue } from '@/actions/giftcard/issues';
 import { GiftcardIssueType } from '@/generated/prisma/enums';
 import { toast } from 'sonner';
 import { BuyFlowGiftcardStatus } from '@/types';
@@ -181,27 +181,20 @@ export const RedeemStep = () => {
             </p>
           </div>
         </div>
-
-        <div className="border-border mt-1 flex flex-col gap-2 border-t pt-2 md:mt-auto md:gap-3 md:pt-6">
-          <Button
-            onClick={() => setStep(4)}
-            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 w-full text-xs font-bold shadow-lg md:h-11 md:text-base"
-          >
-            Verificado {foundGiftcards.length} tarjetas <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
-          </Button>
-        </div>
       </Card>
 
       {/* Right Column: Cards Reveal & Reporting */}
       <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Códigos Revelados</Label>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
-          </div>
-        </div>
+        <CardHeader>
+          <CardTitle className="mb-4 flex items-center justify-between">
+            <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Códigos Revelados</Label>
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
+            </div>
+          </CardTitle>
+        </CardHeader>
 
-        <div className="space-y-1.5 md:space-y-4">
+        <CardContent className="space-y-1.5 md:space-y-4">
           <AnimatePresence>
             {foundGiftcards.map((card, idx) => (
               <motion.div
@@ -210,7 +203,7 @@ export const RedeemStep = () => {
                 animate={{ opacity: 1, x: 0 }}
                 className={`relative rounded-xl border p-2 transition-all md:p-4 ${card.status === 'UNUSED' ? 'border-border bg-card/30' : 'border-destructive/30 bg-destructive/5 grayscale-[0.5]'} `}
               >
-                <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
+                <div className="flex flex-row items-center justify-between gap-2">
                   <div className="flex items-center gap-2 md:gap-4">
                     <div
                       className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black md:h-10 md:w-10 md:text-xs ${card.status === 'UNUSED' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'} `}
@@ -259,7 +252,7 @@ export const RedeemStep = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 self-end md:self-center">
+                  <div className="flex items-center gap-1.5">
                     {redeemState.loadingIds.has(card.id) ? (
                       <Spinner size="sm" className="text-muted-foreground" />
                     ) : card.status === 'UNUSED' ? (
@@ -358,7 +351,15 @@ export const RedeemStep = () => {
               </motion.div>
             ))}
           </AnimatePresence>
-        </div>
+        </CardContent>
+        <CardFooter>
+          <Button
+            onClick={() => setStep(4)}
+            className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 w-full text-xs font-bold shadow-lg md:h-11 md:text-base"
+          >
+            Verificado {foundGiftcards.length} tarjetas <ChevronRight className="ml-1 h-3.5 w-3.5 md:h-4 md:w-4" />
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

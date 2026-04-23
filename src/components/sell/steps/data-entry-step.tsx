@@ -9,10 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { useAction } from 'next-safe-action/hooks';
-import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard-validation-actions';
-import { checkExistingCodes } from '@/actions/seller-actions';
+import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard/ocr';
+import { checkExistingCodes } from '@/actions/seller/check-codes';
 import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
-import type { SellFlowImage } from '@/types/flows/sell-flow';
+import type { SellFlowImage } from '@/types/application/sell-flow';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 

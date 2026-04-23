@@ -9,9 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { OrderDetails } from '@/components/buy/giftcard-orders/order-details';
-import { cancelOrder } from '@/actions/order-actions';
+import { cancelOrder } from '@/actions/order/cancel';
 import { Spinner } from '@/components/ui/spinner';
 import type { OrderCardProps } from './types';
+import Image from 'next/image';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   PENDING: { label: 'PENDIENTE', color: 'bg-amber-500/20 text-amber-500 border-amber-500/30' },
@@ -60,7 +61,13 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
       <div onClick={() => setIsExpanded(!isExpanded)} className="flex cursor-pointer items-center justify-between p-3">
         <div className="flex items-center gap-3">
           <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${status.color}`}>
-            <Package className="h-4 w-4" />
+            <Image
+              src={order.giftcards[0].brand.image || '/'}
+              alt={order.giftcards[0].brand.name}
+              width={20}
+              height={20}
+              className="w-auto"
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-foreground text-xs font-medium md:text-base">Order #{order.id.slice(-8).toUpperCase()}</span>

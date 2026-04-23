@@ -1,0 +1,108 @@
+'use server';
+
+import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
+import { decrypt } from '@/lib/encryption';
+import { sellerActionClient } from '@/lib/safe-action';
+import { getSellerBatchesInputSchema, getSellerBatchesOutputSchema } from '@/types/domain/seller';
+
+export const getSellerBatches = sellerActionClient
+  .inputSchema(getSellerBatchesInputSchema)
+  .outputSchema(getSellerBatchesOutputSchema)
+  .action(async ({ ctx, parsedInput }) => {
+    const { page, limit, search, sort } = parsedInput;
+    const skip = (page - 1) * limit;
+    const orderBy = sort === 'newest' ? { createdAt: 'desc' as const } : { createdAt: 'asc' as const };
+
+    const where: Prisma.GiftcardBatchWhereInput = { userId: ctx.auth.user.id };
+    if (search) where.id = { contains: search, mode: 'insensitive' };
+
+    const [batches, totalCount] = await prisma.$transaction([
+      prisma.giftcardBatch.findMany({
+        where,
+        include: {
+          giftcards: { include: { brand: true, country: true } },
+          payments: true,
+        },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      prisma.giftcardBatch.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      success: true as const,
+      items: batches.map((batch) => {
+        const sellRate = Number(batch.sellRate);
+        const giftcards = batch.giftcards.map((card) => {
+          let claimCode = card.claimCode;
+          let pinCode = card.pinCode ?? null;
+          try {
+            claimCode = decrypt(card.claimCode);
+          } catch {
+            // Legacy unencrypted data — return raw value
+          }
+          if (card.pinCode) {
+            try {
+              pinCode = decrypt(card.pinCode);
+            } catch {
+              pinCode = card.pinCode;
+            }
+          }
+          return {
+            id: card.id,
+            claimCode,
+            pinCode,
+            amount: Number(card.amount),
+            status: card.status,
+            isConfirmed: card.isConfirmed,
+            reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+            orderId: card.orderId,
+            brand: {
+              name: card.brand.name,
+              icon: card.brand.icon,
+              image: card.brand.image,
+            },
+            country: card.country
+              ? {
+                  name: card.country.name,
+                  code: card.country.code,
+                }
+              : null,
+          };
+        });
+        const effectiveTotal = giftcards.reduce((sum, g) => {
+          if (!g.isConfirmed) return sum;
+          if (g.status === 'USED') return sum + g.amount;
+          if (g.status === 'WRONG_AMOUNT') return sum + (g.reportedAmount || 0);
+          return sum;
+        }, 0);
+        const estimatedPayout = effectiveTotal * sellRate;
+        return {
+          id: batch.id,
+          userId: batch.userId,
+          sellRate,
+          isPaid: batch.isPaid,
+          createdAt: batch.createdAt.toISOString(),
+          giftcards,
+          payments: batch.payments.map((payment) => ({
+            id: payment.id,
+            amount: Number(payment.amount),
+            balanceAfter: Number(payment.balanceAfter),
+            status: payment.status,
+            createdAt: payment.createdAt.toISOString(),
+          })),
+          effectiveTotal,
+          estimatedPayout,
+        };
+      }),
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+      },
+    };
+  });

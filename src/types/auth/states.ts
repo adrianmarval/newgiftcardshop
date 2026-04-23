@@ -1,18 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Auth Types — Form action states
+// Auth — Estados de form actions (server actions)
+// Estados retornados por server actions para usar con useActionState.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Form Action States ────────────────────────────────────────────────────────
 
 /**
- * State shape returned by the updateProfile server action.
- * Used with React's useActionState hook in ProfileForm.
+ * Estado retornado por updateProfile server action.
+ * Usado con useActionState de React en ProfileForm.
  */
 export type ProfileState = { error?: string; success?: boolean } | null;
 
 /**
- * State shape returned by the forgotPassword server action.
- * Includes the submitted email so the UI can display it in the success message.
+ * Estado retornado por forgotPassword server action.
+ * Incluye el email submitado para que la UI pueda mostrarlo en el mensaje de éxito.
  */
 export type ForgotPasswordState = {
   error?: string;
@@ -21,15 +22,7 @@ export type ForgotPasswordState = {
 } | null;
 
 /**
- * State shape returned by the resendVerification server action.
- * Used with React's useActionState hook in VerifyEmailForm.
+ * Estado retornado por resendVerification server action.
+ * Usado con useActionState de React en VerifyEmailForm.
  */
 export type ResendState = { error?: string; success?: boolean } | null;
-
-// ── Portal ────────────────────────────────────────────────────────────────────
-
-/**
- * The three portals in the platform.
- * Used across auth components to determine redirect paths and labels.
- */
-export type Portal = 'admin' | 'buy' | 'sell';

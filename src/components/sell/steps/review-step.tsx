@@ -9,12 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import { isBlockingEvidenceState, type ValidationState } from '@/types/sell/validation';
-import type { SellFlowGiftcard, SellFlowImage } from '@/types/flows/sell-flow';
+import { isBlockingEvidenceState, type ValidationState } from '@/types/application/sell-flow';
+import type { SellFlowCard, SellFlowImage } from '@/types/application/sell-flow';
 import type { ReviewStepProps } from '../types';
 import { cn } from '@/lib/utils';
 import { useAction } from 'next-safe-action/hooks';
-import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard-validation-actions';
+import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard/ocr';
 import { toast } from 'sonner';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
 
@@ -193,7 +193,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
 
   // ── Orphaned images logic ──────────────────────────────────────────────────
   const unassignedImages = useMemo(() => {
-    const matchedIds = new Set(giftcards.map((c) => c.evidence?.matchedImageId ?? c.matchedImageId).filter(Boolean));
+    const matchedIds = new Set(giftcards.map((c) => c.evidence?.matchedImageId).filter(Boolean));
     return images.filter((img) => !matchedIds.has(img.id));
   }, [images, giftcards]);
 
@@ -207,8 +207,8 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
   // A card "has capture" when its evidence has a matchedImageId (new field)
   // or legacy matchedImageId field is set, and status is not skipped/no_capture.
   const withCaptureCount = giftcards.filter((card) => {
-    const mid = card.evidence?.matchedImageId ?? card.matchedImageId;
-    const status = card.evidence?.status ?? card.validationState;
+    const mid = card.evidence?.matchedImageId;
+    const status = card.evidence?.status;
     return !!mid && status !== 'skipped' && status !== 'no_capture';
   }).length;
 
@@ -263,7 +263,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
           </Button>
           <Button
             onClick={onPublish}
-            disabled={isPublishing || giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status ?? c.validationState))}
+            disabled={isPublishing || giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status))}
             size="sm"
             className="bg-primary hover:bg-primary/90 h-9 flex-1 text-xs font-semibold"
           >
@@ -285,8 +285,8 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
           {sortedGiftcards.map((card, idx) => {
-            const matchedImageId = card.evidence?.matchedImageId ?? card.matchedImageId;
-            const evidenceStatus = card.evidence?.status ?? card.validationState;
+            const matchedImageId = card.evidence?.matchedImageId;
+            const evidenceStatus = card.evidence?.status;
             // A card has capture if there is a linked image ID, regardless of AI extraction success
             const hasCapture = !!matchedImageId;
 
@@ -401,9 +401,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
                         </div>
                         <div className="rounded border border-emerald-500/10 bg-black/20 p-1.5">
                           <p className="text-[9px] text-emerald-200/50 uppercase">In Picture</p>
-                          <p className="text-xs font-black text-emerald-400">
-                            ${card.evidence?.extractedAmount || card.extractedAmount || '?'}
-                          </p>
+                          <p className="text-xs font-black text-emerald-400">${card.evidence?.extractedAmount || '?'}</p>
                         </div>
                       </div>
                       <div className="flex gap-1.5">
@@ -437,7 +435,7 @@ export function ReviewStep({ onPublish, isPublishing, brandName, countryName, se
                         <p className="text-[9px] text-purple-200/50 uppercase">Code in Photo</p>
                         <p className="font-mono text-[10px] font-bold text-purple-300">
                           {(() => {
-                            const code = card.evidence?.extractedCode || card.extractedCode;
+                            const code = card.evidence?.extractedCode;
                             if (!code) return '—';
                             const normalized = normalizeClaimCode(code);
                             return normalized ? formatClaimCodeCanonical(normalized) : code;

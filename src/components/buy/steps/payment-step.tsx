@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
-import { completeOrder } from '@/actions/order-actions';
-import { getPlatformSetting } from '@/actions/platform-actions';
+import { completeOrder } from '@/actions/order/complete';
+import { getPlatformSetting } from '@/actions/platform/settings';
 import { useAction } from 'next-safe-action/hooks';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
@@ -103,9 +103,7 @@ export const PaymentStep = () => {
             <Wallet className="text-primary h-6 w-6 md:h-8 md:w-8" />
           </motion.div>
           <h2 className="text-2xl font-black tracking-tight uppercase italic md:text-3xl">Binance Pay</h2>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Envía el monto exacto al ID a continuación.
-          </p>
+          <p className="text-muted-foreground text-sm md:text-base">Envía el monto exacto al ID a continuación.</p>
         </div>
 
         <div className="group border-border bg-muted/50 relative w-full max-w-sm space-y-4 overflow-hidden rounded-2xl border p-4 md:p-8">
@@ -134,7 +132,9 @@ export const PaymentStep = () => {
 
         <div className="w-full max-w-sm space-y-3">
           <div className="space-y-1 text-left">
-            <Label className="text-muted-foreground ml-1 text-[10px] font-black uppercase tracking-tight">ID de Transacción (opcional)</Label>
+            <Label className="text-muted-foreground ml-1 text-[10px] font-black tracking-tight uppercase">
+              ID de Transacción (opcional)
+            </Label>
             <Input
               placeholder="ID de transacción"
               value={transactionId}
@@ -154,11 +154,7 @@ export const PaymentStep = () => {
             >
               <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Atrás
             </Button>
-            <Button
-              onClick={handleNotify}
-              disabled={!storedOrderId || completeStatus === 'executing'}
-              className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 h-10 flex-2 text-xs font-bold shadow-xl"
-            >
+            <Button onClick={handleNotify} disabled={!storedOrderId || completeStatus === 'executing'}>
               {completeStatus === 'executing' ? (
                 <>
                   <Spinner size="sm" className="mr-2" /> Notificando...
@@ -172,9 +168,7 @@ export const PaymentStep = () => {
 
         <div className="border-primary/20 bg-primary/5 flex w-full max-w-sm gap-2 rounded-xl border p-3 text-left">
           <Info className="text-primary mt-0.5 h-4 w-4" />
-          <p className="text-muted-foreground text-[10px] leading-relaxed italic">
-            La verificación suele tardar de 1 a 5 minutos.
-          </p>
+          <p className="text-muted-foreground text-[10px] leading-relaxed italic">La verificación suele tardar de 1 a 5 minutos.</p>
         </div>
       </Card>
     </div>

@@ -6,7 +6,7 @@ import { Check, AlertCircle, ArrowLeft, XCircle, Ban, Info } from 'lucide-react'
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
-import { getUserBuyRate, confirmOrderUsage, cancelOrder } from '@/actions/order-actions';
+import { getUserBuyRate, confirmOrderUsage, cancelOrder } from '@/actions/order';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -171,11 +171,7 @@ export const ConfirmUsageStep = () => {
               {cancelStatus === 'executing' ? <Spinner size="sm" /> : 'Cancelar Orden'}
             </Button>
           ) : (
-            <Button
-              onClick={handleConfirmUsage}
-              disabled={confirmStatus === 'executing' || !orderId}
-              className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 h-10 flex-2 text-xs font-bold shadow-xl md:h-12 md:text-base"
-            >
+            <Button onClick={handleConfirmUsage} disabled={confirmStatus === 'executing' || !orderId}>
               {confirmStatus === 'executing' ? <Spinner size="sm" /> : 'Confirmar y Pagar'}
             </Button>
           )}

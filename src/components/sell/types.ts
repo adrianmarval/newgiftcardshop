@@ -2,7 +2,8 @@
 // Sell Component Props — Wizard and Dialog types only
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Brand, Country } from '@/types';
+import type { Brand, Country } from '@/types/domain/catalog';
+import type { ParsedGiftcard } from '@/types/domain/giftcard';
 
 /**
  * Props for the SellBatchManager component.
@@ -44,5 +45,5 @@ export interface ReviewStepProps {
 export interface BulkPasteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImport: (cards: import('@/types').ParsedGiftcard[]) => void;
+  onImport: (cards: ParsedGiftcard[]) => void;
 }

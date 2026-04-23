@@ -14,13 +14,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import { publishBatch } from '@/actions/seller-actions';
+import { publishBatch } from '@/actions/seller/publish-batch';
 import { BrandStep } from '@/components/sell/steps/brand-step';
 import { DataEntryStep } from '@/components/sell/steps/data-entry-step';
 import { ReviewStep } from '@/components/sell/steps/review-step';
 import type { SellBatchManagerProps } from './types';
 import { toast } from 'sonner';
 import { useAction } from 'next-safe-action/hooks';
+import { useRouter } from 'next/navigation';
 
 const STEP_LABELS = ['Config', 'Load', 'Review'];
 
@@ -31,6 +32,7 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [duplicates, setDuplicates] = useState<string[]>([]);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const router = useRouter();
 
   const { execute, status } = useAction(publishBatch, {
     onSuccess: ({ data }) => {
@@ -212,10 +214,11 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
             onClick={() => {
               setShowSuccessDialog(false);
               resetForm();
+              router.push('/sell/dashboard/cards');
             }}
             className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 h-11"
           >
-            Back to Dashboard
+            Go to Cards History
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>

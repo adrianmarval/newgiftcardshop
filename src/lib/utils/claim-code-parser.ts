@@ -11,8 +11,7 @@
 //   6. Dedup keys always use the normalized unformatted string.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { ParsedGiftcard } from '@/types/giftcard/giftcard';
-import type { ClaimCodeParseResult } from '@/types/giftcard/claim-code';
+import type { ParsedGiftcard, ParseClaimCodesResult } from '@/types/domain/giftcard';
 
 // Matches a sequence of alphanumeric chars + hyphens totalling 14 or 15
 // alphanumeric chars after stripping the separators.
@@ -64,7 +63,7 @@ export function formatClaimCodeCanonical(normalized: string): string {
  *   - `errors[]`       — human-readable messages for unparseable lines
  *   - `duplicateCount` — intra-paste duplicates silently dropped
  */
-export function parseClaimCodes(raw: string): ClaimCodeParseResult {
+export function parseClaimCodes(raw: string): ParseClaimCodesResult {
   const parsed: ParsedGiftcard[] = [];
   const errors: string[] = [];
   let duplicateCount = 0;

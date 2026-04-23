@@ -1,18 +1,29 @@
-import { getSellerBatches } from '@/actions/seller-actions';
+import { getSellerBatches } from '@/actions/seller/get-batches';
 import { SellerBatchesView } from '@/components/sell/giftcard-batches';
+import { batchSearchParamsParsers } from '@/components/sell/giftcard-batches/batches-search-params';
+import { createSearchParamsCache } from 'nuqs/server';
 import { Metadata } from 'next';
+
+const searchParamsCache = createSearchParamsCache(batchSearchParamsParsers);
 
 export const metadata: Metadata = {
   title: 'My Cards History | Solmaira Cards',
   description: 'View and track your gift card batches, sales, and payments.',
 };
 
-export default async function SellerCardsPage() {
-  const result = await getSellerBatches();
+export default async function SellerCardsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = await searchParams;
+  const parsed = searchParamsCache.parse(params);
+
+  const page = parsed.page ?? 1;
+  const search = parsed.search || undefined;
+  const sort = parsed.sort ?? 'newest';
+
+  const result = await getSellerBatches({ page, search, sort });
 
   if (!result.data?.success) return <p>No batches found</p>;
 
-  const batches = result.data.batches;
+  const { items, pagination } = result.data;
 
   return (
     <div className="container mx-auto space-y-8 py-6">
@@ -21,7 +32,7 @@ export default async function SellerCardsPage() {
         <p className="text-muted-foreground text-base md:text-lg">Track your inventory, sales status, and payment reports.</p>
       </div>
 
-      <SellerBatchesView batches={batches} />
+      <SellerBatchesView batches={items} pagination={pagination} />
     </div>
   );
 }

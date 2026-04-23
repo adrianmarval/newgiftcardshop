@@ -1,7 +1,7 @@
 import { SellBatchManager } from '@/components/sell/sell-flow-manager';
-import { getActiveBrands } from '@/actions/brand-actions';
-import { getActiveCountries } from '@/actions/country-actions';
-import { getSellerRate } from '@/actions/seller-actions';
+import { getActiveBrands } from '@/actions/catalog/get-active-brands';
+import { getActiveCountries } from '@/actions/catalog/get-active-countries';
+import { getSellerRate } from '@/actions/seller/get-rate';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {

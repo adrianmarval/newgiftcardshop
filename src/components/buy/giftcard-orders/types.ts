@@ -2,8 +2,9 @@
 // Buy Orders Component Props — Moved from @/types barrel
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { BuyerOrder, Giftcard, OrderStatus } from '@/types';
-import type { PaginationInfo } from '@/types/order/pagination';
+import type { BuyerOrder, OrderStatus } from '@/types/domain/order';
+import type { Giftcard } from '@/types/domain/giftcard';
+import type { PaginationMeta } from '@/types/application/shared';
 
 /**
  * Props for the OrdersStats component.
@@ -67,5 +68,5 @@ export interface OrderCardProps {
  */
 export interface BuyerOrdersViewProps {
   orders: BuyerOrder[];
-  pagination: PaginationInfo;
+  pagination: PaginationMeta;
 }

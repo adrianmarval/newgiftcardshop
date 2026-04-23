@@ -1,17 +1,17 @@
 'use client';
 
 import { create } from 'zustand';
-import type { SellFlowState, SellFlowImage, SellFlowGiftcard, SellFlowCardEvidence } from '@/types/flows/sell-flow';
+import type { SellFlowState, SellFlowImage, SellFlowCard, SellFlowCardEvidence } from '@/types/application/sell-flow';
 
 function defaultEvidence(): SellFlowCardEvidence {
   return { status: 'no_capture' };
 }
 
-function makeBlankCard(id: string, source: SellFlowGiftcard['source'] = 'manual'): SellFlowGiftcard {
+function makeBlankCard(id: string, source: SellFlowCard['source'] = 'manual'): SellFlowCard {
   return { id, amount: '', claimCode: '', pinCode: '', source, evidence: defaultEvidence() };
 }
 
-function hasCardContent(card: SellFlowGiftcard): boolean {
+function hasCardContent(card: SellFlowCard): boolean {
   return !!(card.amount || card.claimCode || card.pinCode);
 }
 
@@ -120,7 +120,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
         }
       }
       importedCount = uniqueIncoming.length;
-      const newCards: SellFlowGiftcard[] = uniqueIncoming.map((card, idx) => {
+      const newCards: SellFlowCard[] = uniqueIncoming.map((card, idx) => {
         const hasAmount = parseAmount(card.amount ?? '') !== null;
         return {
           id: String(maxId + idx + 1),
@@ -147,13 +147,13 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       const maxId = Math.max(...state.giftcards.map((g) => parseInt(g.id) || 0), 0);
       const existingCards = state.giftcards.filter(hasCardContent);
 
-      const cardsByNormCode = new Map<string, SellFlowGiftcard>();
+      const cardsByNormCode = new Map<string, SellFlowCard>();
       for (const card of existingCards) {
         const key = card.claimCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (key) cardsByNormCode.set(key, card);
       }
 
-      const updates = new Map<string, SellFlowGiftcard>();
+      const updates = new Map<string, SellFlowCard>();
 
       for (const draft of draftCards) {
         const draftKey = draft.claimCode?.toUpperCase().replace(/[^A-Z0-9]/g, '') ?? '';
@@ -196,7 +196,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       }
 
       return {
-        giftcards: [...existingCards.map((c) => updates.get(c.id) ?? c)] as SellFlowGiftcard[],
+        giftcards: [...existingCards.map((c) => updates.get(c.id) ?? c)] as SellFlowCard[],
       };
     }),
 

@@ -1,67 +1,21 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Types — Central barrel export
-// Import from "@/types" to access all shared project types.
-//
-// Example:
-//   import type { Brand, Country, BuyFlowGiftcardStatus } from "@/types";
+// Types — Root barrel export
+// Central export for all shared project types.
+// Import from "@/types" to access types, or use subdomain barrels:
+//   - "@/types/domain"     → domain entities
+//   - "@/types/application" → flow states and application types
+//   - "@/types/auth"       → authentication types
+//   - "@/types/ui"         → UI component types
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── catalog/ ──────────────────────────────────────────────────────────────────
+// ── Domain ───────────────────────────────────────────────────────────────────
+export * from './domain';
 
-export type { Brand, Country } from './catalog/brand';
+// ── Application ────────────────────────────────────────────────────────────────
+export * from './application';
 
-// ── giftcard/ ────────────────────────────────────────────────────────────────
-
-export { giftcardSchema, giftcardStatusEnum } from './giftcard/giftcard';
-export type { GiftcardStatus, Giftcard, ParsedGiftcard } from './giftcard/giftcard';
-export type { GiftcardIssue } from './giftcard/issues';
-export type { ClaimCodeParseResult } from './giftcard/claim-code';
-
-// ── order/ ───────────────────────────────────────────────────────────────────
-
-export { orderStatusEnum } from './order/buyer-order';
-export type { OrderStatus, BuyerOrder } from './order/buyer-order';
-
-export { paymentSchema, paymentStatusEnum } from './order/payments';
-export type { Payment, PaymentStatus } from './order/payments';
-
-export type { PaginatedBuyerOrders, PaginationInfo, BuyerOrderEffectiveAmount } from './order/pagination';
-
-export type { OrderSearchParams, OrderSearchParamsKeys } from './order/search-params';
-
-export { orderSearchParamsParsers } from './order/search-params';
-
-// ── seller/ ─────────────────────────────────────────────────────────────────
-
-export type { SellerBatch } from './seller/batch';
-
-// ── sell/ ───────────────────────────────────────────────────────────────────
-
-export { validationStateEnum, validationResultSchema } from './sell/validation';
-export type { ValidationState, ValidationResult, OCRDraftCard, OCRIngestOutput } from './sell/validation';
-export type {
-  uploadProvenanceImageInputSchema,
-  validateGiftCardImagesInputSchema,
-  validateGiftCardImagesOutputSchema,
-  extractDraftBatchInputSchema,
-  extractDraftBatchOutputSchema,
-} from './sell/validation';
-
-// ── flows/ ──────────────────────────────────────────────────────────────────
-
-export type { BuyFlowGiftcardStatus, BuyFlowGiftcard, BuyFlowState } from './flows/buy-flow';
-export type { SellFlowGiftcard, SellFlowImage, SellFlowState, SellFlowCardEvidence, SellFlowUnmatchedImage } from './flows/sell-flow';
-
-// ── ui/ ─────────────────────────────────────────────────────────────────────
-
-export type { NavItemIcon, NavItem } from './ui/navigation';
-export type { StatsItem } from './ui/feedback';
-export type { CardStatusInput } from './ui/cards';
-
-// ── auth/ ───────────────────────────────────────────────────────────────────
-
-export type { ProfileState, ForgotPasswordState, ResendState, Portal } from './auth/states';
-
+// ── Auth ─────────────────────────────────────────────────────────────────────
+export type { ProfileState, ForgotPasswordState, ResendState } from './auth/states';
 export type {
   ProfileFormProps,
   Verify2FAFormProps,
@@ -71,16 +25,26 @@ export type {
   ProfileInfoSectionProps,
   TwoFactorSectionProps,
 } from './auth/props';
+export * from './auth/schemas';
 
-// ── email/ ─────────────────────────────────────────────────────────────────
+// ── UI ───────────────────────────────────────────────────────────────────────
+export type { NavItemIcon, NavItem } from './ui/navigation';
+export type { StatsItem } from './ui/feedback';
+export type { CardStatusInput } from './ui/cards';
 
+// ── Email ─────────────────────────────────────────────────────────────────────
 export type { VerifyEmailProps, ResetPasswordProps } from './email/templates';
 
-// ── server/ ─────────────────────────────────────────────────────────────────
-// Server-only types (Prisma/Decimal). Do NOT import in Client Components.
+// ── Platform ──────────────────────────────────────────────────────────────────
+export type { PlatformSetting } from './platform/settings';
+export { getPlatformSettingOutputSchema, setPlatformSettingInputSchema, setPlatformSettingOutputSchema } from './platform/settings';
 
-export type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from './server/batch-processing';
+// ── Re-exports for backwards compatibility ──────────────────────────────────
+// These types were previously exported from different paths
+export type { AppSection } from './application/shared/AppSection';
+export { APP_SECTION_LABELS, APP_SECTION_PATHS } from './application/shared/AppSection';
+export type { PaginationMeta, PaginatedResponse } from './application/shared/Pagination';
+export { paginatedOutputSchema } from './application/shared/Pagination';
 
-// ── Platform Settings ────────────────────────────────────────────────────────
-
-export type { PlatformSetting } from './platform/schemas';
+// ── Backwards compatibility aliases ──────────────────────────────────────────
+export type { PaginationMeta as PaginationInfo } from './application/shared/Pagination';

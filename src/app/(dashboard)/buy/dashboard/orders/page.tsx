@@ -1,4 +1,4 @@
-import { getBuyerOrders } from '@/actions/order-actions';
+import { getBuyerOrders } from '@/actions/order/list';
 import { BuyerOrdersView } from '@/components/buy/giftcard-orders';
 import { searchParamsCache } from '@/lib/search-params-cache';
 import type { Metadata } from 'next';
@@ -26,11 +26,7 @@ export default async function BuyerOrdersPage({ searchParams }: { searchParams: 
 
   if (!result.data) throw new Error('Ocurrio un error al cargar las ordenes');
 
-  const pagination = {
-    currentPage: result.data.currentPage,
-    totalPages: result.data.totalPages,
-    totalCount: result.data.totalCount,
-  };
+  const { items, pagination } = result.data;
 
   return (
     <div className="container mx-auto space-y-8 py-6">
@@ -39,7 +35,7 @@ export default async function BuyerOrdersPage({ searchParams }: { searchParams: 
         <p className="text-muted-foreground text-base md:text-lg">Rastrea tus compras y gestiona órdenes pendientes.</p>
       </div>
 
-      <BuyerOrdersView orders={result.data.orders} pagination={pagination} />
+      <BuyerOrdersView orders={items} pagination={pagination} />
     </div>
   );
 }
