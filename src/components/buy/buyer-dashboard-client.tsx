@@ -66,7 +66,7 @@ export function BuyerDashboardClient({ stats, activeOrders }: BuyerDashboardClie
                 <CardDescription>Buscar gift cards para comprar</CardDescription>
               </div>
               <Link
-                href="/buy/flow"
+                href="/buy/dashboard/browse-cards"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-lg px-2 py-2 font-medium"
               >
                 <IconPlus className="h-4 w-4" />

@@ -66,7 +66,7 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
                 <CardDescription>Create a new batch and start selling</CardDescription>
               </div>
               <Link
-                href="/sell/flow"
+                href="/sell/dashboard/sell-cards"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 font-medium"
               >
                 <IconPlus className="h-4 w-4" />
