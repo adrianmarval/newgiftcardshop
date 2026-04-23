@@ -22,3 +22,9 @@ export interface CardStatusInput {
   /** ID de la orden asociada (null si no está en una orden). */
   orderId: string | null;
 }
+
+export interface StatCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+}

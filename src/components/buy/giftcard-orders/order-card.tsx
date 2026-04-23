@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Package, AlertTriangle } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { ChevronDown } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -58,38 +58,42 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
 
   return (
     <Card
-      className={`border-border bg-card relative overflow-hidden rounded-xl transition-all ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+      onClick={() => setIsExpanded(!isExpanded)}
+      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
     >
-      <div onClick={() => setIsExpanded(!isExpanded)} className="flex cursor-pointer items-center justify-between p-1">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${status.color}`}>
+      <CardHeader>
+        <CardTitle>
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 md:gap-4">
             <Image
               src={order.giftcards[0].brand.image || '/'}
               alt={order.giftcards[0].brand.name}
               width={20}
               height={20}
-              className="w-auto"
+              className={`h-10 w-10 rounded-lg object-contain p-1 ${status.color}`}
             />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-foreground text-md font-medium md:text-base">Order #{order.id.slice(-8).toUpperCase()}</span>
-            <span className="text-muted-foreground text-sm md:text-sm">{new Date(order.createdAt).toLocaleDateString()}</span>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex flex-col items-end">
-            <span className="text-foreground text-md font-semibold md:text-lg">${order.faceValueTotal.toFixed(0)}</span>
-            <span className="text-muted-foreground text-sm md:text-sm">${order.effectiveTotal.toFixed(2)}</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-foreground text-md font-medium md:text-base">Orden #{order.id.slice(-8).toUpperCase()}</span>
+              <div className="flex items-center gap-2">
+                <Badge className={`${status.color} px-1.5 py-0 text-[10px] md:text-xs`}>{status.label}</Badge>
+                <span className="text-muted-foreground hidden text-xs md:inline-block">
+                  {order.giftcards.length} {order.giftcards.length === 1 ? 'tarjeta' : 'tarjetas'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-foreground text-md font-semibold md:text-lg">${order.faceValueTotal.toFixed(0)}</span>
+              <span className="text-muted-foreground text-xs md:text-sm">Precio: ${order.effectiveTotal.toFixed(2)}</span>
+            </div>
           </div>
-          <div className="flex flex-col items-end">
-            <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>{status.label}</Badge>
-            <ChevronDown
-              className={`text-muted-foreground flex h-4 w-full items-center justify-center transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-            />
-          </div>
-        </div>
-      </div>
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="flex items-center justify-between">
+        <span className="text-muted-foreground text-sm">Creada el {new Date(order.createdAt).toLocaleDateString()}</span>
+        <ChevronDown className={`text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+      </CardContent>
 
       <div className="bg-muted flex h-1 overflow-hidden rounded-full">
         {order.status === 'COMPLETED' ? (
@@ -134,10 +138,10 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="border-border border-t p-3">
+            <div className="border-border cursor-default border-t p-3" onClick={(e) => e.stopPropagation()}>
               <OrderDetails order={order} onCardClick={onCardClick} />
             </div>
           </motion.div>

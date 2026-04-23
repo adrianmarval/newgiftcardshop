@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { IconPlus, IconGift, IconSearch, IconShoppingCart, IconClock, IconPigMoney } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { BuyerStats, BuyerOrder } from '@/types/domain/order';
+import { StatCard } from '@/components/ui/stat-card';
 
 interface BuyerDashboardClientProps {
   stats: BuyerStats;
@@ -13,46 +14,22 @@ interface BuyerDashboardClientProps {
 
 export function BuyerDashboardClient({ stats, activeOrders }: BuyerDashboardClientProps) {
   return (
-    <div className="container mx-auto space-y-6 py-4">
+    <div className="container mx-auto space-y-4">
       <section>
         <h2 className="mb-4 text-xl font-semibold">Estadísticas</h2>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <IconSearch className="text-muted-foreground h-6 w-6" />
-              <CardTitle className="text-base">Disponibles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.availableCards}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <IconShoppingCart className="text-muted-foreground h-6 w-6" />
-              <CardTitle className="text-base">Mis Órdenes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.myOrders}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <IconClock className="h-6 w-6 text-yellow-500" />
-              <CardTitle className="text-base">Activas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.activeOrders}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <IconPigMoney className="h-6 w-6 text-green-500" />
-              <CardTitle className="text-base">Ahorrado</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">${stats.totalSaved.toFixed(2)}</p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Disponibles"
+            value={stats.availableCards.toLocaleString()}
+            icon={<IconSearch className="text-muted-foreground h-6 w-6" />}
+          />
+          <StatCard
+            title="Mis Órdenes"
+            value={stats.myOrders.toLocaleString()}
+            icon={<IconShoppingCart className="text-muted-foreground h-6 w-6" />}
+          />
+          <StatCard title="Activas" value={stats.activeOrders.toLocaleString()} icon={<IconClock className="h-6 w-6 text-yellow-500" />} />
+          <StatCard title="Ahorrado" value={stats.totalSaved.toLocaleString()} icon={<IconPigMoney className="h-6 w-6 text-green-500" />} />
         </div>
       </section>
 

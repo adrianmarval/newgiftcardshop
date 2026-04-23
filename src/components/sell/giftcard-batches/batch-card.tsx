@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Package, AlertTriangle } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BatchDetails } from './batch-details';
 import type { BatchCardProps } from './types';
@@ -31,43 +31,48 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
 
   return (
     <Card
-      className={`border-border bg-card relative overflow-hidden rounded-xl transition-all ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+      onClick={onToggle}
+      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
     >
       {hasReport && (
-        <div className="absolute top-2 right-2 z-20">
-          <AlertTriangle className="text-destructive fill-destructive/20 h-5 w-5 drop-shadow-md" />
+        <div className="absolute top-0 right-0 z-20">
+          <AlertTriangle className="text-destructive fill-destructive/20 h-4 w-4 drop-shadow-md" />
         </div>
       )}
-      <div onClick={onToggle} className="flex cursor-pointer items-center justify-between p-1">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${status.color}`}>
+
+      <CardHeader>
+        <CardTitle>
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 md:gap-4">
             <Image
               src={batch.giftcards[0].brand.image || '/'}
               alt={batch.giftcards[0].brand.name}
               width={20}
               height={20}
-              className="w-auto"
+              className={`h-10 w-10 rounded-lg object-contain p-1 ${status.color}`}
             />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-foreground text-md font-medium md:text-base">Batch #{batch.id}</span>
-            <span className="text-muted-foreground text-sm md:text-sm">{new Date(batch.createdAt).toLocaleDateString()}</span>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex flex-col items-end">
-            <span className="text-foreground text-md font-semibold md:text-lg">${batchTotal.toFixed(0)}</span>
-            <span className="text-muted-foreground text-sm md:text-sm">You get: ${batch.estimatedPayout.toFixed(0)}</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-foreground text-md font-medium md:text-base">Batch #{batch.id}</span>
+              <div className="flex items-center gap-2">
+                <Badge className={`${status.color} px-1.5 py-0 text-[10px] md:text-xs`}>{status.label}</Badge>
+                <span className="text-muted-foreground hidden text-xs md:inline-block">
+                  {batch.giftcards.length} {batch.giftcards.length === 1 ? 'tarjeta' : 'tarjetas'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-foreground text-md font-semibold md:text-lg">${batchTotal.toFixed(0)}</span>
+              <span className="text-muted-foreground text-xs md:text-sm">You get: ${batch.estimatedPayout.toFixed(0)}</span>
+            </div>
           </div>
-          <div className="flex flex-col items-end">
-            <Badge className={`${status.color} flex items-center gap-1 px-2 py-0.5 text-[10px] md:text-sm`}>{status.label}</Badge>
-            <ChevronDown
-              className={`text-muted-foreground flex h-4 w-full items-center justify-center transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-            />
-          </div>
-        </div>
-      </div>
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="flex items-center justify-between">
+        <span className="text-muted-foreground">Published on {new Date(batch.createdAt).toLocaleDateString()}</span>
+        <ChevronDown className={`text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+      </CardContent>
 
       <div className="bg-muted flex h-1 overflow-hidden rounded-full">
         {isPaid ? (
@@ -88,10 +93,10 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="border-border border-t p-3">
+            <div className="border-border cursor-default border-t p-3" onClick={(e) => e.stopPropagation()}>
               <BatchDetails batch={batch} onCardClick={onCardClick} />
             </div>
           </motion.div>

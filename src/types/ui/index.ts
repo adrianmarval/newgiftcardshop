@@ -5,4 +5,4 @@
 
 export type { NavItemIcon, NavItem } from './navigation';
 export type { StatsItem } from './feedback';
-export type { CardStatusInput } from './cards';
+export type { CardStatusInput, StatCardProps } from './cards';

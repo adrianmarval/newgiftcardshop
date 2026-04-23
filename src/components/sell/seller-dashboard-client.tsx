@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { IconPlus, IconGift, IconCreditCard, IconPackage, IconCircleCheck, IconClock } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { SellerStats, RecentBatch } from '@/types/domain/seller';
+import { StatCard } from '@/components/ui/stat-card';
 
 interface SellerDashboardClientProps {
   stats: SellerStats;
@@ -13,46 +14,30 @@ interface SellerDashboardClientProps {
 
 export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardClientProps) {
   return (
-    <div className="container mx-auto space-y-6 py-4">
-      <section>
-        <h2 className="mb-4 text-xl font-semibold">Statistics</h2>
+    <div className="container mx-auto space-y-4">
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Statistics</h2>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <IconCreditCard className="text-muted-foreground h-6 w-6" />
-              <CardTitle className="text-base">Total Cards</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.totalCards}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <IconPackage className="text-muted-foreground h-6 w-6" />
-              <CardTitle className="text-base">Total Batches</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.totalBatches}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <IconCircleCheck className="h-6 w-6 text-green-500" />
-              <CardTitle className="text-base">Total Paid Amount</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.paidBatches}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <IconClock className="h-6 w-6 text-yellow-500" />
-              <CardTitle className="text-base">Pending Batches</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.unpaidBatches}</p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total Cards"
+            value={stats.totalCards.toString()}
+            icon={<IconCreditCard className="text-muted-foreground h-6 w-6" />}
+          />
+          <StatCard
+            title="Total Batches"
+            value={stats.totalBatches.toString()}
+            icon={<IconPackage className="text-muted-foreground h-6 w-6" />}
+          />
+          <StatCard
+            title="Total Paid Amount"
+            value={stats.paidBatches.toString()}
+            icon={<IconCircleCheck className="h-6 w-6 text-green-500" />}
+          />
+          <StatCard
+            title="Pending Batches"
+            value={stats.unpaidBatches.toString()}
+            icon={<IconClock className="h-6 w-6 text-yellow-500" />}
+          />
         </div>
       </section>
 
