@@ -468,7 +468,7 @@ export function DataEntryStep() {
         <button
           type="button"
           onClick={() => setShowFormatHelp(!showFormatHelp)}
-          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[10px] transition-colors md:text-xs"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-md transition-colors md:text-xs"
         >
           <Code className="h-3 w-3" />
           <span>Expected format</span>
@@ -492,7 +492,6 @@ export function DataEntryStep() {
                   <div>XXBS-7W4HDV-D2AN 30.00</div>
                   <div>ZART-GWX7EB-ZVAR 5.60</div>
                 </div>
-                <p className="text-muted-foreground/50 text-[10px] italic">Amount is optional.</p>
               </div>
             </motion.div>
           )}
@@ -501,7 +500,7 @@ export function DataEntryStep() {
         {/* Textarea — the compose area */}
         <div className="flex min-h-32 flex-1 flex-col gap-2 md:min-h-48">
           <Textarea
-            placeholder="Paste your gift card codes here… (optional step)"
+            placeholder="Paste your gift card codes here…"
             value={pasteContent}
             onChange={(e) => {
               setPasteContent(e.target.value);
@@ -512,7 +511,7 @@ export function DataEntryStep() {
             }}
             disabled={isProcessing}
             className={cn(
-              'border-border bg-muted/20 focus-visible:ring-primary h-full w-full resize-none rounded-xl font-mono text-xs transition-all md:text-sm',
+              'border-border bg-muted/20 focus-visible:ring-primary h-full w-full resize-none rounded-xl font-mono text-md transition-all md:text-sm',
               isDragOver && 'border-primary',
               validationErrors.length > 0 && 'border-destructive/50 ring-destructive/20 ring-1',
             )}

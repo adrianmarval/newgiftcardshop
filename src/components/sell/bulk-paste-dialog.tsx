@@ -97,7 +97,6 @@ XXXX-XXXXXX-XXXX 50.00
               <div className="hidden space-y-2 pt-2 md:block">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Format Examples</span>
-                  <span className="text-muted-foreground/50 text-[10px] italic">Amount is optional</span>
                 </div>
                 <div className="border-border bg-muted/20 grid grid-cols-2 gap-2 rounded-xl border p-2 font-mono text-[10px]">
                   <div className="text-muted-foreground">CODE123, 50.00</div>
