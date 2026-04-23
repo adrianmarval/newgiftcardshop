@@ -122,9 +122,7 @@ export function DataEntryStep() {
 
   const { execute: runCheckExistingCodes } = useAction(checkExistingCodes, {
     onSuccess: ({ data }) => {
-      console.log('[DB-CHECK] onSuccess callback fired', { data });
       if (data?.success && data.existingCodes && data.existingCodes.length > 0) {
-        console.log('[DB-CHECK] Found existing codes, blocking:', data.existingCodes);
         const codeToLineMap = pendingCodeToLineMapRef.current;
         const existingErrors = (data.existingCodes as string[]).map((code) => {
           const normalizedCode = code.replace(/[^A-Z0-9]/g, '').toUpperCase();
@@ -139,13 +137,10 @@ export function DataEntryStep() {
         setStage('idle');
         return;
       }
-      console.log('[DB-CHECK] No existing codes found, proceeding');
-      // No existing codes - proceed to image upload
       pendingDbCheckRef.current?.();
     },
     onError: ({ error }) => {
       console.error('[DB-CHECK] Error checking existing codes:', error.serverError);
-      // On error, proceed anyway
       pendingDbCheckRef.current?.();
     },
   });

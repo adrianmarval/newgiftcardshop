@@ -41,7 +41,6 @@ export const login = actionClient
           role?: string[];
         };
       };
-      console.log({ email, password, portal });
       if (response.twoFactorRedirect) {
         return { success: true, redirectTo: `/${portal}/auth/verify-2fa` };
       }
