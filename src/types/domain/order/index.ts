@@ -29,5 +29,8 @@ export type {
   GetBuyerOrdersInput,
 } from './Order';
 
+export { buyerStatsSchema } from './BuyerStats';
+export type { BuyerStats } from './BuyerStats';
+
 export { orderSearchParamsParsers } from './SearchParams';
 export type { OrderSearchParams, OrderSearchParamsKeys } from './SearchParams';

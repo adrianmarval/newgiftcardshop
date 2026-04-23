@@ -1,6 +1,10 @@
 import { getSession } from '@/lib/authorization';
-import { IconSearch, IconShoppingCart, IconWallet, IconStar } from '@tabler/icons-react';
 import { Metadata } from 'next';
+import { buyerStats } from '@/actions/order/buyer-stats';
+import { getBuyerOrders } from '@/actions/order/list';
+import { BuyerDashboardClient } from '@/components/buy/buyer-dashboard-client';
+import type { BuyerStats as BuyerStatsType } from '@/types/domain/order';
+import type { BuyerOrder } from '@/types/domain/order';
 
 export const metadata: Metadata = {
   title: 'Dashboard de Comprador | Solmaira Cards',
@@ -10,46 +14,32 @@ export const metadata: Metadata = {
 export default async function BuyerDashboardPage() {
   const session = await getSession();
 
+  const [statsResult, ordersResult] = await Promise.all([buyerStats(), getBuyerOrders({ page: 1, limit: 3, status: 'PENDING' })]);
+
+  if (!statsResult.data) {
+    throw new Error('Failed to load buyer stats');
+  }
+
+  const stats: BuyerStatsType = {
+    availableCards: statsResult.data.availableCards,
+    myOrders: statsResult.data.myOrders,
+    activeOrders: statsResult.data.activeOrders,
+    totalSaved: statsResult.data.totalSaved,
+  };
+
+  let activeOrders: BuyerOrder[] = [];
+  if (ordersResult.data?.success) {
+    activeOrders = ordersResult.data.items as BuyerOrder[];
+  }
+
   return (
-    <div>
-      <div className="space-y-1">
+    <div className="container mx-auto space-y-4 py-2">
+      <div className="flex flex-col gap-1">
         <h1 className="text-4xl font-bold">Bienvenido{session.user.name ? `, ${session.user.name}` : ''}</h1>
         <p className="text-muted-foreground">Explora y compra tarjetas de regalo con descuento</p>
       </div>
 
-      <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-        <div className="border-border bg-card flex flex-col gap-2 rounded-xl border p-6">
-          <div className="text-muted-foreground flex items-center gap-2">
-            <IconSearch className="h-5 w-5" />
-            <span className="text-base font-medium">Tarjetas Disponibles</span>
-          </div>
-          <span className="text-4xl font-bold">1,248</span>
-        </div>
-
-        <div className="border-border bg-card flex flex-col gap-2 rounded-xl border p-6">
-          <div className="text-muted-foreground flex items-center gap-2">
-            <IconShoppingCart className="h-5 w-5" />
-            <span className="text-base font-medium">Mis Órdenes</span>
-          </div>
-          <span className="text-4xl font-bold">12</span>
-        </div>
-
-        <div className="border-border bg-card flex flex-col gap-2 rounded-xl border p-6">
-          <div className="text-muted-foreground flex items-center gap-2">
-            <IconWallet className="h-5 w-5" />
-            <span className="text-base font-medium">Saldo</span>
-          </div>
-          <span className="text-4xl font-bold">$420.00</span>
-        </div>
-
-        <div className="border-border bg-card flex flex-col gap-2 rounded-xl border p-6">
-          <div className="text-muted-foreground flex items-center gap-2">
-            <IconStar className="h-5 w-5" />
-            <span className="text-base font-medium">Ahorrado</span>
-          </div>
-          <span className="text-4xl font-bold">$125.50</span>
-        </div>
-      </div>
+      <BuyerDashboardClient stats={stats} activeOrders={activeOrders} />
     </div>
   );
 }
