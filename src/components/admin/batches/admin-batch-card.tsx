@@ -81,9 +81,9 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted, isExpan
             )}
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
-                <span className="text-foreground text-md font-medium md:text-sm">Lote #{batch.id}</span>
+                <span className="text-foreground text-md font-medium md:text-lg">Lote #{batch.id}</span>
               </div>
-              <span className="text-muted-foreground text-xs md:text-lg">{batch.seller.email}</span>
+              <span className="text-muted-foreground text-xs md:text-sm">{batch.seller.email}</span>
             </div>
           </div>
 
