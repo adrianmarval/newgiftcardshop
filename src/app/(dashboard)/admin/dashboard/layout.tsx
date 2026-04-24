@@ -1,12 +1,22 @@
-import { AdminSidebar } from '@/components/layout/admin-nav';
+import { AdminNavbar } from '@/components/layout/admin-navbar';
 import { authorizeByRequiredRole } from '@/lib/authorization';
 
 export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   await authorizeByRequiredRole(['ADMIN']);
   return (
-    <div className="bg-background min-h-screen pb-20">
-      <div className="flex-1 space-y-4 p-4 md:p-8 md:pt-6">{children}</div>
-      <AdminSidebar />
-    </div>
+    <nav className="grid h-svh w-full grid-cols-1 grid-rows-[1fr_auto] gap-1 p-1 md:gap-4 md:p-4">
+      {/* 2: CONTENT - Full width always */}
+      <main className="bg-background relative col-span-1 overflow-hidden rounded-lg md:col-span-1">
+        <div className="custom-scrollbar text-muted-foreground h-full overflow-y-auto italic md:p-2">{children}</div>
+      </main>
+      {/* 3: NAV/FOOTER - Full width always */}
+      <footer className="bg-card/80 col-span-1 flex items-center justify-center rounded-lg border p-3 shadow-lg backdrop-blur-xl md:col-span-1">
+        <div className="flex w-full max-w-md justify-around">
+          <div className="bg-primary/5 hover:bg-primary/10 border-primary/10 rounded-lg-xl flex h-10 w-10 cursor-pointer items-center justify-center border transition-colors">
+            <AdminNavbar />
+          </div>
+        </div>
+      </footer>
+    </nav>
   );
 }

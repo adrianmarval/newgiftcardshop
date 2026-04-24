@@ -1,30 +1,29 @@
 'use client';
 
-import * as React from 'react';
 import { IconDashboard, IconUsers, IconShoppingCart, IconCreditCard, IconChartBar, IconCash } from '@tabler/icons-react';
 import { BottomNav } from '@/components/layout/bottom-nav';
 
 const navItems = [
   { title: 'Home', url: '/admin/dashboard', icon: IconDashboard },
-  { title: 'Users', url: '/admin/dashboard/users', icon: IconUsers },
+  { title: 'Usuarios', url: '/admin/dashboard/users', icon: IconUsers },
   {
-    title: 'Orders',
+    title: 'Ordenes',
     url: '/admin/dashboard/orders',
     icon: IconShoppingCart,
   },
   {
-    title: 'Cards',
-    url: '/admin/dashboard/cards',
+    title: 'Lotes',
+    url: '/admin/dashboard/batches',
     icon: IconCreditCard,
   },
+  { title: 'Pagos', url: '/admin/dashboard/payments', icon: IconCash },
   {
-    title: 'Stats',
+    title: 'Analiticas',
     url: '/admin/dashboard/analytics',
     icon: IconChartBar,
   },
-  { title: 'Pagos', url: '/admin/dashboard/payments', icon: IconCash },
 ];
 
-export const AdminSidebar = () => {
-  return <BottomNav items={navItems} />;
+export const AdminNavbar = () => {
+  return <BottomNav items={navItems} variant="compact" />;
 };
