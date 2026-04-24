@@ -40,12 +40,11 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
   const extraItems = items.slice(4);
   const hasExtra = extraItems.length > 0;
 
-  const baseHeight = 28;
-  const maxExpansion = Math.min(extraItems.length * 50 + 40, 220);
+  const baseHeight = 0;
+  const maxExpansion = Math.min(extraItems.length * 45 + 30, 180);
   
-  // Height is the only thing we animate
-  const drawerHeight = useTransform(springY, [0, -maxExpansion], [baseHeight, baseHeight + maxExpansion]);
-  const contentOpacity = useTransform(springY, [0, -60], [0, 1]);
+  const drawerHeight = useTransform(springY, [0, -maxExpansion], [baseHeight, maxExpansion]);
+  const contentOpacity = useTransform(springY, [0, -40], [0, 1]);
 
   React.useEffect(() => {
     return dragY.onChange((v) => {
@@ -55,7 +54,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
   }, [dragY, isExpanded, maxExpansion]);
 
   const onDragEnd = (_: any, info: any) => {
-    if (info.offset.y < -50 || info.velocity.y < -500) {
+    if (info.offset.y < -40 || info.velocity.y < -500) {
       dragY.set(-maxExpansion);
       setIsExpanded(true);
     } else {
@@ -76,11 +75,18 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
 
   if (!mounted) return null;
 
+  const handlePan = (_: any, info: { delta: { y: number } }) => {
+    const newY = dragY.get() + info.delta.y;
+    dragY.set(Math.max(-maxExpansion, Math.min(0, newY)));
+  };
+
   return (
-    <nav
+    <motion.nav
+      onPan={handlePan}
+      onPanEnd={onDragEnd}
       className={cn(
-        'border-border bg-background/95 supports-backdrop-filter:bg-background/95 z-50 backdrop-blur-xl transition-colors duration-300',
-        'touch-none select-none',
+        'border-border bg-background/95 supports-backdrop-filter:bg-background/95 z-50 backdrop-blur-xl transition-all duration-300',
+        'relative touch-none overflow-visible select-none',
         isFixed
           ? 'fixed right-0 bottom-0 left-0 border-t shadow-[0_-2px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-2px_30px_rgba(0,0,0,0.3)]'
           : 'w-full rounded-t-2xl border-x border-t shadow-lg',
@@ -89,67 +95,56 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
       )}
     >
       {hasExtra && (
-        <motion.div
-          style={{ height: drawerHeight }}
-          className="overflow-hidden"
-        >
-          {/* Handle Area - Use onPan for direct height control without Y offset issues */}
-          <motion.div
-            onPan={(_, info) => {
-              const newY = dragY.get() + info.delta.y;
-              dragY.set(Math.max(-maxExpansion, Math.min(0, newY)));
+        <>
+          {/* Floating Handle */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMenu();
             }}
-            onPanEnd={onDragEnd}
-            onClick={toggleMenu}
-            className="flex h-6 cursor-grab items-center justify-center active:cursor-grabbing"
+            className={cn(
+              'border-border bg-background absolute -top-3 left-1/2 z-60 flex h-3 w-10 -translate-x-1/2 cursor-grab items-center justify-center rounded-t-lg border-x border-t shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)] active:cursor-grabbing',
+            )}
           >
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
               transition={{ duration: 0.3 }}
-              className="text-primary/50 hover:text-primary transition-colors"
+              className="text-primary/60 hover:text-primary transition-colors"
             >
-              <IconChevronUp size={24} stroke={3} />
+              <IconChevronUp size={18} stroke={2.5} />
             </motion.div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            style={{ opacity: contentOpacity }}
-            className="grid grid-cols-4 gap-4 p-4 pt-0"
-          >
-            {extraItems.map((item, idx) => (
-              <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={isCompact} />
-            ))}
+          {/* Expandable Content Container */}
+          <motion.div style={{ height: drawerHeight }} className="overflow-hidden">
+            <motion.div style={{ opacity: contentOpacity }} className="grid grid-cols-4 gap-3 px-4 pt-4 pb-4">
+              {extraItems.map((item, idx) => (
+                <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={true} />
+              ))}
+            </motion.div>
+            
+            {isExpanded && <div className="border-t border-dashed py-0.5 opacity-50" />}
           </motion.div>
-          
-          {isExpanded && <div className="border-t border-dashed py-1 opacity-50" />}
-        </motion.div>
+        </>
       )}
 
-      {/* Fixed Main Bar */}
-      <div className={cn('flex h-16 items-center justify-around', isCompact ? 'px-0.5 md:px-1' : 'px-1')}>
+      {/* Main Bar */}
+      <div className={cn('flex h-14 items-center justify-around', isCompact ? 'px-0.5 md:px-1' : 'px-1')}>
         {mainItems.map((item, idx) => (
           <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={isCompact} />
         ))}
       </div>
-    </nav>
+    </motion.nav>
   );
 }
 
-function NavItem({
-  item,
-  isActive,
-  isCompact,
-}: {
-  item: BottomNavItem;
-  isActive: boolean;
-  isCompact: boolean;
-}) {
+function NavItem({ item, isActive, isCompact }: { item: BottomNavItem; isActive: boolean; isCompact: boolean }) {
   const Content = (
     <>
       <item.icon className={cn(isCompact ? 'h-4 w-4 md:h-5 md:w-5' : 'h-5 w-5', isActive && 'fill-primary/20')} />
       <span
         className={cn(
-          isCompact ? 'text-[9px] md:text-sm' : 'text-[10px] md:text-sm',
+          isCompact ? 'text-[9px] md:text-xs' : 'text-[10px] md:text-sm',
           'font-semibold tracking-tight',
           isActive ? 'text-primary' : '',
         )}
@@ -160,23 +155,32 @@ function NavItem({
   );
 
   const baseClasses = cn(
-    'flex flex-col items-center justify-center gap-0.5 rounded-xl transition-all duration-200 w-full',
-    isCompact ? 'px-1 py-1 md:px-3 md:py-2' : 'px-3 py-2',
-    isActive
-      ? 'bg-primary/10 text-primary border-primary/20 border shadow-sm'
-      : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+    'flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all duration-200 w-full',
+    isCompact ? 'px-1 py-1 md:px-2 md:py-1.5' : 'px-2 py-1.5',
+    isActive ? 'bg-primary/10 text-primary border-primary/10 border' : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
   );
 
   if (item.onClick) {
     return (
-      <button type="button" onClick={item.onClick} className={baseClasses}>
+      <button 
+        type="button" 
+        onClick={(e) => {
+          e.stopPropagation();
+          item.onClick?.();
+        }} 
+        className={baseClasses}
+      >
         {Content}
       </button>
     );
   }
 
   return (
-    <Link href={item.url || '#'} className={baseClasses}>
+    <Link 
+      href={item.url || '#'} 
+      className={baseClasses}
+      onClick={(e) => e.stopPropagation()}
+    >
       {Content}
     </Link>
   );
