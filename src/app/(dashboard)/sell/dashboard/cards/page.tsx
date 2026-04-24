@@ -29,7 +29,7 @@ export default async function SellerCardsPage({ searchParams }: { searchParams: 
   return (
     <div className="container mx-auto space-y-4 py-2">
       <div className="flex flex-col gap-1">
-        <h1 className="text-5xl font-black tracking-tighter italic md:text-7xl">CARDS BATCHES</h1>
+        <h1 className="text-4xl font-black tracking-tighter italic md:text-7xl">BATCHES HISTORY</h1>
       </div>
       <SellerBatchesView batches={items} pagination={pagination} />
     </div>
