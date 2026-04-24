@@ -6,11 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { batchSearchParamsParsers } from './batches-search-params';
+import { sellerBatchesSearchParamsParsers } from '@/types/domain/seller';
 import type { BatchesFiltersProps } from './types';
 
 export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
-  const [{ status, search, sort }, setParams] = useQueryStates(batchSearchParamsParsers, {
+  const [{ status, search, sort }, setParams] = useQueryStates(sellerBatchesSearchParamsParsers, {
     shallow: false,
     limitUrlUpdates: debounce(400),
   });

@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, AlertTriangle, Trash2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronDown, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -63,7 +63,7 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
   return (
     <Card
       onClick={() => setIsExpanded(!isExpanded)}
-      className={`relative cursor-pointer overflow-hidden p-2 transition-all duration-200 ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+      className={`relative cursor-pointer gap-1 overflow-hidden p-1 transition-all duration-200 ${isExpanded ? 'bg-primary/10 dark:bg-primary/15 shadow-md' : ''}`}
     >
       <CardHeader className="px-1">
         <div className="flex items-start justify-between gap-4">
@@ -78,23 +78,23 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
             )}
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-4">
-                <span className="text-foreground text-md font-medium md:text-lg">Lote #{batch.id}</span>
+                <span className="text-foreground text-md font-medium md:text-sm">Lote #{batch.id}</span>
                 <Badge className={`${statusColor} px-1 py-0 text-[10px] md:p-2 md:text-sm`}>{status.label}</Badge>
               </div>
-              <span className="text-muted-foreground text-xs md:text-xl">{batch.seller.email}</span>
+              <span className="text-muted-foreground text-xs md:text-lg">{batch.seller.email}</span>
             </div>
           </div>
 
           <div className="flex flex-col items-end gap-0.5">
-            <span className="text-foreground text-md font-semibold md:text-xl">${batch.effectiveTotal.toFixed(0)}</span>
-            <span className="text-muted-foreground text-xs md:text-lg">A Pagar: ${batch.estimatedPayout.toFixed(2)}</span>
+            <span className="text-foreground text-md font-semibold md:text-lg">${batch.effectiveTotal.toFixed(0)}</span>
+            <span className="text-muted-foreground text-xs md:text-sm">A Pagar: ${batch.estimatedPayout.toFixed(2)}</span>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-muted-foreground text-sm md:text-lg">Creado el {new Date(batch.createdAt).toLocaleDateString()}</span>
+          <span className="text-muted-foreground text-sm md:text-sm">Creado el {new Date(batch.createdAt).toLocaleDateString()}</span>
           {canDelete && (
             <Button
               onClick={(e) => {
@@ -142,7 +142,7 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="border-border cursor-default border-t p-3" onClick={(e) => e.stopPropagation()}>
+            <div className="border-border cursor-default border-t p-4" onClick={(e) => e.stopPropagation()}>
               <AdminBatchDetails batch={batch} onDeleted={onDeleted} />
             </div>
           </motion.div>

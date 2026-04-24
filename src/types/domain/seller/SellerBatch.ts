@@ -46,19 +46,15 @@ export const sellerBatchSchema = z.object({
   effectiveTotal: z.number(),
   /** Pago estimado = effectiveTotal × sellRate. */
   estimatedPayout: z.number(),
+  /** Cantidad total de cards en el batch. */
+  cardsCount: z.number().optional(),
+  /** Cantidad de cards confirmados. */
+  confirmedCount: z.number().optional(),
+  /** Cantidad de cards pagados (status USED). */
+  paidCount: z.number().optional(),
+  /** Si el batch tiene issues reportados. */
+  hasIssues: z.boolean().optional(),
 });
 
 /** Tipo TypeScript para SellerBatch. */
 export type SellerBatch = z.infer<typeof sellerBatchSchema>;
-
-// ── Get Seller Batches ──────────────────────────────────────────────────────────
-
-/** Schema de entrada para getSellerBatches (paginación). */
-export const getSellerBatchesInputSchema = z.object({
-  page: z.number().int().positive().optional().default(1),
-  limit: z.number().int().positive().max(100).optional().default(10),
-  search: z.string().optional(),
-  sort: z.enum(['newest', 'oldest']).optional().default('newest'),
-});
-
-export type GetSellerBatchesInput = z.infer<typeof getSellerBatchesInputSchema>;

@@ -10,7 +10,7 @@ export const getSellerBatches = sellerActionClient
   .inputSchema(getSellerBatchesInputSchema)
   .outputSchema(getSellerBatchesOutputSchema)
   .action(async ({ ctx, parsedInput }) => {
-    const { page, limit, search, sort } = parsedInput;
+    const { page, limit, status, search, sort } = parsedInput;
     const skip = (page - 1) * limit;
     const orderBy = sort === 'newest' ? { createdAt: 'desc' as const } : { createdAt: 'asc' as const };
 
@@ -21,7 +21,7 @@ export const getSellerBatches = sellerActionClient
       prisma.giftcardBatch.findMany({
         where,
         include: {
-          giftcards: { include: { brand: true, country: true } },
+          giftcards: { include: { brand: true, country: true, issues: true } },
           payments: true,
         },
         orderBy,
@@ -33,71 +33,90 @@ export const getSellerBatches = sellerActionClient
 
     const totalPages = Math.ceil(totalCount / limit);
 
+    const filteredBatches = batches.map((batch) => {
+      const sellRate = Number(batch.sellRate);
+      const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
+      const paidCount = batch.giftcards.filter((g) => g.status === 'USED').length;
+      const hasIssues = batch.giftcards.some((g) => g.issues.length > 0);
+
+      const giftcards = batch.giftcards.map((card) => {
+        let claimCode = card.claimCode;
+        let pinCode = card.pinCode ?? null;
+        try {
+          claimCode = decrypt(card.claimCode);
+        } catch {
+          // Legacy unencrypted data — return raw value
+        }
+        if (card.pinCode) {
+          try {
+            pinCode = decrypt(card.pinCode);
+          } catch {
+            pinCode = card.pinCode;
+          }
+        }
+        return {
+          id: card.id,
+          claimCode,
+          pinCode,
+          amount: Number(card.amount),
+          status: card.status,
+          isConfirmed: card.isConfirmed,
+          reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+          orderId: card.orderId,
+          brand: {
+            name: card.brand.name,
+            icon: card.brand.icon,
+            image: card.brand.image,
+          },
+          country: card.country
+            ? {
+                name: card.country.name,
+                code: card.country.code,
+              }
+            : null,
+        };
+      });
+      const effectiveTotal = giftcards.reduce((sum, g) => {
+        return g.status === 'WRONG_AMOUNT' ? sum + (g.reportedAmount || 0) : sum + g.amount;
+      }, 0);
+      const estimatedPayout = effectiveTotal * sellRate;
+      return {
+        id: batch.id,
+        userId: batch.userId,
+        sellRate,
+        isPaid: batch.isPaid,
+        createdAt: batch.createdAt.toISOString(),
+        giftcards,
+        payments: batch.payments.map((payment) => ({
+          id: payment.id,
+          amount: Number(payment.amount),
+          balanceAfter: Number(payment.balanceAfter),
+          status: payment.status,
+          createdAt: payment.createdAt.toISOString(),
+        })),
+        effectiveTotal,
+        estimatedPayout,
+        confirmedCount,
+        paidCount,
+        cardsCount: batch.giftcards.length,
+        hasIssues,
+      };
+    });
+
+    let filteredByStatus = filteredBatches;
+    if (status && status !== 'ALL') {
+      filteredByStatus = filteredBatches.filter((b) => {
+        if (status === 'PROCESSING') return !b.isPaid && b.confirmedCount < b.cardsCount;
+        if (status === 'CONFIRMED') return !b.isPaid && b.confirmedCount === b.cardsCount && !b.hasIssues;
+        if (status === 'PAID') return b.isPaid;
+        if (status === 'REPORTED') return b.hasIssues;
+        return true;
+      });
+    }
+
     return {
       success: true as const,
-      items: batches.map((batch) => {
-        const sellRate = Number(batch.sellRate);
-        const giftcards = batch.giftcards.map((card) => {
-          let claimCode = card.claimCode;
-          let pinCode = card.pinCode ?? null;
-          try {
-            claimCode = decrypt(card.claimCode);
-          } catch {
-            // Legacy unencrypted data — return raw value
-          }
-          if (card.pinCode) {
-            try {
-              pinCode = decrypt(card.pinCode);
-            } catch {
-              pinCode = card.pinCode;
-            }
-          }
-          return {
-            id: card.id,
-            claimCode,
-            pinCode,
-            amount: Number(card.amount),
-            status: card.status,
-            isConfirmed: card.isConfirmed,
-            reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
-            orderId: card.orderId,
-            brand: {
-              name: card.brand.name,
-              icon: card.brand.icon,
-              image: card.brand.image,
-            },
-            country: card.country
-              ? {
-                  name: card.country.name,
-                  code: card.country.code,
-                }
-              : null,
-          };
-        });
-        const effectiveTotal = giftcards.reduce((sum, g) => {
-          // if (!g.isConfirmed) return sum;
-          // if (g.status === 'USED') return sum + g.amount;
-          return g.status === 'WRONG_AMOUNT' ? sum + (g.reportedAmount || 0) : sum + g.amount;
-        }, 0);
-        const estimatedPayout = effectiveTotal * sellRate;
-        return {
-          id: batch.id,
-          userId: batch.userId,
-          sellRate,
-          isPaid: batch.isPaid,
-          createdAt: batch.createdAt.toISOString(),
-          giftcards,
-          payments: batch.payments.map((payment) => ({
-            id: payment.id,
-            amount: Number(payment.amount),
-            balanceAfter: Number(payment.balanceAfter),
-            status: payment.status,
-            createdAt: payment.createdAt.toISOString(),
-          })),
-          effectiveTotal,
-          estimatedPayout,
-        };
-      }),
+      items: filteredByStatus,
       pagination: {
         currentPage: page,
         totalPages,

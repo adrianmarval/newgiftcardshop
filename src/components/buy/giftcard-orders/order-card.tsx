@@ -59,7 +59,7 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
   return (
     <Card
       onClick={() => setIsExpanded(!isExpanded)}
-      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+      className={`hover:border-primary/30 relative cursor-pointer gap-1 overflow-hidden p-1 transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
     >
       <CardHeader>
         <CardTitle>

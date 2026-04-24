@@ -4,8 +4,9 @@
 
 export { sellerBatchSchema } from './SellerBatch';
 export type { SellerBatch } from './SellerBatch';
-export { getSellerBatchesInputSchema } from './SellerBatch';
-export type { GetSellerBatchesInput } from './SellerBatch';
+
+export { sellerBatchesSearchParamsParsers, getSellerBatchesInputSchema } from './SearchParams';
+export type { SellerBatchesSearchParams, SellerBatchesSearchParamsKeys, GetSellerBatchesInput } from './SearchParams';
 
 export {
   publishBatchSchema,

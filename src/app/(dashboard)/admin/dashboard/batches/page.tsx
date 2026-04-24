@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { adminBatches } from '@/actions/admin/admin-batches';
 import { adminGetSellers } from '@/actions/admin/admin-get-sellers';
 import { AdminBatchesView } from '@/components/admin/batches/admin-batches-view';
-import { adminBatchesSearchParamsParsers } from '@/components/admin/batches/admin-batches-search-params';
+import { adminBatchesSearchParamsParsers } from '@/types/domain/admin';
 import { createSearchParamsCache } from 'nuqs/server';
 
 const searchParamsCache = createSearchParamsCache(adminBatchesSearchParamsParsers);

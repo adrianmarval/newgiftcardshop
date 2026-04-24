@@ -1,11 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Order — Search Params para órdenes del buyer
-// Parsers de URL search params usando nuqs v2.
+// Order — Search params y schemas (nuqs v2 + Zod)
+// Todos los parsers y schemas de filtrado para órdenes del buyer.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { z } from 'zod';
 import { parseAsInteger, parseAsString, parseAsStringLiteral } from 'nuqs/server';
+import { paginatedOutputSchema } from '@/types/application/shared/Pagination';
+import { buyerOrderSchema } from './Order';
 
-// ── Parser Definitions ────────────────────────────────────────────────────────
+// ── nuqs parsers (para URL search params y useQueryStates) ──────────────────
 
 /**
  * Parsers para los search params de la página de órdenes del buyer.
@@ -39,3 +42,22 @@ export type OrderSearchParams = {
 
 /** Union de keys válidas para OrderSearchParams. Útil para iterate over params. */
 export type OrderSearchParamsKeys = keyof typeof orderSearchParamsParsers;
+
+// ── Zod input schema (para server action) ────────────────────────────────────
+
+/**
+ * Schema de entrada para getBuyerOrders (paginación).
+ * Todos los campos son opcionales con defaults sensatos.
+ */
+export const getBuyerOrdersInputSchema = z.object({
+  page: z.number().int().positive().optional().default(1),
+  limit: z.number().int().positive().max(100).optional().default(10),
+  status: z.enum(['PENDING', 'AWAITING_PAYMENT', 'COMPLETED', 'CANCELLED']).optional(),
+  search: z.string().optional(),
+  sort: z.enum(['newest', 'oldest']).optional().default('newest'),
+});
+
+export type GetBuyerOrdersInput = z.infer<typeof getBuyerOrdersInputSchema>;
+
+/** Schema de salida para getBuyerOrders (usa paginatedOutputSchema). */
+export const getBuyerOrdersOutputSchema = paginatedOutputSchema(z.array(buyerOrderSchema));

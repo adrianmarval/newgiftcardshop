@@ -1,6 +1,6 @@
 import { getBuyerOrders } from '@/actions/order/list';
 import { BuyerOrdersView } from '@/components/buy/giftcard-orders';
-import { searchParamsCache } from '@/lib/search-params-cache';
+import { orderSearchParamsCache } from '@/lib/search-params-cache';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function BuyerOrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
-  const parsed = searchParamsCache.parse(params);
+  const parsed = orderSearchParamsCache.parse(params);
 
   const page = parsed.page ?? 1;
   const status = parsed.status === 'ALL' ? undefined : parsed.status;

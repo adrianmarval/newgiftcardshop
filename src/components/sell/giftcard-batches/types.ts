@@ -7,14 +7,6 @@ import type { Giftcard } from '@/types/domain/giftcard';
 import type { PaginationMeta } from '@/types/application/shared';
 
 /**
- * Props for the BatchesStats component.
- * Displays aggregated batch statistics.
- */
-export interface BatchesStatsProps {
-  batches: SellerBatch[];
-}
-
-/**
  * Props for the BatchesFilters component.
  * Search and filter controls for batches.
  */

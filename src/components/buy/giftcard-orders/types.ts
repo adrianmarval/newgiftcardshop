@@ -7,15 +7,6 @@ import type { Giftcard } from '@/types/domain/giftcard';
 import type { PaginationMeta } from '@/types/application/shared';
 
 /**
- * Props for the OrdersStats component.
- * Displays aggregated order statistics.
- */
-export interface OrdersStatsProps {
-  orders: BuyerOrder[];
-  totalCount: number;
-}
-
-/**
  * Props for the OrdersList component.
  * Displays a paginated list of buyer orders.
  */

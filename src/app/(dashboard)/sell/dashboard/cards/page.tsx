@@ -1,10 +1,10 @@
 import { getSellerBatches } from '@/actions/seller/get-batches';
 import { SellerBatchesView } from '@/components/sell/giftcard-batches';
-import { batchSearchParamsParsers } from '@/components/sell/giftcard-batches/batches-search-params';
+import { sellerBatchesSearchParamsParsers } from '@/types/domain/seller';
 import { createSearchParamsCache } from 'nuqs/server';
 import { Metadata } from 'next';
 
-const searchParamsCache = createSearchParamsCache(batchSearchParamsParsers);
+const searchParamsCache = createSearchParamsCache(sellerBatchesSearchParamsParsers);
 
 export const metadata: Metadata = {
   title: 'My Cards History | Solmaira Cards',
@@ -16,10 +16,11 @@ export default async function SellerCardsPage({ searchParams }: { searchParams: 
   const parsed = searchParamsCache.parse(params);
 
   const page = parsed.page ?? 1;
+  const status = parsed.status ?? 'ALL';
   const search = parsed.search || undefined;
   const sort = parsed.sort ?? 'newest';
 
-  const result = await getSellerBatches({ page, search, sort });
+  const result = await getSellerBatches({ page, status, search, sort });
 
   if (!result.data?.success) return <p>No batches found</p>;
 

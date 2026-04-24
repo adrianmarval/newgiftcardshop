@@ -4,11 +4,11 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import { adminActionClient } from '@/lib/safe-action';
-import { adminBatchesFiltersSchema, adminBatchesOutputSchema } from '@/types/domain/admin';
+import { getAdminBatchesInputSchema, getAdminBatchesOutputSchema } from '@/types/domain/admin';
 
 export const adminBatches = adminActionClient
-  .inputSchema(adminBatchesFiltersSchema)
-  .outputSchema(adminBatchesOutputSchema)
+  .inputSchema(getAdminBatchesInputSchema)
+  .outputSchema(getAdminBatchesOutputSchema)
   .action(async ({ parsedInput }) => {
     const { page, limit, search, sort, sellerId, status, dateFrom, dateTo, amountMin, amountMax } = parsedInput;
     const skip = (page - 1) * limit;

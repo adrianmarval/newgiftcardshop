@@ -37,6 +37,8 @@ export { publishBatch } from './seller/publish-batch';
 export { getSellerBatches } from './seller/get-batches';
 export { getSellerRate } from './seller/get-rate';
 export { checkExistingCodes } from './seller/check-codes';
+export { sellerStats } from './seller/seller-stats';
+export { recentBatches } from './seller/recent-batches';
 
 // ── Platform ──────────────────────────────────────────────────────────────────
 export { getPlatformSetting, setPlatformSetting } from './platform/settings';

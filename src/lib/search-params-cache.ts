@@ -5,4 +5,4 @@
 import { createSearchParamsCache } from 'nuqs/server';
 import { orderSearchParamsParsers } from '@/types/domain/order';
 
-export const searchParamsCache = createSearchParamsCache(orderSearchParamsParsers);
+export const orderSearchParamsCache = createSearchParamsCache(orderSearchParamsParsers);

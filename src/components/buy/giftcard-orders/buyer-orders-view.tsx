@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { OrdersStats } from '@/components/buy/giftcard-orders/orders-stats';
 import { OrdersFilters } from '@/components/buy/giftcard-orders/orders-filters';
 import { OrdersList } from '@/components/buy/giftcard-orders/orders-list';
 import { CardDetailDialog } from '@/components/buy/giftcard-orders/card-detail-dialog';
@@ -20,7 +19,6 @@ export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) =>
 
   return (
     <div className="space-y-2">
-      <OrdersStats orders={orders} totalCount={pagination.totalCount} />
       <OrdersFilters />
       <OrdersList orders={orders} totalPages={pagination.totalPages} onCardClick={handleCardClick} />
       <CardDetailDialog

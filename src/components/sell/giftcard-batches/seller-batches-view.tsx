@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { BatchesStats } from './batches-stats';
 import { BatchesFilters } from './batches-filters';
 import { BatchesList } from './batches-list';
 import { CardDetailDialog } from './card-detail-dialog';
@@ -17,7 +16,6 @@ export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProp
 
   return (
     <div className="space-y-2">
-      <BatchesStats batches={batches} />
       <BatchesFilters />
       <BatchesList batches={batches} totalPages={pagination?.totalPages} onCardClick={handleCardClick} />
       <CardDetailDialog

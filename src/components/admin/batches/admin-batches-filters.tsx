@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { adminBatchesSearchParamsParsers } from './admin-batches-search-params';
+import { adminBatchesSearchParamsParsers } from '@/types/domain/admin';
 import type { AdminBatchesFiltersProps } from '@/types/domain/admin';
 
 export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
@@ -66,7 +66,7 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
               )}
             </div>
 
-            <div className="space-y-2 flex flex-col">
+            <div className="flex flex-col space-y-2">
               <Label className="text-xs">Vendedor</Label>
               <Popover open={openSeller} onOpenChange={setOpenSeller}>
                 <PopoverTrigger asChild>
@@ -74,7 +74,7 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={openSeller}
-                    className="h-8 text-xs md:h-9 md:text-sm w-full justify-between font-normal"
+                    className="h-8 w-full justify-between text-xs font-normal md:h-9 md:text-sm"
                   >
                     {params.sellerId && params.sellerId !== 'ALL'
                       ? sellers.find((s) => s.id === params.sellerId)?.name || 'Vendedor no encontrado'

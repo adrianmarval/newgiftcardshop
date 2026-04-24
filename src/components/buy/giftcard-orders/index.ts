@@ -1,5 +1,4 @@
 // Buyer Orders Components — barrel export
-export { OrdersStats } from './orders-stats';
 export { OrdersFilters } from './orders-filters';
 export { OrdersList } from './orders-list';
 export { OrderCard } from './order-card';
