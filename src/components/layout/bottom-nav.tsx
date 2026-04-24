@@ -41,7 +41,8 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
   const hasExtra = extraItems.length > 0;
 
   const baseHeight = 0;
-  const maxExpansion = Math.min(extraItems.length * 45 + 30, 180);
+  const rows = Math.ceil(extraItems.length / 4);
+  const maxExpansion = Math.min(rows * 65 + 10, 240);
   
   const drawerHeight = useTransform(springY, [0, -maxExpansion], [baseHeight, maxExpansion]);
   const contentOpacity = useTransform(springY, [0, -40], [0, 1]);
@@ -117,9 +118,9 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
 
           {/* Expandable Content Container */}
           <motion.div style={{ height: drawerHeight }} className="overflow-hidden">
-            <motion.div style={{ opacity: contentOpacity }} className="grid grid-cols-4 gap-3 px-4 pt-4 pb-4">
+            <motion.div style={{ opacity: contentOpacity }} className="grid grid-cols-4 gap-2 px-4 pt-2 pb-2">
               {extraItems.map((item, idx) => (
-                <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={true} />
+                <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={false} />
               ))}
             </motion.div>
             
@@ -131,7 +132,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
       {/* Main Bar */}
       <div className={cn('flex h-14 items-center justify-around', isCompact ? 'px-0.5 md:px-1' : 'px-1')}>
         {mainItems.map((item, idx) => (
-          <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={isCompact} />
+          <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={false} />
         ))}
       </div>
     </motion.nav>
@@ -141,10 +142,10 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
 function NavItem({ item, isActive, isCompact }: { item: BottomNavItem; isActive: boolean; isCompact: boolean }) {
   const Content = (
     <>
-      <item.icon className={cn(isCompact ? 'h-4 w-4 md:h-5 md:w-5' : 'h-5 w-5', isActive && 'fill-primary/20')} />
+      <item.icon className={cn('h-6 w-6', isActive && 'fill-primary/20')} />
       <span
         className={cn(
-          isCompact ? 'text-[9px] md:text-xs' : 'text-[10px] md:text-sm',
+          'text-[10px] md:text-sm',
           'font-semibold tracking-tight',
           isActive ? 'text-primary' : '',
         )}
@@ -156,7 +157,7 @@ function NavItem({ item, isActive, isCompact }: { item: BottomNavItem; isActive:
 
   const baseClasses = cn(
     'flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all duration-200 w-full',
-    isCompact ? 'px-1 py-1 md:px-2 md:py-1.5' : 'px-2 py-1.5',
+    'px-2 py-1.5',
     isActive ? 'bg-primary/10 text-primary border-primary/10 border' : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
   );
 
