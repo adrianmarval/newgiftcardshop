@@ -24,6 +24,6 @@ const navItems = [
   },
 ];
 
-export const AdminNavbar = () => {
-  return <BottomNav items={navItems} variant="compact" />;
+export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
+  return <BottomNav items={navItems} variant="compact" isFixed={isFixed} />;
 };

@@ -11,12 +11,8 @@ export default async function SellerDashboardLayout({ children }: { children: Re
       </main>
 
       {/* 3: NAV/FOOTER - Full width always */}
-      <footer className="bg-card/80 col-span-1 mx-auto flex w-full max-w-6xl items-center justify-center rounded-lg border p-3 shadow-lg backdrop-blur-xl md:col-span-1">
-        <div className="flex w-full max-w-md justify-around">
-          <div className="bg-primary/5 hover:bg-primary/10 border-primary/10 rounded-lg-xl flex h-10 w-10 cursor-pointer items-center justify-center border transition-colors">
-            <SellerNavbar />
-          </div>
-        </div>
+      <footer className="col-span-1 mx-auto flex w-full max-w-6xl items-center justify-center md:col-span-1">
+        <SellerNavbar />
       </footer>
     </nav>
   );

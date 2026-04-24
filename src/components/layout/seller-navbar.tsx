@@ -19,6 +19,6 @@ const navItems = [
   { title: 'Profile', url: '/sell/dashboard/profile', icon: IconUser },
 ];
 
-export const SellerNavbar = () => {
-  return <BottomNav items={navItems} />;
+export const SellerNavbar = ({ isFixed }: { isFixed?: boolean }) => {
+  return <BottomNav items={navItems} isFixed={isFixed} />;
 };

@@ -17,9 +17,10 @@ interface BottomNavProps {
   showThemeToggle?: boolean;
   className?: string;
   variant?: 'default' | 'compact';
+  isFixed?: boolean;
 }
 
-export function BottomNav({ items, showThemeToggle = true, className, variant = 'default' }: BottomNavProps) {
+export function BottomNav({ items, showThemeToggle = true, className, variant = 'default', isFixed = false }: BottomNavProps) {
   const pathname = usePathname();
 
   const isCompact = variant === 'compact';
@@ -27,7 +28,10 @@ export function BottomNav({ items, showThemeToggle = true, className, variant = 
   return (
     <nav
       className={cn(
-        'border-border bg-background/95 supports-backdrop-filter:bg-background/95 fixed right-0 bottom-0 left-0 z-50 border-t shadow-[0_-2px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:shadow-[0_-2px_30px_rgba(0,0,0,0.3)]',
+        'border-border bg-background/95 supports-backdrop-filter:bg-background/95 z-50 backdrop-blur-xl',
+        isFixed
+          ? 'fixed right-0 bottom-0 left-0 border-t shadow-[0_-2px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-2px_30px_rgba(0,0,0,0.3)]'
+          : 'w-full rounded-xl border shadow-lg',
         className,
       )}
     >
