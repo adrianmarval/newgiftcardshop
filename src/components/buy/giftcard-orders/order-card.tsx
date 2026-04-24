@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatDateTime } from '@/lib/date-formatter';
@@ -59,7 +58,7 @@ export const OrderCard = ({ order, onCardClick, isExpanded, onToggle }: OrderCar
   return (
     <Card
       onClick={onToggle}
-      className={`hover:border-primary/30 relative cursor-pointer gap-1 overflow-hidden p-1 transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden py-2 transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
     >
       <CardHeader>
         <CardTitle>
@@ -74,12 +73,6 @@ export const OrderCard = ({ order, onCardClick, isExpanded, onToggle }: OrderCar
 
             <div className="flex flex-col gap-0.5">
               <span className="text-foreground text-md font-medium md:text-base">Orden #{order.id.slice(-8).toUpperCase()}</span>
-              <div className="flex items-center gap-2">
-                <Badge className={`${status.color} px-1.5 py-0 text-[10px] md:text-xs`}>{status.label}</Badge>
-                <span className="text-muted-foreground hidden text-xs md:inline-block">
-                  {order.giftcards.length} {order.giftcards.length === 1 ? 'tarjeta' : 'tarjetas'}
-                </span>
-              </div>
             </div>
 
             <div className="flex flex-col items-end gap-0.5">
@@ -91,7 +84,7 @@ export const OrderCard = ({ order, onCardClick, isExpanded, onToggle }: OrderCar
       </CardHeader>
 
       <CardContent className="flex items-center justify-between">
-        <span className="text-muted-foreground text-sm">{formatDateTime(order.createdAt,'es-AR')}</span>
+        <span className="text-muted-foreground text-sm">{formatDateTime(order.createdAt, 'es-AR')}</span>
         <ChevronDown
           className={`text-muted-foreground cursor-pointer transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
           onClick={onToggle}

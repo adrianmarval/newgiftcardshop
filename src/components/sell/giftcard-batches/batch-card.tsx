@@ -3,7 +3,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { formatDateTime } from '@/lib/date-formatter';
 import { BatchDetails } from './batch-details';
 import type { BatchCardProps } from './types';
@@ -54,12 +53,6 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
 
             <div className="flex flex-col gap-0.5">
               <span className="text-foreground text-md font-medium md:text-base">Batch #{batch.id}</span>
-              <div className="flex items-center gap-2">
-                <Badge className={`${status.color} px-1.5 py-0 text-[10px] md:text-xs`}>{status.label}</Badge>
-                <span className="text-muted-foreground hidden text-xs md:inline-block">
-                  {batch.giftcards.length} {batch.giftcards.length === 1 ? 'tarjeta' : 'tarjetas'}
-                </span>
-              </div>
             </div>
 
             <div className="flex flex-col items-end gap-0.5">
@@ -71,7 +64,7 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
       </CardHeader>
 
       <CardContent className="flex items-center justify-between">
-        <span className="text-muted-foreground">{formatDateTime(batch.createdAt, 'en-US')}</span>
+        <span className="text-muted-foreground text-sm">{formatDateTime(batch.createdAt, 'en-US')}</span>
         <ChevronDown className={`text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
       </CardContent>
 
