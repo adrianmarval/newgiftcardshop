@@ -40,7 +40,11 @@ async function copyToClipboard(text: string): Promise<boolean> {
 export function ClaimCodeField({ code, variant = 'masked', showToast = true, showCopyButton = true }: ClaimCodeFieldProps) {
   const [copied, setCopied] = useState(false);
 
-  const copy = async () => {
+  const copy = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     const success = await copyToClipboard(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

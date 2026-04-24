@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ClaimCodeField } from '@/components/ui/claim-code-field';
 import { toast } from 'sonner';
 import { adminCardDelete } from '@/actions/admin/admin-card-delete';
 import Image from 'next/image';
@@ -44,7 +45,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
   return (
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-muted-foreground flex items-center gap-4 text-xs">
+        <div className="text-muted-foreground flex items-center gap-4 text-xs md:text-lg">
           <span>{batch.cardsCount} tarjetas</span>
           <span>Confirmadas: {batch.confirmedCount}</span>
           <span>Tasa: {(batch.sellRate * 100).toFixed(0)}%</span>
@@ -68,9 +69,9 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-mono text-xs">{card.claimCode}</div>
+                <ClaimCodeField code={card.claimCode} variant="visible" showCopyButton={false} />
                 {card.buyer && (
-                  <div className="text-muted-foreground text-[10px]">
+                  <div className="text-muted-foreground text-[10px] md:text-sm">
                     Comprador: {card.buyer.name} ({card.buyer.email})
                   </div>
                 )}
@@ -79,11 +80,11 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
 
             <div className="flex shrink-0 items-center gap-2">
               <div className="flex flex-col items-end gap-0.5">
-                <span className="text-xs font-medium md:text-sm">${card.amount.toFixed(2)}</span>
+                <span className="text-xs font-medium md:text-lg">${card.amount.toFixed(2)}</span>
                 <div className="flex items-center gap-1">
-                  <Badge className={`${statusColors[card.status]} px-1 py-0 text-[9px] md:text-xs`}>{card.status}</Badge>
+                  <Badge className={`${statusColors[card.status]} px-1 py-0 text-[9px] md:text-sm`}>{card.status}</Badge>
                   {card.issues && card.issues.length > 0 && (
-                    <span className="text-destructive flex items-center gap-0.5 text-[9px] md:text-xs">
+                    <span className="text-destructive flex items-center gap-0.5 text-[9px] md:text-sm">
                       <AlertTriangle className="h-3 w-3" />
                       Problema
                     </span>

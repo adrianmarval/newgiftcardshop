@@ -61,7 +61,10 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
   };
 
   return (
-    <Card className={`relative overflow-hidden p-2 transition-all duration-200 ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}>
+    <Card
+      onClick={() => setIsExpanded(!isExpanded)}
+      className={`relative cursor-pointer overflow-hidden p-2 transition-all duration-200 ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+    >
       <CardHeader className="px-1">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -70,28 +73,28 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
                 checked={isSelected}
                 onCheckedChange={(checked) => onSelect(!!checked)}
                 onClick={(e) => e.stopPropagation()}
-                className="mt-1"
+                className="mt-1 cursor-pointer"
               />
             )}
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-4">
-                <span className="text-foreground text-md font-medium md:text-base">Lote #{batch.id}</span>
-                <Badge className={`${statusColor} px-1 py-0 text-[10px] md:text-xs`}>{status.label}</Badge>
+                <span className="text-foreground text-md font-medium md:text-lg">Lote #{batch.id}</span>
+                <Badge className={`${statusColor} px-1 py-0 text-[10px] md:p-2 md:text-sm`}>{status.label}</Badge>
               </div>
-              <span className="text-muted-foreground text-xs">{batch.seller.email}</span>
+              <span className="text-muted-foreground text-xs md:text-xl">{batch.seller.email}</span>
             </div>
           </div>
 
           <div className="flex flex-col items-end gap-0.5">
-            <span className="text-foreground text-md font-semibold md:text-lg">${batch.effectiveTotal.toFixed(0)}</span>
-            <span className="text-muted-foreground text-xs md:text-sm">Pago: ${batch.estimatedPayout.toFixed(2)}</span>
+            <span className="text-foreground text-md font-semibold md:text-xl">${batch.effectiveTotal.toFixed(0)}</span>
+            <span className="text-muted-foreground text-xs md:text-lg">A Pagar: ${batch.estimatedPayout.toFixed(2)}</span>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-muted-foreground text-sm">Creado el {new Date(batch.createdAt).toLocaleDateString()}</span>
+          <span className="text-muted-foreground text-sm md:text-lg">Creado el {new Date(batch.createdAt).toLocaleDateString()}</span>
           {canDelete && (
             <Button
               onClick={(e) => {
@@ -139,7 +142,7 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="border-border cursor-default border-t p-3">
+            <div className="border-border cursor-default border-t p-3" onClick={(e) => e.stopPropagation()}>
               <AdminBatchDetails batch={batch} onDeleted={onDeleted} />
             </div>
           </motion.div>

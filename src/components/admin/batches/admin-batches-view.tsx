@@ -82,7 +82,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
       <AdminPayDialog batches={selectedBatches} open={payDialogOpen} onOpenChange={setPayDialogOpen} onPaid={handlePaid} />
 
       {showFloatingBar && (
-        <div className="bg-card border-border fixed bottom-6 left-1/2 z-9999 flex -translate-x-1/2 items-center gap-4 rounded-full border px-4 py-2 shadow-lg">
+        <div className="bg-card border-border fixed bottom-22 left-1/2 z-9999 flex -translate-x-1/2 items-center gap-4 rounded-full border px-4 py-2 shadow-lg">
           <span className="text-sm font-medium">
             {selectedBatches.length} lote{selectedBatches.length > 1 ? 's' : ''} seleccionado{selectedBatches.length > 1 ? 's' : ''}
           </span>

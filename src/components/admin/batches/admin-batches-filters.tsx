@@ -1,12 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { useQueryStates, debounce } from 'nuqs';
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal, Check, ChevronsUpDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { adminBatchesSearchParamsParsers } from './admin-batches-search-params';
 import type { AdminBatchesFiltersProps } from '@/types/domain/admin';
 
@@ -23,6 +26,8 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
       limitUrlUpdates: debounce(400),
     },
   );
+
+  const [openSeller, setOpenSeller] = useState(false);
 
   const hasActiveFilters = params.status !== 'ALL' || params.search || params.sort !== 'newest' || params.sellerId;
 
@@ -44,9 +49,9 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-9 md:gap-2 md:px-3">
+          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-10 md:gap-2 md:px-3">
             <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            <span className="hidden md:inline">Filtros</span>
+            <span className="hidden md:inline md:text-lg">Filtros</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[320px] p-4" align="end">
@@ -61,21 +66,56 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flex flex-col">
               <Label className="text-xs">Vendedor</Label>
-              <Select value={params.sellerId || 'ALL'} onValueChange={(value) => setParams({ sellerId: value === 'ALL' ? '' : value })}>
-                <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
-                  <SelectValue placeholder="Todos los vendedores" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Todos los vendedores</SelectItem>
-                  {sellers.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={openSeller} onOpenChange={setOpenSeller}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openSeller}
+                    className="h-8 text-xs md:h-9 md:text-sm w-full justify-between font-normal"
+                  >
+                    {params.sellerId && params.sellerId !== 'ALL'
+                      ? sellers.find((s) => s.id === params.sellerId)?.name || 'Vendedor no encontrado'
+                      : 'Todos los vendedores'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar vendedor..." />
+                    <CommandList>
+                      <CommandEmpty>No se encontraron vendedores.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="ALL"
+                          onSelect={() => {
+                            setParams({ sellerId: '' });
+                            setOpenSeller(false);
+                          }}
+                        >
+                          <Check className={cn('mr-2 h-4 w-4', !params.sellerId ? 'opacity-100' : 'opacity-0')} />
+                          Todos los vendedores
+                        </CommandItem>
+                        {sellers.map((s) => (
+                          <CommandItem
+                            key={s.id}
+                            value={s.name}
+                            onSelect={() => {
+                              setParams({ sellerId: s.id });
+                              setOpenSeller(false);
+                            }}
+                          >
+                            <Check className={cn('mr-2 h-4 w-4', params.sellerId === s.id ? 'opacity-100' : 'opacity-0')} />
+                            {s.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
