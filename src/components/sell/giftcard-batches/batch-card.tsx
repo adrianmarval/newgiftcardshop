@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { formatDateTime } from '@/lib/date-formatter';
 import { BatchDetails } from './batch-details';
 import type { BatchCardProps } from './types';
 import Image from 'next/image';
@@ -70,7 +71,7 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
       </CardHeader>
 
       <CardContent className="flex items-center justify-between">
-        <span className="text-muted-foreground">Published on {new Date(batch.createdAt).toLocaleDateString()}</span>
+        <span className="text-muted-foreground">{formatDateTime(batch.createdAt, 'en-US')}</span>
         <ChevronDown className={`text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
       </CardContent>
 

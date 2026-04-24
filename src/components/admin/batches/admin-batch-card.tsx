@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { formatDateTime } from '@/lib/date-formatter';
 import { adminBatchDelete } from '@/actions/admin/admin-batch-delete';
 import { AdminBatchDetails } from './admin-batch-details';
 import type { AdminBatch } from '@/types/domain/admin';
@@ -63,8 +64,8 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted, isExpan
       onClick={onToggle}
       className={`relative cursor-pointer overflow-hidden p-1 transition-all duration-200 ${isExpanded ? 'bg-primary/10 dark:bg-primary/15 shadow-md' : ''}`}
     >
-     {batch.hasIssues && (
-        <div className="absolute bottom-4 right-1 z-20">
+      {batch.hasIssues && (
+        <div className="absolute right-1 bottom-4 z-20">
           <AlertTriangle className="text-destructive fill-destructive/20 h-4 w-4 drop-shadow-md" />
         </div>
       )}
@@ -92,16 +93,11 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted, isExpan
             <span className="text-muted-foreground text-xs md:text-sm">A Pagar: ${batch.estimatedPayout.toFixed(2)}</span>
           </div>
         </div>
-        {/* <Badge
-          className={`${statusColor} absolute -right-2 top-12 z-20 rotate-[-12deg] border-2 border-current bg-background px-3 py-1 text-[10px] font-black tracking-widest uppercase shadow-xl transition-all hover:rotate-[-5deg] hover:scale-110 md:text-xs`}
-        >
-          {status.label}
-        </Badge> */}
       </CardHeader>
 
       <CardContent className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-muted-foreground text-sm md:text-sm">Fecha: {new Date(batch.createdAt).toLocaleDateString()}</span>
+          <span className="text-muted-foreground text-sm md:text-sm">{formatDateTime(batch.createdAt, 'es-AR')}</span>
           {canDelete && (
             <Button
               onClick={(e) => {

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { formatDateTime } from '@/lib/date-formatter';
 import { OrderDetails } from '@/components/buy/giftcard-orders/order-details';
 import { cancelOrder } from '@/actions/order/cancel';
 import { Spinner } from '@/components/ui/spinner';
@@ -90,7 +91,7 @@ export const OrderCard = ({ order, onCardClick, isExpanded, onToggle }: OrderCar
       </CardHeader>
 
       <CardContent className="flex items-center justify-between">
-        <span className="text-muted-foreground text-sm">Creada el {new Date(order.createdAt).toLocaleDateString()}</span>
+        <span className="text-muted-foreground text-sm">{formatDateTime(order.createdAt,'es-AR')}</span>
         <ChevronDown
           className={`text-muted-foreground cursor-pointer transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
           onClick={onToggle}
