@@ -34,7 +34,7 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
       onClick={onToggle}
       className={`hover:border-primary/30 relative cursor-pointer overflow-hidden py-2 transition-all duration-200 ease-out ${isExpanded ? 'bg-primary/10 dark:bg-primary/15 shadow-md' : ''}`}
     >
-      {hasReport && (
+      {hasReport && !isExpanded && (
         <div className="absolute right-1 bottom-4 z-20">
           <AlertTriangle className="text-destructive fill-destructive/20 h-4 w-4 drop-shadow-md" />
         </div>

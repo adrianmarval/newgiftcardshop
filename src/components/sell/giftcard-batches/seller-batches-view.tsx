@@ -17,7 +17,7 @@ export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProp
 
   return (
     <div className="space-y-4">
-      <StatusLeyend />
+      <StatusLeyend language='en' />
       <BatchesFilters />
       <BatchesList batches={batches} totalPages={pagination?.totalPages} onCardClick={handleCardClick} />
       <CardDetailDialog

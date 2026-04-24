@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
 import type { BatchDetailsProps } from './types';
@@ -13,9 +12,9 @@ export function BatchDetails({ batch, onCardClick }: BatchDetailsProps) {
         <span className="text-muted-foreground text-xs font-medium md:text-base">Batch Rate: {batch.sellRate * 100}%</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {batch.giftcards.map((card) => (
-          <GiftcardItem key={card.id} card={card} onViewDetails={onCardClick} />
+          <GiftcardItem key={card.id} card={card} onViewDetails={onCardClick} showCopyButton={false} />
         ))}
       </div>
 

@@ -40,7 +40,7 @@ export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <form onSubmit={handleSearchSubmit}>
           <Input
-            placeholder="Search..."
+            placeholder="Search by claim code or batch id..."
             value={search}
             onChange={handleSearchChange}
             className="border-border bg-muted/20 h-8 pr-3 pl-9 text-xs md:h-10 md:text-sm"
