@@ -23,7 +23,7 @@ export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
     setParams({ search: newSearch, page: 1 });
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     setParams({ search, page: 1 });
   };
@@ -50,7 +50,7 @@ export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-9 md:gap-2 md:px-3">
+          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-10 md:gap-2 md:px-3">
             <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4" />
             <span className="hidden md:inline">Filters</span>
           </Button>
