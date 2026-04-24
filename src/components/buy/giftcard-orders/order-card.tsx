@@ -58,7 +58,7 @@ export const OrderCard = ({ order, onCardClick, isExpanded, onToggle }: OrderCar
   return (
     <Card
       onClick={onToggle}
-      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden py-2 transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden py-2 transition-all duration-200 ease-out ${isExpanded ? 'bg-primary/10 dark:bg-primary/15 shadow-md' : ''}`}
     >
       <CardHeader>
         <CardTitle>
@@ -85,10 +85,7 @@ export const OrderCard = ({ order, onCardClick, isExpanded, onToggle }: OrderCar
 
       <CardContent className="flex items-center justify-between">
         <span className="text-muted-foreground text-sm">{formatDateTime(order.createdAt, 'es-AR')}</span>
-        <ChevronDown
-          className={`text-muted-foreground cursor-pointer transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-          onClick={onToggle}
-        />
+        <ChevronDown className={`text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
       </CardContent>
 
       <div className="bg-muted flex h-1 overflow-hidden rounded-full">

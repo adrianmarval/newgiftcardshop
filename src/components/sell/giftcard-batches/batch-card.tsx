@@ -32,7 +32,7 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
   return (
     <Card
       onClick={onToggle}
-      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden py-2 transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden py-2 transition-all duration-200 ease-out ${isExpanded ? 'bg-primary/10 dark:bg-primary/15 shadow-md' : ''}`}
     >
       {hasReport && (
         <div className="absolute right-1 bottom-4 z-20">
