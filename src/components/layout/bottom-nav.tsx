@@ -47,7 +47,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
   const contentOpacity = useTransform(springY, [0, -40], [0, 1]);
 
   React.useEffect(() => {
-    return dragY.onChange((v) => {
+    return dragY.on('change', (v) => {
       if (v < -maxExpansion / 2 && !isExpanded) setIsExpanded(true);
       if (v > -20 && isExpanded) setIsExpanded(false);
     });
