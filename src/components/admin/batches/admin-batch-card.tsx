@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Trash2 } from 'lucide-react';
+import { ChevronDown, Trash2, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,8 @@ interface AdminBatchCardProps {
   isSelected: boolean;
   onSelect: (selected: boolean) => void;
   onDeleted: () => void;
+  isExpanded?: boolean;
+  onToggle?: () => void;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -27,17 +29,13 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   WITH_ISSUES: { label: 'CON REPORTES', color: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
-export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: AdminBatchCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted, isExpanded, onToggle }: AdminBatchCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const canPay = !batch.isPaid && batch.confirmedCount === batch.cardsCount && batch.cardsCount > 0;
   const canDelete = batch.giftcards.every((c) => !c.orderId);
 
-  const status =
-    statusConfig[
-      batch.hasIssues ? 'WITH_ISSUES' : batch.isPaid ? 'PAID' : batch.confirmedCount === batch.cardsCount ? 'CONFIRMED' : 'PROCESSING'
-    ];
+  const status = statusConfig[batch.isPaid ? 'PAID' : batch.confirmedCount === batch.cardsCount ? 'CONFIRMED' : 'PROCESSING'];
   const statusColor = status.color;
 
   const handleDelete = async () => {
@@ -62,9 +60,14 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
 
   return (
     <Card
-      onClick={() => setIsExpanded(!isExpanded)}
-      className={`relative cursor-pointer gap-1 overflow-hidden p-1 transition-all duration-200 ${isExpanded ? 'bg-primary/10 dark:bg-primary/15 shadow-md' : ''}`}
+      onClick={onToggle}
+      className={`relative cursor-pointer overflow-hidden p-1 transition-all duration-200 ${isExpanded ? 'bg-primary/10 dark:bg-primary/15 shadow-md' : ''}`}
     >
+     {batch.hasIssues && (
+        <div className="absolute bottom-4 right-1 z-20">
+          <AlertTriangle className="text-destructive fill-destructive/20 h-4 w-4 drop-shadow-md" />
+        </div>
+      )}
       <CardHeader className="px-1">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -77,9 +80,8 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
               />
             )}
             <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <span className="text-foreground text-md font-medium md:text-sm">Lote #{batch.id}</span>
-                <Badge className={`${statusColor} px-1 py-0 text-[10px] md:p-2 md:text-sm`}>{status.label}</Badge>
               </div>
               <span className="text-muted-foreground text-xs md:text-lg">{batch.seller.email}</span>
             </div>
@@ -90,11 +92,16 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
             <span className="text-muted-foreground text-xs md:text-sm">A Pagar: ${batch.estimatedPayout.toFixed(2)}</span>
           </div>
         </div>
+        {/* <Badge
+          className={`${statusColor} absolute -right-2 top-12 z-20 rotate-[-12deg] border-2 border-current bg-background px-3 py-1 text-[10px] font-black tracking-widest uppercase shadow-xl transition-all hover:rotate-[-5deg] hover:scale-110 md:text-xs`}
+        >
+          {status.label}
+        </Badge> */}
       </CardHeader>
 
       <CardContent className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-muted-foreground text-sm md:text-sm">Creado el {new Date(batch.createdAt).toLocaleDateString()}</span>
+          <span className="text-muted-foreground text-sm md:text-sm">Fecha: {new Date(batch.createdAt).toLocaleDateString()}</span>
           {canDelete && (
             <Button
               onClick={(e) => {
@@ -112,7 +119,7 @@ export function AdminBatchCard({ batch, isSelected, onSelect, onDeleted }: Admin
         </div>
         <ChevronDown
           className={`text-muted-foreground cursor-pointer transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={onToggle}
         />
       </CardContent>
 

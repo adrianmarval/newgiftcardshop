@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { OrderCard } from '@/components/buy/giftcard-orders/order-card';
@@ -8,6 +9,12 @@ import { EmptyState } from '@/components/ui/empty-state';
 import type { OrdersListProps } from './types';
 
 export const OrdersList = ({ orders, totalPages, onCardClick }: OrdersListProps) => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const handleToggle = (orderId: string) => {
+    setExpandedId((prev) => (prev === orderId ? null : orderId));
+  };
+
   if (orders.length === 0) {
     return (
       <EmptyState
@@ -23,7 +30,13 @@ export const OrdersList = ({ orders, totalPages, onCardClick }: OrdersListProps)
       <div className="space-y-2">
         <AnimatePresence mode="popLayout">
           {orders.map((order) => (
-            <OrderCard key={order.id} order={order} onCardClick={onCardClick} />
+            <OrderCard
+              key={order.id}
+              order={order}
+              onCardClick={onCardClick}
+              isExpanded={expandedId === order.id}
+              onToggle={() => handleToggle(order.id)}
+            />
           ))}
         </AnimatePresence>
       </div>

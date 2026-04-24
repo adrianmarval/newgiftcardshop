@@ -1,8 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Package, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronDown, AlertTriangle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BatchDetails } from './batch-details';
 import type { BatchCardProps } from './types';
@@ -32,10 +32,10 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
   return (
     <Card
       onClick={onToggle}
-      className={`gap-1 hover:border-primary/30 relative cursor-pointer overflow-hidden py-2 transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
+      className={`hover:border-primary/30 relative cursor-pointer overflow-hidden py-2 transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
     >
       {hasReport && (
-        <div className="absolute top-0 right-0 z-20">
+        <div className="absolute right-1 bottom-4 z-20">
           <AlertTriangle className="text-destructive fill-destructive/20 h-4 w-4 drop-shadow-md" />
         </div>
       )}

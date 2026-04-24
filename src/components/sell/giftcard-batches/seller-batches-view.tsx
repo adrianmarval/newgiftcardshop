@@ -6,6 +6,7 @@ import { BatchesList } from './batches-list';
 import { CardDetailDialog } from './card-detail-dialog';
 import type { SellerBatchesViewProps } from './types';
 import type { Giftcard } from '@/types';
+import { StatusLeyend } from '@/components/ui/status-leyend';
 
 export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProps) {
   const [selectedCard, setSelectedCard] = useState<Giftcard | null>(null);
@@ -15,7 +16,8 @@ export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProp
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
+      <StatusLeyend />
       <BatchesFilters />
       <BatchesList batches={batches} totalPages={pagination?.totalPages} onCardClick={handleCardClick} />
       <CardDetailDialog

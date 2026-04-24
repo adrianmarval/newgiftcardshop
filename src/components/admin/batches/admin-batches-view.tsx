@@ -9,6 +9,8 @@ import { AdminPayDialog } from './admin-pay-dialog';
 import type { AdminBatch } from '@/types/domain/admin';
 import type { PaginationMeta } from '@/types/application/shared';
 import { IconCurrencyDollar } from '@tabler/icons-react';
+import { AlertTriangle } from 'lucide-react';
+import { StatusLeyend } from '@/components/ui/status-leyend';
 
 interface AdminBatchesClientProps {
   batches: AdminBatch[];
@@ -55,7 +57,9 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
+      <StatusLeyend />
+
       <AdminBatchesFilters sellers={sellers} />
 
       <AdminBatchesList batches={batches} selectedIds={selectedIds} onSelect={handleSelect} onDeleted={handleDeleted} />

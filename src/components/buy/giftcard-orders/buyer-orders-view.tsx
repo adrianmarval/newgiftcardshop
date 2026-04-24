@@ -6,6 +6,7 @@ import { OrdersList } from '@/components/buy/giftcard-orders/orders-list';
 import { CardDetailDialog } from '@/components/buy/giftcard-orders/card-detail-dialog';
 import type { Giftcard, OrderStatus } from '@/types';
 import type { BuyerOrdersViewProps } from './types';
+import { StatusLeyend } from '@/components/ui/status-leyend';
 
 export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) => {
   const [selectedCard, setSelectedCard] = useState<{
@@ -18,7 +19,8 @@ export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) =>
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
+      <StatusLeyend />
       <OrdersFilters />
       <OrdersList orders={orders} totalPages={pagination.totalPages} onCardClick={handleCardClick} />
       <CardDetailDialog

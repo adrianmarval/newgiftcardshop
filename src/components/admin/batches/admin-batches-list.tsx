@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,6 +16,7 @@ interface AdminBatchesListProps {
 }
 
 export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: AdminBatchesListProps) {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const payableBatches = batches.filter((b) => !b.isPaid && b.confirmedCount === b.cardsCount && b.cardsCount > 0);
   const allPayableSelected = payableBatches.length > 0 && payableBatches.every((b) => selectedIds.has(b.id));
 
@@ -24,6 +26,10 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: 
     } else {
       payableBatches.forEach((b) => onSelect(b.id, true));
     }
+  };
+
+  const handleToggle = (batchId: number) => {
+    setExpandedId((prev) => (prev === batchId ? null : batchId));
   };
 
   if (batches.length === 0) {
@@ -52,6 +58,8 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: 
             isSelected={selectedIds.has(batch.id)}
             onSelect={(selected) => onSelect(batch.id, selected)}
             onDeleted={onDeleted}
+            isExpanded={expandedId === batch.id}
+            onToggle={() => handleToggle(batch.id)}
           />
         ))}
       </AnimatePresence>

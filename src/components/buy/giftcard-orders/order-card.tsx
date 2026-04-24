@@ -21,9 +21,8 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   CANCELLED: { label: 'CANCELADA', color: 'bg-destructive/20 text-destructive border-destructive/30' },
 };
 
-export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
+export const OrderCard = ({ order, onCardClick, isExpanded, onToggle }: OrderCardProps) => {
   const router = useRouter();
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
   const confirmedCount = order.giftcards.filter((g) => g.isConfirmed).length;
@@ -58,7 +57,7 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
 
   return (
     <Card
-      onClick={() => setIsExpanded(!isExpanded)}
+      onClick={onToggle}
       className={`hover:border-primary/30 relative cursor-pointer gap-1 overflow-hidden p-1 transition-all duration-200 ease-out ${isExpanded ? 'ring-primary/20 ring-1' : ''}`}
     >
       <CardHeader>
@@ -92,7 +91,10 @@ export const OrderCard = ({ order, onCardClick }: OrderCardProps) => {
 
       <CardContent className="flex items-center justify-between">
         <span className="text-muted-foreground text-sm">Creada el {new Date(order.createdAt).toLocaleDateString()}</span>
-        <ChevronDown className={`text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`text-muted-foreground cursor-pointer transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+          onClick={onToggle}
+        />
       </CardContent>
 
       <div className="bg-muted flex h-1 overflow-hidden rounded-full">

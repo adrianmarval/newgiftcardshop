@@ -51,6 +51,8 @@ export interface OrdersFiltersProps {
 export interface OrderCardProps {
   order: BuyerOrder;
   onCardClick?: (card: Giftcard, orderStatus: OrderStatus) => void;
+  isExpanded?: boolean;
+  onToggle?: () => void;
 }
 
 /**

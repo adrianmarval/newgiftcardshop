@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import type { CodeDisplayProps } from '@/components/ui/types';
+import { Button } from './button';
 
 type ClaimCodeFieldProps = CodeDisplayProps & {
   variant?: 'visible' | 'masked';
@@ -67,17 +68,18 @@ export function ClaimCodeField({ code, variant = 'masked', showToast = true, sho
           <TooltipTrigger asChild>
             <code
               onClick={copy}
-              className="border-border/60 bg-muted/60 text-foreground hover:bg-muted text-md max-w-35 cursor-pointer truncate rounded-lg border px-2 py-0.5 font-mono font-bold tracking-tight transition-colors"
+              className="border-border/60 bg-muted/60 text-foreground hover:bg-muted text-md max-w-40 cursor-pointer truncate rounded-lg border px-2 py-0.5 font-mono font-bold tracking-tight transition-colors sm:max-w-48"
             >
               {codeDisplay}
             </code>
           </TooltipTrigger>
-          <TooltipContent className="border-border bg-background text-sm font-bold">
-            <p>Click to copy: {code}</p>
+          <TooltipContent className="border-border bg-popover text-popover-foreground border p-2">
+            <p className="font-mono text-xs">Click to copy: {code}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <button
+      <Button
+        variant={'link'}
         onClick={(e) => {
           e.stopPropagation();
           copy();
@@ -85,7 +87,7 @@ export function ClaimCodeField({ code, variant = 'masked', showToast = true, sho
         className="text-primary/70 hover:text-primary shrink-0 text-[10px] font-black tracking-widest uppercase transition-colors"
       >
         {copied ? '✓' : 'COPY'}
-      </button>
+      </Button>
     </div>
   );
 }
