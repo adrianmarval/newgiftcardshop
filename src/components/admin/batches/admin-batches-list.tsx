@@ -41,7 +41,7 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: 
       {payableBatches.length > 0 && (
         <div className="flex items-center gap-2 px-1">
           <Checkbox checked={allPayableSelected} onCheckedChange={handleSelectAll} className="cursor-pointer" />
-          <span className="text-muted-foreground text-sm">Seleccionar todos los pagables</span>
+          <span className="text-muted-foreground text-sm md:text-lg">Seleccionar todos los pagables</span>
         </div>
       )}
       <AnimatePresence mode="popLayout">

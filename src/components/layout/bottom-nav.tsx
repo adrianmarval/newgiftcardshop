@@ -31,7 +31,7 @@ export function BottomNav({ items, showThemeToggle = true, className, variant = 
         className,
       )}
     >
-      <div className={cn("flex h-16 items-center justify-around", isCompact ? "px-0.5 md:px-1" : "px-1")}>
+      <div className={cn('flex h-16 items-center justify-around', isCompact ? 'px-0.5 md:px-1' : 'px-1')}>
         {items.map((item) => {
           const isActive = pathname === item.url;
           return (
@@ -47,7 +47,13 @@ export function BottomNav({ items, showThemeToggle = true, className, variant = 
               )}
             >
               <item.icon className={cn(isCompact ? 'h-4 w-4 md:h-5 md:w-5' : 'h-5 w-5', isActive && 'fill-primary/20')} />
-              <span className={cn(isCompact ? 'text-[9px] md:text-sm' : 'text-[10px] md:text-sm', 'font-semibold tracking-tight', isActive ? 'text-primary' : '')}>
+              <span
+                className={cn(
+                  isCompact ? 'text-[9px] md:text-sm' : 'text-[10px] md:text-sm',
+                  'font-semibold tracking-tight',
+                  isActive ? 'text-primary' : '',
+                )}
+              >
                 {item.title}
               </span>
             </Link>
@@ -57,7 +63,7 @@ export function BottomNav({ items, showThemeToggle = true, className, variant = 
           <div
             className={cn(
               'text-muted-foreground hover:bg-muted/80 hover:text-foreground flex flex-col items-center justify-center gap-0.5 rounded-xl',
-              isCompact ? 'px-1 py-1 md:px-3 md:py-2' : 'px-3 py-2'
+              isCompact ? 'px-1 py-1 md:px-3 md:py-2' : 'px-3 py-2',
             )}
           >
             <ThemeToggle />

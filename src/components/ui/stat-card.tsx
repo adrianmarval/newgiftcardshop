@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { StatCardProps } from '@/types/ui';
 
-export function StatCard({ title, value, icon }: StatCardProps) {
+export function StatCard({ title, value, icon, description }: StatCardProps) {
   return (
     <Card size="sm">
       <CardHeader className="flex flex-row items-center gap-2">
@@ -10,6 +10,7 @@ export function StatCard({ title, value, icon }: StatCardProps) {
       </CardHeader>
       <CardContent>
         <p className="text-3xl font-bold">{value}</p>
+        {description && <p className="text-muted-foreground text-sm">{description}</p>}
       </CardContent>
     </Card>
   );
