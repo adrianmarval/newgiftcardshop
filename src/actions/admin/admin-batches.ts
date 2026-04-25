@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
-import { decrypt } from '@/lib/encryption';
+import { decrypt, hashCode } from '@/lib/encryption';
 import { adminActionClient } from '@/lib/safe-action';
 import { getAdminBatchesInputSchema, getAdminBatchesOutputSchema } from '@/types/domain/admin';
 
@@ -33,12 +33,30 @@ export const adminBatches = adminActionClient
     }
 
     if (search) {
-      const searchNum = Number(search);
-      const isNumericSearch = !isNaN(searchNum);
+      const isNumericSearch = !isNaN(Number(search));
+      const hashedSearch = hashCode(search.trim().toUpperCase());
+
       where.OR = [
-        isNumericSearch ? { id: searchNum } : { id: 0 },
+        ...(isNumericSearch ? [{ id: Number(search) }] : []),
         { user: { name: { contains: search, mode: 'insensitive' } } },
         { user: { email: { contains: search, mode: 'insensitive' } } },
+        {
+          giftcards: {
+            some: {
+              OR: [
+                { codeHash: hashedSearch },
+                {
+                  brand: {
+                    name: {
+                      contains: search,
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
       ];
     }
 

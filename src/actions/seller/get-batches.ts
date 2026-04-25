@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
-import { decrypt } from '@/lib/encryption';
+import { decrypt, hashCode } from '@/lib/encryption';
 import { sellerActionClient } from '@/lib/safe-action';
 import { getSellerBatchesInputSchema, getSellerBatchesOutputSchema } from '@/types/domain/seller';
 
@@ -15,7 +15,32 @@ export const getSellerBatches = sellerActionClient
     const orderBy = sort === 'newest' ? { createdAt: 'desc' as const } : { createdAt: 'asc' as const };
 
     const where: Prisma.GiftcardBatchWhereInput = { userId: ctx.auth.user.id };
-    if (search) where.id = { equals: Number(search) };
+    
+    if (search) {
+      const isNumeric = !isNaN(Number(search));
+      const hashedSearch = hashCode(search.trim().toUpperCase());
+
+      where.OR = [
+        ...(isNumeric ? [{ id: Number(search) }] : []),
+        {
+          giftcards: {
+            some: {
+              OR: [
+                { codeHash: hashedSearch },
+                {
+                  brand: {
+                    name: {
+                      contains: search,
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ];
+    }
 
     const [batches, totalCount] = await prisma.$transaction([
       prisma.giftcardBatch.findMany({

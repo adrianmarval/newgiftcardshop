@@ -30,11 +30,7 @@ export default async function BuyerOrdersPage({ searchParams }: { searchParams: 
 
   return (
     <div className="container mx-auto space-y-4 py-2">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-black tracking-tighter italic md:text-7xl">MIS ÓRDENES</h1>
-        <p className="text-muted-foreground text-base md:text-lg">Rastrea tus compras y gestiona órdenes pendientes.</p>
-      </div>
-
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-7xl">MIS ÓRDENES</h1>
       <BuyerOrdersView orders={items} pagination={pagination} />
     </div>
   );
