@@ -118,7 +118,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
 
           {/* Expandable Content Container */}
           <motion.div style={{ height: drawerHeight }} className="overflow-hidden">
-            <motion.div style={{ opacity: contentOpacity }} className="grid grid-cols-4 gap-2 px-4 pt-2 pb-2">
+            <motion.div style={{ opacity: contentOpacity }} className="grid grid-cols-4 gap-2 px-1 pt-2 pb-2">
               {extraItems.map((item, idx) => (
                 <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={false} />
               ))}
