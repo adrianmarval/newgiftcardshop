@@ -134,6 +134,15 @@ export const adminBatches = adminActionClient
           }
         }
 
+        // Flag if this card matches the search
+        let isSearchMatch = false;
+        if (search) {
+          const hashedSearch = hashCode(search.trim().toUpperCase());
+          const matchesCode = card.codeHash === hashedSearch;
+          const matchesBrand = card.brand.name.toLowerCase().includes(search.toLowerCase());
+          isSearchMatch = matchesCode || matchesBrand;
+        }
+
         return {
           id: card.id,
           claimCode,
@@ -162,6 +171,7 @@ export const adminBatches = adminActionClient
             sellerId: issue.sellerId,
             createdAt: issue.createdAt.toISOString(),
           })),
+          isSearchMatch,
         };
       });
 

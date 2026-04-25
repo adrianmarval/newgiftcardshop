@@ -71,6 +71,8 @@ export const giftcardSchema = z.object({
   }),
   /** Sub-selection de country (null si no aplica). */
   country: z.object({ name: z.string(), code: z.string() }).nullable(),
+  /** Si el card coincide con la búsqueda actual (para highlighting en UI). */
+  isSearchMatch: z.boolean().optional(),
 });
 
 /** Tipo TypeScript para un Giftcard serializado. */

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -9,6 +9,14 @@ import type { BatchesListProps } from './types';
 
 export function BatchesList({ batches, onCardClick }: BatchesListProps) {
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
+
+  // Auto-expand batch if it contains a search match
+  useEffect(() => {
+    const batchWithMatch = batches.find((b) => b.giftcards.some((g) => g.isSearchMatch));
+    if (batchWithMatch) {
+      setExpandedBatch(batchWithMatch.id.toString());
+    }
+  }, [batches]);
 
   if (batches.length === 0) {
     return (

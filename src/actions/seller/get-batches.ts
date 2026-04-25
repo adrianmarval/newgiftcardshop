@@ -79,6 +79,16 @@ export const getSellerBatches = sellerActionClient
             pinCode = card.pinCode;
           }
         }
+
+        // Flag if this card matches the search
+        let isSearchMatch = false;
+        if (search) {
+          const hashedSearch = hashCode(search.trim().toUpperCase());
+          const matchesCode = card.codeHash === hashedSearch;
+          const matchesBrand = card.brand.name.toLowerCase().includes(search.toLowerCase());
+          isSearchMatch = matchesCode || matchesBrand;
+        }
+
         return {
           id: card.id,
           claimCode,
@@ -88,6 +98,8 @@ export const getSellerBatches = sellerActionClient
           isConfirmed: card.isConfirmed,
           reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
           orderId: card.orderId,
+          batchId: card.batchId,
+          provenanceImageId: card.provenanceImageId,
           brand: {
             name: card.brand.name,
             icon: card.brand.icon,
@@ -99,6 +111,7 @@ export const getSellerBatches = sellerActionClient
                 code: card.country.code,
               }
             : null,
+          isSearchMatch,
         };
       });
       const effectiveTotal = giftcards.reduce((sum, g) => {

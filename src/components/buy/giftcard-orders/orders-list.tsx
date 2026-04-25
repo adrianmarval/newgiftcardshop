@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { OrderCard } from '@/components/buy/giftcard-orders/order-card';
@@ -10,6 +10,14 @@ import type { OrdersListProps } from './types';
 
 export const OrdersList = ({ orders, totalPages, onCardClick }: OrdersListProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Auto-expand order if it contains a search match
+  useEffect(() => {
+    const orderWithMatch = orders.find((o) => o.giftcards.some((g) => g.isSearchMatch));
+    if (orderWithMatch) {
+      setExpandedId(orderWithMatch.id);
+    }
+  }, [orders]);
 
   const handleToggle = (orderId: string) => {
     setExpandedId((prev) => (prev === orderId ? null : orderId));

@@ -40,10 +40,39 @@ export function GiftcardItem({
   const showIssues = hasIssuesProp;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
-      <Card className="group mb-1 flex h-full flex-col gap-1 overflow-hidden rounded-t-2xl rounded-b-none border-b-0 p-0 shadow-sm transition-all hover:shadow-md">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: 1,
+        scale: card.isSearchMatch ? [1, 1.05, 1.03] : 1,
+      }}
+      transition={{
+        scale: card.isSearchMatch
+          ? {
+              duration: 0.5,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }
+          : { duration: 0.2 },
+      }}
+      className="h-full"
+    >
+      <Card
+        className={`group mb-1 flex h-full flex-col gap-1 overflow-hidden rounded-t-2xl rounded-b-none border-b-0 p-0 shadow-sm transition-all hover:shadow-md ${
+          card.isSearchMatch
+            ? 'ring-primary z-10 ring-4 ring-offset-4 ring-offset-background shadow-[0_0_30px_var(--primary)]'
+            : ''
+        }`}
+      >
         {/* TOP HALF: Gift Card Design */}
         <div className="bg-muted/50 relative h-28 w-full shrink-0">
+          {card.isSearchMatch && (
+            <div className="absolute top-0 right-0 z-50">
+              <Badge className="bg-primary animate-pulse rounded-none rounded-bl-lg px-2 py-1 text-[10px] font-black tracking-tighter text-white shadow-lg">
+                MATCH
+              </Badge>
+            </div>
+          )}
           {card.brand.image ? (
             <>
               <Image src={card.brand.image} alt={card.brand.name} fill className="object-contain" loading="eager" />

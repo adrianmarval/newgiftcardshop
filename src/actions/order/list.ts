@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
-import { decrypt } from '@/lib/encryption';
+import { decrypt, hashCode } from '@/lib/encryption';
 import { buyerActionClient } from '@/lib/safe-action';
 import type { OrderStatus } from '@/types/domain/order';
 import type { Giftcard, GiftcardStatus } from '@/types/domain/giftcard';
@@ -34,7 +34,29 @@ export const getBuyerOrders = buyerActionClient
 
     const where: Prisma.OrderWhereInput = { userId: ctx.auth.user.id };
     if (status) where.status = status;
-    if (search) where.id = { contains: search, mode: 'insensitive' };
+    if (search) {
+      const hashedSearch = hashCode(search.trim().toUpperCase());
+      where.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        {
+          giftcards: {
+            some: {
+              OR: [
+                { codeHash: hashedSearch },
+                {
+                  brand: {
+                    name: {
+                      contains: search,
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ];
+    }
 
     const [orders, totalCount] = await prisma.$transaction([
       prisma.order.findMany({
@@ -71,6 +93,15 @@ export const getBuyerOrders = buyerActionClient
               pinCode = card.pinCode;
             }
           }
+          // Flag if this card matches the search
+          let isSearchMatch = false;
+          if (search) {
+            const hashedSearch = hashCode(search.trim().toUpperCase());
+            const matchesCode = card.codeHash === hashedSearch;
+            const matchesBrand = card.brand.name.toLowerCase().includes(search.toLowerCase());
+            isSearchMatch = matchesCode || matchesBrand;
+          }
+
           return {
             id: card.id,
             claimCode,
@@ -87,6 +118,7 @@ export const getBuyerOrders = buyerActionClient
               image: card.brand.image,
             },
             country: card.country,
+            isSearchMatch,
           };
         });
         const payments: Payment[] = order.payments.map((p) => ({

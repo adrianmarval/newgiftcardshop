@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,6 +17,14 @@ interface AdminBatchesListProps {
 
 export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: AdminBatchesListProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Auto-expand batch if it contains a search match
+  useEffect(() => {
+    const batchWithMatch = batches.find((b) => b.giftcards.some((g) => g.isSearchMatch));
+    if (batchWithMatch) {
+      setExpandedId(batchWithMatch.id);
+    }
+  }, [batches]);
   const payableBatches = batches.filter((b) => !b.isPaid && b.confirmedCount === b.cardsCount && b.cardsCount > 0);
   const allPayableSelected = payableBatches.length > 0 && payableBatches.every((b) => selectedIds.has(b.id));
 
