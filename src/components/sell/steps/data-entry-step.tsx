@@ -452,12 +452,11 @@ export function DataEntryStep() {
         {/* Header */}
         <CardHeader className="px-1">
           <CardTitle className="text-foreground text-lg font-bold md:text-2xl">Load Gift Cards</CardTitle>
-          <CardDescription className="text-muted-foreground flex flex-col text-xs md:block md:text-sm">
+          <CardDescription className="text-muted-foreground flex flex-col gap-1 text-xs md:block md:text-sm">
             Paste codes and attach screenshots — like composing an email.
             {/* Format help (collapsible) */}
             <Button
               type="button"
-              variant="link"
               onClick={() => setShowFormatHelp(!showFormatHelp)}
               className="text-muted-foreground hover:text-foreground text-md flex justify-start gap-1 transition-colors md:text-xs"
             >
