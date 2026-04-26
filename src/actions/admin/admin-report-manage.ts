@@ -72,17 +72,13 @@ export const adminReportManage = adminActionClient
     }
 
     if (action === 'DELETE') {
-      const remainingIssues = await prisma.giftcardIssue.findFirst({
-        where: { giftcardId },
-      });
-
       await prisma.$transaction([
         prisma.giftcardIssue.deleteMany({
           where: { giftcardId, orderId },
         }),
         prisma.giftcard.update({
           where: { id: giftcardId },
-          data: remainingIssues ? {} : { status: 'UNUSED', reportedAmount: null },
+          data: { status: 'USED', reportedAmount: null },
         }),
       ]);
       return { success: true as const };

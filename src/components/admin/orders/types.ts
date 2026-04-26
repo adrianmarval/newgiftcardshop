@@ -3,14 +3,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { AdminOrder } from '@/types/domain/admin';
-import type { OrderStatus } from '@/types/domain/order';
 import type { Giftcard } from '@/types/domain/giftcard';
 import type { PaginationMeta } from '@/types/application/shared';
 
 export interface AdminOrdersListProps {
   orders: AdminOrder[];
   totalPages: number;
-  onCardClick?: (card: Giftcard, orderStatus: OrderStatus) => void;
   onViewBuyer?: (order: AdminOrder) => void;
   onAddReport?: (card: Giftcard) => void;
   onEditReport?: (card: Giftcard) => void;
@@ -19,7 +17,6 @@ export interface AdminOrdersListProps {
 
 export interface AdminOrderDetailsProps {
   order: AdminOrder;
-  onCardClick?: (card: Giftcard, orderStatus: OrderStatus) => void;
   onAddReport?: (card: Giftcard) => void;
   onEditReport?: (card: Giftcard) => void;
   onDeleteReport?: (card: Giftcard) => void;
@@ -31,7 +28,6 @@ export interface AdminOrdersFiltersProps {
 
 export interface AdminOrderCardProps {
   order: AdminOrder;
-  onCardClick?: (card: Giftcard, orderStatus: OrderStatus) => void;
   onViewBuyer?: (order: AdminOrder) => void;
   onAddReport?: (card: Giftcard) => void;
   onEditReport?: (card: Giftcard) => void;

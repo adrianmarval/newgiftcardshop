@@ -1,17 +1,19 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Eye, Trash2, AlertTriangle } from 'lucide-react';
+import { Eye, Trash2, AlertTriangle, EllipsisVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ClaimCodeField } from '@/components/ui/claim-code-field';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Image from 'next/image';
 import type { Giftcard } from '@/types/domain/giftcard';
 
 interface GiftcardItemProps {
   card: Giftcard;
   contextualInfo?: React.ReactNode;
+  dropdownActions?: React.ReactNode;
   onViewDetails?: (card: Giftcard) => void;
   onDelete?: (cardId: string) => void;
   showCopyButton?: boolean;
@@ -30,6 +32,7 @@ const statusColors: Record<string, string> = {
 export function GiftcardItem({
   card,
   contextualInfo,
+  dropdownActions,
   onViewDetails,
   onDelete,
   showCopyButton = true,
@@ -38,6 +41,7 @@ export function GiftcardItem({
   const canDelete = !card.orderId && onDelete;
   const canViewDetails = onViewDetails;
   const showIssues = hasIssuesProp;
+  const hasDropdownActions = dropdownActions !== undefined;
 
   return (
     <motion.div
@@ -59,9 +63,7 @@ export function GiftcardItem({
     >
       <Card
         className={`group mb-1 flex h-full flex-col gap-1 overflow-hidden rounded-t-2xl rounded-b-none border-b-0 p-0 shadow-sm transition-all hover:shadow-md ${
-          card.isSearchMatch
-            ? 'ring-primary z-10 ring-4 ring-offset-4 ring-offset-background shadow-[0_0_30px_var(--primary)]'
-            : ''
+          card.isSearchMatch ? 'ring-primary ring-offset-background z-10 shadow-[0_0_30px_var(--primary)] ring-4 ring-offset-4' : ''
         }`}
       >
         {/* TOP HALF: Gift Card Design */}
@@ -90,14 +92,27 @@ export function GiftcardItem({
                 {card.status}
               </Badge>
               <div className="flex items-center gap-1">
-                {showIssues && (
+                {hasDropdownActions ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="bg-background/40 hover:bg-background/60 size-7 rounded-full text-white shadow-sm backdrop-blur-md hover:text-white"
+                      >
+                        <EllipsisVertical className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">{dropdownActions}</DropdownMenuContent>
+                  </DropdownMenu>
+                ) : showIssues ? (
                   <div
                     className="bg-destructive/90 flex h-7 w-7 items-center justify-center rounded-full text-white shadow-sm backdrop-blur-sm"
                     title="Con problemas"
                   >
                     <AlertTriangle className="h-3.5 w-3.5" />
                   </div>
-                )}
+                ) : null}
                 {canDelete && (
                   <Button
                     onClick={(e) => {
@@ -130,9 +145,20 @@ export function GiftcardItem({
             <div className="flex w-full items-end justify-between">
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold tracking-widest text-white/90 uppercase drop-shadow-md">{card.brand.name}</span>
-                <CardFooter className="p-0 text-3xl leading-none font-black tracking-tight text-white drop-shadow-lg">
-                  ${card.amount.toFixed(2)}
-                </CardFooter>
+                {card.status === 'WRONG_AMOUNT' && card.reportedAmount != null ? (
+                  <div className="flex flex-col">
+                    <span className="text-lg leading-none font-black tracking-tight text-white/50 line-through drop-shadow-lg">
+                      ${card.amount.toFixed(2)}
+                    </span>
+                    <span className="text-3xl leading-none font-black tracking-tight text-amber-400 drop-shadow-lg">
+                      ${card.reportedAmount.toFixed(2)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-3xl leading-none font-black tracking-tight text-white drop-shadow-lg">
+                    ${card.amount.toFixed(2)}
+                  </span>
+                )}
               </div>
               {!card.brand.image && <span className="text-4xl leading-none text-white/50">{card.brand.icon}</span>}
             </div>

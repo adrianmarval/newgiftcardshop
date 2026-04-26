@@ -18,6 +18,16 @@ const buyerInfoSchema = z.object({
   twoFactorEnabled: z.boolean(),
 });
 
+export const giftcardWithSellerSchema = giftcardSchema.extend({
+  seller: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      email: z.string(),
+    })
+    .nullable(),
+});
+
 export const adminOrderSchema = z.object({
   id: z.string(),
   status: orderStatusEnum,
@@ -26,7 +36,7 @@ export const adminOrderSchema = z.object({
   buyRate: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  giftcards: z.array(giftcardSchema),
+  giftcards: z.array(giftcardWithSellerSchema),
   payments: z.array(paymentSchema),
   effectiveTotal: z.number(),
   faceValueTotal: z.number(),

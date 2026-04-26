@@ -22,7 +22,6 @@ export interface BatchCardProps {
   batch: SellerBatch;
   isExpanded: boolean;
   onToggle: () => void;
-  onCardClick: (card: Giftcard) => void;
 }
 
 /**
@@ -31,7 +30,6 @@ export interface BatchCardProps {
  */
 export interface BatchDetailsProps {
   batch: SellerBatch;
-  onCardClick: (card: Giftcard) => void;
 }
 
 /**
@@ -41,7 +39,6 @@ export interface BatchDetailsProps {
 export interface BatchesListProps {
   batches: SellerBatch[];
   totalPages?: number;
-  onCardClick: (card: Giftcard) => void;
 }
 
 /**

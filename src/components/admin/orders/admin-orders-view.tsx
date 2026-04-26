@@ -1,23 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AdminOrdersFilters } from '@/components/admin/orders/admin-orders-filters';
 import { AdminOrdersList } from '@/components/admin/orders/admin-orders-list';
 import { AdminReportDialog } from '@/components/admin/orders/admin-report-dialog';
 import { AdminBuyerDialog } from '@/components/admin/orders/admin-buyer-dialog';
-import { CardDetailDialog } from '@/components/buy/giftcard-orders/card-detail-dialog';
 import { StatusLeyend } from '@/components/ui/status-leyend';
 import type { AdminOrdersViewProps } from './types';
 import type { Giftcard } from '@/types/domain/giftcard';
-import type { OrderStatus } from '@/types/domain/order';
 import type { AdminOrder } from '@/types/domain/admin';
 
 export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewProps) => {
-  const [selectedCard, setSelectedCard] = useState<{
-    card: Giftcard;
-    orderStatus: OrderStatus;
-  } | null>(null);
-
+  const router = useRouter();
   const [reportDialog, setReportDialog] = useState<{
     card: Giftcard | null;
     mode: 'ADD' | 'EDIT' | 'DELETE' | null;
@@ -27,10 +22,6 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
   const [buyerDialog, setBuyerDialog] = useState<{
     buyer: AdminOrdersViewProps['orders'][0]['buyer'] | null;
   }>({ buyer: null });
-
-  const handleCardClick = (card: Giftcard, orderStatus: OrderStatus) => {
-    setSelectedCard({ card, orderStatus });
-  };
 
   const handleAddReport = (card: Giftcard) => {
     const order = orders.find((o) => o.giftcards.some((g) => g.id === card.id));
@@ -57,6 +48,10 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
     setBuyerDialog({ buyer: order.buyer });
   };
 
+  const handleReportSuccess = () => {
+    router.refresh();
+  };
+
   return (
     <div className="space-y-4">
       <StatusLeyend />
@@ -64,19 +59,10 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
       <AdminOrdersList
         orders={orders}
         totalPages={pagination.totalPages}
-        onCardClick={handleCardClick}
         onViewBuyer={handleViewBuyer}
         onAddReport={handleAddReport}
         onEditReport={handleEditReport}
         onDeleteReport={handleDeleteReport}
-      />
-      <CardDetailDialog
-        card={selectedCard?.card ?? null}
-        orderStatus={selectedCard?.orderStatus ?? null}
-        open={!!selectedCard}
-        onOpenChange={(open) => {
-          if (!open) setSelectedCard(null);
-        }}
       />
       <AdminReportDialog
         card={reportDialog.card}
@@ -86,6 +72,7 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
         onOpenChange={(open) => {
           if (!open) setReportDialog({ card: null, mode: null, orderId: null });
         }}
+        onSuccess={handleReportSuccess}
       />
       <AdminBuyerDialog
         buyer={buyerDialog.buyer}

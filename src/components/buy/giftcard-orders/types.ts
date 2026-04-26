@@ -7,33 +7,20 @@ import type { Giftcard } from '@/types/domain/giftcard';
 import type { PaginationMeta } from '@/types/application/shared';
 
 /**
+ * Props for the OrderDetails component.
+ * Shows detailed view of a single order's cards.
+ */
+export interface OrderDetailsProps {
+  order: BuyerOrder;
+}
+
+/**
  * Props for the OrdersList component.
  * Displays a paginated list of buyer orders.
  */
 export interface OrdersListProps {
   orders: BuyerOrder[];
   totalPages: number;
-  onCardClick?: (card: Giftcard, orderStatus: OrderStatus) => void;
-}
-
-/**
- * Props for the OrderDetails component.
- * Shows detailed view of a single order's cards.
- */
-export interface OrderDetailsProps {
-  order: BuyerOrder;
-  onCardClick?: (card: Giftcard, orderStatus: OrderStatus) => void;
-}
-
-/**
- * Props for the CardDetailDialog component.
- * Modal showing full gift card details.
- */
-export interface CardDetailDialogProps {
-  card: Giftcard | null;
-  orderStatus: OrderStatus | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
 }
 
 /**
@@ -50,7 +37,6 @@ export interface OrdersFiltersProps {
  */
 export interface OrderCardProps {
   order: BuyerOrder;
-  onCardClick?: (card: Giftcard, orderStatus: OrderStatus) => void;
   isExpanded?: boolean;
   onToggle?: () => void;
 }

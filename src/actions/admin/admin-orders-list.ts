@@ -5,7 +5,7 @@ import { Prisma } from '@/generated/prisma/client';
 import { decrypt, hashCode } from '@/lib/encryption';
 import { adminActionClient } from '@/lib/safe-action';
 import type { OrderStatus } from '@/types/domain/order';
-import type { Giftcard, GiftcardStatus } from '@/types/domain/giftcard';
+import type { GiftcardStatus } from '@/types/domain/giftcard';
 import type { Payment, PaymentStatus } from '@/types/domain/payment';
 import { getAdminOrdersInputSchema, getAdminOrdersOutputSchema } from '@/types/domain/admin';
 
@@ -72,7 +72,13 @@ export const adminOrders = adminActionClient
         where,
         include: {
           user: { select: { id: true, name: true, email: true, buyRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
-          giftcards: { include: { brand: true, country: true } },
+          giftcards: {
+            include: {
+              brand: true,
+              country: true,
+              batch: { include: { user: { select: { id: true, name: true, email: true } } } },
+            },
+          },
           payments: { where: { status: 'COMPLETED' } },
         },
         orderBy: { createdAt: 'desc' },
@@ -99,7 +105,7 @@ export const adminOrders = adminActionClient
       success: true as const,
       items: orders.map((order) => {
         const totals = computeTotals(order.giftcards, order.buyRate);
-        const giftcards: Giftcard[] = order.giftcards.map((card) => {
+        const giftcards = order.giftcards.map((card) => {
           let claimCode = card.claimCode;
           let pinCode = card.pinCode ?? null;
           try {
@@ -140,6 +146,7 @@ export const adminOrders = adminActionClient
             },
             country: card.country,
             isSearchMatch,
+            seller: card.batch?.user ? { id: card.batch.user.id, name: card.batch.user.name, email: card.batch.user.email } : null,
           };
         });
 

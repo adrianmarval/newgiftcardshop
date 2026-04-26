@@ -139,7 +139,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
 
           {(currentMode as ReportMode) === 'DELETE' && (
             <p className="text-muted-foreground text-sm">
-              ¿Estás seguro de que deseas eliminar el reporte de esta tarjeta? La tarjeta volverá a su estado original.
+              ¿Estás seguro de que deseas eliminar el reporte de esta tarjeta? La tarjeta quedará como USADA.
             </p>
           )}
 

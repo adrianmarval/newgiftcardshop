@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { BatchCard } from './batch-card';
 import type { BatchesListProps } from './types';
 
-export function BatchesList({ batches, onCardClick }: BatchesListProps) {
+export function BatchesList({ batches }: BatchesListProps) {
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
 
   // Auto-expand batch if it contains a search match
@@ -34,22 +34,21 @@ export function BatchesList({ batches, onCardClick }: BatchesListProps) {
         {batches
           .filter((batch) => expandedBatch === null || expandedBatch === batch.id.toString())
           .map((batch) => (
-          <motion.div
-            key={batch.id}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <BatchCard
-              batch={batch}
-              isExpanded={expandedBatch === batch.id.toString()}
-              onToggle={() => setExpandedBatch(expandedBatch === batch.id.toString() ? null : batch.id.toString())}
-              onCardClick={onCardClick}
-            />
-          </motion.div>
-        ))}
+            <motion.div
+              key={batch.id}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <BatchCard
+                batch={batch}
+                isExpanded={expandedBatch === batch.id.toString()}
+                onToggle={() => setExpandedBatch(expandedBatch === batch.id.toString() ? null : batch.id.toString())}
+              />
+            </motion.div>
+          ))}
       </AnimatePresence>
     </div>
   );

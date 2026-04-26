@@ -8,7 +8,7 @@ import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { OrdersListProps } from './types';
 
-export const OrdersList = ({ orders, totalPages, onCardClick }: OrdersListProps) => {
+export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Auto-expand order if it contains a search match
@@ -40,22 +40,17 @@ export const OrdersList = ({ orders, totalPages, onCardClick }: OrdersListProps)
           {orders
             .filter((order) => expandedId === null || expandedId === order.id)
             .map((order) => (
-            <motion.div
-              key={order.id}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <OrderCard
-                order={order}
-                onCardClick={onCardClick}
-                isExpanded={expandedId === order.id}
-                onToggle={() => handleToggle(order.id)}
-              />
-            </motion.div>
-          ))}
+              <motion.div
+                key={order.id}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <OrderCard order={order} isExpanded={expandedId === order.id} onToggle={() => handleToggle(order.id)} />
+              </motion.div>
+            ))}
         </AnimatePresence>
       </div>
       <UrlPagination totalPages={totalPages} />

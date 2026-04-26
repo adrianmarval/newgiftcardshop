@@ -3,10 +3,15 @@
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { CardFooter } from '@/components/ui/card';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import type { AdminOrderDetailsProps } from './types';
 import type { Giftcard } from '@/types/domain/giftcard';
 
-export function AdminOrderDetails({ order, onCardClick, onAddReport, onEditReport, onDeleteReport }: AdminOrderDetailsProps) {
+interface GiftcardWithSeller extends Giftcard {
+  seller: { id: string; name: string; email: string } | null;
+}
+
+export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteReport }: AdminOrderDetailsProps) {
   const confirmedCount = order.giftcards.filter((g) => g.isConfirmed).length;
 
   const hasIssue = (card: Giftcard) => {
@@ -14,61 +19,35 @@ export function AdminOrderDetails({ order, onCardClick, onAddReport, onEditRepor
   };
 
   const renderCardActions = (card: Giftcard) => {
-    const baseBtnClass = 'h-6 w-6 p-0';
-
     if (!hasIssue(card)) {
       return (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddReport?.(card);
-          }}
-          className="bg-primary text-primary-foreground flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold"
-          title="Reportar problema"
-        >
-          <Plus className="h-3 w-3" />
-        </button>
+        <DropdownMenuItem onSelect={() => onAddReport?.(card)}>
+          <Plus className="h-4 w-4" />
+          Reportar
+        </DropdownMenuItem>
       );
     }
 
     if (card.status === 'WRONG_AMOUNT') {
       return (
-        <div className="flex gap-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditReport?.(card);
-            }}
-            className={baseBtnClass}
-            title="Editar monto"
-          >
-            <Pencil className="h-3 w-3" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteReport?.(card);
-            }}
-            className={`${baseBtnClass} text-destructive`}
-            title="Eliminar reporte"
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
-        </div>
+        <>
+          <DropdownMenuItem onSelect={() => onEditReport?.(card)}>
+            <Pencil className="h-4 w-4" />
+            Editar Monto
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={() => onDeleteReport?.(card)}>
+            <Trash2 className="h-4 w-4" />
+            Eliminar Reporte
+          </DropdownMenuItem>
+        </>
       );
     }
 
     return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDeleteReport?.(card);
-        }}
-        className={`${baseBtnClass} text-destructive`}
-        title="Eliminar reporte"
-      >
-        <Trash2 className="h-3 w-3" />
-      </button>
+      <DropdownMenuItem variant="destructive" onSelect={() => onDeleteReport?.(card)}>
+        <Trash2 className="h-4 w-4" />
+        Eliminar Reporte
+      </DropdownMenuItem>
     );
   };
 
@@ -81,17 +60,33 @@ export function AdminOrderDetails({ order, onCardClick, onAddReport, onEditRepor
         <span className="text-muted-foreground text-xs font-medium md:text-sm">Tasa: {(order.buyRate * 100).toFixed(0)}%</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {order.giftcards.map((card) => (
           <GiftcardItem
             key={card.id}
             card={card}
-            onViewDetails={onCardClick ? (c) => onCardClick(c, order.status) : undefined}
+            dropdownActions={renderCardActions(card)}
             contextualInfo={
-              <CardFooter className="bg-muted/30 mt-auto flex items-center justify-between border-t p-1 px-3">
-                <div className="flex items-center gap-2">{renderCardActions(card)}</div>
-                <span className="text-muted-foreground ml-2 shrink-0 text-[9px] font-bold tracking-widest uppercase">{card.status}</span>
-              </CardFooter>
+              (card as GiftcardWithSeller).seller ? (
+                <CardFooter className="bg-muted/30 mt-auto flex items-center justify-between border-t p-1 px-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="border-primary/20 bg-primary/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
+                      <span className="text-primary text-[10px] font-bold">
+                        {(card as GiftcardWithSeller).seller!.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="text-foreground truncate text-[11px] leading-tight font-semibold">
+                        {(card as GiftcardWithSeller).seller!.name}
+                      </span>
+                      <span className="text-muted-foreground truncate text-[9px] leading-tight">
+                        {(card as GiftcardWithSeller).seller!.email}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground ml-2 shrink-0 text-[9px] font-bold tracking-widest uppercase">Vendedor</span>
+                </CardFooter>
+              ) : undefined
             }
             showCopyButton={false}
           />

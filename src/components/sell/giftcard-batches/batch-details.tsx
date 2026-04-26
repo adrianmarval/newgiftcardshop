@@ -4,7 +4,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
 import type { BatchDetailsProps } from './types';
 
-export function BatchDetails({ batch, onCardClick }: BatchDetailsProps) {
+export function BatchDetails({ batch }: BatchDetailsProps) {
   return (
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
@@ -14,7 +14,7 @@ export function BatchDetails({ batch, onCardClick }: BatchDetailsProps) {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {batch.giftcards.map((card) => (
-          <GiftcardItem key={card.id} card={card} onViewDetails={onCardClick} showCopyButton={false} />
+          <GiftcardItem key={card.id} card={card} showCopyButton={false} />
         ))}
       </div>
 

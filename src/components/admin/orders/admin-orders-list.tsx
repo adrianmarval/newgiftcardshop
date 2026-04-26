@@ -1,22 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { History } from 'lucide-react';
 import { AdminOrderCard } from '@/components/admin/orders/admin-order-card';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { AdminOrdersListProps } from './types';
 
-export function AdminOrdersList({
-  orders,
-  totalPages,
-  onCardClick,
-  onViewBuyer,
-  onAddReport,
-  onEditReport,
-  onDeleteReport,
-}: AdminOrdersListProps) {
+export function AdminOrdersList({ orders, totalPages, onViewBuyer, onAddReport, onEditReport, onDeleteReport }: AdminOrdersListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,31 +35,28 @@ export function AdminOrdersList({
   return (
     <>
       <div className="space-y-2">
-        <AnimatePresence>
-          {orders
-            .filter((order) => expandedId === null || expandedId === order.id)
-            .map((order) => (
-              <motion.div
-                key={order.id}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
-                className="overflow-hidden"
-              >
-                <AdminOrderCard
-                  order={order}
-                  onCardClick={onCardClick}
-                  onViewBuyer={onViewBuyer}
-                  onAddReport={onAddReport}
-                  onEditReport={onEditReport}
-                  onDeleteReport={onDeleteReport}
-                  isExpanded={expandedId === order.id}
-                  onToggle={() => handleToggle(order.id)}
-                />
-              </motion.div>
-            ))}
-        </AnimatePresence>
+        {orders
+          .filter((order) => expandedId === null || expandedId === order.id)
+          .map((order) => (
+            <motion.div
+              key={order.id}
+              layout
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <AdminOrderCard
+                order={order}
+                onViewBuyer={onViewBuyer}
+                onAddReport={onAddReport}
+                onEditReport={onEditReport}
+                onDeleteReport={onDeleteReport}
+                isExpanded={expandedId === order.id}
+                onToggle={() => handleToggle(order.id)}
+              />
+            </motion.div>
+          ))}
       </div>
       <UrlPagination totalPages={totalPages} />
     </>

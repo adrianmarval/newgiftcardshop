@@ -13,13 +13,29 @@ import type { OrderCardProps } from './types';
 import Image from 'next/image';
 
 const statusConfig: Record<string, { label: string; color: string; activeBg: string }> = {
-  PENDING: { label: 'PENDIENTE', color: 'bg-amber-500/20 text-amber-500 border-amber-500/30', activeBg: 'bg-amber-500/10 dark:bg-amber-500/15' },
-  AWAITING_PAYMENT: { label: 'ESPERANDO', color: 'bg-blue-500/20 text-blue-500 border-blue-500/30', activeBg: 'bg-blue-500/10 dark:bg-blue-500/15' },
-  COMPLETED: { label: 'COMPLETADA', color: 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30', activeBg: 'bg-emerald-500/10 dark:bg-emerald-500/15' },
-  CANCELLED: { label: 'CANCELADA', color: 'bg-destructive/20 text-destructive border-destructive/30', activeBg: 'bg-destructive/10 dark:bg-destructive/15' },
+  PENDING: {
+    label: 'PENDIENTE',
+    color: 'bg-amber-500/20 text-amber-500 border-amber-500/30',
+    activeBg: 'bg-amber-500/10 dark:bg-amber-500/15',
+  },
+  AWAITING_PAYMENT: {
+    label: 'ESPERANDO',
+    color: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
+    activeBg: 'bg-blue-500/10 dark:bg-blue-500/15',
+  },
+  COMPLETED: {
+    label: 'COMPLETADA',
+    color: 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30',
+    activeBg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
+  },
+  CANCELLED: {
+    label: 'CANCELADA',
+    color: 'bg-destructive/20 text-destructive border-destructive/30',
+    activeBg: 'bg-destructive/10 dark:bg-destructive/15',
+  },
 };
 
-export const OrderCard = ({ order, onCardClick, isExpanded = false, onToggle = () => {} }: OrderCardProps) => {
+export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: OrderCardProps) => {
   const router = useRouter();
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -70,8 +86,8 @@ export const OrderCard = ({ order, onCardClick, isExpanded = false, onToggle = (
       }
       topRightContent={
         <>
-          <span className="text-md font-semibold text-foreground md:text-lg">${order.faceValueTotal.toFixed(0)}</span>
-          <span className="text-xs text-muted-foreground md:text-sm">Precio: ${order.effectiveTotal.toFixed(2)}</span>
+          <span className="text-md text-foreground font-semibold md:text-lg">${order.faceValueTotal.toFixed(0)}</span>
+          <span className="text-muted-foreground text-xs md:text-sm">Precio: ${order.effectiveTotal.toFixed(2)}</span>
         </>
       }
       date={formatDateTime(order.createdAt, 'es-AR')}
@@ -82,8 +98,7 @@ export const OrderCard = ({ order, onCardClick, isExpanded = false, onToggle = (
       progress={{
         percentage: progressPercentage,
         colorClass: 'bg-primary',
-        fullColorClass:
-          order.status === 'COMPLETED' ? 'bg-emerald-500' : order.status === 'CANCELLED' ? 'bg-destructive' : undefined,
+        fullColorClass: order.status === 'COMPLETED' ? 'bg-emerald-500' : order.status === 'CANCELLED' ? 'bg-destructive' : undefined,
       }}
       actions={
         isActionable ? (
@@ -97,7 +112,7 @@ export const OrderCard = ({ order, onCardClick, isExpanded = false, onToggle = (
                 disabled={isCancelling}
                 variant="outline"
                 size="sm"
-                className="h-8 border-destructive/50 px-2 text-xs text-destructive hover:bg-destructive/10 md:h-9 md:px-3 md:text-sm"
+                className="border-destructive/50 text-destructive hover:bg-destructive/10 h-8 px-2 text-xs md:h-9 md:px-3 md:text-sm"
               >
                 {isCancelling && <Spinner size="sm" className="mr-1" />}
                 Cancelar
@@ -107,7 +122,7 @@ export const OrderCard = ({ order, onCardClick, isExpanded = false, onToggle = (
         ) : undefined
       }
     >
-      <OrderDetails order={order} onCardClick={onCardClick} />
+      <OrderDetails order={order} />
     </RegistryCard>
   );
 };

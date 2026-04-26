@@ -38,7 +38,6 @@ const statusConfig: Record<string, { label: string; color: string; activeBg: str
 
 export const AdminOrderCard = ({
   order,
-  onCardClick,
   onViewBuyer,
   onAddReport,
   onEditReport,
@@ -143,13 +142,7 @@ export const AdminOrderCard = ({
         ) : undefined
       }
     >
-      <AdminOrderDetails
-        order={order}
-        onCardClick={onCardClick}
-        onAddReport={onAddReport}
-        onEditReport={onEditReport}
-        onDeleteReport={onDeleteReport}
-      />
+      <AdminOrderDetails order={order} onAddReport={onAddReport} onEditReport={onEditReport} onDeleteReport={onDeleteReport} />
     </RegistryCard>
   );
 };
