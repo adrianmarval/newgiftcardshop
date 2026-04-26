@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, Sparkles, Loader2, Upload, X, Plus, Code, ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -445,60 +445,57 @@ export function DataEntryStep() {
       {/* Main Compose Card */}
       <Card
         className={cn(
-          'border-border bg-card/50 flex flex-1 flex-col gap-2 p-2 backdrop-blur-sm transition-all md:gap-4 md:p-6',
+          'border-border bg-card/50 flex flex-1 flex-col gap-0 backdrop-blur-sm transition-all',
           isDragOver && 'border-primary bg-primary/5 scale-[1.01]',
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-foreground text-lg font-bold md:text-2xl">Load Gift Cards</h2>
-            <p className="text-muted-foreground hidden text-xs md:block md:text-sm">
-              Paste codes and attach screenshots — like composing an email.
-            </p>
-          </div>
-          {hasExistingCards && (
-            <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary text-[10px] md:text-xs">
-              {giftcards.length} card{giftcards.length !== 1 ? 's' : ''} loaded
-            </Badge>
-          )}
-        </div>
-
-        {/* Format help (collapsible) */}
-        <button
-          type="button"
-          onClick={() => setShowFormatHelp(!showFormatHelp)}
-          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-md transition-colors md:text-xs"
-        >
-          <Code className="h-3 w-3" />
-          <span>Expected format</span>
-          {showFormatHelp ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-        </button>
-
-        <AnimatePresence>
-          {showFormatHelp && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
+        <CardHeader className="px-1">
+          <CardTitle className="text-foreground text-lg font-bold md:text-2xl">Load Gift Cards</CardTitle>
+          <CardDescription className="text-muted-foreground flex flex-col text-xs md:block md:text-sm">
+            Paste codes and attach screenshots — like composing an email.
+            {/* Format help (collapsible) */}
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => setShowFormatHelp(!showFormatHelp)}
+              className="text-muted-foreground hover:text-foreground text-md flex justify-start gap-1 transition-colors md:text-xs"
             >
-              <div className="border-border bg-muted/30 space-y-1 rounded-lg border p-2 md:p-3">
-                <p className="text-muted-foreground text-[10px] md:text-xs">
-                  One card per line: <span className="text-foreground font-mono font-bold">CODE AMOUNT</span>
-                </p>
-                <div className="text-muted-foreground/70 font-mono text-[10px] md:text-xs">
-                  <div>HPGE-JV9RR4-8SA9 30.00</div>
-                  <div>XXBS-7W4HDV-D2AN 30.00</div>
-                  <div>ZART-GWX7EB-ZVAR 5.60</div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <Code className="h-3 w-3" />
+              <span>Expected format</span>
+              {showFormatHelp ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </Button>
+            <AnimatePresence>
+              {showFormatHelp && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="border-border bg-muted/30 space-y-1 rounded-lg border p-2 md:p-3">
+                    <p className="text-muted-foreground text-[10px] md:text-xs">
+                      One card per line: <span className="text-foreground font-mono font-bold">CODE AMOUNT</span>
+                    </p>
+                    <div className="text-muted-foreground/70 font-mono text-[10px] md:text-xs">
+                      <div>HPGE-JV9RR4-8SA9 30.00</div>
+                      <div>XXBS-7W4HDV-D2AN 30.00</div>
+                      <div>ZART-GWX7EB-ZVAR 5.60</div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {hasExistingCards && (
+              <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary text-[10px] md:text-xs">
+                {giftcards.length} card{giftcards.length !== 1 ? 's' : ''} loaded
+              </Badge>
+            )}
+          </CardDescription>
+        </CardHeader>
 
         {/* Textarea — the compose area */}
-        <div className="flex min-h-32 flex-1 flex-col gap-2 md:min-h-48">
+        <CardContent className="flex min-h-32 flex-1 flex-col space-y-1 p-1 md:min-h-48">
           <Textarea
             placeholder="Paste your gift card codes here…"
             value={pasteContent}
@@ -511,7 +508,7 @@ export function DataEntryStep() {
             }}
             disabled={isProcessing}
             className={cn(
-              'border-border bg-muted/20 focus-visible:ring-primary h-full w-full resize-none rounded-xl font-mono text-md transition-all md:text-sm',
+              'border-border bg-muted/20 focus-visible:ring-primary text-md h-full w-full resize-none rounded-xl font-mono transition-all md:text-sm',
               isDragOver && 'border-primary',
               validationErrors.length > 0 && 'border-destructive/50 ring-destructive/20 ring-1',
             )}
@@ -540,7 +537,7 @@ export function DataEntryStep() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </CardContent>
 
         {/* Attachments strip */}
         <AnimatePresence>
@@ -643,7 +640,7 @@ export function DataEntryStep() {
         </AnimatePresence>
 
         {/* Action bar */}
-        <div className="border-border mt-auto grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-t pt-2 md:pt-3">
+        <CardFooter className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 p-2">
           <Button
             onClick={() => setStep(1)}
             variant="outline"
@@ -686,7 +683,7 @@ export function DataEntryStep() {
               </>
             )}
           </Button>
-        </div>
+        </CardFooter>
       </Card>
 
       {/* Hidden file input */}
