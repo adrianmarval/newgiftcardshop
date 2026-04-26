@@ -48,7 +48,7 @@ const STATUS_INDICATOR_COLORS: Record<ValidationState, string> = {
   error: 'bg-red-500',
 };
 
-export function ReviewStep({ onPublish, isPublishing, brandName, countryName, sellRate, backStep }: ReviewStepProps) {
+export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, backStep }: ReviewStepProps) {
   const {
     giftcards,
     images,

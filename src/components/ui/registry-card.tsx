@@ -74,35 +74,18 @@ export function RegistryCard({
 
       <CardContent className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
-          {date && (
-            <span className="text-muted-foreground text-sm">
-              {date instanceof Date ? formatDateTime(date, 'es-AR') : date}
-            </span>
-          )}
+          {date && <span className="text-muted-foreground text-sm">{date instanceof Date ? formatDateTime(date, 'es-AR') : date}</span>}
         </div>
-        <ChevronDown
-          className={`text-muted-foreground h-5 w-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-        />
+        <ChevronDown className={`text-muted-foreground h-5 w-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
       </CardContent>
 
       {/* Progress Bar */}
       {progress && (
         <div className="bg-muted flex h-1 overflow-hidden">
           {progress.fullColorClass ? (
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: '100%' }}
-              className={`h-full ${progress.fullColorClass}`}
-            />
+            <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className={`h-full ${progress.fullColorClass}`} />
           ) : (
-            <>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progress.percentage}%` }}
-                className={`h-full ${progress.colorClass}`}
-              />
-              <div className="flex-1 bg-amber-400" />
-            </>
+            <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className={`h-full ${progress.colorClass}`} />
           )}
         </div>
       )}

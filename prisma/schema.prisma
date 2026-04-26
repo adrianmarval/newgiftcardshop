@@ -103,16 +103,16 @@ model Verification {
 // --------------------------------------
 
 model Giftcard {
-  id          String         @id @default(cuid())
-  brandId     String
-  brand       Brand          @relation(fields: [brandId], references: [id])
-  claimCode   String
-  codeHash    String?        @unique
-  pinCode     String?
-  amount      Decimal        @db.Decimal(10, 2) // Valor nominal (el seller lo define al crear)
-  inStock     Boolean        @default(true)
-  isConfirmed Boolean        @default(false)
-  status      GiftcardStatus @default(UNUSED)
+  id             String         @id @default(cuid())
+  brandCountryId String
+  brandCountry   BrandCountry   @relation(fields: [brandCountryId], references: [id])
+  claimCode      String
+  codeHash       String?        @unique
+  pinCode        String?
+  amount         Decimal        @db.Decimal(10, 2) // Valor nominal (el seller lo define al crear)
+  inStock        Boolean        @default(true)
+  isConfirmed    Boolean        @default(false)
+  status         GiftcardStatus @default(UNUSED)
 
   // Monto reportado por el buyer (solo cuando status = WRONG_AMOUNT o redimida con diferencia)
   reportedAmount Decimal? @db.Decimal(10, 2)
@@ -120,9 +120,6 @@ model Giftcard {
   // Relaciones
   ownerId String?
   owner   User?   @relation(fields: [ownerId], references: [id])
-
-  countryId String?
-  country   Country? @relation(fields: [countryId], references: [id])
 
   orderId String?
   order   Order?  @relation(fields: [orderId], references: [id])
@@ -142,13 +139,14 @@ model Giftcard {
 }
 
 model Brand {
-  id        String     @id @default(cuid())
-  slug      String     @unique
-  name      String
-  icon      String // Emoji
-  image     String? // Logo path
-  isActive  Boolean    @default(true)
-  giftcards Giftcard[]
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  name     String
+  icon     String // Emoji
+  image    String? // Logo path
+  isActive Boolean @default(true)
+
+  countries BrandCountry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -157,17 +155,38 @@ model Brand {
 }
 
 model Country {
-  id        String     @id @default(cuid())
-  name      String     @unique
-  code      String     @unique
-  currency  String?
-  isActive  Boolean    @default(true)
-  giftcards Giftcard[]
+  id       String  @id @default(cuid())
+  name     String  @unique
+  code     String  @unique
+  currency String?
+  isActive Boolean @default(true)
+
+  brands BrandCountry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("country")
+}
+
+model BrandCountry {
+  id        String  @id @default(cuid())
+  brandId   String
+  brand     Brand   @relation(fields: [brandId], references: [id])
+  countryId String
+  country   Country @relation(fields: [countryId], references: [id])
+
+  isActive  Boolean  @default(true)
+  minAmount Decimal? @db.Decimal(10, 2)
+  maxAmount Decimal? @db.Decimal(10, 2)
+
+  giftcards Giftcard[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([brandId, countryId])
+  @@map("brand_country")
 }
 
 model Order {

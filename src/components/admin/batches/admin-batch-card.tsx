@@ -114,7 +114,7 @@ export function AdminBatchCard({
       progress={{
         percentage: (batch.confirmedCount / (batch.cardsCount || 1)) * 100,
         colorClass: 'bg-blue-500',
-        fullColorClass: batch.isPaid ? 'bg-emerald-500' : batch.confirmedCount === batch.cardsCount ? 'bg-blue-500' : undefined,
+        fullColorClass: batch.isPaid ? 'bg-emerald-500' : batch.confirmedCount === batch.cardsCount ? 'bg-blue-500' : 'bg-amber-500',
       }}
     >
       <AdminBatchDetails batch={batch} onDeleted={onDeleted} />

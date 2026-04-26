@@ -41,8 +41,20 @@ const STAGE_PROGRESS: Record<ProcessingStage, number> = {
 // ─── DataEntryStep ──────────────────────────────────────────────────────────
 
 export function DataEntryStep() {
-  const { addImage, clearImages, setGiftcards, handleBulkImport, ingestOCRDraft, setStep, giftcards, selectedBrand, selectedCountry } =
-    useSellFlow();
+  const {
+    addImage,
+    clearImages,
+    setGiftcards,
+    handleBulkImport,
+    ingestOCRDraft,
+    setStep,
+    giftcards,
+    selectedBrandCountry,
+    brandCountryLimits,
+  } = useSellFlow();
+
+  const brandId = selectedBrandCountry?.split('|')[0] ?? '';
+  const countryId = selectedBrandCountry?.split('|')[1] ?? '';
 
   const [pasteContent, setPasteContent] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -192,7 +204,7 @@ export function DataEntryStep() {
 
         // Phase 3.5: Check DB for existing codes (text codes only, not OCR)
         const textCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
-        console.log('[DB-CHECK] Checking text codes after OCR:', { textCodes, brandId: selectedBrand, countryId: selectedCountry });
+        console.log('[DB-CHECK] Checking text codes after OCR:', { textCodes, brandId, countryId });
         if (textCodes.length > 0) {
           pendingDbCheckRef.current = () => {
             setStage('done');
@@ -201,8 +213,8 @@ export function DataEntryStep() {
           pendingCodeToLineMapRef.current = new Map();
           runCheckExistingCodes({
             codes: textCodes,
-            brandId: selectedBrand,
-            countryId: selectedCountry,
+            brandId: brandId,
+            countryId: countryId,
           });
           return;
         }
@@ -375,14 +387,14 @@ export function DataEntryStep() {
 
       // Phase 1.5: Check DB for existing codes BEFORE processing images
       const allCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
-      console.log('[DB-CHECK] Initiating check', { allCodes, brandId: selectedBrand, countryId: selectedCountry });
+      console.log('[DB-CHECK] Initiating check', { allCodes, brandId: brandId, countryId: countryId });
       if (allCodes.length > 0) {
         pendingDbCheckRef.current = () => proceedToImageUpload(filesToUpload, parsedCount);
         pendingCodeToLineMapRef.current = codeToLineMap;
         runCheckExistingCodes({
           codes: allCodes,
-          brandId: selectedBrand,
-          countryId: selectedCountry,
+          brandId: brandId,
+          countryId: countryId,
         });
         return;
       }

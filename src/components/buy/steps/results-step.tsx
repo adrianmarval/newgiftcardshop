@@ -94,7 +94,8 @@ export const ResultsStep = () => {
 
   useEffect(() => {
     if (selectedBrand) {
-      executeGetBrandById({ id: selectedBrand });
+      const brandId = selectedBrand.split('|')[0];
+      executeGetBrandById({ id: brandId });
     }
     executeGetUserBuyRate();
   }, [selectedBrand, executeGetBrandById, executeGetUserBuyRate]);

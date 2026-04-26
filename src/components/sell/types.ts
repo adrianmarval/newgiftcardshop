@@ -2,7 +2,7 @@
 // Sell Component Props — Wizard and Dialog types only
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Brand, Country } from '@/types/domain/catalog';
+import type { BrandCountry } from '@/types/domain/catalog';
 import type { ParsedGiftcard } from '@/types/domain/giftcard';
 
 /**
@@ -10,18 +10,16 @@ import type { ParsedGiftcard } from '@/types/domain/giftcard';
  * Manages the multi-step sell flow wizard.
  */
 export interface SellBatchManagerProps {
-  brands: Brand[];
-  countries: Country[];
+  brandCountries: BrandCountry[];
   sellRate: number;
 }
 
 /**
  * Props for the BrandStep component.
- * Allows seller to select brand and country for their batch.
+ * Allows seller to select brand-country combination for their batch.
  */
 export interface BrandStepProps {
-  brands: Brand[];
-  countries: Country[];
+  brandCountries: BrandCountry[];
 }
 
 /**
@@ -31,8 +29,7 @@ export interface BrandStepProps {
 export interface ReviewStepProps {
   onPublish: () => void;
   isPublishing?: boolean;
-  brandName: string;
-  countryName: string;
+  brandCountry: BrandCountry;
   sellRate: number;
   /** The step number to go back to from review */
   backStep?: number;

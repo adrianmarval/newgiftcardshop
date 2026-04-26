@@ -14,6 +14,7 @@ export { getActiveBrands } from './catalog/get-active-brands';
 export { getBrandById } from './catalog/get-brand-by-id';
 export { getActiveCountries } from './catalog/get-active-countries';
 export { getCountryById } from './catalog/get-country-by-id';
+export { getBrandsByCountry, getBrandCountryById, getActiveBrandCountries } from './catalog/brand-country';
 
 // ── Giftcard ────────────────────────────────────────────────────────────────────
 export { searchGiftcards } from './giftcard/search';

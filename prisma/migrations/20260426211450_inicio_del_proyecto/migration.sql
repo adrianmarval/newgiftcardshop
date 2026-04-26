@@ -29,7 +29,7 @@ CREATE TABLE "user" (
     "email" TEXT NOT NULL,
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "image" TEXT,
-    "role" "Role"[] DEFAULT ARRAY['BUYER']::"Role"[],
+    "role" "Role" NOT NULL DEFAULT 'BUYER',
     "buyRate" DECIMAL(10,4) NOT NULL DEFAULT 0.85,
     "sellRate" DECIMAL(10,4) NOT NULL DEFAULT 0.75,
     "twoFactorEnabled" BOOLEAN NOT NULL DEFAULT false,
@@ -87,7 +87,7 @@ CREATE TABLE "verification" (
 -- CreateTable
 CREATE TABLE "giftcard" (
     "id" TEXT NOT NULL,
-    "brandId" TEXT NOT NULL,
+    "brandCountryId" TEXT NOT NULL,
     "claimCode" TEXT NOT NULL,
     "codeHash" TEXT,
     "pinCode" TEXT,
@@ -97,11 +97,11 @@ CREATE TABLE "giftcard" (
     "status" "GiftcardStatus" NOT NULL DEFAULT 'UNUSED',
     "reportedAmount" DECIMAL(10,2),
     "ownerId" TEXT,
-    "countryId" TEXT,
     "orderId" TEXT,
-    "batchId" TEXT,
+    "batchId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "provenanceImageId" TEXT,
 
     CONSTRAINT "giftcard_pkey" PRIMARY KEY ("id")
 );
@@ -134,6 +134,20 @@ CREATE TABLE "country" (
 );
 
 -- CreateTable
+CREATE TABLE "brand_country" (
+    "id" TEXT NOT NULL,
+    "brandId" TEXT NOT NULL,
+    "countryId" TEXT NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "minAmount" DECIMAL(10,2),
+    "maxAmount" DECIMAL(10,2),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "brand_country_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "order" (
     "id" TEXT NOT NULL,
     "total" DECIMAL(10,2) NOT NULL,
@@ -149,7 +163,7 @@ CREATE TABLE "order" (
 
 -- CreateTable
 CREATE TABLE "giftcard_batch" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "sellRate" DECIMAL(10,4) NOT NULL,
     "isPaid" BOOLEAN NOT NULL DEFAULT false,
     "userId" TEXT,
@@ -157,6 +171,19 @@ CREATE TABLE "giftcard_batch" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "giftcard_batch_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "provenance_image" (
+    "id" TEXT NOT NULL,
+    "data" BYTEA NOT NULL,
+    "mimeType" TEXT NOT NULL,
+    "size" INTEGER NOT NULL,
+    "giftcardId" TEXT,
+    "batchId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "provenance_image_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -168,7 +195,7 @@ CREATE TABLE "payment" (
     "transactionType" "TransactionType" NOT NULL,
     "transactionId" TEXT,
     "orderId" TEXT,
-    "batchId" TEXT,
+    "batchId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -253,6 +280,9 @@ CREATE UNIQUE INDEX "country_name_key" ON "country"("name");
 CREATE UNIQUE INDEX "country_code_key" ON "country"("code");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "brand_country_brandId_countryId_key" ON "brand_country"("brandId", "countryId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "payment_method_userId_key" ON "payment_method"("userId");
 
 -- CreateIndex
@@ -268,19 +298,25 @@ ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "account" ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "giftcard" ADD CONSTRAINT "giftcard_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "brand"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "giftcard" ADD CONSTRAINT "giftcard_brandCountryId_fkey" FOREIGN KEY ("brandCountryId") REFERENCES "brand_country"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "giftcard" ADD CONSTRAINT "giftcard_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "giftcard" ADD CONSTRAINT "giftcard_countryId_fkey" FOREIGN KEY ("countryId") REFERENCES "country"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "giftcard" ADD CONSTRAINT "giftcard_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "order"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "giftcard" ADD CONSTRAINT "giftcard_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "giftcard_batch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "giftcard" ADD CONSTRAINT "giftcard_provenanceImageId_fkey" FOREIGN KEY ("provenanceImageId") REFERENCES "provenance_image"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "brand_country" ADD CONSTRAINT "brand_country_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "brand"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "brand_country" ADD CONSTRAINT "brand_country_countryId_fkey" FOREIGN KEY ("countryId") REFERENCES "country"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "order" ADD CONSTRAINT "order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

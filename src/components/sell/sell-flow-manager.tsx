@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import {
@@ -25,14 +25,16 @@ import { useRouter } from 'next/navigation';
 
 const STEP_LABELS = ['Config', 'Load', 'Review'];
 
-// ─── SellBatchManager ─────────────────────────────────────────────────────────
-
-export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManagerProps) => {
-  const { step, resetForm, giftcards, selectedBrand, images, selectedCountry } = useSellFlow();
+export const SellBatchManager = ({ brandCountries, sellRate }: SellBatchManagerProps) => {
+  const { step, resetForm, giftcards, selectedBrandCountry, images, brandCountryLimits } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [duplicates, setDuplicates] = useState<string[]>([]);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const router = useRouter();
+
+  const selectedBrandCountryData = useMemo(() => {
+    return brandCountries.find((bc) => `${bc.brandId}|${bc.countryId}` === selectedBrandCountry);
+  }, [brandCountries, selectedBrandCountry]);
 
   const { execute, status } = useAction(publishBatch, {
     onSuccess: ({ data }) => {
@@ -54,6 +56,7 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
   });
 
   const handlePublish = async () => {
+    if (!selectedBrandCountryData) return;
     const storeImages = useSellFlow.getState().images;
     execute({
       cards: giftcards.map((g) => {
@@ -66,27 +69,21 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
           compressedImageData: matchedImage?.compressedData,
         };
       }),
-      brandId: selectedBrand,
-      countryId: useSellFlow.getState().selectedCountry,
+      brandId: selectedBrandCountryData.brandId,
+      countryId: selectedBrandCountryData.countryId,
     });
   };
 
   const totalSteps = STEP_LABELS.length;
 
-  // Build a brand map for review step
-  const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
-  const countryMap = Object.fromEntries(countries.map((c) => [c.id, c.name]));
-
   return (
     <div className="flex h-full w-full flex-col space-y-1 px-0 py-0 md:space-y-6 md:px-0 md:py-0">
-      {/* Header & Progress combined */}
       <div className="border-border bg-card/40 flex flex-row items-center justify-between gap-2.5 rounded-none border-y px-1.5 py-1.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Sell Gift Cards</h1>
           <p className="text-muted-foreground hidden text-xs md:block md:text-base">Complete the batch in this session.</p>
         </motion.div>
 
-        {/* Compact Progress Steps */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -129,7 +126,6 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
         </motion.div>
       </div>
 
-      {/* Step Content */}
       <AnimatePresence mode="wait">
         {step === 1 && (
           <motion.div
@@ -140,7 +136,7 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <BrandStep brands={brands} countries={countries} />
+            <BrandStep brandCountries={brandCountries} />
           </motion.div>
         )}
 
@@ -166,19 +162,19 @@ export const SellBatchManager = ({ brands, countries, sellRate }: SellBatchManag
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <ReviewStep
-              onPublish={handlePublish}
-              isPublishing={status === 'executing'}
-              brandName={brandMap[selectedBrand] || ''}
-              countryName={countryMap[selectedCountry] || ''}
-              sellRate={sellRate}
-              backStep={2}
-            />
+            {selectedBrandCountryData && (
+              <ReviewStep
+                onPublish={handlePublish}
+                isPublishing={status === 'executing'}
+                brandCountry={selectedBrandCountryData}
+                sellRate={sellRate}
+                backStep={2}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Success Dialog */}
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <AlertDialogContent className="border-border bg-card">
           <AlertDialogHeader>

@@ -1,16 +1,14 @@
 import { BuyGiftcardManager } from '@/components/buy/buy-flow-manager';
-import { getActiveBrands, getActiveCountries } from '@/actions';
+import { getActiveBrandCountries } from '@/actions/catalog/brand-country';
 import { getOrderById } from '@/actions/order/get-order-by-id';
 import type { BuyerOrder } from '@/types';
 
 export default async function BrowseCardsPage({ searchParams }: { searchParams: Promise<{ orderId?: string }> }) {
-  const [brandsResult, countriesResult, params] = await Promise.all([getActiveBrands(), getActiveCountries(), searchParams]);
+  const [brandCountriesResult, params] = await Promise.all([getActiveBrandCountries(), searchParams]);
 
-  if (!brandsResult.data?.success) throw new Error('Ocurrio un error al cargar las marcas');
-  if (!countriesResult.data?.success) throw new Error('Ocurrio un error al cargar los paises');
+  if (!brandCountriesResult.data?.success) throw new Error('Ocurrio un error al cargar las marcas');
 
-  const brands = brandsResult.data.brands;
-  const countries = countriesResult.data.countries;
+  const brandCountries = brandCountriesResult.data.brandCountries;
 
   let resumeOrder: BuyerOrder | null = null;
   if (params.orderId) {
@@ -20,5 +18,5 @@ export default async function BrowseCardsPage({ searchParams }: { searchParams: 
     }
   }
 
-  return <BuyGiftcardManager brands={brands} countries={countries} resumeOrder={resumeOrder} />;
+  return <BuyGiftcardManager brandCountries={brandCountries} resumeOrder={resumeOrder} />;
 }

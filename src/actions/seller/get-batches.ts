@@ -15,7 +15,7 @@ export const getSellerBatches = sellerActionClient
     const orderBy = sort === 'newest' ? { createdAt: 'desc' as const } : { createdAt: 'asc' as const };
 
     const where: Prisma.GiftcardBatchWhereInput = { userId: ctx.auth.user.id };
-    
+
     if (search) {
       const isNumeric = !isNaN(Number(search));
       const hashedSearch = hashCode(search.trim().toUpperCase());
@@ -28,10 +28,12 @@ export const getSellerBatches = sellerActionClient
               OR: [
                 { codeHash: hashedSearch },
                 {
-                  brand: {
-                    name: {
-                      contains: search,
-                      mode: 'insensitive' as const,
+                  brandCountry: {
+                    brand: {
+                      name: {
+                        contains: search,
+                        mode: 'insensitive' as const,
+                      },
                     },
                   },
                 },
@@ -46,7 +48,7 @@ export const getSellerBatches = sellerActionClient
       prisma.giftcardBatch.findMany({
         where,
         include: {
-          giftcards: { include: { brand: true, country: true, issues: true } },
+          giftcards: { include: { brandCountry: { include: { brand: true, country: true } }, issues: true } },
           payments: true,
         },
         orderBy,
@@ -85,7 +87,7 @@ export const getSellerBatches = sellerActionClient
         if (search) {
           const hashedSearch = hashCode(search.trim().toUpperCase());
           const matchesCode = card.codeHash === hashedSearch;
-          const matchesBrand = card.brand.name.toLowerCase().includes(search.toLowerCase());
+          const matchesBrand = card.brandCountry.brand.name.toLowerCase().includes(search.toLowerCase());
           isSearchMatch = matchesCode || matchesBrand;
         }
 
@@ -101,16 +103,14 @@ export const getSellerBatches = sellerActionClient
           batchId: card.batchId,
           provenanceImageId: card.provenanceImageId,
           brand: {
-            name: card.brand.name,
-            icon: card.brand.icon,
-            image: card.brand.image,
+            name: card.brandCountry.brand.name,
+            icon: card.brandCountry.brand.icon,
+            image: card.brandCountry.brand.image,
           },
-          country: card.country
-            ? {
-                name: card.country.name,
-                code: card.country.code,
-              }
-            : null,
+          country: {
+            name: card.brandCountry.country.name,
+            code: card.brandCountry.country.code,
+          },
           isSearchMatch,
         };
       });

@@ -12,7 +12,6 @@ export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
   const allConfirmed = confirmedCount === totalItems && totalItems > 0;
   const isPaid = batch.isPaid || batch.payments.some((p) => p.status === 'COMPLETED');
   const progressPercentage = totalItems > 0 ? (confirmedCount / totalItems) * 100 : 0;
-  const hasReport = batch.giftcards.some((g) => g.isConfirmed && g.status !== 'USED');
   const batchTotal = batch.giftcards.reduce((sum, g) => sum + g.amount, 0);
 
   const getStatus = (): { label: string; color: string; activeBg: string } => {
@@ -29,7 +28,7 @@ export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
         activeBg: 'bg-blue-500/10 dark:bg-blue-500/15',
       };
     return {
-      label: `PROCESSING`,
+      label: 'PROCESSING',
       color: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
       activeBg: 'bg-amber-500/10 dark:bg-amber-500/15',
     };
@@ -59,12 +58,12 @@ export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
       date={formatDateTime(batch.createdAt, 'en-US')}
       isExpanded={isExpanded}
       onToggle={onToggle}
-      hasReport={hasReport}
+      hasReport={batch.giftcards.some((g) => g.status === 'WRONG_AMOUNT')}
       activeBgClass={status.activeBg}
       progress={{
         percentage: progressPercentage,
         colorClass: 'bg-blue-500',
-        fullColorClass: isPaid ? 'bg-emerald-500' : allConfirmed ? 'bg-blue-500' : undefined,
+        fullColorClass: isPaid ? 'bg-emerald-500' : allConfirmed ? 'bg-blue-500' : 'bg-amber-500',
       }}
     >
       <BatchDetails batch={batch} />

@@ -46,10 +46,12 @@ export const adminBatches = adminActionClient
               OR: [
                 { codeHash: hashedSearch },
                 {
-                  brand: {
-                    name: {
-                      contains: search,
-                      mode: 'insensitive' as const,
+                  brandCountry: {
+                    brand: {
+                      name: {
+                        contains: search,
+                        mode: 'insensitive' as const,
+                      },
                     },
                   },
                 },
@@ -67,8 +69,7 @@ export const adminBatches = adminActionClient
           user: { select: { id: true, name: true, email: true, sellRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
           giftcards: {
             include: {
-              brand: true,
-              country: true,
+              brandCountry: { include: { brand: true, country: true } },
               order: { select: { id: true, status: true, userId: true } },
               issues: true,
             },
@@ -147,7 +148,7 @@ export const adminBatches = adminActionClient
         if (search) {
           const hashedSearch = hashCode(search.trim().toUpperCase());
           const matchesCode = card.codeHash === hashedSearch;
-          const matchesBrand = card.brand.name.toLowerCase().includes(search.toLowerCase());
+          const matchesBrand = card.brandCountry.brand.name.toLowerCase().includes(search.toLowerCase());
           isSearchMatch = matchesCode || matchesBrand;
         }
 
@@ -161,11 +162,11 @@ export const adminBatches = adminActionClient
           reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
           orderId: card.orderId,
           brand: {
-            name: card.brand.name,
-            icon: card.brand.icon,
-            image: card.brand.image,
+            name: card.brandCountry.brand.name,
+            icon: card.brandCountry.brand.icon,
+            image: card.brandCountry.brand.image,
           },
-          country: card.country ? { name: card.country.name, code: card.country.code } : null,
+          country: card.brandCountry.country ? { name: card.brandCountry.country.name, code: card.brandCountry.country.code } : null,
           buyer,
           order: card.order ? { id: card.order.id, status: card.order.status } : null,
           issues: card.issues.map((issue) => ({

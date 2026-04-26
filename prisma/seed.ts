@@ -12,7 +12,7 @@ const prisma = new PrismaClient({
 });
 
 export async function main() {
-  const { userData, countryData, brandData } = seedData;
+  const { userData, countryData, brandData, brandCountryData } = seedData;
   console.log(`Iniciando el seed...`);
 
   // Limpiar base de datos (ordenado para evitar errores de claves foráneas)
@@ -26,6 +26,7 @@ export async function main() {
   await prisma.session.deleteMany();
   await prisma.account.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.brandCountry.deleteMany();
   await prisma.country.deleteMany();
   await prisma.brand.deleteMany();
 
@@ -41,7 +42,15 @@ export async function main() {
   });
   console.log('Países creados.');
 
-  // 3. Crear usuarios (incluyendo batches y giftcards anidados)
+  // 3. Crear BrandCountries (relaciones marca-país con límites)
+  if (brandCountryData && brandCountryData.length > 0) {
+    for (const bc of brandCountryData) {
+      await prisma.brandCountry.create({ data: bc });
+    }
+    console.log(`BrandCountries creados: ${brandCountryData.length}`);
+  }
+
+  // 4. Crear usuarios (incluyendo batches y giftcards anidados)
   for (const u of userData) {
     const user = await prisma.user.create({
       data: u,

@@ -18,8 +18,8 @@ import type { SellFlowImage } from './SellFlowImage';
  */
 export interface SellFlowState {
   step: number;
-  selectedBrand: string;
-  selectedCountry: string;
+  selectedBrandCountry: string; // Composite: brandId|countryId
+  brandCountryLimits: { minAmount: number | null; maxAmount: number | null };
   giftcards: SellFlowCard[];
   images: SellFlowImage[];
   unmatchedImages: SellFlowUnmatchedImage[];
@@ -27,8 +27,7 @@ export interface SellFlowState {
   // ── Navigation ──────────────────────────────────────────────────────────────
 
   setStep: (step: number) => void;
-  setSelectedBrand: (brand: string) => void;
-  setSelectedCountry: (country: string) => void;
+  setSelectedBrandCountry: (brandCountry: string, limits: { minAmount: number | null; maxAmount: number | null }) => void;
 
   // ── Giftcard Management ─────────────────────────────────────────────────────
 

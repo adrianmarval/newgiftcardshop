@@ -9,10 +9,16 @@ export const searchGiftcards = buyerActionClient
   .inputSchema(searchGiftcardSchema)
   .outputSchema(searchGiftcardsOutputSchema)
   .action(async ({ parsedInput: { brandId, countryId, amount } }) => {
+    const brandCountry = await prisma.brandCountry.findUnique({
+      where: { brandId_countryId: { brandId, countryId } },
+      select: { id: true },
+    });
+    if (!brandCountry) {
+      return { success: true as const, giftcards: [] };
+    }
     const giftcards = await prisma.giftcard.findMany({
       where: {
-        brandId,
-        countryId,
+        brandCountryId: brandCountry.id,
         inStock: true,
         status: 'UNUSED',
       },
@@ -22,7 +28,7 @@ export const searchGiftcards = buyerActionClient
       success: true as const,
       giftcards: selectedGiftcards.selectedCards.map((card) => ({
         id: card.id,
-        brand: card.brandId,
+        brand: card.brandCountryId,
         amount: card.amount.toNumber(),
         status: 'UNUSED' as const,
       })),

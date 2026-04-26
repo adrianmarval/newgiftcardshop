@@ -21,11 +21,19 @@ export const checkExistingCodes = sellerActionClient
 
     const codeHashes = formattedCodes.map((c) => hashCode(c.toUpperCase()));
 
+    const brandCountry = await prisma.brandCountry.findUnique({
+      where: { brandId_countryId: { brandId, countryId } },
+      select: { id: true },
+    });
+
+    if (!brandCountry) {
+      return next({ ctx: { existingCodes: [] } });
+    }
+
     const existingInDb = await prisma.giftcard.findMany({
       where: {
         codeHash: { in: codeHashes },
-        brandId,
-        countryId,
+        brandCountryId: brandCountry.id,
       },
       select: { claimCode: true },
     });
@@ -43,8 +51,5 @@ export const checkExistingCodes = sellerActionClient
     return next({ ctx: { existingCodes } });
   })
   .action(async ({ ctx }) => {
-    return {
-      success: true as const,
-      existingCodes: ctx.existingCodes,
-    };
+    return { success: true as const, existingCodes: ctx.existingCodes };
   });

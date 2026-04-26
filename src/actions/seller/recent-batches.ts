@@ -15,7 +15,7 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchSchema.a
     include: {
       giftcards: {
         take: 2,
-        include: { brand: true },
+        include: { brandCountry: { include: { brand: true } } },
       },
     },
   });
@@ -32,9 +32,9 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchSchema.a
         id: card.id,
         amount: Number(card.amount),
         brand: {
-          name: card.brand.name,
-          icon: card.brand.icon,
-          image: card.brand.image,
+          name: card.brandCountry.brand.name,
+          icon: card.brandCountry.brand.icon,
+          image: card.brandCountry.brand.image,
         },
       };
     });

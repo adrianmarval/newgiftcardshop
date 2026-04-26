@@ -6,6 +6,7 @@ interface SeedData {
   userData: Prisma.UserCreateInput[];
   countryData: Prisma.CountryCreateInput[];
   brandData: Prisma.BrandCreateInput[];
+  brandCountryData: Prisma.BrandCountryCreateInput[];
 }
 
 export const seedData: SeedData = {
@@ -43,103 +44,6 @@ export const seedData: SeedData = {
           network: 'AVAXC',
         },
       },
-      giftcardBatches: {
-        create: [
-          {
-            giftcards: {
-              create: [
-                {
-                  brand: { connect: { slug: 'amazon' } },
-                  claimCode: encrypt('AMZ-BATCH1-001'),
-                  codeHash: hashCode('AMZ-BATCH1-001'),
-                  amount: 100.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-                {
-                  brand: { connect: { slug: 'amazon' } },
-                  claimCode: encrypt('AMZ-BATCH1-002'),
-                  codeHash: hashCode('AMZ-BATCH1-002'),
-                  amount: 50.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-                {
-                  brand: { connect: { slug: 'amazon' } },
-                  claimCode: encrypt('AMZ-BATCH1-003'),
-                  codeHash: hashCode('AMZ-BATCH1-003'),
-                  amount: 25.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-              ],
-            },
-            sellRate: 0.75,
-          },
-          {
-            giftcards: {
-              create: [
-                {
-                  brand: { connect: { slug: 'apple' } },
-                  claimCode: encrypt('APL-BATCH2-001'),
-                  codeHash: hashCode('APL-BATCH2-001'),
-                  amount: 100.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-                {
-                  brand: { connect: { slug: 'apple' } },
-                  claimCode: encrypt('APL-BATCH2-002'),
-                  codeHash: hashCode('APL-BATCH2-002'),
-                  amount: 100.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-                {
-                  brand: { connect: { slug: 'apple' } },
-                  claimCode: encrypt('APL-BATCH2-003'),
-                  codeHash: hashCode('APL-BATCH2-003'),
-                  amount: 50.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-              ],
-            },
-            sellRate: 0.75,
-          },
-          {
-            giftcards: {
-              create: [
-                {
-                  brand: { connect: { slug: 'google-play' } },
-                  claimCode: encrypt('RZR-BATCH3-001'),
-                  codeHash: hashCode('RZR-BATCH3-001'),
-                  amount: 50.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-                {
-                  brand: { connect: { slug: 'google-play' } },
-                  claimCode: encrypt('RZR-BATCH3-002'),
-                  codeHash: hashCode('RZR-BATCH3-002'),
-                  amount: 20.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-                {
-                  brand: { connect: { slug: 'google-play' } },
-                  claimCode: encrypt('RZR-BATCH3-003'),
-                  codeHash: hashCode('RZR-BATCH3-003'),
-                  amount: 10.0,
-                  status: 'UNUSED',
-                  country: { connect: { code: 'US' } },
-                },
-              ],
-            },
-            sellRate: 0.75,
-          },
-        ],
-      },
       accounts: {
         create: {
           accountId: 'seller-account-provider-id',
@@ -171,77 +75,51 @@ export const seedData: SeedData = {
     },
   ],
   countryData: [
-    { code: 'US', name: 'United States' },
-    { code: 'CA', name: 'Canada' },
-    { code: 'GB', name: 'United Kingdom' },
+    { code: 'US', name: 'United States', currency: 'USD' },
+    { code: 'CA', name: 'Canada', currency: 'CAD' },
+    { code: 'GB', name: 'United Kingdom', currency: 'GBP' },
   ],
   brandData: [
-    {
-      slug: 'amazon',
-      name: 'Amazon',
-      icon: '📦',
-      image: '/images/amazonlogo.svg',
-    },
-    {
-      slug: 'apple',
-      name: 'Apple',
-      icon: '🍎',
-      image: '/images/applelogo.svg',
-    },
-    {
-      slug: 'best-buy',
-      name: 'Best Buy',
-      icon: '🏷️',
-      image: '/images/bestbuylogo.svg',
-    },
-    {
-      slug: 'gamestop',
-      name: 'GameStop',
-      icon: '🎮',
-      image: '/images/gamestoplogo.svg',
-    },
-    {
-      slug: 'google-play',
-      name: 'Google Play',
-      icon: '🎯',
-      image: '/images/googleplaylogo.svg',
-    },
-    {
-      slug: 'home-depot',
-      name: 'Home Depot',
-      icon: '🛠️',
-      image: '/images/homedepotlogo.svg',
-    },
-    {
-      slug: 'macys',
-      name: "Macy's",
-      icon: '🏬',
-      image: '/images/macyslogo.svg',
-    },
+    { slug: 'amazon', name: 'Amazon', icon: '📦', image: '/images/amazonlogo.svg' },
+    { slug: 'apple', name: 'Apple', icon: '🍎', image: '/images/applelogo.svg' },
+    { slug: 'best-buy', name: 'Best Buy', icon: '🏷️', image: '/images/bestbuylogo.svg' },
+    { slug: 'gamestop', name: 'GameStop', icon: '🎮', image: '/images/gamestoplogo.svg' },
+    { slug: 'google-play', name: 'Google Play', icon: '🎯', image: '/images/googleplaylogo.svg' },
+    { slug: 'home-depot', name: 'Home Depot', icon: '🛠️', image: '/images/homedepotlogo.svg' },
+    { slug: 'macys', name: "Macy's", icon: '🏬', image: '/images/macyslogo.svg' },
     { slug: 'nike', name: 'Nike', icon: '✔️', image: '/images/nikelogo.svg' },
-    {
-      slug: 'sephora',
-      name: 'Sephora',
-      icon: '✨',
-      image: '/images/sephoralogo.svg',
-    },
-    {
-      slug: 'starbucks',
-      name: 'Starbucks',
-      icon: '☕',
-      image: '/images/starbuckslogo.svg',
-    },
-    {
-      slug: 'target',
-      name: 'Target',
-      icon: '🎯',
-      image: '/images/targetlogo.svg',
-    },
-    {
-      slug: 'walmart',
-      name: 'Walmart',
-      icon: '🛒',
-      image: '/images/walmartlogo.svg',
-    },
+    { slug: 'sephora', name: 'Sephora', icon: '✨', image: '/images/sephoralogo.svg' },
+    { slug: 'starbucks', name: 'Starbucks', icon: '☕', image: '/images/starbuckslogo.svg' },
+    { slug: 'target', name: 'Target', icon: '🎯', image: '/images/targetlogo.svg' },
+    { slug: 'walmart', name: 'Walmart', icon: '🛒', image: '/images/walmartlogo.svg' },
+  ],
+  brandCountryData: [
+    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500 },
+    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'CA' } }, minAmount: 5, maxAmount: 200 },
+    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'GB' } }, minAmount: 5, maxAmount: 500 },
+    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 1000 },
+    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'CA' } } },
+    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'GB' } } },
+    { brand: { connect: { slug: 'best-buy' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500 },
+    { brand: { connect: { slug: 'best-buy' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 500 },
+    { brand: { connect: { slug: 'gamestop' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 200 },
+    { brand: { connect: { slug: 'gamestop' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 200 },
+    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'US' } } },
+    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'CA' } } },
+    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'GB' } } },
+    { brand: { connect: { slug: 'home-depot' } }, country: { connect: { code: 'US' } }, minAmount: 25, maxAmount: 500 },
+    { brand: { connect: { slug: 'home-depot' } }, country: { connect: { code: 'CA' } }, minAmount: 25, maxAmount: 500 },
+    { brand: { connect: { slug: 'macys' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500 },
+    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500 },
+    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'CA' } } },
+    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'GB' } } },
+    { brand: { connect: { slug: 'sephora' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500 },
+    { brand: { connect: { slug: 'sephora' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 500 },
+    { brand: { connect: { slug: 'starbucks' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 200 },
+    { brand: { connect: { slug: 'starbucks' } }, country: { connect: { code: 'CA' } }, minAmount: 5, maxAmount: 200 },
+    { brand: { connect: { slug: 'target' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500 },
+    { brand: { connect: { slug: 'target' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 500 },
+    { brand: { connect: { slug: 'walmart' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500 },
+    { brand: { connect: { slug: 'walmart' } }, country: { connect: { code: 'CA' } }, minAmount: 5, maxAmount: 500 },
   ],
 };

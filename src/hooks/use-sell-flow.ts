@@ -55,16 +55,15 @@ function formatAmount(value?: string): string {
 
 export const useSellFlow = create<SellFlowState>((set, get) => ({
   step: 1,
-  selectedBrand: '',
-  selectedCountry: '',
+  selectedBrandCountry: '',
+  brandCountryLimits: { minAmount: null, maxAmount: null },
   giftcards: [],
   images: [],
   unmatchedImages: [],
 
   setStep: (step) => set({ step }),
 
-  setSelectedBrand: (brand) => set({ selectedBrand: brand }),
-  setSelectedCountry: (country) => set({ selectedCountry: country }),
+  setSelectedBrandCountry: (brandCountry, limits) => set({ selectedBrandCountry: brandCountry, brandCountryLimits: limits }),
 
   setGiftcards: (giftcards) => set({ giftcards }),
 
@@ -248,8 +247,8 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
   resetForm: () =>
     set({
       step: 1,
-      selectedBrand: '',
-      selectedCountry: '',
+      selectedBrandCountry: '',
+      brandCountryLimits: { minAmount: null, maxAmount: null },
       giftcards: [],
       images: [],
       unmatchedImages: [],

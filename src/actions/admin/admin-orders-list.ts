@@ -53,10 +53,12 @@ export const adminOrders = adminActionClient
               OR: [
                 { codeHash: hashedSearch },
                 {
-                  brand: {
-                    name: {
-                      contains: search,
-                      mode: 'insensitive' as const,
+                  brandCountry: {
+                    brand: {
+                      name: {
+                        contains: search,
+                        mode: 'insensitive' as const,
+                      },
                     },
                   },
                 },
@@ -74,8 +76,7 @@ export const adminOrders = adminActionClient
           user: { select: { id: true, name: true, email: true, buyRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
           giftcards: {
             include: {
-              brand: true,
-              country: true,
+              brandCountry: { include: { brand: true, country: true } },
               batch: { include: { user: { select: { id: true, name: true, email: true } } } },
             },
           },
@@ -125,7 +126,7 @@ export const adminOrders = adminActionClient
           if (search) {
             const hashedSearch = hashCode(search.trim().toUpperCase());
             const matchesCode = card.codeHash === hashedSearch;
-            const matchesBrand = card.brand.name.toLowerCase().includes(search.toLowerCase());
+            const matchesBrand = card.brandCountry.brand.name.toLowerCase().includes(search.toLowerCase());
             isSearchMatch = matchesCode || matchesBrand;
           }
 
@@ -140,11 +141,11 @@ export const adminOrders = adminActionClient
             orderId: card.orderId,
             batchId: card.batchId ?? undefined,
             brand: {
-              name: card.brand.name,
-              icon: card.brand.icon,
-              image: card.brand.image,
+              name: card.brandCountry.brand.name,
+              icon: card.brandCountry.brand.icon,
+              image: card.brandCountry.brand.image,
             },
-            country: card.country,
+            country: { name: card.brandCountry.country.name, code: card.brandCountry.country.code },
             isSearchMatch,
             seller: card.batch?.user ? { id: card.batch.user.id, name: card.batch.user.name, email: card.batch.user.email } : null,
           };

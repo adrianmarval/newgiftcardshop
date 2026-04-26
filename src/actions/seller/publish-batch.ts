@@ -33,11 +33,20 @@ export const publishBatch = sellerActionClient
     const codesToCheck = normalizedCards.map((c) => c.claimCode);
     const codeHashes = codesToCheck.map((c) => hashCode(c.toUpperCase()));
 
+    const brandCountry = await prisma.brandCountry.findUnique({
+      where: {
+        brandId_countryId: { brandId, countryId },
+      },
+    });
+
+    if (!brandCountry) {
+      throw new ActionError('Invalid brand-country combination');
+    }
+
     const existingInDb = await prisma.giftcard.findMany({
       where: {
         codeHash: { in: codeHashes },
-        brandId,
-        countryId,
+        brandCountryId: brandCountry.id,
       },
       select: { codeHash: true },
     });
@@ -88,10 +97,10 @@ export const publishBatch = sellerActionClient
 
     if (uniqueCards.length === 0) throw new ActionError('All provided cards already exist in the inventory.');
 
-    return next({ ctx: { uniqueCards, duplicates, dbUser } });
+    return next({ ctx: { uniqueCards, duplicates, dbUser, brandCountryId: brandCountry.id } });
   })
   .action(async ({ parsedInput: { brandId, countryId }, ctx }) => {
-    const { uniqueCards, duplicates, dbUser } = ctx;
+    const { uniqueCards, duplicates, dbUser, brandCountryId } = ctx;
 
     const sellRateSnapshot = dbUser.sellRate;
 
@@ -119,8 +128,7 @@ export const publishBatch = sellerActionClient
             inStock: true,
             status: 'UNUSED',
             batchId: createdBatch.id,
-            brandId,
-            countryId,
+            brandCountryId,
           },
         });
 

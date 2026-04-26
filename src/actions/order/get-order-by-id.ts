@@ -31,7 +31,7 @@ export const getOrderById = buyerActionClient
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        giftcards: { include: { brand: true, country: true } },
+        giftcards: { include: { brandCountry: { include: { brand: true, country: true } } } },
         payments: { where: { status: 'COMPLETED' } },
       },
     });
@@ -70,11 +70,11 @@ export const getOrderById = buyerActionClient
         orderId: card.orderId,
         batchId: card.batchId ?? undefined,
         brand: {
-          name: card.brand.name,
-          icon: card.brand.icon,
-          image: card.brand.image,
+          name: card.brandCountry.brand.name,
+          icon: card.brandCountry.brand.icon,
+          image: card.brandCountry.brand.image,
         },
-        country: card.country,
+        country: { name: card.brandCountry.country.name, code: card.brandCountry.country.code },
       };
     });
     const payments: Payment[] = order.payments.map((p) => ({

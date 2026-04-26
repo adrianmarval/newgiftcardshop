@@ -6,7 +6,7 @@ import type { BuyFlowState } from '@/types';
 export const useBuyFlow = create<BuyFlowState>((set) => ({
   step: 1,
   selectedBrand: '',
-  selectedCountry: 'US',
+  selectedCountry: '',
   targetAmount: '',
   foundGiftcards: [],
   orderId: null,
@@ -42,7 +42,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
     set({
       step: 1,
       selectedBrand: '',
-      selectedCountry: 'US',
+      selectedCountry: '',
       targetAmount: '',
       foundGiftcards: [],
       orderId: null,

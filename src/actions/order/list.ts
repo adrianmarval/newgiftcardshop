@@ -44,10 +44,12 @@ export const getBuyerOrders = buyerActionClient
               OR: [
                 { codeHash: hashedSearch },
                 {
-                  brand: {
-                    name: {
-                      contains: search,
-                      mode: 'insensitive' as const,
+                  brandCountry: {
+                    brand: {
+                      name: {
+                        contains: search,
+                        mode: 'insensitive' as const,
+                      },
                     },
                   },
                 },
@@ -62,7 +64,7 @@ export const getBuyerOrders = buyerActionClient
       prisma.order.findMany({
         where,
         include: {
-          giftcards: { include: { brand: true, country: true } },
+          giftcards: { include: { brandCountry: { include: { brand: true, country: true } } } },
           payments: { where: { status: 'COMPLETED' } },
         },
         orderBy,
@@ -98,7 +100,7 @@ export const getBuyerOrders = buyerActionClient
           if (search) {
             const hashedSearch = hashCode(search.trim().toUpperCase());
             const matchesCode = card.codeHash === hashedSearch;
-            const matchesBrand = card.brand.name.toLowerCase().includes(search.toLowerCase());
+            const matchesBrand = card.brandCountry.brand.name.toLowerCase().includes(search.toLowerCase());
             isSearchMatch = matchesCode || matchesBrand;
           }
 
@@ -113,11 +115,11 @@ export const getBuyerOrders = buyerActionClient
             orderId: card.orderId,
             batchId: card.batchId ?? undefined,
             brand: {
-              name: card.brand.name,
-              icon: card.brand.icon,
-              image: card.brand.image,
+              name: card.brandCountry.brand.name,
+              icon: card.brandCountry.brand.icon,
+              image: card.brandCountry.brand.image,
             },
-            country: card.country,
+            country: { name: card.brandCountry.country.name, code: card.brandCountry.country.code },
             isSearchMatch,
           };
         });

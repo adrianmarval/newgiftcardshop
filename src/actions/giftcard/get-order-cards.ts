@@ -14,7 +14,7 @@ export const getOrderCards = buyerActionClient
       where: { id: orderId },
       include: {
         giftcards: {
-          include: { brand: { select: { id: true, name: true } } },
+          include: { brandCountry: { include: { brand: true } } },
         },
       },
     });
@@ -39,7 +39,7 @@ export const getOrderCards = buyerActionClient
         }
         return {
           id: card.id,
-          brand: card.brandId,
+          brand: card.brandCountry.brand.id,
           amount: card.amount.toNumber(),
           claimCode,
           pinCode,

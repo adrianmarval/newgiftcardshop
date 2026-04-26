@@ -14,7 +14,7 @@ import type { BuyGiftcardManagerProps } from './types';
 
 const STEP_LABELS = ['Buscar', 'Seleccionar', 'Redimir', 'Uso', 'Pagar'];
 
-export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftcardManagerProps) => {
+export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardManagerProps) => {
   const { step } = useBuyFlow();
 
   // Sync store ONCE per mount / per orderId change — synchronously before first paint
@@ -45,7 +45,7 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
         adjustedTotal: resumeOrder.adjustedTotal,
         foundGiftcards: giftcards,
         selectedBrand: '',
-        selectedCountry: 'US',
+        selectedCountry: '',
         targetAmount: '',
       });
     } else {
@@ -60,7 +60,7 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
       <div className="border-border bg-card/40 flex flex-row items-center justify-between gap-2.5 rounded-none border-y px-1.5 py-1.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Comprar Tarjetas</h1>
-          <p className="text-muted-foreground hidden text-xs md:block md:text-base">Encuentra los mejores precios en gift cards.</p>
+          <p className="text-muted-foreground hidden text-xs md:block md:text-base">Encuentra los mejores precios en gift card.</p>
         </motion.div>
 
         {/* Compact Progress Steps */}
@@ -117,7 +117,7 @@ export const BuyGiftcardManager = ({ brands, countries, resumeOrder }: BuyGiftca
             transition={{ duration: 0.2 }}
             className="flex h-full flex-col"
           >
-            {step === 1 && <SearchStep brands={brands} countries={countries} />}
+            {step === 1 && <SearchStep brandCountries={brandCountries} />}
             {step === 2 && <ResultsStep />}
             {step === 3 && <RedeemStep />}
             {step === 4 && <ConfirmUsageStep />}

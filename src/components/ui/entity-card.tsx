@@ -95,7 +95,7 @@ export function EntityCard({
         ) : (
           <>
             <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} className={`h-full ${progColor}`} />
-            <div className="flex-1 bg-amber-400" />
+            <div className="bg-muted flex-1" />
           </>
         )}
       </div>
