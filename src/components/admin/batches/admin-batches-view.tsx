@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { AdminBatchesFilters } from './admin-batches-filters';
 import { AdminBatchesList } from './admin-batches-list';
 import { AdminPayDialog } from './admin-pay-dialog';
+import { AdminSellerDialog } from './admin-seller-dialog';
 import type { AdminBatch } from '@/types/domain/admin';
 import type { PaginationMeta } from '@/types/application/shared';
 import { IconCurrencyDollar } from '@tabler/icons-react';
-import { AlertTriangle } from 'lucide-react';
 import { StatusLeyend } from '@/components/ui/status-leyend';
 
 interface AdminBatchesClientProps {
@@ -23,6 +23,17 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [showFloatingBar, setShowFloatingBar] = useState(false);
+  const [sellerDialog, setSellerDialog] = useState<{
+    seller: {
+      id: string;
+      name: string;
+      email: string;
+      sellRate: number;
+      orderCount: number;
+      createdAt: string;
+      twoFactorEnabled: boolean;
+    } | null;
+  }>({ seller: null });
 
   const selectedBatches = batches.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount);
 
@@ -37,6 +48,10 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
       else next.delete(id);
       return next;
     });
+  };
+
+  const handleViewSeller = (batch: AdminBatch) => {
+    setSellerDialog({ seller: batch.seller });
   };
 
   const currentPage = parseInt(searchParams.get('page') || '1');
@@ -62,7 +77,13 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
 
       <AdminBatchesFilters sellers={sellers} />
 
-      <AdminBatchesList batches={batches} selectedIds={selectedIds} onSelect={handleSelect} onDeleted={handleDeleted} />
+      <AdminBatchesList
+        batches={batches}
+        selectedIds={selectedIds}
+        onSelect={handleSelect}
+        onDeleted={handleDeleted}
+        onViewSeller={handleViewSeller}
+      />
 
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
@@ -84,6 +105,14 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
       )}
 
       <AdminPayDialog batches={selectedBatches} open={payDialogOpen} onOpenChange={setPayDialogOpen} onPaid={handlePaid} />
+
+      <AdminSellerDialog
+        seller={sellerDialog.seller}
+        open={!!sellerDialog.seller}
+        onOpenChange={(open) => {
+          if (!open) setSellerDialog({ seller: null });
+        }}
+      />
 
       {showFloatingBar && (
         <div className="bg-card border-border fixed bottom-22 left-1/2 z-9999 flex -translate-x-1/2 items-center gap-4 rounded-full border px-4 py-2 shadow-lg">

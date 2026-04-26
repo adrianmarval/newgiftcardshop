@@ -64,7 +64,7 @@ export const adminBatches = adminActionClient
       prisma.giftcardBatch.findMany({
         where,
         include: {
-          user: { select: { id: true, name: true, email: true } },
+          user: { select: { id: true, name: true, email: true, sellRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
           giftcards: {
             include: {
               brand: true,
@@ -107,8 +107,16 @@ export const adminBatches = adminActionClient
       }, 0);
 
       const seller = batch.user
-        ? { id: batch.user.id, name: batch.user.name, email: batch.user.email }
-        : { id: '', name: 'Unknown', email: '' };
+        ? {
+            id: batch.user.id,
+            name: batch.user.name,
+            email: batch.user.email,
+            sellRate: Number(batch.user.sellRate),
+            orderCount: 0,
+            createdAt: batch.user.createdAt.toISOString(),
+            twoFactorEnabled: batch.user.twoFactorEnabled,
+          }
+        : { id: '', name: 'Unknown', email: '', sellRate: 0, orderCount: 0, createdAt: '', twoFactorEnabled: false };
 
       const giftcards = batch.giftcards.map((card) => {
         let claimCode = card.claimCode;

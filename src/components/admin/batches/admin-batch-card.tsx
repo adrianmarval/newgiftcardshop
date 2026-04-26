@@ -17,6 +17,7 @@ interface AdminBatchCardProps {
   isSelected: boolean;
   onSelect: (selected: boolean) => void;
   onDeleted: () => void;
+  onViewSeller?: (batch: AdminBatch) => void;
   isExpanded?: boolean;
   onToggle?: () => void;
 }
@@ -26,6 +27,7 @@ export function AdminBatchCard({
   isSelected,
   onSelect,
   onDeleted,
+  onViewSeller,
   isExpanded = false,
   onToggle = () => {},
 }: AdminBatchCardProps) {
@@ -62,7 +64,17 @@ export function AdminBatchCard({
     <RegistryCard
       id={batch.id}
       title={`Lote #${batch.id}`}
-      subtitle={batch.seller.email}
+      subtitle={
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewSeller?.(batch);
+          }}
+          className="text-muted-foreground hover:text-primary text-left"
+        >
+          {batch.seller.email}
+        </button>
+      }
       icon={
         canPay ? (
           <Checkbox
@@ -75,8 +87,8 @@ export function AdminBatchCard({
       }
       topRightContent={
         <>
-          <span className="text-md font-semibold text-foreground md:text-lg">${batch.effectiveTotal.toFixed(0)}</span>
-          <span className="text-xs text-muted-foreground md:text-sm">A Pagar: ${batch.estimatedPayout.toFixed(2)}</span>
+          <span className="text-md text-foreground font-semibold md:text-lg">${batch.effectiveTotal.toFixed(0)}</span>
+          <span className="text-muted-foreground text-xs md:text-sm">A Pagar: ${batch.estimatedPayout.toFixed(2)}</span>
         </>
       }
       date={
@@ -88,7 +100,7 @@ export function AdminBatchCard({
               disabled={isDeleting}
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:bg-destructive/10 h-8 w-8"
             >
               {isDeleting ? <Spinner size="sm" /> : <Trash2 className="h-4 w-4" />}
             </Button>

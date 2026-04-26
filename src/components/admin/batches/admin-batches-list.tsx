@@ -13,14 +13,15 @@ interface AdminBatchesListProps {
   selectedIds: Set<number>;
   onSelect: (id: number, selected: boolean) => void;
   onDeleted: () => void;
+  onViewSeller?: (batch: AdminBatch) => void;
 }
 
-export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: AdminBatchesListProps) {
+export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, onViewSeller }: AdminBatchesListProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   // Auto-expand batch if it contains a search match
   useEffect(() => {
-    const batchWithMatch = batches.find((b) => b.giftcards.some((g) => g.isSearchMatch ));
+    const batchWithMatch = batches.find((b) => b.giftcards.some((g) => g.isSearchMatch));
     if (batchWithMatch) {
       setExpandedId(batchWithMatch.id);
     }
@@ -62,24 +63,25 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: 
         {batches
           .filter((batch) => expandedId === null || expandedId === batch.id)
           .map((batch) => (
-          <motion.div
-            key={batch.id}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <AdminBatchCard
-              batch={batch}
-              isSelected={selectedIds.has(batch.id)}
-              onSelect={(selected) => onSelect(batch.id, selected)}
-              onDeleted={onDeleted}
-              isExpanded={expandedId === batch.id}
-              onToggle={() => handleToggle(batch.id)}
-            />
-          </motion.div>
-        ))}
+            <motion.div
+              key={batch.id}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <AdminBatchCard
+                batch={batch}
+                isSelected={selectedIds.has(batch.id)}
+                onSelect={(selected) => onSelect(batch.id, selected)}
+                onDeleted={onDeleted}
+                onViewSeller={onViewSeller}
+                isExpanded={expandedId === batch.id}
+                onToggle={() => handleToggle(batch.id)}
+              />
+            </motion.div>
+          ))}
       </AnimatePresence>
     </div>
   );
