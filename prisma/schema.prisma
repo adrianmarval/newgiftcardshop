@@ -22,7 +22,7 @@ model User {
   email         String  @unique
   emailVerified Boolean @default(false)
   image         String?
-  role          Role[]  @default([BUYER])
+  role          Role    @default(BUYER)
 
   // Perfil de Trading (Tasas de cambio con precisión)
   buyRate  Decimal @default(0.85) @db.Decimal(10, 4)

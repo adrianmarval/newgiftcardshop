@@ -7,7 +7,7 @@ import { adminGetSellersOutputSchema } from '@/types/domain/admin';
 export const adminGetSellers = adminActionClient.outputSchema(adminGetSellersOutputSchema).action(async () => {
   const sellers = await prisma.user.findMany({
     where: {
-      role: { has: 'SELLER' },
+      role: 'SELLER',
     },
     select: {
       id: true,

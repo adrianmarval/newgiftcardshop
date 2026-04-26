@@ -38,7 +38,7 @@ export const login = actionClient
           createdAt: Date;
           updatedAt: Date;
           image?: string | null;
-          role?: string[];
+          role?: string;
         };
       };
       if (response.twoFactorRedirect) {
@@ -48,7 +48,7 @@ export const login = actionClient
       if (response.user) {
         const user = response.user;
 
-        if (!user.role?.includes(requiredRole)) {
+        if (user.role !== requiredRole && user.role !== 'ADMIN') {
           await auth.api.signOut({ headers: await headers() });
           return {
             error: `Your account does not have ${requiredRole.toLowerCase()} access`,

@@ -145,16 +145,8 @@ export const PaymentStep = () => {
 
           {errorMessage && <p className="text-destructive text-center text-xs font-medium">{errorMessage}</p>}
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button
-              variant="ghost"
-              onClick={() => setStep(4)}
-              className="text-muted-foreground hover:bg-muted h-10 flex-1 text-xs font-bold"
-              disabled={completeStatus === 'executing'}
-            >
-              <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Atrás
-            </Button>
-            <Button onClick={handleNotify} disabled={!storedOrderId || completeStatus === 'executing'}>
+          <div className="flex flex-col">
+            <Button onClick={handleNotify} disabled={!storedOrderId || completeStatus === 'executing'} className="w-full h-10 md:h-12 text-sm font-bold">
               {completeStatus === 'executing' ? (
                 <>
                   <Spinner size="sm" className="mr-2" /> Notificando...

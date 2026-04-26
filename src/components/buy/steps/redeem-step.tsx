@@ -219,6 +219,11 @@ export const RedeemStep = () => {
                         >
                           ${card.amount}
                         </span>
+                        {card.status === 'WRONG_AMOUNT' && card.reportedAmount !== undefined && (
+                          <span className="text-destructive text-lg font-black md:text-xl">
+                            ${card.reportedAmount}
+                          </span>
+                        )}
                         {card.status !== 'UNUSED' && (
                           <Badge variant="destructive" className="h-4 px-1.5 py-0 text-[10px] font-bold uppercase md:text-xs">
                             {card.status === 'INVALID'

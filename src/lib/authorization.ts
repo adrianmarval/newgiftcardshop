@@ -11,7 +11,7 @@ export async function getSession() {
 
 export async function authorizeByRequiredRole(requiredRoles: Role[]) {
   const session = await getSession();
-  if (!session.user.role.some((role) => requiredRoles.includes(role as Role))) {
+  if (!requiredRoles.includes(session.user.role as Role)) {
     unauthorized();
   }
   return session;
@@ -20,7 +20,7 @@ export async function authorizeByRequiredRole(requiredRoles: Role[]) {
 export async function authorizeOrRedirect(requiredRoles: Role[], redirectTo: string) {
   const session = await getSession();
   if (!session?.user) redirect(redirectTo);
-  if (!session.user.role.some((role) => requiredRoles.includes(role as Role))) {
+  if (!requiredRoles.includes(session.user.role as Role)) {
     redirect(redirectTo);
   }
   return session;

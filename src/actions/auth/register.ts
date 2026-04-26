@@ -28,7 +28,7 @@ export const register = actionClient
           name: fullName,
           email,
           password,
-          role: [role],
+          role,
           callbackURL,
         },
         headers: await headers(),
