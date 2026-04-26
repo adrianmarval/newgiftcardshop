@@ -21,6 +21,7 @@ export interface RegistryCardProps {
     colorClass: string;
     fullColorClass?: string;
   };
+  activeBgClass?: string;
   actions?: ReactNode;
   children?: ReactNode;
   className?: string;
@@ -37,6 +38,7 @@ export function RegistryCard({
   onToggle,
   hasReport,
   progress,
+  activeBgClass,
   actions,
   children,
   className = '',
@@ -45,7 +47,7 @@ export function RegistryCard({
     <Card
       onClick={onToggle}
       className={`hover:border-primary/30 relative cursor-pointer gap-2 overflow-hidden py-2 transition-all duration-200 ease-out ${
-        isExpanded ? 'bg-primary/10 dark:bg-primary/15 shadow-md' : ''
+        isExpanded ? `${activeBgClass || 'bg-primary/10 dark:bg-primary/15'} shadow-md` : ''
       } ${className}`}
     >
       {hasReport && !isExpanded && (

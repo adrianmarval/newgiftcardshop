@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -58,17 +58,27 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: 
           <span className="text-muted-foreground text-sm md:text-lg">Seleccionar todos los pagables</span>
         </div>
       )}
-      <AnimatePresence mode="popLayout">
-        {batches.map((batch) => (
-          <AdminBatchCard
+      <AnimatePresence>
+        {batches
+          .filter((batch) => expandedId === null || expandedId === batch.id)
+          .map((batch) => (
+          <motion.div
             key={batch.id}
-            batch={batch}
-            isSelected={selectedIds.has(batch.id)}
-            onSelect={(selected) => onSelect(batch.id, selected)}
-            onDeleted={onDeleted}
-            isExpanded={expandedId === batch.id}
-            onToggle={() => handleToggle(batch.id)}
-          />
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <AdminBatchCard
+              batch={batch}
+              isSelected={selectedIds.has(batch.id)}
+              onSelect={(selected) => onSelect(batch.id, selected)}
+              onDeleted={onDeleted}
+              isExpanded={expandedId === batch.id}
+              onToggle={() => handleToggle(batch.id)}
+            />
+          </motion.div>
         ))}
       </AnimatePresence>
     </div>

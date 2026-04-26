@@ -15,10 +15,10 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
   const hasReport = batch.giftcards.some((g) => g.isConfirmed && g.status !== 'USED');
   const batchTotal = batch.giftcards.reduce((sum, g) => sum + g.amount, 0);
 
-  const getStatus = (): { label: string; color: string } => {
-    if (isPaid) return { label: 'PAID', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
-    if (allConfirmed) return { label: 'CONFIRMED', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' };
-    return { label: `PROCESSING`, color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' };
+  const getStatus = (): { label: string; color: string; activeBg: string } => {
+    if (isPaid) return { label: 'PAID', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', activeBg: 'bg-emerald-500/10 dark:bg-emerald-500/15' };
+    if (allConfirmed) return { label: 'CONFIRMED', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20', activeBg: 'bg-blue-500/10 dark:bg-blue-500/15' };
+    return { label: `PROCESSING`, color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', activeBg: 'bg-amber-500/10 dark:bg-amber-500/15' };
   };
 
   const status = getStatus();
@@ -46,6 +46,7 @@ export function BatchCard({ batch, isExpanded, onToggle, onCardClick }: BatchCar
       isExpanded={isExpanded}
       onToggle={onToggle}
       hasReport={hasReport}
+      activeBgClass={status.activeBg}
       progress={{
         percentage: progressPercentage,
         colorClass: 'bg-blue-500',

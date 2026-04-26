@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { BatchCard } from './batch-card';
@@ -30,15 +30,25 @@ export function BatchesList({ batches, onCardClick }: BatchesListProps) {
 
   return (
     <div className="space-y-2">
-      <AnimatePresence mode="popLayout">
-        {batches.map((batch) => (
-          <BatchCard
+      <AnimatePresence>
+        {batches
+          .filter((batch) => expandedBatch === null || expandedBatch === batch.id.toString())
+          .map((batch) => (
+          <motion.div
             key={batch.id}
-            batch={batch}
-            isExpanded={expandedBatch === batch.id.toString()}
-            onToggle={() => setExpandedBatch(expandedBatch === batch.id.toString() ? null : batch.id.toString())}
-            onCardClick={onCardClick}
-          />
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <BatchCard
+              batch={batch}
+              isExpanded={expandedBatch === batch.id.toString()}
+              onToggle={() => setExpandedBatch(expandedBatch === batch.id.toString() ? null : batch.id.toString())}
+              onCardClick={onCardClick}
+            />
+          </motion.div>
         ))}
       </AnimatePresence>
     </div>

@@ -33,6 +33,12 @@ export function AdminBatchCard({
   const canPay = !batch.isPaid && batch.confirmedCount === batch.cardsCount && batch.cardsCount > 0;
   const canDelete = batch.giftcards.every((c) => !c.orderId);
 
+  const getActiveBg = (): string => {
+    if (batch.isPaid) return 'bg-emerald-500/10 dark:bg-emerald-500/15';
+    if (batch.confirmedCount === batch.cardsCount && batch.cardsCount > 0) return 'bg-blue-500/10 dark:bg-blue-500/15';
+    return 'bg-amber-500/10 dark:bg-amber-500/15';
+  };
+
   const handleDelete = async (e: MouseEvent) => {
     e.stopPropagation();
     if (!confirm(`¿Eliminar lote #${batch.id}?`)) return;
@@ -92,6 +98,7 @@ export function AdminBatchCard({
       isExpanded={isExpanded}
       onToggle={onToggle}
       hasReport={batch.hasIssues}
+      activeBgClass={getActiveBg()}
       progress={{
         percentage: (batch.confirmedCount / (batch.cardsCount || 1)) * 100,
         colorClass: 'bg-blue-500',

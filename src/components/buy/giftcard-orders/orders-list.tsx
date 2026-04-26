@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { OrderCard } from '@/components/buy/giftcard-orders/order-card';
 import { UrlPagination } from '@/components/ui/url-pagination';
@@ -36,15 +36,25 @@ export const OrdersList = ({ orders, totalPages, onCardClick }: OrdersListProps)
   return (
     <>
       <div className="space-y-2">
-        <AnimatePresence mode="popLayout">
-          {orders.map((order) => (
-            <OrderCard
+        <AnimatePresence>
+          {orders
+            .filter((order) => expandedId === null || expandedId === order.id)
+            .map((order) => (
+            <motion.div
               key={order.id}
-              order={order}
-              onCardClick={onCardClick}
-              isExpanded={expandedId === order.id}
-              onToggle={() => handleToggle(order.id)}
-            />
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <OrderCard
+                order={order}
+                onCardClick={onCardClick}
+                isExpanded={expandedId === order.id}
+                onToggle={() => handleToggle(order.id)}
+              />
+            </motion.div>
           ))}
         </AnimatePresence>
       </div>
