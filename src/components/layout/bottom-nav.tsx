@@ -25,8 +25,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
-  const dragControls = useDragControls();
-  
+
   // Safe hydration
   React.useEffect(() => {
     setMounted(true);
@@ -34,7 +33,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
 
   const dragY = useMotionValue(0);
   const springY = useSpring(dragY, { stiffness: 400, damping: 40 });
-  
+
   const isCompact = variant === 'compact';
   const mainItems = items.slice(0, 4);
   const extraItems = items.slice(4);
@@ -43,7 +42,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
   const baseHeight = 0;
   const rows = Math.ceil(extraItems.length / 4);
   const maxExpansion = Math.min(rows * 65 + 10, 240);
-  
+
   const drawerHeight = useTransform(springY, [0, -maxExpansion], [baseHeight, maxExpansion]);
   const contentOpacity = useTransform(springY, [0, -40], [0, 1]);
 
@@ -86,7 +85,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
       onPan={handlePan}
       onPanEnd={onDragEnd}
       className={cn(
-        'border-border bg-background/95 supports-backdrop-filter:bg-background/95 z-50 backdrop-blur-xl transition-all duration-300',
+        'p-1 border-border bg-background/95 supports-backdrop-filter:bg-background/95 z-50 backdrop-blur-xl transition-all duration-300',
         'relative touch-none overflow-visible select-none',
         isFixed
           ? 'fixed right-0 bottom-0 left-0 border-t shadow-[0_-2px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-2px_30px_rgba(0,0,0,0.3)]'
@@ -123,7 +122,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
                 <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={false} />
               ))}
             </motion.div>
-            
+
             {isExpanded && <div className="border-t border-dashed py-0.5 opacity-50" />}
           </motion.div>
         </>
@@ -143,15 +142,7 @@ function NavItem({ item, isActive, isCompact }: { item: BottomNavItem; isActive:
   const Content = (
     <>
       <item.icon className={cn('h-6 w-6', isActive && 'fill-primary/20')} />
-      <span
-        className={cn(
-          'text-[10px] md:text-sm',
-          'font-semibold tracking-tight',
-          isActive ? 'text-primary' : '',
-        )}
-      >
-        {item.title}
-      </span>
+      <span className={cn('text-[10px] md:text-sm', 'font-semibold tracking-tight', isActive ? 'text-primary' : '')}>{item.title}</span>
     </>
   );
 
@@ -163,12 +154,12 @@ function NavItem({ item, isActive, isCompact }: { item: BottomNavItem; isActive:
 
   if (item.onClick) {
     return (
-      <button 
-        type="button" 
+      <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           item.onClick?.();
-        }} 
+        }}
         className={baseClasses}
       >
         {Content}
@@ -177,11 +168,7 @@ function NavItem({ item, isActive, isCompact }: { item: BottomNavItem; isActive:
   }
 
   return (
-    <Link 
-      href={item.url || '#'} 
-      className={baseClasses}
-      onClick={(e) => e.stopPropagation()}
-    >
+    <Link href={item.url || '#'} className={baseClasses} onClick={(e) => e.stopPropagation()}>
       {Content}
     </Link>
   );
