@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import Image from 'next/image';
-import type { BrandStepProps } from '../types';
+import type { BrandStepProps } from '@/components/sell/types';
 
 export function BrandStep({ brands, countries }: BrandStepProps) {
   const { selectedBrand, setSelectedBrand, selectedCountry, setSelectedCountry, setStep } = useSellFlow();

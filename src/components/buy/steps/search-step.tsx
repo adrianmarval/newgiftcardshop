@@ -13,7 +13,7 @@ import { searchGiftcards } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { Brand, Country } from '@/types';
-import type { SearchStepProps } from '../types';
+import type { SearchStepProps } from '@/components/buy/types';
 import { toast } from 'sonner';
 
 export function SearchStep({ brands, countries }: SearchStepProps) {
