@@ -63,7 +63,16 @@ export function EntityCard({
       <CardHeader>
         <CardTitle>
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 md:gap-4">
-            {image && <Image src={image} alt={imageAlt || ''} width={20} height={20} className="h-10 w-10 rounded-lg object-contain p-1" />}
+            {image && (
+              <Image
+                src={image}
+                alt={imageAlt || ''}
+                width={20}
+                height={20}
+                style={{ width: 'auto', height: 'auto' }}
+                className="h-10 w-10 rounded-lg object-contain p-1"
+              />
+            )}
 
             <div className="flex flex-col gap-0.5">
               <span className="text-foreground text-md font-medium md:text-base">{title}</span>

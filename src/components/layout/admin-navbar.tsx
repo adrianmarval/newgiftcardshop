@@ -1,6 +1,17 @@
 'use client';
 
-import { IconDashboard, IconUsers, IconShoppingCart, IconCreditCard, IconChartBar, IconCash, IconSun, IconMoon, IconLogout } from '@tabler/icons-react';
+import {
+  IconDashboard,
+  IconUsers,
+  IconShoppingCart,
+  IconCreditCard,
+  IconChartBar,
+  IconCash,
+  IconSun,
+  IconMoon,
+  IconLogout,
+  IconTag,
+} from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
 import { useLogout } from '@/hooks/use-logout';
@@ -21,6 +32,11 @@ export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
       title: 'Lotes',
       url: '/admin/dashboard/batches',
       icon: IconCreditCard,
+    },
+    {
+      title: 'Brands',
+      url: '/admin/dashboard/brands',
+      icon: IconTag,
     },
     { title: 'Pagos', url: '/admin/dashboard/payments', icon: IconCash },
     {

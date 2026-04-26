@@ -82,6 +82,7 @@ export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: Or
           width={40}
           height={40}
           className={`h-10 w-10 rounded-lg object-contain p-1 ${status.color}`}
+          style={{ width: 'auto', height: 'auto' }}
         />
       }
       topRightContent={

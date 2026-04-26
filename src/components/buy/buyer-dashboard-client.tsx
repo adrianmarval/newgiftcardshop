@@ -68,7 +68,13 @@ export function BuyerDashboardClient({ stats, activeOrders }: BuyerDashboardClie
                 <CardHeader className="flex flex-row items-center gap-3">
                   {order.giftcards[0]?.brand.image ? (
                     <div className="relative h-10 w-10">
-                      <Image src={order.giftcards[0].brand.image} alt={order.giftcards[0].brand.name} fill className="object-contain" />
+                      <Image
+                        src={order.giftcards[0].brand.image}
+                        alt={order.giftcards[0].brand.name}
+                        fill
+                        style={{ width: 'auto', height: 'auto' }}
+                        className="object-contain"
+                      />
                     </div>
                   ) : (
                     <span className="text-2xl">{order.giftcards[0]?.brand.icon || '🛒'}</span>

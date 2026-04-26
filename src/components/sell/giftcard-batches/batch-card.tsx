@@ -47,6 +47,7 @@ export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
           width={40}
           height={40}
           className={`h-10 w-10 rounded-lg object-contain p-1 ${status.color}`}
+          style={{ width: 'auto', height: 'auto' }}
         />
       }
       topRightContent={

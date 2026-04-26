@@ -76,7 +76,13 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
                 <CardHeader className="flex flex-row items-center gap-3">
                   {batch.giftcards[0]?.brand.image ? (
                     <div className="relative h-10 w-10">
-                      <Image src={batch.giftcards[0].brand.image} alt={batch.giftcards[0].brand.name} fill className="object-contain" />
+                      <Image
+                        src={batch.giftcards[0].brand.image}
+                        alt={batch.giftcards[0].brand.name}
+                        fill
+                        style={{ width: 'auto', height: 'auto' }}
+                        className="object-contain"
+                      />
                     </div>
                   ) : (
                     <span className="text-2xl">{batch.giftcards[0]?.brand.icon || '🎁'}</span>
