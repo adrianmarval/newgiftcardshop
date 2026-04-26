@@ -109,11 +109,11 @@ export function BrandStep({ brands, countries }: BrandStepProps) {
             ))}
           </AnimatePresence>
         </CardContent>
-        <CardFooter className="p-0">
+        <CardFooter className="p-2">
           <Button
             onClick={() => setStep(2)}
             disabled={!isStep1Valid}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-full text-sm font-bold transition-all md:h-11 md:text-base"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-full font-bold transition-all"
           >
             Continuar <ChevronRight className="ml-1 h-4 w-4 md:ml-2" />
           </Button>
