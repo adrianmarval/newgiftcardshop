@@ -72,7 +72,6 @@ export function BuyerDashboardClient({ stats, activeOrders }: BuyerDashboardClie
                         src={order.giftcards[0].brand.image}
                         alt={order.giftcards[0].brand.name}
                         fill
-                        style={{ width: 'auto', height: 'auto' }}
                         className="object-contain"
                       />
                     </div>

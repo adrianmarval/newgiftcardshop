@@ -81,7 +81,6 @@ export function GiftcardItem({
                 src={card.brand.image}
                 alt={card.brand.name}
                 fill
-                style={{ width: 'auto', height: 'auto' }}
                 className="object-contain"
                 loading="eager"
               />

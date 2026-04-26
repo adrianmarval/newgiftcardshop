@@ -195,7 +195,6 @@ export const ResultsStep = () => {
                         src={resultsState.brandData.image}
                         alt={resultsState.brandData.name}
                         fill
-                        style={{ width: 'auto', height: 'auto' }}
                         className="object-contain p-1.5"
                         loading="eager"
                       />

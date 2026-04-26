@@ -80,7 +80,6 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
                         src={batch.giftcards[0].brand.image}
                         alt={batch.giftcards[0].brand.name}
                         fill
-                        style={{ width: 'auto', height: 'auto' }}
                         className="object-contain"
                       />
                     </div>

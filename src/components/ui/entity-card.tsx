@@ -69,7 +69,6 @@ export function EntityCard({
                 alt={imageAlt || ''}
                 width={20}
                 height={20}
-                style={{ width: 'auto', height: 'auto' }}
                 className="h-10 w-10 rounded-lg object-contain p-1"
               />
             )}
