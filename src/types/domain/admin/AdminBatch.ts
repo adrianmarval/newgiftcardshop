@@ -36,6 +36,7 @@ const cardWithBuyerSchema = z.object({
     })
     .nullable(),
   issues: z.array(giftcardIssueSchema).nullable(),
+  isSearchMatch: z.boolean().optional(),
 });
 
 export const adminBatchSchema = z.object({

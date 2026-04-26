@@ -20,7 +20,7 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted }: 
 
   // Auto-expand batch if it contains a search match
   useEffect(() => {
-    const batchWithMatch = batches.find((b) => b.giftcards.some((g) => g.isSearchMatch));
+    const batchWithMatch = batches.find((b) => b.giftcards.some((g) => g.isSearchMatch ));
     if (batchWithMatch) {
       setExpandedId(batchWithMatch.id);
     }
