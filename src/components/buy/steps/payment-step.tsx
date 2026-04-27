@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clipboard, Check, Wallet, Info, ArrowLeft } from 'lucide-react';
+import { Clipboard, Check, Wallet, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
