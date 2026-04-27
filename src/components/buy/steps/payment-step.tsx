@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
 
 export const PaymentStep = () => {
-  const { setStep, orderId: storedOrderId, adjustedTotal } = useBuyFlow();
+  const { orderId: storedOrderId, adjustedTotal } = useBuyFlow();
 
   const [transactionId, setTransactionId] = useState('');
   const [notified, setNotified] = useState(false);
@@ -146,7 +146,11 @@ export const PaymentStep = () => {
           {errorMessage && <p className="text-destructive text-center text-xs font-medium">{errorMessage}</p>}
 
           <div className="flex flex-col">
-            <Button onClick={handleNotify} disabled={!storedOrderId || completeStatus === 'executing'} className="w-full h-10 md:h-12 text-sm font-bold">
+            <Button
+              onClick={handleNotify}
+              disabled={!storedOrderId || completeStatus === 'executing'}
+              className="h-10 w-full text-sm font-bold md:h-12"
+            >
               {completeStatus === 'executing' ? (
                 <>
                   <Spinner size="sm" className="mr-2" /> Notificando...
