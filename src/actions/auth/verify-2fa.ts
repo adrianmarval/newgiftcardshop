@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { authActionClient } from '@/lib/safe-action';
+import { actionClient } from '@/lib/safe-action';
 import { verify2FASchema, verify2FAOutputSchema } from '@/types/auth/schemas';
 
 const dashboardMap = {
@@ -11,7 +11,7 @@ const dashboardMap = {
   admin: '/admin/dashboard',
 } as const;
 
-export const verify2FA = authActionClient
+export const verify2FA = actionClient
   .inputSchema(verify2FASchema)
   .outputSchema(verify2FAOutputSchema)
   .action(async function ({ parsedInput: { code, portal } }) {

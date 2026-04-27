@@ -49,6 +49,11 @@ export const auth = betterAuth({
         defaultValue: 'BUYER',
         input: true,
       },
+      isActive: {
+        type: 'boolean',
+        defaultValue: false,
+        input: true,
+      },
     },
   },
   plugins: [

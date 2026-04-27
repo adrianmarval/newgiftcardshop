@@ -1,7 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { adminActionClient, authActionClient } from '@/lib/safe-action';
+import { adminActionClient } from '@/lib/safe-action';
 import { z } from 'zod';
 import { paginatedOutputSchema } from '@/types/application/shared/Pagination';
 
@@ -34,9 +34,20 @@ const updateUserSchema = z.object({
   allowBuyRateAdjustment: z.boolean().optional(),
 });
 
-export const updateUser = authActionClient.inputSchema(updateUserSchema).action(async function ({ parsedInput }) {
+export const updateUser = adminActionClient.inputSchema(updateUserSchema).action(async function ({ parsedInput }) {
   try {
-    const { userId, role, isActive, creditLimit, buyRate, sellRate, minAmountPreference, maxAmountPreference, allowSearchPreferences, allowBuyRateAdjustment } = parsedInput;
+    const {
+      userId,
+      role,
+      isActive,
+      creditLimit,
+      buyRate,
+      sellRate,
+      minAmountPreference,
+      maxAmountPreference,
+      allowSearchPreferences,
+      allowBuyRateAdjustment,
+    } = parsedInput;
 
     const updated = await prisma.user.update({
       where: { id: userId },

@@ -52,7 +52,15 @@ export const actionClient = createSafeActionClient({
  *     return { user: ctx.auth.user };
  *   });
  */
-export const authActionClient = actionClient.use(betterAuth(auth));
+export const authActionClient = actionClient.use(
+  betterAuth(auth, {
+    authorize: ({ authData, next }) => {
+      if (!authData) unauthorized();
+      if (!authData.user.isActive && authData.user.role !== 'ADMIN') unauthorized();
+      return next({ ctx: { auth: authData } });
+    },
+  }),
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Role-Specific Clients — Enforce authorization at the action level
@@ -83,6 +91,7 @@ export const sellerActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
+      if (!authData.user.isActive && authData.user.role !== 'ADMIN') unauthorized();
       const role = authData.user.role as Role;
       if (role !== 'SELLER' && role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
@@ -114,6 +123,7 @@ export const buyerActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
+      if (!authData.user.isActive && authData.user.role !== 'ADMIN') unauthorized();
       const role = authData.user.role as Role;
       if (role !== 'BUYER' && role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
@@ -135,6 +145,7 @@ export const adminActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
+      if (!authData.user.isActive && authData.user.role !== 'ADMIN') unauthorized();
       const role = authData.user.role as Role;
       if (role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });

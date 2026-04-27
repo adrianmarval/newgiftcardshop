@@ -9,8 +9,16 @@ export async function getSession() {
   return session;
 }
 
-export async function authorizeByRequiredRole(requiredRoles: Role[]) {
+export async function authorizeActiveUser() {
   const session = await getSession();
+  if (!session.user.isActive && session.user.role !== 'ADMIN') {
+    redirect('/pending-activation');
+  }
+  return session;
+}
+
+export async function authorizeByRequiredRole(requiredRoles: Role[]) {
+  const session = await authorizeActiveUser();
   if (!requiredRoles.includes(session.user.role as Role)) {
     unauthorized();
   }
@@ -18,8 +26,13 @@ export async function authorizeByRequiredRole(requiredRoles: Role[]) {
 }
 
 export async function authorizeOrRedirect(requiredRoles: Role[], redirectTo: string) {
-  const session = await getSession();
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) redirect(redirectTo);
+  
+  if (!session.user.isActive && session.user.role !== 'ADMIN') {
+    redirect('/pending-activation');
+  }
+
   if (!requiredRoles.includes(session.user.role as Role)) {
     redirect(redirectTo);
   }

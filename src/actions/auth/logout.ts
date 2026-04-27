@@ -2,10 +2,10 @@
 
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { authActionClient } from '@/lib/safe-action';
+import { actionClient } from '@/lib/safe-action';
 import { logoutSchema, logoutOutputSchema } from '@/types/auth/schemas';
 
-export const logout = authActionClient
+export const logout = actionClient
   .inputSchema(logoutSchema)
   .outputSchema(logoutOutputSchema)
   .action(async function ({ parsedInput: { portal } }) {
