@@ -29,10 +29,13 @@ export const searchGiftcardItemSchema = z.object({
 export type SearchGiftcardItem = z.infer<typeof searchGiftcardItemSchema>;
 
 /** Schema de salida para searchGiftcards */
-export const searchGiftcardsOutputSchema = z.object({
-  success: z.literal(true),
-  giftcards: z.array(searchGiftcardItemSchema),
-});
+export const searchGiftcardsOutputSchema = z
+  .object({
+    success: z.literal(true),
+    giftcards: z.array(searchGiftcardItemSchema),
+    error: z.string().optional(),
+  })
+  .strict();
 
 // ── Get Order Cards ───────────────────────────────────────────────────────────
 

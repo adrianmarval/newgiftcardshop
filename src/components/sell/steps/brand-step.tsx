@@ -1,22 +1,27 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Check, ChevronRight, Globe } from 'lucide-react';
+import { Search, Check, ChevronRight, Globe, X, Plus } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+
 import { useSellFlow } from '@/hooks/use-sell-flow';
+
 import Image from 'next/image';
 import type { BrandStepProps } from '@/components/sell/types';
 
+
 export function BrandStep({ brandCountries }: BrandStepProps) {
+
   const { selectedBrandCountry, setSelectedBrandCountry, setStep } = useSellFlow();
 
   const [searchBrand, setSearchBrand] = useState('');
   const [selectedCountryId, setSelectedCountryId] = useState('');
+
 
   const countries = useMemo(() => {
     const unique = new Map<string, { id: string; name: string; code: string }>();
@@ -44,8 +49,8 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
 
   return (
     <div className="grid grid-cols-1 items-start gap-1 md:grid-cols-12 md:gap-6">
-      {/* Left Column: Filters */}
       <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
+
         <div className="space-y-1">
           <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
@@ -91,7 +96,6 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
         </div>
       </Card>
 
-      {/* Right Column: Brand Grid */}
       <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <CardContent className="custom-scrollbar grid flex-1 grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
           {showEmptyState ? (

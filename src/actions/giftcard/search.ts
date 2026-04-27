@@ -3,12 +3,65 @@
 import { findGiftcardCombination } from '@/lib/browse-giftcards';
 import prisma from '@/lib/prisma';
 import { buyerActionClient } from '@/lib/safe-action';
+import { headers } from 'next/headers';
 import { searchGiftcardSchema, searchGiftcardsOutputSchema } from '@/types/application/buy-flow';
+import { auth } from '@/lib/auth';
+import { Decimal } from '@prisma/client/runtime/client';
 
 export const searchGiftcards = buyerActionClient
   .inputSchema(searchGiftcardSchema)
   .outputSchema(searchGiftcardsOutputSchema)
   .action(async ({ parsedInput: { brandId, countryId, amount } }) => {
+    const headersList = await headers();
+    const session = await auth.api.getSession({ headers: headersList });
+
+    if (!session?.user?.id) {
+      return { success: true as const, giftcards: [], error: 'Unauthorized' };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        creditLimit: true,
+        role: true,
+        minAmountPreference: true,
+        maxAmountPreference: true,
+      },
+    });
+
+    if (user?.role === 'BUYER') {
+      const unpaidOrders = await prisma.order.findMany({
+        where: {
+          userId: session.user.id,
+          status: 'AWAITING_PAYMENT',
+        },
+        select: { adjustedTotal: true, total: true },
+      });
+
+      let unpaidTotal = 0;
+      for (const o of unpaidOrders) {
+        unpaidTotal += o.adjustedTotal ? Number(o.adjustedTotal) : Number(o.total);
+      }
+
+      const creditLimitNum = Number(user.creditLimit);
+
+      if (unpaidTotal >= creditLimitNum) {
+        return {
+          success: true as const,
+          giftcards: [],
+          error: 'Has alcanzado tu límite de crédito. Debes realizar el pago antes de continuar.',
+        };
+      }
+
+      if (unpaidTotal + amount > creditLimitNum) {
+        return {
+          success: true as const,
+          giftcards: [],
+          error: `Esta compra excedería tu límite de crédito ($${creditLimitNum}). Tienes $${unpaidTotal.toFixed(2)} pendiente.`,
+        };
+      }
+    }
+
     const brandCountry = await prisma.brandCountry.findUnique({
       where: { brandId_countryId: { brandId, countryId } },
       select: { id: true },
@@ -16,20 +69,39 @@ export const searchGiftcards = buyerActionClient
     if (!brandCountry) {
       return { success: true as const, giftcards: [] };
     }
-    const giftcards = await prisma.giftcard.findMany({
+
+    const allGiftcards = await prisma.giftcard.findMany({
       where: {
         brandCountryId: brandCountry.id,
         inStock: true,
         status: 'UNUSED',
       },
     });
-    const selectedGiftcards = findGiftcardCombination(giftcards, amount);
+
+
+
+    const selectedGiftcards = findGiftcardCombination(
+      allGiftcards,
+      amount,
+      user?.minAmountPreference ? new Decimal(user.minAmountPreference) : undefined,
+      user?.maxAmountPreference ? new Decimal(user.maxAmountPreference) : undefined,
+    );
+
+    if (selectedGiftcards.selectedCards.length === 0 && allGiftcards.length > 0) {
+      const outsideAmount = allGiftcards.reduce((sum, c) => sum + Number(c.amount), 0);
+      return {
+        success: true as const,
+        giftcards: [],
+        error: `No hay tarjetas dentro de tus preferencias. Hay $${outsideAmount.toFixed(2)} disponible. Cambiá tus preferencias para ver más opciones.`,
+      };
+    }
+
     return {
       success: true as const,
       giftcards: selectedGiftcards.selectedCards.map((card) => ({
         id: card.id,
         brand: card.brandCountryId,
-        amount: card.amount.toNumber(),
+        amount: Number(card.amount),
         status: 'UNUSED' as const,
       })),
     };

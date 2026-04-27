@@ -21,14 +21,13 @@ const BATCH_GROUP_BY_DAY_THRESHOLD = 3; // Agrupar por día si hay más de cards
  * - No exceder el 100% del objetivo
  * - Preferir combinaciones dentro del rango de tolerancia de $5 por debajo
  * - Mantener prioridad estricta por antigüedad de lotes
- * - Filtrar tarjetas por denominación mínima/máxima y montos fijos
+ * - Filtrar tarjetas por denominación mínima/máxima
  */
 export function findGiftcardCombination(
   cards: Giftcard[],
   targetPurchaseAmount: number,
   minamount: Decimal = new Decimal(1),
   maxamount?: Decimal | null,
-  fixedamounts: Decimal[] = [],
 ): GiftcardSelectionResult {
   const emptyResult: GiftcardSelectionResult = {
     selectedCards: [],
@@ -51,11 +50,9 @@ export function findGiftcardCombination(
   // Filtrar solo tarjetas disponibles/válidas
   const availableCards = cards.filter((card) => {
     if (!card.inStock || card.status !== 'UNUSED') return false;
+
     if (card.amount.lt(safeMinamount)) return false;
     if (maxamount && card.amount.gt(maxamount)) return false;
-    if (fixedamounts.length > 0) {
-      return fixedamounts.some((d) => d.equals(card.amount));
-    }
     return true;
   });
 

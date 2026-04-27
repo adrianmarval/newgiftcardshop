@@ -1,21 +1,26 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSession } from '@/lib/auth-client';
 import { motion } from 'framer-motion';
-import { Search, ChevronRight, Check, DollarSign, Globe } from 'lucide-react';
+import { Search, ChevronRight, Check, DollarSign, Globe, Settings, X, Plus, Filter } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { searchGiftcards } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { SearchStepProps } from '@/components/buy/types';
 import { toast } from 'sonner';
+import { getUserSearchPreferences, updateSearchPreferences } from '@/actions/user/search-preferences';
 
 export function SearchStep({ brandCountries }: SearchStepProps) {
+  const { data: session } = useSession();
   const {
     selectedBrand,
     setSelectedBrand,
@@ -29,6 +34,66 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
   const [searchBrand, setSearchBrand] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [prefMin, setPrefMin] = useState('');
+  const [prefMax, setPrefMax] = useState('');
+  const [savedMin, setSavedMin] = useState('');
+  const [savedMax, setSavedMax] = useState('');
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      getUserSearchPreferences(session.user.id).then((prefs) => {
+        if (prefs) {
+          const minStr = prefs.minAmount?.toString() || '';
+          const maxStr = prefs.maxAmount?.toString() || '';
+          setPrefMin(minStr);
+          setPrefMax(maxStr);
+          setSavedMin(minStr);
+          setSavedMax(maxStr);
+        }
+      });
+    }
+  }, [session?.user?.id]);
+
+  const handleClearPreferences = async () => {
+    setPrefMin('');
+    setPrefMax('');
+    setSavedMin('');
+    setSavedMax('');
+
+    if (session?.user?.id) {
+      await updateSearchPreferences({
+        minAmount: null,
+        maxAmount: null,
+      });
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    if (!session?.user?.id) return;
+
+    const minVal = prefMin ? parseFloat(prefMin) : null;
+    const maxVal = prefMax ? parseFloat(prefMax) : null;
+
+    if (minVal !== null && maxVal !== null && minVal > maxVal) {
+      toast.error('El monto mínimo no puede ser mayor al máximo');
+      return;
+    }
+
+    const result = await updateSearchPreferences({
+      minAmount: minVal,
+      maxAmount: maxVal,
+    });
+
+    if (result.serverError) {
+      toast.error('Error al guardar preferencias');
+    } else {
+      toast.success('Preferencias guardadas');
+      setSavedMin(prefMin);
+      setSavedMax(prefMax);
+      setPreferencesOpen(false);
+    }
+  };
 
   const countries = useMemo(() => {
     const unique = new Map<string, { id: string; name: string; code: string }>();
@@ -53,9 +118,13 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
   const { execute, status } = useAction(searchGiftcards, {
     onSuccess: ({ data }) => {
-      if (data?.success && data.giftcards) {
+      if (data?.success && data.giftcards && data.giftcards.length > 0) {
         setFoundGiftcards(data.giftcards);
         setStep(2);
+      } else if (data?.error) {
+        toast.error(data.error);
+      } else {
+        toast.warning('No se encontraron tarjetas disponibles');
       }
       setIsSearching(false);
     },
@@ -93,6 +162,71 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       {/* Left Column: Filters */}
       <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
         <div className="space-y-1">
+          {/* Header + Preferences Popover */}
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Configuración</span>
+            <Popover open={preferencesOpen} onOpenChange={setPreferencesOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon-sm" className="h-8 w-8">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-50" align="end">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium">Preferencias de Búsqueda</div>
+                    <Button variant="ghost" size="sm" onClick={handleClearPreferences} className="text-muted-foreground h-6 text-xs">
+                      Limpiar
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Min. Denominacion</Label>
+                      <Input type="number" placeholder="25" value={prefMin} onChange={(e) => setPrefMin(e.target.value)} className="h-8" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Max. Denominacion</Label>
+                      <Input type="number" placeholder="500" value={prefMax} onChange={(e) => setPrefMax(e.target.value)} className="h-8" />
+                    </div>
+                  </div>
+                  <Button onClick={handleSavePreferences} className="w-full" size="sm">
+                    Guardar
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Active Filters Indicator */}
+          {(savedMin || savedMax) && (
+            <div className="bg-muted/50 flex items-center gap-2 rounded-md px-3 py-2">
+              <Filter className="text-muted-foreground h-3.5 w-3.5" />
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                {savedMin && (
+                  <span className="text-muted-foreground">
+                    Min Denominacion: <span className="text-foreground font-medium">${savedMin}</span>
+                  </span>
+                )}
+                {/* {savedMin && savedMax && <span className="text-muted-foreground">|</span>} */}
+                {savedMax && (
+                  <span className="text-muted-foreground">
+                    Max Denominacion: <span className="text-foreground font-medium">${savedMax}</span>
+                  </span>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="text-muted-foreground hover:text-foreground ml-auto h-5 w-5"
+                onClick={() => {
+                  handleClearPreferences();
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+
           {/* País Selector */}
           <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
