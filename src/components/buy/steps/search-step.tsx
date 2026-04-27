@@ -3,14 +3,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { motion } from 'framer-motion';
-import { Search, ChevronRight, Check, DollarSign, Globe, Settings, X, Plus, Filter } from 'lucide-react';
+import { Search, ChevronRight, Check, DollarSign, Globe, Settings, X, Filter } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { searchGiftcards } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
