@@ -26,15 +26,17 @@ model User {
   isActive      Boolean @default(true)
 
   // Perfil de Trading (Tasas de cambio con precisión)
-  buyRate   Decimal @default(0.85) @db.Decimal(10, 4)
-  sellRate  Decimal @default(0.75) @db.Decimal(10, 4)
+  buyRate                Decimal @default(0.85) @db.Decimal(10, 4)
+  allowBuyRateAdjustment Boolean @default(false)
+  sellRate               Decimal @default(0.75) @db.Decimal(10, 4)
 
   // Límite de crédito (solo buyers)
   creditLimit Decimal @default(200) @db.Decimal(10, 2)
 
   // Preferencias de búsqueda de tarjetas
+  allowSearchPreferences Boolean  @default(false)
   minAmountPreference    Decimal? @db.Decimal(10, 2)
-  maxAmountPreference  Decimal? @db.Decimal(10, 2)
+  maxAmountPreference    Decimal? @db.Decimal(10, 2)
 
   // Relaciones
   sessions        Session[]

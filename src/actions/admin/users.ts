@@ -16,6 +16,8 @@ const userSchema = z.object({
   sellRate: z.number(),
   minAmountPreference: z.number().nullable(),
   maxAmountPreference: z.number().nullable(),
+  allowSearchPreferences: z.boolean(),
+  allowBuyRateAdjustment: z.boolean(),
   createdAt: z.date(),
 });
 
@@ -28,11 +30,13 @@ const updateUserSchema = z.object({
   sellRate: z.number().optional(),
   minAmountPreference: z.number().nullable().optional(),
   maxAmountPreference: z.number().nullable().optional(),
+  allowSearchPreferences: z.boolean().optional(),
+  allowBuyRateAdjustment: z.boolean().optional(),
 });
 
 export const updateUser = authActionClient.inputSchema(updateUserSchema).action(async function ({ parsedInput }) {
   try {
-    const { userId, role, isActive, creditLimit, buyRate, sellRate, minAmountPreference, maxAmountPreference } = parsedInput;
+    const { userId, role, isActive, creditLimit, buyRate, sellRate, minAmountPreference, maxAmountPreference, allowSearchPreferences, allowBuyRateAdjustment } = parsedInput;
 
     const updated = await prisma.user.update({
       where: { id: userId },
@@ -44,6 +48,8 @@ export const updateUser = authActionClient.inputSchema(updateUserSchema).action(
         ...(sellRate !== undefined && { sellRate }),
         ...(minAmountPreference !== undefined && { minAmountPreference }),
         ...(maxAmountPreference !== undefined && { maxAmountPreference }),
+        ...(allowSearchPreferences !== undefined && { allowSearchPreferences }),
+        ...(allowBuyRateAdjustment !== undefined && { allowBuyRateAdjustment }),
       },
       select: { id: true },
     });
@@ -107,6 +113,8 @@ export const listUsers = adminActionClient
       sellRate: Number(user.sellRate),
       minAmountPreference: user.minAmountPreference ? Number(user.minAmountPreference) : null,
       maxAmountPreference: user.maxAmountPreference ? Number(user.maxAmountPreference) : null,
+      allowSearchPreferences: user.allowSearchPreferences,
+      allowBuyRateAdjustment: user.allowBuyRateAdjustment,
       createdAt: user.createdAt,
     }));
 

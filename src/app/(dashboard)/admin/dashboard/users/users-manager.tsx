@@ -25,6 +25,8 @@ interface User {
   sellRate: number;
   minAmountPreference: number | null;
   maxAmountPreference: number | null;
+  allowSearchPreferences: boolean;
+  allowBuyRateAdjustment: boolean;
   createdAt: Date;
 }
 
@@ -46,7 +48,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   const [search, setSearch] = useState(searchParams?.search || '');
   const [role, setRole] = useState(searchParams?.role || 'ALL');
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState({ role: '', creditLimit: '', buyRate: '', sellRate: '', minAmount: '', maxAmount: '' });
+  const [editForm, setEditForm] = useState({ role: '', creditLimit: '', buyRate: '', sellRate: '', minAmount: '', maxAmount: '', allowSearchPreferences: false, allowBuyRateAdjustment: false });
 
   const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
     onSuccess: () => {
@@ -74,6 +76,8 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
       sellRate: (user.sellRate * 100).toString(),
       minAmount: user.minAmountPreference?.toString() || '',
       maxAmount: user.maxAmountPreference?.toString() || '',
+      allowSearchPreferences: user.allowSearchPreferences,
+      allowBuyRateAdjustment: user.allowBuyRateAdjustment,
     });
   };
 
@@ -87,6 +91,8 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
       sellRate: editForm.sellRate ? parseFloat(editForm.sellRate) / 100 : undefined,
       minAmountPreference: editForm.minAmount ? parseFloat(editForm.minAmount) : null,
       maxAmountPreference: editForm.maxAmount ? parseFloat(editForm.maxAmount) : null,
+      allowSearchPreferences: editForm.allowSearchPreferences,
+      allowBuyRateAdjustment: editForm.allowBuyRateAdjustment,
     });
   };
 
@@ -274,6 +280,44 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                     placeholder="500"
                     value={editForm.maxAmount}
                     onChange={(e) => setEditForm((f) => ({ ...f, maxAmount: e.target.value }))}
+                  />
+                </div>
+              </div>
+            )}
+
+            {editForm.role === 'BUYER' && (
+              <div className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium">Filtros de Búsqueda</label>
+                  <p className="text-muted-foreground text-xs">
+                    Permite al usuario configurar filtros de denominación mínima y máxima.
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={editForm.allowSearchPreferences}
+                    onChange={(e) => setEditForm((f) => ({ ...f, allowSearchPreferences: e.target.checked }))}
+                  />
+                </div>
+              </div>
+            )}
+
+            {editForm.role === 'BUYER' && (
+              <div className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium">Ajuste de Tarifa</label>
+                  <p className="text-muted-foreground text-xs">
+                    Permite al usuario ajustar su propia tarifa de compra (Buy Rate).
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={editForm.allowBuyRateAdjustment}
+                    onChange={(e) => setEditForm((f) => ({ ...f, allowBuyRateAdjustment: e.target.checked }))}
                   />
                 </div>
               </div>

@@ -3,20 +3,20 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { motion } from 'framer-motion';
-import { Search, ChevronRight, Check, DollarSign, Globe, Settings, X, Filter } from 'lucide-react';
+import { Search, ChevronRight, Check, DollarSign, Globe, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { searchGiftcards } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { SearchStepProps } from '@/components/buy/types';
 import { toast } from 'sonner';
-import { getUserSearchPreferences, updateSearchPreferences } from '@/actions/user/search-preferences';
+import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/user/search-preferences';
 
 export function SearchStep({ brandCountries }: SearchStepProps) {
   const { data: session } = useSession();
@@ -33,11 +33,15 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
   const [searchBrand, setSearchBrand] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [prefMin, setPrefMin] = useState('');
   const [prefMax, setPrefMax] = useState('');
   const [savedMin, setSavedMin] = useState('');
   const [savedMax, setSavedMax] = useState('');
+  const [allowSearchPreferences, setAllowSearchPreferences] = useState(false);
+  const [allowBuyRateAdjustment, setAllowBuyRateAdjustment] = useState(false);
+  const [prefBuyRate, setPrefBuyRate] = useState('');
+  const [savedBuyRate, setSavedBuyRate] = useState('');
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -49,6 +53,13 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
           setPrefMax(maxStr);
           setSavedMin(minStr);
           setSavedMax(maxStr);
+          setAllowSearchPreferences(prefs.allowSearchPreferences || false);
+          setAllowBuyRateAdjustment(prefs.allowBuyRateAdjustment || false);
+          if (prefs.buyRate) {
+            const brStr = (prefs.buyRate * 100).toString();
+            setPrefBuyRate(brStr);
+            setSavedBuyRate(brStr);
+          }
         }
       });
     }
@@ -61,10 +72,16 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     setSavedMax('');
 
     if (session?.user?.id) {
-      await updateSearchPreferences({
+      const result = await updateSearchPreferences({
         minAmount: null,
         maxAmount: null,
       });
+      
+      if (result?.serverError) {
+        toast.error('Error al limpiar filtros');
+      } else {
+        toast.success('Filtros limpiados correctamente');
+      }
     }
   };
 
@@ -87,10 +104,30 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     if (result.serverError) {
       toast.error('Error al guardar preferencias');
     } else {
-      toast.success('Preferencias guardadas');
-      setSavedMin(prefMin);
-      setSavedMax(prefMax);
-      setPreferencesOpen(false);
+      let brUpdated = true;
+      if (allowBuyRateAdjustment && prefBuyRate) {
+        const brVal = parseFloat(prefBuyRate) / 100;
+        if (brVal < 0.80) {
+          toast.error('La tarifa de compra no puede ser inferior a 80%');
+          return;
+        }
+        const brResult = await updateBuyRate({ buyRate: brVal });
+        if (brResult?.data?.error) {
+           toast.error(brResult.data.error);
+           brUpdated = false;
+        } else if (brResult?.serverError) {
+           toast.error('Error al actualizar tarifa');
+           brUpdated = false;
+        } else {
+           setSavedBuyRate(prefBuyRate);
+        }
+      }
+
+      if (brUpdated) {
+        toast.success('Ajustes guardados correctamente');
+        setSavedMin(prefMin);
+        setSavedMax(prefMax);
+      }
     }
   };
 
@@ -161,70 +198,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       {/* Left Column: Filters */}
       <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
         <div className="space-y-1">
-          {/* Header + Preferences Popover */}
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Configuración</span>
-            <Popover open={preferencesOpen} onOpenChange={setPreferencesOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon-sm" className="h-8 w-8">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-50" align="end">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">Preferencias de Búsqueda</div>
-                    <Button variant="ghost" size="sm" onClick={handleClearPreferences} className="text-muted-foreground h-6 text-xs">
-                      Limpiar
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs">Min. Denominacion</Label>
-                      <Input type="number" placeholder="25" value={prefMin} onChange={(e) => setPrefMin(e.target.value)} className="h-8" />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Max. Denominacion</Label>
-                      <Input type="number" placeholder="500" value={prefMax} onChange={(e) => setPrefMax(e.target.value)} className="h-8" />
-                    </div>
-                  </div>
-                  <Button onClick={handleSavePreferences} className="w-full" size="sm">
-                    Guardar
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Active Filters Indicator */}
-          {(savedMin || savedMax) && (
-            <div className="bg-muted/50 flex items-center gap-2 rounded-md px-3 py-2">
-              <Filter className="text-muted-foreground h-3.5 w-3.5" />
-              <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                {savedMin && (
-                  <span className="text-muted-foreground">
-                    Min Denominacion: <span className="text-foreground font-medium">${savedMin}</span>
-                  </span>
-                )}
-                {/* {savedMin && savedMax && <span className="text-muted-foreground">|</span>} */}
-                {savedMax && (
-                  <span className="text-muted-foreground">
-                    Max Denominacion: <span className="text-foreground font-medium">${savedMax}</span>
-                  </span>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="text-muted-foreground hover:text-foreground ml-auto h-5 w-5"
-                onClick={() => {
-                  handleClearPreferences();
-                }}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          )}
+          {/* Configuración Header Omitted */}
 
           {/* País Selector */}
           <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
@@ -280,6 +254,95 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
               />
             </div>
           </div>
+
+          {/* Ajustes Avanzados */}
+          {(allowSearchPreferences || allowBuyRateAdjustment) && (
+            <div className="mt-6 pt-4 border-t border-border">
+              <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen} className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent h-auto flex items-center gap-1">
+                      <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase md:text-xs">
+                        Ajustes Avanzados
+                      </span>
+                      <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  
+                  {allowSearchPreferences && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleClearPreferences} 
+                      disabled={!savedMin && !savedMax}
+                      className={
+                        savedMin || savedMax 
+                          ? "h-6 text-xs px-2 text-primary bg-primary/10 hover:bg-primary/20 hover:text-primary font-medium" 
+                          : "h-6 text-xs px-2 text-muted-foreground"
+                      }
+                    >
+                      Limpiar Filtros
+                    </Button>
+                  )}
+                </div>
+                
+                <CollapsibleContent className="space-y-4">
+                  {allowBuyRateAdjustment && (
+                    <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
+                      <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+                        Mi Tarifa de Compra (%)
+                      </Label>
+                      <div className="relative w-40 md:w-full">
+                        <Input 
+                          type="number" 
+                          placeholder="85" 
+                          min="80" 
+                          max="100" 
+                          step="0.1"
+                          value={prefBuyRate} 
+                          onChange={(e) => setPrefBuyRate(e.target.value)} 
+                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm" 
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {allowSearchPreferences && (
+                    <div className="flex items-center justify-between gap-4 md:flex-row md:gap-2">
+                      <div className="flex-1 space-y-2">
+                        <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+                          Min ($)
+                        </Label>
+                        <Input 
+                          type="number" 
+                          placeholder="25" 
+                          value={prefMin} 
+                          onChange={(e) => setPrefMin(e.target.value)} 
+                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm" 
+                        />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+                          Max ($)
+                        </Label>
+                        <Input 
+                          type="number" 
+                          placeholder="500" 
+                          value={prefMax} 
+                          onChange={(e) => setPrefMax(e.target.value)} 
+                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm" 
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Button onClick={handleSavePreferences} className="w-full h-8 text-xs bg-muted/50 text-foreground hover:bg-muted" variant="outline">
+                    Guardar Ajustes
+                  </Button>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          )}
         </div>
       </Card>
 
