@@ -11,6 +11,7 @@ export function formatDateTime(date: Date | string, locale?: Locale): string {
   const hour = d.toLocaleTimeString(userLocale, {
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
     hour12: !useES,
   });
 
