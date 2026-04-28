@@ -370,25 +370,38 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.02 }}
+                disabled={!bc.isActive}
                 onClick={() => handleBrandSelect({ brandId: bc.brandId, countryId: bc.countryId })}
-                className={`group relative flex h-20 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 pb-1 transition-all md:h-32 ${
-                  selectedBrand === `${bc.brandId}|${bc.countryId}`
-                    ? 'border-primary bg-primary/10 shadow-primary/20 shadow-lg'
-                    : 'border-border bg-muted/20 hover:border-muted-foreground/30 hover:bg-muted/40'
+                className={`group relative flex h-20 flex-col items-center justify-center overflow-hidden rounded-xl border-2 pb-1 transition-all md:h-32 ${
+                  !bc.isActive 
+                    ? 'border-border bg-muted/10 cursor-not-allowed opacity-80' 
+                    : selectedBrand === `${bc.brandId}|${bc.countryId}`
+                      ? 'border-primary bg-primary/10 shadow-primary/20 shadow-lg cursor-pointer'
+                      : 'border-border bg-muted/20 hover:border-muted-foreground/30 hover:bg-muted/40 cursor-pointer'
                 } `}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={bc.isActive ? { scale: 1.02, y: -2 } : {}}
+                whileTap={bc.isActive ? { scale: 0.98 } : {}}
               >
-                <div className="relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-110 dark:bg-white">
+                <div className={`relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 ${bc.isActive ? 'group-hover:scale-110' : 'grayscale opacity-40'} dark:bg-white`}>
                   {bc.brandImage ? (
                     <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-contain" loading="eager" />
                   ) : (
                     <span className="text-xl md:text-5xl">{bc.brandIcon}</span>
                   )}
                 </div>
-                <div className="w-full truncate px-1 text-center text-[11px] font-bold tracking-tight md:text-base">{bc.brandName}</div>
+                <div className={`w-full truncate px-1 text-center text-[11px] font-bold tracking-tight md:text-base ${!bc.isActive ? 'text-muted-foreground' : ''}`}>
+                  {bc.brandName}
+                </div>
 
-                {selectedBrand === `${bc.brandId}|${bc.countryId}` && (
+                {!bc.isActive && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center overflow-hidden pointer-events-none">
+                    <div className="w-[300%] py-2 bg-black/60 text-white text-[9px] font-black uppercase tracking-[0.4em] text-center -rotate-45 shadow-2xl backdrop-blur-md border-y border-white/10 md:text-[14px] md:py-3 whitespace-nowrap">
+                      Coming Soon
+                    </div>
+                  </div>
+                )}
+
+                {selectedBrand === `${bc.brandId}|${bc.countryId}` && bc.isActive && (
                   <div className="bg-primary absolute top-1 right-1 rounded-full p-0.5 shadow-lg md:top-2 md:right-2 md:p-1">
                     <Check className="text-primary-foreground h-2 w-2 md:h-3 md:w-3" />
                   </div>

@@ -19,7 +19,6 @@ export const getBrandsByCountry = authActionClient
     const brandCountries = await prisma.brandCountry.findMany({
       where: {
         countryId,
-        isActive: true,
       },
       include: {
         brand: true,
@@ -96,9 +95,7 @@ export const getBrandCountryById = authActionClient
 
 export const getActiveBrandCountries = authActionClient.outputSchema(getActiveBrandCountriesOutputSchema).action(async () => {
   const brandCountries = await prisma.brandCountry.findMany({
-    where: {
-      isActive: true,
-    },
+    where: {},
     include: {
       brand: true,
       country: true,
