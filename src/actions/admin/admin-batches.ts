@@ -62,26 +62,24 @@ export const adminBatches = adminActionClient
       ];
     }
 
-    const [batches, totalCount] = await prisma.$transaction([
-      prisma.giftcardBatch.findMany({
-        where,
-        include: {
-          user: { select: { id: true, name: true, email: true, sellRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
-          giftcards: {
-            include: {
-              brandCountry: { include: { brand: true, country: true } },
-              order: { select: { id: true, status: true, userId: true } },
-              issues: true,
-            },
+    const batches = await prisma.giftcardBatch.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true, sellRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
+        giftcards: {
+          include: {
+            brandCountry: { include: { brand: true, country: true } },
+            order: { select: { id: true, status: true, userId: true } },
+            issues: true,
           },
-          payments: { where: { status: 'COMPLETED' } },
         },
-        orderBy,
-        skip,
-        take: limit,
-      }),
-      prisma.giftcardBatch.count({ where }),
-    ]);
+        payments: { where: { status: 'COMPLETED' } },
+      },
+      orderBy,
+      skip,
+      take: limit,
+    });
+    const totalCount = await prisma.giftcardBatch.count({ where });
 
     const totalPages = Math.ceil(totalCount / limit);
 

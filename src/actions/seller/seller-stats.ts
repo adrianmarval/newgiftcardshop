@@ -7,22 +7,20 @@ import { sellerStatsSchema } from '@/types/domain/seller';
 export const sellerStats = sellerActionClient.outputSchema(sellerStatsSchema).action(async ({ ctx }) => {
   const userId = ctx.auth.user.id;
 
-  const [totalCards, totalBatches, paidBatches, unpaidBatches] = await prisma.$transaction([
-    prisma.giftcard.count({
-      where: {
-        batch: { userId },
-      },
-    }),
-    prisma.giftcardBatch.count({
-      where: { userId },
-    }),
-    prisma.giftcardBatch.count({
-      where: { userId, isPaid: true },
-    }),
-    prisma.giftcardBatch.count({
-      where: { userId, isPaid: false },
-    }),
-  ]);
+  const totalCards = await prisma.giftcard.count({
+    where: {
+      batch: { userId },
+    },
+  });
+  const totalBatches = await prisma.giftcardBatch.count({
+    where: { userId },
+  });
+  const paidBatches = await prisma.giftcardBatch.count({
+    where: { userId, isPaid: true },
+  });
+  const unpaidBatches = await prisma.giftcardBatch.count({
+    where: { userId, isPaid: false },
+  });
 
   return {
     totalCards,

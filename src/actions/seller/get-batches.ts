@@ -44,19 +44,17 @@ export const getSellerBatches = sellerActionClient
       ];
     }
 
-    const [batches, totalCount] = await prisma.$transaction([
-      prisma.giftcardBatch.findMany({
-        where,
-        include: {
-          giftcards: { include: { brandCountry: { include: { brand: true, country: true } }, issues: true } },
-          payments: true,
-        },
-        orderBy,
-        skip,
-        take: limit,
-      }),
-      prisma.giftcardBatch.count({ where }),
-    ]);
+    const batches = await prisma.giftcardBatch.findMany({
+      where,
+      include: {
+        giftcards: { include: { brandCountry: { include: { brand: true, country: true } }, issues: true } },
+        payments: true,
+      },
+      orderBy,
+      skip,
+      take: limit,
+    });
+    const totalCount = await prisma.giftcardBatch.count({ where });
 
     const totalPages = Math.ceil(totalCount / limit);
 

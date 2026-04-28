@@ -9,10 +9,8 @@ export const createOrder = buyerActionClient
   .inputSchema(createOrderInputSchema)
   .outputSchema(createOrderOutputSchema)
   .useValidated(async ({ parsedInput: { giftcardIds }, ctx, next }) => {
-    const [dbUser, giftcards] = await Promise.all([
-      prisma.user.findUnique({ where: { id: ctx.auth.user.id } }),
-      prisma.giftcard.findMany({ where: { id: { in: giftcardIds } } }),
-    ]);
+    const dbUser = await prisma.user.findUnique({ where: { id: ctx.auth.user.id } });
+    const giftcards = await prisma.giftcard.findMany({ where: { id: { in: giftcardIds } } });
 
     if (!dbUser) throw new ActionError('Usuario no encontrado en la base de datos');
 

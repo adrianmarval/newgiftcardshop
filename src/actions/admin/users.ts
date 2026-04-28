@@ -101,15 +101,13 @@ export const listUsers = adminActionClient
       where.OR = [{ name: { contains: search, mode: 'insensitive' } }, { email: { contains: search, mode: 'insensitive' } }];
     }
 
-    const [items, totalCount] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.user.count({ where }),
-    ]);
+    const items = await prisma.user.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    });
+    const totalCount = await prisma.user.count({ where });
 
     const totalPages = Math.ceil(totalCount / limit);
 

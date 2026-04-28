@@ -7,20 +7,18 @@ import { buyerStatsSchema } from '@/types/domain/order';
 export const buyerStats = buyerActionClient.outputSchema(buyerStatsSchema).action(async ({ ctx }) => {
   const userId = ctx.auth.user.id;
 
-  const [availableCards, myOrders, activeOrdersResult] = await prisma.$transaction([
-    prisma.giftcard.count({
-      where: { status: 'UNUSED', inStock: true },
-    }),
-    prisma.order.count({
-      where: { userId },
-    }),
-    prisma.order.count({
-      where: {
-        userId,
-        status: { in: ['PENDING', 'AWAITING_PAYMENT'] },
-      },
-    }),
-  ]);
+  const availableCards = await prisma.giftcard.count({
+    where: { status: 'UNUSED', inStock: true },
+  });
+  const myOrders = await prisma.order.count({
+    where: { userId },
+  });
+  const activeOrdersResult = await prisma.order.count({
+    where: {
+      userId,
+      status: { in: ['PENDING', 'AWAITING_PAYMENT'] },
+    },
+  });
 
   const completedOrders = await prisma.order.findMany({
     where: { userId, status: 'COMPLETED' },

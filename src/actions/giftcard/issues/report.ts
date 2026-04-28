@@ -29,8 +29,8 @@ export const reportGiftcardIssue = buyerActionClient
     return next({ ctx: { foundGiftcard } });
   })
   .action(async ({ parsedInput: { giftcardId, orderId, issueType, reportedAmount, proofImageUrl }, ctx }) => {
-    const [issue] = await prisma.$transaction([
-      prisma.giftcardIssue.create({
+    const issue = await prisma.$transaction(async (tx) => {
+      const createdIssue = await tx.giftcardIssue.create({
         data: {
           issueType,
           reportedAmount: reportedAmount != null ? new Prisma.Decimal(reportedAmount) : undefined,
@@ -40,15 +40,16 @@ export const reportGiftcardIssue = buyerActionClient
           reportedById: ctx.auth.user.id,
           sellerId: ctx.foundGiftcard.ownerId ?? undefined,
         },
-      }),
-      prisma.giftcard.update({
+      });
+      await tx.giftcard.update({
         where: { id: giftcardId },
         data: {
           status: issueType,
           reportedAmount: issueType === 'WRONG_AMOUNT' && reportedAmount != null ? new Prisma.Decimal(reportedAmount) : undefined,
         },
-      }),
-    ]);
+      });
+      return createdIssue;
+    });
     return {
       success: true as const,
       issue: {

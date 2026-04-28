@@ -60,19 +60,17 @@ export const getBuyerOrders = buyerActionClient
       ];
     }
 
-    const [orders, totalCount] = await prisma.$transaction([
-      prisma.order.findMany({
-        where,
-        include: {
-          giftcards: { include: { brandCountry: { include: { brand: true, country: true } } } },
-          payments: { where: { status: 'COMPLETED' } },
-        },
-        orderBy,
-        skip,
-        take: limit,
-      }),
-      prisma.order.count({ where }),
-    ]);
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        giftcards: { include: { brandCountry: { include: { brand: true, country: true } } } },
+        payments: { where: { status: 'COMPLETED' } },
+      },
+      orderBy,
+      skip,
+      take: limit,
+    });
+    const totalCount = await prisma.order.count({ where });
 
     const totalPages = Math.ceil(totalCount / limit);
 
