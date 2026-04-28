@@ -100,6 +100,7 @@ export const adminBatches = adminActionClient
       const hasIssues = batch.giftcards.some((g) => g.issues.length > 0);
 
       const effectiveTotal = batch.giftcards.reduce((sum, card) => {
+        if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) return sum;
         if (card.status === 'WRONG_AMOUNT') return sum + Number(card.reportedAmount ?? 0);
         if (card.status === 'USED' || card.status === 'UNUSED') return sum + Number(card.amount);
         return sum;

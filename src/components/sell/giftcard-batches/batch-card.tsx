@@ -12,7 +12,7 @@ export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
   const allConfirmed = confirmedCount === totalItems && totalItems > 0;
   const isPaid = batch.isPaid || batch.payments.some((p) => p.status === 'COMPLETED');
   const progressPercentage = totalItems > 0 ? (confirmedCount / totalItems) * 100 : 0;
-  const batchTotal = batch.giftcards.reduce((sum, g) => sum + g.amount, 0);
+  const batchTotal = batch.effectiveTotal;
 
   const getStatus = (): { label: string; color: string; activeBg: string } => {
     if (isPaid)

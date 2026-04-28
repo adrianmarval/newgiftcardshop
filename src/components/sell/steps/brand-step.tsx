@@ -14,14 +14,11 @@ import { useSellFlow } from '@/hooks/use-sell-flow';
 import Image from 'next/image';
 import type { BrandStepProps } from '@/components/sell/types';
 
-
 export function BrandStep({ brandCountries }: BrandStepProps) {
-
   const { selectedBrandCountry, setSelectedBrandCountry, setStep } = useSellFlow();
 
   const [searchBrand, setSearchBrand] = useState('');
   const [selectedCountryId, setSelectedCountryId] = useState('');
-
 
   const countries = useMemo(() => {
     const unique = new Map<string, { id: string; name: string; code: string }>();
@@ -50,7 +47,6 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
   return (
     <div className="grid grid-cols-1 items-start gap-1 md:grid-cols-12 md:gap-6">
       <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
-
         <div className="space-y-1">
           <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
@@ -126,15 +122,14 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-110 md:mb-2 dark:bg-white">
+                  <div className="relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-110 dark:bg-white">
                     {bc.brandImage ? (
-                      <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-cover" loading="eager" />
+                      <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-contain" loading="eager" />
                     ) : (
                       <span className="text-xl md:text-5xl">{bc.brandIcon}</span>
                     )}
                   </div>
                   <div className="w-full truncate px-1 text-center text-[11px] font-bold tracking-tight md:text-base">{bc.brandName}</div>
-                  <div className="text-muted-foreground text-[9px] md:text-xs">{bc.countryCode}</div>
 
                   {selectedBrandCountry === `${bc.brandId}|${bc.countryId}` && (
                     <motion.div

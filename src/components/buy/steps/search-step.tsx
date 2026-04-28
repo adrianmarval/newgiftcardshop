@@ -76,7 +76,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         minAmount: null,
         maxAmount: null,
       });
-      
+
       if (result?.serverError) {
         toast.error('Error al limpiar filtros');
       } else {
@@ -107,19 +107,19 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       let brUpdated = true;
       if (allowBuyRateAdjustment && prefBuyRate) {
         const brVal = parseFloat(prefBuyRate) / 100;
-        if (brVal < 0.80) {
+        if (brVal < 0.8) {
           toast.error('La tarifa de compra no puede ser inferior a 80%');
           return;
         }
         const brResult = await updateBuyRate({ buyRate: brVal });
         if (brResult?.data?.error) {
-           toast.error(brResult.data.error);
-           brUpdated = false;
+          toast.error(brResult.data.error);
+          brUpdated = false;
         } else if (brResult?.serverError) {
-           toast.error('Error al actualizar tarifa');
-           brUpdated = false;
+          toast.error('Error al actualizar tarifa');
+          brUpdated = false;
         } else {
-           setSavedBuyRate(prefBuyRate);
+          setSavedBuyRate(prefBuyRate);
         }
       }
 
@@ -257,35 +257,37 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
           {/* Ajustes Avanzados */}
           {(allowSearchPreferences || allowBuyRateAdjustment) && (
-            <div className="mt-6 pt-4 border-t border-border">
+            <div className="border-border mt-6 border-t pt-4">
               <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen} className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex md:flex-col items-center justify-between">
                   <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent h-auto flex items-center gap-1">
+                    <Button variant="ghost" size="sm" className="flex h-auto items-center gap-1 p-0 hover:bg-transparent">
                       <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase md:text-xs">
                         Ajustes Avanzados
                       </span>
-                      <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown
+                        className={`text-muted-foreground h-3.5 w-3.5 transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`}
+                      />
                     </Button>
                   </CollapsibleTrigger>
-                  
+
                   {allowSearchPreferences && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleClearPreferences} 
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearPreferences}
                       disabled={!savedMin && !savedMax}
                       className={
-                        savedMin || savedMax 
-                          ? "h-6 text-xs px-2 text-primary bg-primary/10 hover:bg-primary/20 hover:text-primary font-medium" 
-                          : "h-6 text-xs px-2 text-muted-foreground"
+                        savedMin || savedMax
+                          ? 'text-primary bg-primary/10 hover:bg-primary/20 hover:text-primary h-6 px-2 text-xs font-medium'
+                          : 'text-muted-foreground h-6 px-2 text-xs'
                       }
                     >
                       Limpiar Filtros
                     </Button>
                   )}
                 </div>
-                
+
                 <CollapsibleContent className="space-y-4">
                   {allowBuyRateAdjustment && (
                     <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
@@ -293,15 +295,15 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
                         Mi Tarifa de Compra (%)
                       </Label>
                       <div className="relative w-40 md:w-full">
-                        <Input 
-                          type="number" 
-                          placeholder="85" 
-                          min="80" 
-                          max="100" 
+                        <Input
+                          type="number"
+                          placeholder="85"
+                          min="80"
+                          max="100"
                           step="0.1"
-                          value={prefBuyRate} 
-                          onChange={(e) => setPrefBuyRate(e.target.value)} 
-                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm" 
+                          value={prefBuyRate}
+                          onChange={(e) => setPrefBuyRate(e.target.value)}
+                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm"
                         />
                       </div>
                     </div>
@@ -313,30 +315,34 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
                         <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
                           Min ($)
                         </Label>
-                        <Input 
-                          type="number" 
-                          placeholder="25" 
-                          value={prefMin} 
-                          onChange={(e) => setPrefMin(e.target.value)} 
-                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm" 
+                        <Input
+                          type="number"
+                          placeholder="25"
+                          value={prefMin}
+                          onChange={(e) => setPrefMin(e.target.value)}
+                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm"
                         />
                       </div>
                       <div className="flex-1 space-y-2">
                         <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
                           Max ($)
                         </Label>
-                        <Input 
-                          type="number" 
-                          placeholder="500" 
-                          value={prefMax} 
-                          onChange={(e) => setPrefMax(e.target.value)} 
-                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm" 
+                        <Input
+                          type="number"
+                          placeholder="500"
+                          value={prefMax}
+                          onChange={(e) => setPrefMax(e.target.value)}
+                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm"
                         />
                       </div>
                     </div>
                   )}
-                  
-                  <Button onClick={handleSavePreferences} className="w-full h-8 text-xs bg-muted/50 text-foreground hover:bg-muted" variant="outline">
+
+                  <Button
+                    onClick={handleSavePreferences}
+                    className="bg-muted/50 text-foreground hover:bg-muted h-8 w-full text-xs"
+                    variant="outline"
+                  >
                     Guardar Ajustes
                   </Button>
                 </CollapsibleContent>
@@ -373,15 +379,14 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-110 md:mb-2 dark:bg-white">
+                <div className="relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-110 dark:bg-white">
                   {bc.brandImage ? (
-                    <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-cover" loading="eager" />
+                    <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-contain" loading="eager" />
                   ) : (
                     <span className="text-xl md:text-5xl">{bc.brandIcon}</span>
                   )}
                 </div>
                 <div className="w-full truncate px-1 text-center text-[11px] font-bold tracking-tight md:text-base">{bc.brandName}</div>
-                <div className="text-muted-foreground text-[9px] md:text-xs">{bc.countryCode}</div>
 
                 {selectedBrand === `${bc.brandId}|${bc.countryId}` && (
                   <div className="bg-primary absolute top-1 right-1 rounded-full p-0.5 shadow-lg md:top-2 md:right-2 md:p-1">

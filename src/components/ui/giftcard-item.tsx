@@ -160,6 +160,10 @@ export function GiftcardItem({
                       ${card.reportedAmount.toFixed(2)}
                     </span>
                   </div>
+                ) : ['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status) ? (
+                  <span className="text-3xl leading-none font-black tracking-tight text-white/50 line-through drop-shadow-lg">
+                    ${card.amount.toFixed(2)}
+                  </span>
                 ) : (
                   <span className="text-3xl leading-none font-black tracking-tight text-white drop-shadow-lg">
                     ${card.amount.toFixed(2)}

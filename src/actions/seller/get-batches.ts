@@ -113,6 +113,7 @@ export const getSellerBatches = sellerActionClient
         };
       });
       const effectiveTotal = giftcards.reduce((sum, g) => {
+        if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(g.status)) return sum;
         return g.status === 'WRONG_AMOUNT' ? sum + (g.reportedAmount || 0) : sum + g.amount;
       }, 0);
       const estimatedPayout = effectiveTotal * sellRate;
