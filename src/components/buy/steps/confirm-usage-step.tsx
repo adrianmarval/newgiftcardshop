@@ -11,6 +11,7 @@ import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
+import { formatCurrency } from '@/lib/currency-formatter';
 
 export const ConfirmUsageStep = () => {
   const { foundGiftcards, setStep, orderId, setAdjustedTotal, resetForm } = useBuyFlow();
@@ -129,7 +130,7 @@ export const ConfirmUsageStep = () => {
               Total a Pagar
             </div>
             <div className={`text-xl font-black md:text-3xl ${allCardsWorthless ? 'text-destructive' : 'text-primary'}`}>
-              ${totalAmount.toFixed(2)}
+              {formatCurrency(totalAmount, { currency: 'USD' })}
             </div>
           </div>
         </div>

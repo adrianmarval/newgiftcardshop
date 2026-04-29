@@ -38,14 +38,14 @@ export const searchGiftcards = buyerActionClient
         select: { adjustedTotal: true, total: true },
       });
 
-      let unpaidTotal = 0;
+      let unpaidTotal = new Decimal(0);
       for (const o of unpaidOrders) {
-        unpaidTotal += o.adjustedTotal ? Number(o.adjustedTotal) : Number(o.total);
+        unpaidTotal = unpaidTotal.plus(o.adjustedTotal ?? o.total);
       }
 
-      const creditLimitNum = Number(user.creditLimit);
+      const creditLimit = user.creditLimit;
 
-      if (unpaidTotal >= creditLimitNum) {
+      if (unpaidTotal.gte(creditLimit)) {
         return {
           success: true as const,
           giftcards: [],
@@ -53,11 +53,12 @@ export const searchGiftcards = buyerActionClient
         };
       }
 
-      if (unpaidTotal + amount > creditLimitNum) {
+      const amountDecimal = new Decimal(amount);
+      if (unpaidTotal.plus(amountDecimal).gt(creditLimit)) {
         return {
           success: true as const,
           giftcards: [],
-          error: `Esta compra excedería tu límite de crédito ($${creditLimitNum}). Tienes $${unpaidTotal.toFixed(2)} pendiente.`,
+          error: `Esta compra excedería tu límite de crédito ($${creditLimit.toNumber()}). Tienes $${unpaidTotal.toFixed(2)} pendiente.`,
         };
       }
     }
@@ -76,9 +77,14 @@ export const searchGiftcards = buyerActionClient
         inStock: true,
         status: 'UNUSED',
       },
+      include: {
+        brandCountry: {
+          include: {
+            country: true,
+          },
+        },
+      },
     });
-
-
 
     const selectedGiftcards = findGiftcardCombination(
       allGiftcards,
@@ -98,11 +104,18 @@ export const searchGiftcards = buyerActionClient
 
     return {
       success: true as const,
-      giftcards: selectedGiftcards.selectedCards.map((card) => ({
+      giftcards: (selectedGiftcards.selectedCards as any[]).map((card) => ({
         id: card.id,
         brand: card.brandCountryId,
         amount: Number(card.amount),
         status: 'UNUSED' as const,
+        country: card.brandCountry.country
+          ? {
+              name: card.brandCountry.country.name,
+              code: card.brandCountry.country.code,
+              currency: card.brandCountry.country.currency,
+            }
+          : null,
       })),
     };
   });

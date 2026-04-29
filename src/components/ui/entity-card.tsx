@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDateTime } from '@/lib/date-formatter';
+import { formatCurrency } from '@/lib/currency-formatter';
 import Image from 'next/image';
 
 interface EntityCardProps {
@@ -21,6 +22,7 @@ interface EntityCardProps {
   isExpanded: boolean;
   onToggle: () => void;
   children?: React.ReactNode;
+  currency?: string;
 }
 
 const statusColors: Record<EntityCardProps['status'], string> = {
@@ -52,6 +54,7 @@ export function EntityCard({
   isExpanded,
   onToggle,
   children,
+  currency = 'USD',
 }: EntityCardProps) {
   const progColor = progressColor[status];
 
@@ -78,9 +81,11 @@ export function EntityCard({
             </div>
 
             <div className="flex flex-col items-end gap-0.5">
-              <span className="text-foreground text-md font-semibold md:text-lg">${faceValue.toFixed(0)}</span>
+              <span className="text-foreground text-md font-semibold md:text-lg">
+                {formatCurrency(faceValue, { currency })}
+              </span>
               <span className="text-muted-foreground text-xs md:text-sm">
-                {priceLabel}: ${priceValue.toFixed(2)}
+                {priceLabel}: {formatCurrency(priceValue, { currency })}
               </span>
             </div>
           </div>

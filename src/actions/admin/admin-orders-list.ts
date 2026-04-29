@@ -145,7 +145,11 @@ export const adminOrders = adminActionClient
               icon: card.brandCountry.brand.icon,
               image: card.brandCountry.brand.image,
             },
-            country: { name: card.brandCountry.country.name, code: card.brandCountry.country.code },
+            country: {
+              name: card.brandCountry.country.name,
+              code: card.brandCountry.country.code,
+              currency: card.brandCountry.country.currency,
+            },
             isSearchMatch,
             seller: card.batch?.user ? { id: card.batch.user.id, name: card.batch.user.name, email: card.batch.user.email } : null,
           };

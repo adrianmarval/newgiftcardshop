@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import { sellerActionClient } from '@/lib/safe-action';
 import { recentBatchSchema } from '@/types/domain/seller';
@@ -40,8 +41,9 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchSchema.a
     });
 
     const effectiveTotal = batch.giftcards.reduce((sum, card) => {
-      return card.status === 'WRONG_AMOUNT' ? sum + (Number(card.reportedAmount) || 0) : sum + Number(card.amount);
-    }, 0);
+      if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
+      return sum.plus(card.amount);
+    }, new Prisma.Decimal(0));
 
     return {
       id: batch.id,
@@ -50,7 +52,7 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchSchema.a
       createdAt: batch.createdAt.toISOString(),
       giftcards,
       cardsCount: batch.giftcards.length,
-      effectiveTotal,
+      effectiveTotal: effectiveTotal.toNumber(),
     };
   });
 });

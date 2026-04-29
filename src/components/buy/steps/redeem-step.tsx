@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { BuyFlowGiftcardStatus } from '@/types';
 import { Spinner } from '@/components/ui/spinner';
 import { useAction } from 'next-safe-action/hooks';
+import { formatCurrency } from '@/lib/currency-formatter';
 
 export const RedeemStep = () => {
   const { foundGiftcards, reportIssue, setStep, orderId } = useBuyFlow();
@@ -160,17 +161,20 @@ export const RedeemStep = () => {
             <div className="text-md flex items-center justify-between md:text-base">
               <span className="text-muted-foreground">Monto en Giftcards</span>
               <span className="font-bold">
-                {/* {foundGiftcards.length - reportedCount} / {foundGiftcards.length} */}
-                {rawTotal.toFixed(2)}
+                {formatCurrency(rawTotal, { currency: (foundGiftcards[0] as any)?.country?.currency || 'USD' })}
               </span>
             </div>
 
             <div className="border-border text-md flex items-center justify-between border-t pt-1.5 md:text-base">
               <span className="text-muted-foreground">Monto a pagar</span>
               <div className="flex flex-col text-right">
-                <span className="text-primary text-xl font-black md:text-2xl">${totalAmount.toFixed(2)}</span>
+                <span className="text-primary text-xl font-black md:text-2xl">
+                  {formatCurrency(totalAmount, { currency: 'USD' })}
+                </span>
                 {/* show buyerRate */}
-                <span className="text-muted-foreground text-[10px] md:text-sm">Rate ({redeemState.buyRate * 100}%)</span>
+                <span className="text-muted-foreground text-[10px] md:text-sm">
+                  Rate ({(redeemState.buyRate * 100).toFixed(1)}%)
+                </span>
               </div>
             </div>
           </div>
@@ -217,11 +221,11 @@ export const RedeemStep = () => {
                         <span
                           className={`text-lg font-black md:text-xl ${card.status === 'UNUSED' ? 'text-foreground' : 'text-muted-foreground line-through'}`}
                         >
-                          ${card.amount}
+                          {formatCurrency(card.amount, { currency: (card as any).country?.currency || 'USD' })}
                         </span>
                         {card.status === 'WRONG_AMOUNT' && card.reportedAmount !== undefined && (
                           <span className="text-destructive text-lg font-black md:text-xl">
-                            ${card.reportedAmount}
+                            {formatCurrency(card.reportedAmount, { currency: (card as any).country?.currency || 'USD' })}
                           </span>
                         )}
                         {card.status !== 'UNUSED' && (

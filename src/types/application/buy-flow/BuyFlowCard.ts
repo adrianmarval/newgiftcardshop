@@ -13,7 +13,7 @@ import type { GiftcardStatus } from '@/types/domain/giftcard/Giftcard';
  * Excluye 'USED' porque buyers nunca reciben cards ya usados.
  * Estados válidos: UNUSED, ALREADY_USED, INVALID, DEACTIVATED, WRONG_AMOUNT
  */
-export type BuyFlowGiftcardStatus = Exclude<GiftcardStatus, 'USED'>;
+export type BuyFlowGiftcardStatus = GiftcardStatus;
 
 /**
  * Gift card individual dentro del wizard de compra.
@@ -37,4 +37,9 @@ export interface BuyFlowCard {
   reportedAmount?: number;
   /** ownerId del giftcard — usado para tracking de issues. */
   sellerId?: string;
+  country?: {
+    name: string;
+    code: string;
+    currency: string | null;
+  } | null;
 }

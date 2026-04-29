@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ClaimCodeField } from '@/components/ui/claim-code-field';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { formatCurrency } from '@/lib/currency-formatter';
 import Image from 'next/image';
 import type { Giftcard } from '@/types/domain/giftcard';
 
@@ -42,6 +43,7 @@ export function GiftcardItem({
   const canViewDetails = onViewDetails;
   const showIssues = hasIssuesProp;
   const hasDropdownActions = dropdownActions !== undefined;
+  const currency = card.country?.currency || 'USD';
 
   return (
     <motion.div
@@ -154,19 +156,19 @@ export function GiftcardItem({
                 {card.status === 'WRONG_AMOUNT' && card.reportedAmount != null ? (
                   <div className="flex flex-col">
                     <span className="text-lg leading-none font-black tracking-tight text-white/50 line-through drop-shadow-lg">
-                      ${card.amount.toFixed(2)}
+                      {formatCurrency(card.amount, { currency })}
                     </span>
                     <span className="text-3xl leading-none font-black tracking-tight text-white drop-shadow-lg">
-                      ${card.reportedAmount.toFixed(2)}
+                      {formatCurrency(card.reportedAmount, { currency })}
                     </span>
                   </div>
                 ) : ['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status) ? (
                   <span className="text-3xl leading-none font-black tracking-tight text-red-500 line-through drop-shadow-lg">
-                    ${card.amount.toFixed(2)}
+                    {formatCurrency(card.amount, { currency })}
                   </span>
                 ) : (
                   <span className="text-3xl leading-none font-black tracking-tight text-white drop-shadow-lg">
-                    ${card.amount.toFixed(2)}
+                    {formatCurrency(card.amount, { currency })}
                   </span>
                 )}
               </div>

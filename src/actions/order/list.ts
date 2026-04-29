@@ -117,7 +117,11 @@ export const getBuyerOrders = buyerActionClient
               icon: card.brandCountry.brand.icon,
               image: card.brandCountry.brand.image,
             },
-            country: { name: card.brandCountry.country.name, code: card.brandCountry.country.code },
+            country: {
+              name: card.brandCountry.country.name,
+              code: card.brandCountry.country.code,
+              currency: card.brandCountry.country.currency,
+            },
             isSearchMatch,
           };
         });

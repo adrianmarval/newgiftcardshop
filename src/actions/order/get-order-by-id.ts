@@ -74,7 +74,11 @@ export const getOrderById = buyerActionClient
           icon: card.brandCountry.brand.icon,
           image: card.brandCountry.brand.image,
         },
-        country: { name: card.brandCountry.country.name, code: card.brandCountry.country.code },
+        country: {
+          name: card.brandCountry.country.name,
+          code: card.brandCountry.country.code,
+          currency: card.brandCountry.country.currency,
+        },
       };
     });
     const payments: Payment[] = order.payments.map((p) => ({

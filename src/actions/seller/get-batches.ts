@@ -108,15 +108,18 @@ export const getSellerBatches = sellerActionClient
           country: {
             name: card.brandCountry.country.name,
             code: card.brandCountry.country.code,
+            currency: card.brandCountry.country.currency,
           },
           isSearchMatch,
         };
       });
-      const effectiveTotal = giftcards.reduce((sum, g) => {
-        if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(g.status)) return sum;
-        return g.status === 'WRONG_AMOUNT' ? sum + (g.reportedAmount || 0) : sum + g.amount;
-      }, 0);
-      const estimatedPayout = effectiveTotal * sellRate;
+      const effectiveTotalDecimal = batch.giftcards.reduce((sum, card) => {
+        if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) return sum;
+        if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
+        return sum.plus(card.amount);
+      }, new Prisma.Decimal(0));
+      const effectiveTotal = effectiveTotalDecimal.toNumber();
+      const estimatedPayout = effectiveTotalDecimal.mul(batch.sellRate).toNumber();
       return {
         id: batch.id,
         userId: batch.userId,

@@ -21,7 +21,7 @@ const cardWithBuyerSchema = z.object({
     icon: z.string(),
     image: z.string().nullable(),
   }),
-  country: z.object({ name: z.string(), code: z.string() }).nullable(),
+  country: z.object({ name: z.string(), code: z.string(), currency: z.string().nullable() }).nullable(),
   buyer: z
     .object({
       id: z.string(),
@@ -62,6 +62,7 @@ export const adminBatchSchema = z.object({
   confirmedCount: z.number(),
   paidCount: z.number(),
   hasIssues: z.boolean(),
+  currency: z.string().optional(),
 });
 
 export type AdminBatch = z.infer<typeof adminBatchSchema>;

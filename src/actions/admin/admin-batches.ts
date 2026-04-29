@@ -99,12 +99,13 @@ export const adminBatches = adminActionClient
       const allConfirmed = confirmedCount === batch.giftcards.length && batch.giftcards.length > 0;
       const hasIssues = batch.giftcards.some((g) => g.issues.length > 0);
 
-      const effectiveTotal = batch.giftcards.reduce((sum, card) => {
+      const effectiveTotalDecimal = batch.giftcards.reduce((sum, card) => {
         if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) return sum;
-        if (card.status === 'WRONG_AMOUNT') return sum + Number(card.reportedAmount ?? 0);
-        if (card.status === 'USED' || card.status === 'UNUSED') return sum + Number(card.amount);
+        if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
+        if (card.status === 'USED' || card.status === 'UNUSED') return sum.plus(card.amount);
         return sum;
-      }, 0);
+      }, new Prisma.Decimal(0));
+      const effectiveTotal = effectiveTotalDecimal.toNumber();
 
       const seller = batch.user
         ? {
@@ -165,7 +166,7 @@ export const adminBatches = adminActionClient
             icon: card.brandCountry.brand.icon,
             image: card.brandCountry.brand.image,
           },
-          country: card.brandCountry.country ? { name: card.brandCountry.country.name, code: card.brandCountry.country.code } : null,
+          country: card.brandCountry.country ? { name: card.brandCountry.country.name, code: card.brandCountry.country.code, currency: card.brandCountry.country.currency } : null,
           buyer,
           order: card.order ? { id: card.order.id, status: card.order.status } : null,
           issues: card.issues.map((issue) => ({
@@ -208,11 +209,12 @@ export const adminBatches = adminActionClient
           createdAt: p.createdAt.toISOString(),
         })),
         effectiveTotal,
-        estimatedPayout: effectiveTotal * Number(batch.sellRate),
+        estimatedPayout: effectiveTotalDecimal.mul(batch.sellRate).toNumber(),
         cardsCount: batch.giftcards.length,
         confirmedCount,
         paidCount,
         hasIssues,
+        currency: batch.giftcards[0]?.brandCountry?.country?.currency || 'USD',
       };
     });
 

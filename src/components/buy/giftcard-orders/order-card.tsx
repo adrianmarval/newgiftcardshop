@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, MouseEvent } from 'react';
 import { RegistryCard } from '@/components/ui/registry-card';
 import { formatDateTime } from '@/lib/date-formatter';
+import { formatCurrency } from '@/lib/currency-formatter';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { OrderDetails } from '@/components/buy/giftcard-orders/order-details';
@@ -46,6 +47,7 @@ export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: Or
   const status = statusConfig[order.status] || { label: order.status, color: 'bg-muted', activeBg: 'bg-muted/10 dark:bg-muted/15' };
   const isActionable = order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT';
   const hasReport = order.giftcards.some((g) => g.isConfirmed && g.status !== 'USED');
+  const currency = order.giftcards[0]?.country?.currency || 'USD';
 
   const handleResumeOrder = (e: MouseEvent) => {
     e.stopPropagation();
@@ -87,8 +89,12 @@ export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: Or
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">${order.faceValueTotal.toFixed(0)}</span>
-          <span className="text-muted-foreground text-xs md:text-sm">Precio: ${order.effectiveTotal.toFixed(2)}</span>
+          <span className="text-md text-foreground font-semibold md:text-lg">
+            {formatCurrency(order.faceValueTotal, { currency })}
+          </span>
+          <span className="text-muted-foreground text-xs md:text-sm">
+            Precio: {formatCurrency(order.effectiveTotal, { currency })}
+          </span>
         </>
       }
       date={formatDateTime(order.createdAt, 'es-AR')}

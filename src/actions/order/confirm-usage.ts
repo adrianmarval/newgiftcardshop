@@ -8,13 +8,13 @@ import { confirmOrderUsageInputSchema, confirmOrderUsageOutputSchema } from '@/t
 function computeEffectiveTotal(
   giftcards: { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null }[],
   buyRate: Prisma.Decimal,
-): number {
+): Prisma.Decimal {
   const rawTotal = giftcards.reduce((sum, card) => {
     if (card.status === 'UNUSED') return sum.plus(card.amount);
     if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
     return sum;
   }, new Prisma.Decimal(0));
-  return rawTotal.mul(buyRate).toNumber();
+  return rawTotal.mul(buyRate);
 }
 
 export const confirmOrderUsage = buyerActionClient
@@ -39,9 +39,9 @@ export const confirmOrderUsage = buyerActionClient
       where: { id: orderId },
       data: {
         status: 'AWAITING_PAYMENT',
-        adjustedTotal: new Prisma.Decimal(adjustedTotal),
+        adjustedTotal,
       },
     });
 
-    return { success: true as const, adjustedTotal };
+    return { success: true as const, adjustedTotal: adjustedTotal.toNumber() };
   });

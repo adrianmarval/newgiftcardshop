@@ -11,6 +11,7 @@ import { AdminBatchDetails } from './admin-batch-details';
 import type { AdminBatch } from '@/types/domain/admin';
 import { Spinner } from '@/components/ui/spinner';
 import { formatDateTime } from '@/lib/date-formatter';
+import { formatCurrency } from '@/lib/currency-formatter';
 
 interface AdminBatchCardProps {
   batch: AdminBatch;
@@ -34,6 +35,7 @@ export function AdminBatchCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const canPay = !batch.isPaid && batch.confirmedCount === batch.cardsCount && batch.cardsCount > 0;
   const canDelete = batch.giftcards.every((c) => !c.orderId);
+  const currency = batch.giftcards[0]?.country?.currency || 'USD';
 
   const getActiveBg = (): string => {
     if (batch.isPaid) return 'bg-emerald-500/10 dark:bg-emerald-500/15';
@@ -87,8 +89,12 @@ export function AdminBatchCard({
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">${batch.effectiveTotal.toFixed(0)}</span>
-          <span className="text-muted-foreground text-xs md:text-sm">A Pagar: ${batch.estimatedPayout.toFixed(2)}</span>
+          <span className="text-md text-foreground font-semibold md:text-lg">
+            {formatCurrency(batch.effectiveTotal, { currency })}
+          </span>
+          <span className="text-muted-foreground text-xs md:text-sm">
+            A Pagar: {formatCurrency(batch.estimatedPayout, { currency: 'USD' })}
+          </span>
         </>
       }
       date={

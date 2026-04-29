@@ -24,7 +24,7 @@ export function serializeGiftcard(card: {
   orderId: string | null;
   batchId?: string | null;
   brand: { name: string; icon: string; image: string | null };
-  country: { name: string; code: string } | null;
+  country: { name: string; code: string; currency: string | null } | null;
 }): Giftcard {
   let claimCode = card.claimCode;
   let pinCode = card.pinCode ?? null;

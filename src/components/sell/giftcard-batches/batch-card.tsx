@@ -4,6 +4,7 @@ import { RegistryCard } from '@/components/ui/registry-card';
 import { formatDateTime } from '@/lib/date-formatter';
 import { BatchDetails } from './batch-details';
 import type { BatchCardProps } from './types';
+import { formatCurrency } from '@/lib/currency-formatter';
 import Image from 'next/image';
 
 export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
@@ -13,6 +14,8 @@ export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
   const isPaid = batch.isPaid || batch.payments.some((p) => p.status === 'COMPLETED');
   const progressPercentage = totalItems > 0 ? (confirmedCount / totalItems) * 100 : 0;
   const batchTotal = batch.effectiveTotal;
+  const firstCard = batch.giftcards[0];
+  const currency = firstCard?.country?.currency || 'USD';
 
   const getStatus = (): { label: string; color: string; activeBg: string } => {
     if (isPaid)
@@ -52,8 +55,12 @@ export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">${batchTotal.toFixed(0)}</span>
-          <span className="text-muted-foreground text-xs md:text-sm">You get: ${batch.estimatedPayout.toFixed(0)}</span>
+          <span className="text-md text-foreground font-semibold md:text-lg">
+            {formatCurrency(batchTotal, { currency })}
+          </span>
+          <span className="text-muted-foreground text-xs md:text-sm">
+            You get: {formatCurrency(batch.estimatedPayout, { currency: 'USD' })}
+          </span>
         </>
       }
       date={formatDateTime(batch.createdAt, 'en-US')}

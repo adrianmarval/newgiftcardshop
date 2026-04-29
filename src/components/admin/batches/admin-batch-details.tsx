@@ -1,10 +1,9 @@
-'use client';
-
 import { CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
 import { adminCardDelete } from '@/actions/admin/admin-card-delete';
 import type { AdminBatch } from '@/types/domain/admin';
+import { formatCurrency } from '@/lib/currency-formatter';
 
 interface AdminBatchDetailsProps {
   batch: AdminBatch;
@@ -35,7 +34,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
         <div className="text-muted-foreground flex items-center gap-4 text-xs md:text-sm">
           <span>{batch.cardsCount} tarjetas</span>
           <span>Confirmadas: {batch.confirmedCount}</span>
-          <span>Tasa: {(batch.sellRate * 100).toFixed(0)}%</span>
+          <span>Tasa: {(batch.sellRate * 100).toFixed(1)}%</span>
         </div>
       </div>
 
@@ -76,7 +75,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-emerald-500">Pago #{p.id.slice(-6).toUpperCase()}</span>
               </div>
-              <span className="text-xs font-semibold text-emerald-500">+${p.amount.toFixed(2)}</span>
+              <span className="text-xs font-semibold text-emerald-500">+{formatCurrency(p.amount, { currency: 'USD' })}</span>
             </div>
           ))}
         </div>

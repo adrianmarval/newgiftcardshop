@@ -24,6 +24,14 @@ export const searchGiftcardItemSchema = z.object({
   brand: z.string(),
   amount: z.number(),
   status: z.literal('UNUSED'),
+  country: z
+    .object({
+      name: z.string(),
+      code: z.string(),
+      currency: z.string().nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type SearchGiftcardItem = z.infer<typeof searchGiftcardItemSchema>;
@@ -51,8 +59,16 @@ export const orderCardItemSchema = z.object({
   amount: z.number(),
   claimCode: z.string(),
   pinCode: z.string().optional(),
-  status: z.string(),
+  status: z.enum(['UNUSED', 'ALREADY_USED', 'INVALID', 'DEACTIVATED', 'WRONG_AMOUNT', 'USED']),
   reportedAmount: z.number().optional(),
+  country: z
+    .object({
+      name: z.string(),
+      code: z.string(),
+      currency: z.string().nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type OrderCardItem = z.infer<typeof orderCardItemSchema>;

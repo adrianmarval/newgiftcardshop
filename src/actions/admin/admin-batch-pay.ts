@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
 import { adminActionClient } from '@/lib/safe-action';
 import { payBatchesInputSchema, payBatchesOutputSchema } from '@/types/domain/admin';
 
@@ -28,14 +29,16 @@ export const adminBatchPay = adminActionClient
       if (!isPayable) continue;
 
       const effectiveTotal = batch.giftcards.reduce((sum, card) => {
-        if (card.status === 'WRONG_AMOUNT') return sum + Number(card.reportedAmount ?? 0);
-        if (card.status === 'USED' || card.status === 'UNUSED') return sum + Number(card.amount);
+        if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
+        if (card.status === 'USED' || card.status === 'UNUSED') return sum.plus(card.amount);
         return sum;
-      }, 0);
+      }, new Prisma.Decimal(0));
+
+      const paymentAmount = effectiveTotal.mul(batch.sellRate);
 
       const payment = await prisma.payment.create({
         data: {
-          amount: effectiveTotal * Number(batch.sellRate),
+          amount: paymentAmount,
           balanceAfter: 0,
           status: 'COMPLETED',
           transactionType: 'CREDIT',

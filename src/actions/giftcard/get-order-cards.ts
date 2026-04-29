@@ -14,7 +14,14 @@ export const getOrderCards = buyerActionClient
       where: { id: orderId },
       include: {
         giftcards: {
-          include: { brandCountry: { include: { brand: true } } },
+          include: {
+            brandCountry: {
+              include: {
+                brand: true,
+                country: true,
+              },
+            },
+          },
         },
       },
     });
@@ -45,6 +52,13 @@ export const getOrderCards = buyerActionClient
           pinCode,
           status: (card.status as BuyFlowGiftcardStatus) ?? 'UNUSED',
           reportedAmount: card.reportedAmount ? card.reportedAmount.toNumber() : undefined,
+          country: card.brandCountry.country
+            ? {
+                name: card.brandCountry.country.name,
+                code: card.brandCountry.country.code,
+                currency: card.brandCountry.country.currency,
+              }
+            : null,
         };
       }),
     };

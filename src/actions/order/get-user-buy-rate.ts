@@ -11,6 +11,6 @@ export const getUserBuyRate = buyerActionClient.outputSchema(getUserBuyRateOutpu
   });
   return {
     success: true as const,
-    rate: dbUser?.buyRate ? dbUser.buyRate.toNumber() : 85.0,
+    rate: dbUser?.buyRate ? dbUser.buyRate.toNumber() : 0.85,
   };
 });

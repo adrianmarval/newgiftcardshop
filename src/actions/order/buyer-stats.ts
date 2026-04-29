@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
 import { buyerActionClient } from '@/lib/safe-action';
 import { buyerStatsSchema } from '@/types/domain/order';
 
@@ -28,16 +29,16 @@ export const buyerStats = buyerActionClient.outputSchema(buyerStatsSchema).actio
   const totalSaved = completedOrders.reduce((sum, order) => {
     const faceValueTotal = order.giftcards.reduce((faceSum, card) => {
       if (card.status === 'UNUSED' || card.status === 'USED') {
-        return faceSum + Number(card.amount);
+        return faceSum.plus(card.amount);
       }
       if (card.status === 'WRONG_AMOUNT') {
-        return faceSum + Number(card.reportedAmount ?? 0);
+        return faceSum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
       }
       return faceSum;
-    }, 0);
-    const effectiveTotal = faceValueTotal * Number(order.buyRate);
-    return sum + (faceValueTotal - effectiveTotal);
-  }, 0);
+    }, new Prisma.Decimal(0));
+    const effectiveTotal = faceValueTotal.mul(order.buyRate);
+    return sum.plus(faceValueTotal.sub(effectiveTotal));
+  }, new Prisma.Decimal(0));
 
   const activeOrders = activeOrdersResult;
 
@@ -45,6 +46,6 @@ export const buyerStats = buyerActionClient.outputSchema(buyerStatsSchema).actio
     availableCards,
     myOrders,
     activeOrders,
-    totalSaved: Math.round(totalSaved * 100) / 100,
+    totalSaved: totalSaved.toNumber(),
   };
 });
