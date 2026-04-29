@@ -9,36 +9,33 @@ import {
   IconCash,
   IconSun,
   IconMoon,
-  IconLogout,
   IconTag,
+  IconBell,
 } from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
-import { useLogout } from '@/hooks/use-logout';
+// import { useLogout } from '@/hooks/use-logout';
 
 export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
   const { theme, setTheme } = useTheme();
-  const { handleLogout } = useLogout('admin');
+  // const { handleLogout } = useLogout('admin');
 
   const navItems: BottomNavItem[] = [
     { title: 'Home', url: '/admin/dashboard', icon: IconDashboard },
     { title: 'Usuarios', url: '/admin/dashboard/users', icon: IconUsers },
-    {
-      title: 'Ordenes',
-      url: '/admin/dashboard/orders',
-      icon: IconShoppingCart,
-    },
+    { title: 'Ordenes', url: '/admin/dashboard/orders', icon: IconShoppingCart },
     {
       title: 'Lotes',
       url: '/admin/dashboard/batches',
       icon: IconCreditCard,
     },
+    { title: 'Alertas', url: '/buy/dashboard/notifications', icon: IconBell },
+    { title: 'Pagos', url: '/admin/dashboard/payments', icon: IconCash },
     {
       title: 'Brands',
       url: '/admin/dashboard/brands',
       icon: IconTag,
     },
-    { title: 'Pagos', url: '/admin/dashboard/payments', icon: IconCash },
     {
       title: 'Analiticas',
       url: '/admin/dashboard/analytics',
@@ -49,11 +46,11 @@ export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
       icon: theme === 'dark' ? IconSun : IconMoon,
       onClick: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
     },
-    {
-      title: 'Salir',
-      icon: IconLogout,
-      onClick: handleLogout,
-    },
+    // {
+    //   title: 'Salir',
+    //   icon: IconLogout,
+    //   onClick: handleLogout,
+    // },
   ];
 
   return <BottomNav items={navItems} variant="compact" isFixed={isFixed} />;

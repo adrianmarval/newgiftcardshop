@@ -164,11 +164,7 @@ export const ConfirmUsageStep = () => {
           </Button>
 
           {allCardsWorthless ? (
-            <Button
-              onClick={handleCancelOrder}
-              disabled={cancelStatus === 'executing' || !orderId}
-              className="bg-destructive text-destructive-foreground shadow-destructive/30 hover:bg-destructive/90 h-10 flex-2 text-xs font-bold shadow-xl md:h-12 md:text-base"
-            >
+            <Button variant={'destructive'} onClick={handleCancelOrder} disabled={cancelStatus === 'executing' || !orderId}>
               {cancelStatus === 'executing' ? <Spinner size="sm" /> : 'Cancelar Orden'}
             </Button>
           ) : (

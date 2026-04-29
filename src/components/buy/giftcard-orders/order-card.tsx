@@ -89,12 +89,8 @@ export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: Or
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">
-            {formatCurrency(order.faceValueTotal, { currency })}
-          </span>
-          <span className="text-muted-foreground text-xs md:text-sm">
-            Precio: {formatCurrency(order.effectiveTotal, { currency })}
-          </span>
+          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(order.faceValueTotal, { currency })}</span>
+          <span className="text-muted-foreground text-xs md:text-sm">Precio: {formatCurrency(order.effectiveTotal, { currency })}</span>
         </>
       }
       date={formatDateTime(order.createdAt, 'es-AR')}
@@ -111,7 +107,7 @@ export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: Or
         isActionable ? (
           <>
             <Button onClick={handleResumeOrder} size="sm" className="h-8 px-3 text-xs md:h-9 md:px-4 md:text-sm">
-              Reanudar
+              Completar Orden
             </Button>
             {canCancel && (
               <Button
@@ -122,7 +118,7 @@ export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: Or
                 className="border-destructive/50 text-destructive hover:bg-destructive/10 h-8 px-2 text-xs md:h-9 md:px-3 md:text-sm"
               >
                 {isCancelling && <Spinner size="sm" className="mr-1" />}
-                Cancelar
+                Cancelar Orden
               </Button>
             )}
           </>

@@ -3,7 +3,7 @@
 import { ReactNode, MouseEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, AlertTriangle } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { formatDateTime } from '@/lib/date-formatter';
 
 export interface RegistryCardProps {
@@ -91,7 +91,7 @@ export function RegistryCard({
       )}
 
       {/* Action Slot */}
-      {actions && <div className="border-border flex gap-2 border-t px-3 py-2">{actions}</div>}
+      {actions && <CardFooter className="p-1">{actions}</CardFooter>}
 
       {/* Expansion Details */}
       <AnimatePresence>

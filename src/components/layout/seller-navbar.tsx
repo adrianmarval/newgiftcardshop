@@ -1,13 +1,13 @@
 'use client';
 
-import { IconDashboard, IconCreditCard, IconUser, IconSun, IconMoon, IconSettings, IconCash, IconLogout } from '@tabler/icons-react';
+import { IconDashboard, IconCreditCard, IconUser, IconSun, IconMoon, IconSettings, IconCash, IconBell } from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
-import { useLogout } from '@/hooks/use-logout';
+// import { useLogout } from '@/hooks/use-logout';
 
 export const SellerNavbar = ({ isFixed }: { isFixed?: boolean }) => {
   const { theme, setTheme } = useTheme();
-  const { handleLogout } = useLogout('sell');
+  // const { handleLogout } = useLogout('sell');
 
   const navItems: BottomNavItem[] = [
     { title: 'Home', url: '/sell/dashboard', icon: IconDashboard },
@@ -22,17 +22,18 @@ export const SellerNavbar = ({ isFixed }: { isFixed?: boolean }) => {
       icon: IconCash,
     },
     { title: 'Profile', url: '/sell/dashboard/profile', icon: IconUser },
+    { title: 'Alertas', url: '/buy/dashboard/notifications', icon: IconBell },
     {
       title: theme === 'dark' ? 'Light' : 'Dark',
       icon: theme === 'dark' ? IconSun : IconMoon,
       onClick: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
     },
-    { title: 'Settings', url: '/sell/dashboard/settings', icon: IconSettings },
-    {
-      title: 'Logout',
-      icon: IconLogout,
-      onClick: handleLogout,
-    },
+
+    // {
+    //   title: 'Logout',
+    //   icon: IconLogout,
+    //   onClick: handleLogout,
+    // },
   ];
 
   return <BottomNav items={navItems} isFixed={isFixed} />;

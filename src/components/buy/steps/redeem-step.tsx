@@ -166,7 +166,7 @@ export const RedeemStep = () => {
   return (
     <div className="grid grid-cols-1 items-start gap-2 md:h-full md:grid-cols-12 md:gap-6">
       {/* Left Column: Order Summary & Actions */}
-      <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border bg-card/50 flex h-auto flex-col gap-1 space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Redimir y Verificar</h2>
           <p className="text-muted-foreground text-xs md:text-sm">Copia tus códigos y reporta cualquier problema.</p>
@@ -184,13 +184,9 @@ export const RedeemStep = () => {
             <div className="border-border text-md flex items-center justify-between border-t pt-1.5 md:text-base">
               <span className="text-muted-foreground">Monto a pagar</span>
               <div className="flex flex-col text-right">
-                <span className="text-primary text-xl font-black md:text-2xl">
-                  {formatCurrency(totalAmount, { currency: 'USD' })}
-                </span>
+                <span className="text-primary text-xl font-black md:text-2xl">{formatCurrency(totalAmount, { currency: 'USD' })}</span>
                 {/* show buyerRate */}
-                <span className="text-muted-foreground text-[10px] md:text-sm">
-                  Rate ({(redeemState.buyRate * 100).toFixed(1)}%)
-                </span>
+                <span className="text-muted-foreground text-[10px] md:text-sm">Rate ({(redeemState.buyRate * 100).toFixed(1)}%)</span>
               </div>
             </div>
           </div>
@@ -205,13 +201,13 @@ export const RedeemStep = () => {
       </Card>
 
       {/* Right Column: Cards Reveal & Reporting */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
+      <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Códigos Revelados</Label>
             <div className="flex items-center gap-1.5 md:gap-2">
               {copiedCount > 0 && (
-                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 gap-1 text-[10px] md:text-xs">
+                <Badge variant="outline" className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-[10px] text-emerald-500 md:text-xs">
                   <ClipboardCheck className="h-3 w-3" />
                   {copiedCount}/{totalCards} copiadas
                 </Badge>
@@ -221,193 +217,187 @@ export const RedeemStep = () => {
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-1.5 md:space-y-4">
+        <CardContent className="space-y-1.5 px-1 md:space-y-4">
           <AnimatePresence>
             {foundGiftcards.map((card, idx) => {
               const isCopied = redeemState.copiedIds.has(card.id);
 
               return (
-              <motion.div
-                key={card.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className={`relative rounded-xl border p-2 transition-all md:p-4 ${
-                  card.status !== 'UNUSED'
-                    ? 'border-destructive/30 bg-destructive/5 grayscale-[0.5]'
-                    : isCopied
-                      ? 'border-emerald-500/30 bg-emerald-500/5'
-                      : 'border-border bg-card/30'
-                } `}
-              >
-                <div className="flex flex-row items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 md:gap-4">
-                    <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black md:h-10 md:w-10 md:text-xs ${
-                        card.status !== 'UNUSED'
-                          ? 'bg-muted text-muted-foreground'
-                          : isCopied
-                            ? 'bg-emerald-500/20 text-emerald-500'
-                            : 'bg-primary/20 text-primary'
-                      } `}
-                    >
-                      {isCopied ? <ClipboardCheck className="h-3.5 w-3.5 md:h-4 md:w-4" /> : `#${idx + 1}`}
-                    </div>
-
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`text-lg font-black md:text-xl ${card.status === 'UNUSED' ? 'text-foreground' : 'text-muted-foreground line-through'}`}
-                        >
-                          {formatCurrency(card.amount, { currency: (card as any).country?.currency || 'USD' })}
-                        </span>
-                        {card.status === 'WRONG_AMOUNT' && card.reportedAmount !== undefined && (
-                          <span className="text-destructive text-lg font-black md:text-xl">
-                            {formatCurrency(card.reportedAmount, { currency: (card as any).country?.currency || 'USD' })}
-                          </span>
-                        )}
-                        {card.status !== 'UNUSED' && (
-                          <Badge variant="destructive" className="h-4 px-1.5 py-0 text-[10px] font-bold uppercase md:text-xs">
-                            {card.status === 'INVALID'
-                              ? 'INV.'
-                              : card.status === 'ALREADY_USED'
-                                ? 'USADA'
-                                : card.status === 'DEACTIVATED'
-                                  ? 'DESACT.'
-                                  : card.status === 'WRONG_AMOUNT'
-                                    ? 'MONTO'
-                                    : 'ERROR'}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="mt-0.5 flex items-center gap-2">
-                        {card.claimCode ? (
-                          <div className={`group text-md flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono font-bold md:text-sm ${
-                            isCopied
-                              ? 'border-emerald-500/30 bg-emerald-500/10'
-                              : 'border-border bg-muted/50'
-                          }`}>
-                            {card.claimCode}
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className={`h-3.5 w-3.5 transition-colors ${
-                                isCopied
-                                  ? 'text-emerald-500'
-                                  : 'text-muted-foreground hover:text-primary'
-                              }`}
-                              onClick={() => handleCopy(card.id, card.claimCode!)}
-                            >
-                              {isCopied ? (
-                                <ClipboardCheck className="h-2.5 w-2.5" />
-                              ) : (
-                                <Clipboard className="h-2.5 w-2.5" />
-                              )}
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground/30 font-mono text-[9px]">NO DISP.</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    {redeemState.loadingIds.has(card.id) ? (
-                      <Spinner size="sm" className="text-muted-foreground" />
-                    ) : card.status === 'UNUSED' ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-destructive/30 text-destructive/80 hover:bg-destructive/10 h-7 px-2 text-[10px]"
-                          >
-                            Reportar
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="border-border bg-popover">
-                          <DropdownMenuItem
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
-                            onClick={() => handleReport(card.id, 'INVALID')}
-                          >
-                            Código inválido
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
-                            onClick={() => handleReport(card.id, 'ALREADY_USED')}
-                          >
-                            Ya usada
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
-                            onClick={() => handleReport(card.id, 'DEACTIVATED')}
-                          >
-                            Desactivada
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-xs" onClick={() => handleReport(card.id, 'WRONG_AMOUNT')}>
-                            Monto incorrecto
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground hover:bg-muted h-7 px-2 text-[10px]"
-                        onClick={() => handleUndoReport(card.id, card.status)}
+                <motion.div
+                  key={card.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className={`relative rounded-xl border p-2 transition-all md:p-4 ${
+                    card.status !== 'UNUSED'
+                      ? 'border-destructive/30 bg-destructive/5 grayscale-[0.5]'
+                      : isCopied
+                        ? 'border-emerald-500/30 bg-emerald-500/5'
+                        : 'border-border bg-card/30'
+                  } `}
+                >
+                  <div className="flex flex-row items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 md:gap-4">
+                      <div
+                        className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black md:h-10 md:w-10 md:text-xs ${
+                          card.status !== 'UNUSED'
+                            ? 'bg-muted text-muted-foreground'
+                            : isCopied
+                              ? 'bg-emerald-500/20 text-emerald-500'
+                              : 'bg-primary/20 text-primary'
+                        } `}
                       >
-                        Deshacer
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                        {isCopied ? <ClipboardCheck className="h-3.5 w-3.5 md:h-4 md:w-4" /> : `#${idx + 1}`}
+                      </div>
 
-                {/* Inline form for WRONG_AMOUNT */}
-                {redeemState.activeReportId === card.id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="border-border mt-3 flex items-center gap-3 overflow-hidden border-t pt-3"
-                  >
-                    <div className="relative max-w-37.5 flex-1">
-                      <span className="text-muted-foreground/50 absolute top-1.5 left-2 text-xs">$</span>
-                      <Input
-                        type="number"
-                        placeholder="Monto corr."
-                        value={redeemState.correctedAmount}
-                        onChange={(e) =>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`text-lg font-black md:text-xl ${card.status === 'UNUSED' ? 'text-foreground' : 'text-muted-foreground line-through'}`}
+                          >
+                            {formatCurrency(card.amount, { currency: (card as any).country?.currency || 'USD' })}
+                          </span>
+                          {card.status === 'WRONG_AMOUNT' && card.reportedAmount !== undefined && (
+                            <span className="text-destructive text-lg font-black md:text-xl">
+                              {formatCurrency(card.reportedAmount, { currency: (card as any).country?.currency || 'USD' })}
+                            </span>
+                          )}
+                          {card.status !== 'UNUSED' && (
+                            <Badge variant="destructive" className="h-4 px-1.5 py-0 text-[10px] font-bold uppercase md:text-xs">
+                              {card.status === 'INVALID'
+                                ? 'INV.'
+                                : card.status === 'ALREADY_USED'
+                                  ? 'USADA'
+                                  : card.status === 'DEACTIVATED'
+                                    ? 'DESACT.'
+                                    : card.status === 'WRONG_AMOUNT'
+                                      ? 'MONTO'
+                                      : 'ERROR'}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-2">
+                          {card.claimCode ? (
+                            <div
+                              className={`group text-md flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono font-bold md:text-sm ${
+                                isCopied ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-border bg-muted/50'
+                              }`}
+                            >
+                              {card.claimCode}
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className={`h-3.5 w-3.5 transition-colors ${
+                                  isCopied ? 'text-emerald-500' : 'text-muted-foreground hover:text-primary'
+                                }`}
+                                onClick={() => handleCopy(card.id, card.claimCode!)}
+                              >
+                                {isCopied ? <ClipboardCheck className="h-2.5 w-2.5" /> : <Clipboard className="h-2.5 w-2.5" />}
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/30 font-mono text-[9px]">NO DISP.</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {redeemState.loadingIds.has(card.id) ? (
+                        <Spinner size="sm" className="text-muted-foreground" />
+                      ) : card.status === 'UNUSED' ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-destructive/30 text-destructive/80 hover:bg-destructive/10 h-7 px-2 text-[10px]"
+                            >
+                              Reportar
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="border-border bg-popover">
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
+                              onClick={() => handleReport(card.id, 'INVALID')}
+                            >
+                              Código inválido
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
+                              onClick={() => handleReport(card.id, 'ALREADY_USED')}
+                            >
+                              Ya usada
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive/10 focus:text-destructive text-xs"
+                              onClick={() => handleReport(card.id, 'DEACTIVATED')}
+                            >
+                              Desactivada
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs" onClick={() => handleReport(card.id, 'WRONG_AMOUNT')}>
+                              Monto incorrecto
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground hover:bg-muted h-7 px-2 text-[10px]"
+                          onClick={() => handleUndoReport(card.id, card.status)}
+                        >
+                          Deshacer
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Inline form for WRONG_AMOUNT */}
+                  {redeemState.activeReportId === card.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      className="border-border mt-3 flex items-center gap-3 overflow-hidden border-t pt-3"
+                    >
+                      <div className="relative max-w-37.5 flex-1">
+                        <span className="text-muted-foreground/50 absolute top-1.5 left-2 text-xs">$</span>
+                        <Input
+                          type="number"
+                          placeholder="Monto corr."
+                          value={redeemState.correctedAmount}
+                          onChange={(e) =>
+                            setRedeemState((prev) => ({
+                              ...prev,
+                              correctedAmount: e.target.value,
+                            }))
+                          }
+                          className="border-border bg-muted/50 h-8 pl-5 text-sm"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-primary text-primary-foreground h-8 text-sm"
+                        onClick={() => submitCorrectedAmount(card.id)}
+                      >
+                        Actualizar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() =>
                           setRedeemState((prev) => ({
                             ...prev,
-                            correctedAmount: e.target.value,
+                            activeReportId: null,
+                            correctedAmount: '',
                           }))
                         }
-                        className="border-border bg-muted/50 h-8 pl-5 text-sm"
-                      />
-                    </div>
-                    <Button
-                      size="sm"
-                      className="bg-primary text-primary-foreground h-8 text-sm"
-                      onClick={() => submitCorrectedAmount(card.id)}
-                    >
-                      Actualizar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0"
-                      onClick={() =>
-                        setRedeemState((prev) => ({
-                          ...prev,
-                          activeReportId: null,
-                          correctedAmount: '',
-                        }))
-                      }
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </motion.div>
-                )}
-              </motion.div>
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  )}
+                </motion.div>
               );
             })}
           </AnimatePresence>

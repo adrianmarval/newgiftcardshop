@@ -35,8 +35,8 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
   const springY = useSpring(dragY, { stiffness: 400, damping: 40 });
 
   const isCompact = variant === 'compact';
-  const mainItems = items.slice(0, 4);
-  const extraItems = items.slice(4);
+  const mainItems = items.slice(0, 5);
+  const extraItems = items.slice(5);
   const hasExtra = extraItems.length > 0;
 
   const baseHeight = 0;
