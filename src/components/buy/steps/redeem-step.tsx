@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clipboard, AlertTriangle, ChevronRight, X, Info } from 'lucide-react';
+import { Clipboard, ClipboardCheck, AlertTriangle, ChevronRight, X, Info } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -27,11 +27,13 @@ export const RedeemStep = () => {
     correctedAmount: string;
     buyRate: number;
     loadingIds: Set<string>;
+    copiedIds: Set<string>;
   }>({
     activeReportId: null,
     correctedAmount: '',
     buyRate: 0.85,
     loadingIds: new Set<string>(),
+    copiedIds: new Set<string>(),
   });
 
   const { execute: executeGetUserBuyRate } = useAction(getUserBuyRate, {
@@ -138,6 +140,15 @@ export const RedeemStep = () => {
     setLoading(giftcardId, false);
   };
 
+  const handleCopy = (cardId: string, claimCode: string) => {
+    navigator.clipboard.writeText(claimCode);
+    setRedeemState((prev) => {
+      const next = new Set(prev.copiedIds);
+      next.add(cardId);
+      return { ...prev, copiedIds: next };
+    });
+  };
+
   // Calculate totals based on status and apply buyRate
   const rawTotal = foundGiftcards.reduce((sum, card) => {
     if (card.status === 'UNUSED') return sum + card.amount;
@@ -147,8 +158,15 @@ export const RedeemStep = () => {
 
   const totalAmount = rawTotal * redeemState.buyRate;
 
+  // Clipboard progress tracking
+  const copiedCount = redeemState.copiedIds.size;
+  const totalCards = foundGiftcards.length;
+  const nextUncopiedIdx = foundGiftcards.findIndex(
+    (card) => card.status === 'UNUSED' && !redeemState.copiedIds.has(card.id),
+  );
+
   return (
-    <div className="grid h-full grid-cols-1 items-start gap-2 md:grid-cols-12 md:gap-6">
+    <div className="grid grid-cols-1 items-start gap-2 md:h-full md:grid-cols-12 md:gap-6">
       {/* Left Column: Order Summary & Actions */}
       <Card className="border-border bg-card/50 flex h-auto flex-col space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
@@ -194,6 +212,12 @@ export const RedeemStep = () => {
           <CardTitle className="flex items-center justify-between">
             <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Códigos Revelados</Label>
             <div className="flex items-center gap-1.5 md:gap-2">
+              {copiedCount > 0 && (
+                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 gap-1 text-[10px] md:text-xs">
+                  <ClipboardCheck className="h-3 w-3" />
+                  {copiedCount}/{totalCards} copiadas
+                </Badge>
+              )}
               <span className="text-muted-foreground/50 text-xs">{foundGiftcards.length} ítems</span>
             </div>
           </CardTitle>
@@ -201,19 +225,37 @@ export const RedeemStep = () => {
 
         <CardContent className="space-y-1.5 md:space-y-4">
           <AnimatePresence>
-            {foundGiftcards.map((card, idx) => (
+            {foundGiftcards.map((card, idx) => {
+              const isCopied = redeemState.copiedIds.has(card.id);
+              const isNextToCopy = idx === nextUncopiedIdx;
+
+              return (
               <motion.div
                 key={card.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`relative rounded-xl border p-2 transition-all md:p-4 ${card.status === 'UNUSED' ? 'border-border bg-card/30' : 'border-destructive/30 bg-destructive/5 grayscale-[0.5]'} `}
+                className={`relative rounded-xl border p-2 transition-all md:p-4 ${
+                  card.status !== 'UNUSED'
+                    ? 'border-destructive/30 bg-destructive/5 grayscale-[0.5]'
+                    : isCopied
+                      ? 'border-emerald-500/30 bg-emerald-500/5'
+                      : isNextToCopy
+                        ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
+                        : 'border-border bg-card/30'
+                } `}
               >
                 <div className="flex flex-row items-center justify-between gap-2">
                   <div className="flex items-center gap-2 md:gap-4">
                     <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black md:h-10 md:w-10 md:text-xs ${card.status === 'UNUSED' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'} `}
+                      className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black md:h-10 md:w-10 md:text-xs ${
+                        card.status !== 'UNUSED'
+                          ? 'bg-muted text-muted-foreground'
+                          : isCopied
+                            ? 'bg-emerald-500/20 text-emerald-500'
+                            : 'bg-primary/20 text-primary'
+                      } `}
                     >
-                      #{idx + 1}
+                      {isCopied ? <ClipboardCheck className="h-3.5 w-3.5 md:h-4 md:w-4" /> : `#${idx + 1}`}
                     </div>
 
                     <div className="flex flex-col">
@@ -244,15 +286,27 @@ export const RedeemStep = () => {
                       </div>
                       <div className="mt-0.5 flex items-center gap-2">
                         {card.claimCode ? (
-                          <div className="group border-border bg-muted/50 text-md flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono font-bold md:text-sm">
+                          <div className={`group text-md flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono font-bold md:text-sm ${
+                            isCopied
+                              ? 'border-emerald-500/30 bg-emerald-500/10'
+                              : 'border-border bg-muted/50'
+                          }`}>
                             {card.claimCode}
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="text-muted-foreground hover:text-primary h-3.5 w-3.5 transition-colors"
-                              onClick={() => navigator.clipboard.writeText(card.claimCode!)}
+                              className={`h-3.5 w-3.5 transition-colors ${
+                                isCopied
+                                  ? 'text-emerald-500'
+                                  : 'text-muted-foreground hover:text-primary'
+                              }`}
+                              onClick={() => handleCopy(card.id, card.claimCode!)}
                             >
-                              <Clipboard className="h-2.5 w-2.5" />
+                              {isCopied ? (
+                                <ClipboardCheck className="h-2.5 w-2.5" />
+                              ) : (
+                                <Clipboard className="h-2.5 w-2.5" />
+                              )}
                             </Button>
                           </div>
                         ) : (
@@ -359,7 +413,8 @@ export const RedeemStep = () => {
                   </motion.div>
                 )}
               </motion.div>
-            ))}
+              );
+            })}
           </AnimatePresence>
         </CardContent>
         <CardFooter>
