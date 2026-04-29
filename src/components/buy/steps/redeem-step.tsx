@@ -18,6 +18,7 @@ import { BuyFlowGiftcardStatus } from '@/types';
 import { Spinner } from '@/components/ui/spinner';
 import { useAction } from 'next-safe-action/hooks';
 import { formatCurrency } from '@/lib/currency-formatter';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export const RedeemStep = () => {
   const { foundGiftcards, reportIssue, setStep, orderId } = useBuyFlow();
@@ -141,7 +142,7 @@ export const RedeemStep = () => {
   };
 
   const handleCopy = (cardId: string, claimCode: string) => {
-    navigator.clipboard.writeText(claimCode);
+    copyToClipboard(claimCode);
     setRedeemState((prev) => {
       const next = new Set(prev.copiedIds);
       next.add(cardId);
@@ -161,9 +162,6 @@ export const RedeemStep = () => {
   // Clipboard progress tracking
   const copiedCount = redeemState.copiedIds.size;
   const totalCards = foundGiftcards.length;
-  const nextUncopiedIdx = foundGiftcards.findIndex(
-    (card) => card.status === 'UNUSED' && !redeemState.copiedIds.has(card.id),
-  );
 
   return (
     <div className="grid grid-cols-1 items-start gap-2 md:h-full md:grid-cols-12 md:gap-6">
@@ -227,7 +225,6 @@ export const RedeemStep = () => {
           <AnimatePresence>
             {foundGiftcards.map((card, idx) => {
               const isCopied = redeemState.copiedIds.has(card.id);
-              const isNextToCopy = idx === nextUncopiedIdx;
 
               return (
               <motion.div
@@ -239,9 +236,7 @@ export const RedeemStep = () => {
                     ? 'border-destructive/30 bg-destructive/5 grayscale-[0.5]'
                     : isCopied
                       ? 'border-emerald-500/30 bg-emerald-500/5'
-                      : isNextToCopy
-                        ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
-                        : 'border-border bg-card/30'
+                      : 'border-border bg-card/30'
                 } `}
               >
                 <div className="flex flex-row items-center justify-between gap-2">

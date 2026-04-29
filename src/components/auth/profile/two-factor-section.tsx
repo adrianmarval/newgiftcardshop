@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { QRCodeSVG } from 'qrcode.react';
 import type { TwoFactorSectionProps } from '@/types';
 import { usePathname } from 'next/navigation';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
   const pathname = usePathname();
@@ -253,7 +254,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
               <Button
                 variant="outline"
                 className="h-8 w-full rounded-md text-xs font-medium md:h-9 md:text-sm"
-                onClick={() => navigator.clipboard.writeText(backupCodes.join('\n'))}
+                onClick={() => copyToClipboard(backupCodes.join('\n'))}
               >
                 <Copy className="mr-1 h-2.5 w-2.5" />
                 {isSpanish ? 'Copiar Todos' : 'Copy All'}

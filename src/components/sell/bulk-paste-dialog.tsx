@@ -12,6 +12,7 @@ import { Check, Copy, Code, Info, AlertCircle } from 'lucide-react';
 import type { ParsedGiftcard } from '@/types';
 import { parseClaimCodes } from '@/lib/utils/claim-code-parser';
 import type { BulkPasteDialogProps } from './types';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export function BulkPasteDialog({ open, onOpenChange, onImport }: BulkPasteDialogProps) {
   const [pasteContent, setPasteContent] = useState('');
@@ -55,7 +56,7 @@ export function BulkPasteDialog({ open, onOpenChange, onImport }: BulkPasteDialo
     const example = `XXXX-XXXXXX-XXXX 50.00
 YYYY-YYYYYY-YYYY 100.00
 ZZZZ-ZZZZZZ-ZZZZZ 75.50`;
-    navigator.clipboard.writeText(example);
+    copyToClipboard(example);
   };
 
   return (

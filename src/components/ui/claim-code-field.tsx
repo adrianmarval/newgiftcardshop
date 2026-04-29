@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toast } from 'sonner';
+import { copyToClipboard } from '@/lib/clipboard';
 import type { CodeDisplayProps } from '@/components/ui/types';
 import { Button } from './button';
 
@@ -12,31 +12,6 @@ type ClaimCodeFieldProps = CodeDisplayProps & {
   showCopyButton?: boolean;
 };
 
-async function copyToClipboard(text: string): Promise<boolean> {
-  if (navigator.clipboard && window.isSecureContext) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      // fallback
-    }
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
-  textarea.select();
-  try {
-    document.execCommand('copy');
-    return true;
-  } catch {
-    return false;
-  } finally {
-    document.body.removeChild(textarea);
-  }
-}
 
 export function ClaimCodeField({ code, variant = 'masked', showToast = true, showCopyButton = true }: ClaimCodeFieldProps) {
   const [copied, setCopied] = useState(false);

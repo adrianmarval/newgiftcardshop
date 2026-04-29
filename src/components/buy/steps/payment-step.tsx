@@ -13,6 +13,7 @@ import { getPlatformSetting } from '@/actions/platform/settings';
 import { useAction } from 'next-safe-action/hooks';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export const PaymentStep = () => {
   const { orderId: storedOrderId, adjustedTotal } = useBuyFlow();
@@ -121,7 +122,7 @@ export const PaymentStep = () => {
                   size="icon"
                   variant="ghost"
                   className="text-primary hover:bg-primary/10 h-6 w-6"
-                  onClick={() => navigator.clipboard.writeText(binancePayId)}
+                  onClick={() => copyToClipboard(binancePayId)}
                 >
                   <Clipboard className="h-3 w-3" />
                 </Button>
