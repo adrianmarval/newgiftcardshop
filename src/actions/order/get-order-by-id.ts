@@ -6,7 +6,7 @@ import { decrypt } from '@/lib/encryption';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import type { OrderStatus } from '@/types/domain/order';
 import type { Giftcard, GiftcardStatus } from '@/types/domain/giftcard';
-import type { Payment, PaymentStatus } from '@/types/domain/payment';
+import type { Payment } from '@/types/domain/payment';
 import { getOrderByIdInputSchema, getOrderByIdOutputSchema } from '@/types/domain/order';
 
 function computeTotals(
@@ -32,7 +32,7 @@ export const getOrderById = buyerActionClient
       where: { id: orderId },
       include: {
         giftcards: { include: { brandCountry: { include: { brand: true, country: true } } } },
-        payments: { where: { status: 'COMPLETED' } },
+        payments: true,
       },
     });
 
@@ -85,7 +85,8 @@ export const getOrderById = buyerActionClient
       id: p.id,
       amount: Number(p.amount),
       balanceAfter: Number(p.balanceAfter),
-      status: p.status as PaymentStatus,
+      direction: p.direction,
+      category: p.category,
       createdAt: p.createdAt.toISOString(),
     }));
     const totals = computeTotals(order.giftcards, order.buyRate);

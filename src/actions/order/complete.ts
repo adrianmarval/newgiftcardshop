@@ -26,10 +26,11 @@ export const completeOrder = buyerActionClient
         data: {
           amount: paymentAmount,
           balanceAfter: 0,
-          status: 'COMPLETED',
-          transactionType: 'DEBIT',
+          direction: 'CREDIT',
+          category: 'ORDER',
           orderId: order.id,
           transactionId: _transactionId,
+          relatedUserId: order.userId,
         },
       });
       await tx.order.update({

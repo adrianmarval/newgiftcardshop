@@ -6,7 +6,7 @@ import { decrypt, hashCode } from '@/lib/encryption';
 import { adminActionClient } from '@/lib/safe-action';
 import type { OrderStatus } from '@/types/domain/order';
 import type { GiftcardStatus } from '@/types/domain/giftcard';
-import type { Payment, PaymentStatus } from '@/types/domain/payment';
+import type { Payment } from '@/types/domain/payment';
 import { getAdminOrdersInputSchema, getAdminOrdersOutputSchema } from '@/types/domain/admin';
 
 function computeTotals(
@@ -80,7 +80,7 @@ export const adminOrders = adminActionClient
               batch: { include: { user: { select: { id: true, name: true, email: true } } } },
             },
           },
-          payments: { where: { status: 'COMPLETED' } },
+          payments: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -159,7 +159,8 @@ export const adminOrders = adminActionClient
           id: p.id,
           amount: Number(p.amount),
           balanceAfter: Number(p.balanceAfter),
-          status: p.status as PaymentStatus,
+          direction: p.direction,
+          category: p.category,
           createdAt: p.createdAt.toISOString(),
         }));
 

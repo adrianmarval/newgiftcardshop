@@ -15,6 +15,7 @@ export const seedData: SeedData = {
       name: 'Adrian Marval',
       email: 'adrian.marval@gmail.com',
       emailVerified: true,
+      isActive: true,
       role: 'ADMIN',
       paymentMethod: {
         create: {
@@ -35,6 +36,7 @@ export const seedData: SeedData = {
       name: 'Solmaira Maza',
       email: 'solmaira.maza@gmail.com',
       emailVerified: true,
+      isActive: true,
       role: 'SELLER',
       sellRate: 0.75,
       paymentMethod: {
@@ -56,6 +58,7 @@ export const seedData: SeedData = {
       name: 'Dunia Marcano',
       email: 'dunia@prisma.io',
       emailVerified: true,
+      isActive: true,
       buyRate: 0.85,
       role: 'BUYER',
       paymentMethod: {

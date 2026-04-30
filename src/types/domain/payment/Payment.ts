@@ -4,17 +4,15 @@
 
 import { z } from 'zod';
 
-/**
- * Payment lifecycle states.
- *
- * - PENDING: Payment initiated but not yet confirmed
- * - COMPLETED: Payment successfully processed
- * - CANCELLED: Payment was cancelled or failed
- */
-export const paymentStatusEnum = z.enum(['PENDING', 'COMPLETED', 'CANCELLED']);
+export const paymentDirectionEnum = z.enum(['CREDIT', 'DEBIT']);
+export type PaymentDirection = z.infer<typeof paymentDirectionEnum>;
 
-/** Type derived from paymentStatusEnum. Use this for PaymentStatus in component props. */
-export type PaymentStatus = z.infer<typeof paymentStatusEnum>;
+export const paymentCategoryEnum = z.enum(['ORDER', 'BATCH', 'DEPOSIT', 'REFUND_BUYER', 'REFUND_SELLER']);
+export type PaymentCategory = z.infer<typeof paymentCategoryEnum>;
+
+export const paymentReferenceTypeEnum = z.enum(['ORDER', 'BATCH', 'MANUAL']);
+
+export type PaymentReferenceType = z.infer<typeof paymentReferenceTypeEnum>;
 
 /**
  * Serialized Payment as returned to client components.
@@ -29,22 +27,56 @@ export type PaymentStatus = z.infer<typeof paymentStatusEnum>;
  *   id: "pay_123",
  *   amount: 50.00,
  *   balanceAfter: 150.00,
- *   status: "COMPLETED",
  *   createdAt: "2024-01-15T10:30:00Z"
  * }
  */
 export const paymentSchema = z.object({
   /** Unique payment identifier. */
   id: z.string(),
-  /** Transaction amount in user's currency. */
+  /** Transaction amount in USDT. */
   amount: z.number(),
   /** Account balance after the transaction completed. */
   balanceAfter: z.number(),
-  /** Current payment status. */
-  status: paymentStatusEnum,
+  /** Accounting direction: does this move money in or out of the caja? */
+  direction: paymentDirectionEnum,
+  /** Business reason for this payment */
+  category: paymentCategoryEnum,
+  /** Binance transaction ID (for external reference) */
+  binanceTxId: z.string().optional(),
+  /** User involved in the transaction (buyer or seller) */
+  relatedUserId: z.string().optional(),
+  relatedUserName: z.string().optional(),
+  /** Internal notes for manual transactions */
+  notes: z.string().optional(),
+  /** Reference type for linking to Order, Batch, or manual */
+  referenceType: paymentReferenceTypeEnum.optional(),
+  /** ID of the referenced Order or Batch */
+  referenceId: z.string().optional(),
   /** ISO 8601 timestamp when payment was created. */
   createdAt: z.string(),
 });
 
 /** TypeScript type for a serialized Payment object. */
 export type Payment = z.infer<typeof paymentSchema>;
+
+/** Input for creating a deposit (money returned to platform by seller) */
+export const depositSchema = z.object({
+  amount: z.number().positive('Amount must be positive'),
+  relatedUserId: z.string().min(1, 'Seller is required'),
+  binanceTxId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type DepositInput = z.infer<typeof depositSchema>;
+
+/** Input for creating a refund */
+export const refundSchema = z.object({
+  amount: z.number().positive('Amount must be positive'),
+  refundType: z.enum(['BUYER', 'SELLER']),
+  relatedUserId: z.string().min(1, 'User is required'),
+  referenceType: z.enum(['ORDER', 'BATCH']),
+  referenceId: z.string().min(1, 'Reference ID is required'),
+  notes: z.string().optional(),
+});
+
+export type RefundInput = z.infer<typeof refundSchema>;

@@ -13,6 +13,12 @@ export const adminBatchPay = adminActionClient
 
     const results: { batchId: number; paymentId: string; amount: number }[] = [];
 
+    const lastPayment = await prisma.payment.findFirst({
+      orderBy: { createdAt: 'desc' },
+      select: { balanceAfter: true },
+    });
+    let currentBalance = lastPayment ? Number(lastPayment.balanceAfter) : 0;
+
     for (const batchId of batchIds) {
       const batch = await prisma.giftcardBatch.findUnique({
         where: { id: batchId },
@@ -36,13 +42,17 @@ export const adminBatchPay = adminActionClient
 
       const paymentAmount = effectiveTotal.mul(batch.sellRate);
 
+      const newBalance = currentBalance - Number(paymentAmount);
+      currentBalance = newBalance;
+
       const payment = await prisma.payment.create({
         data: {
           amount: paymentAmount,
-          balanceAfter: 0,
-          status: 'COMPLETED',
-          transactionType: 'CREDIT',
+          balanceAfter: newBalance,
+          direction: 'DEBIT',
+          category: 'BATCH',
           batchId: batch.id,
+          relatedUserId: batch.user?.id ?? null,
         },
       });
 

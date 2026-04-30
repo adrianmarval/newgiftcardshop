@@ -43,3 +43,11 @@ export { recentBatches } from './seller/recent-batches';
 
 // ── Platform ──────────────────────────────────────────────────────────────────
 export { getPlatformSetting, setPlatformSetting } from './platform/settings';
+
+// ── Admin Payments ──────────────────────────────────────────────────────────
+export { adminPayments } from './admin/admin-payments-list';
+export { adminGetSellers } from './admin/admin-get-sellers';
+export { adminGetBuyers } from './admin/admin-get-buyers';
+export { adminGetAdmins } from './admin/admin-get-admins';
+export { createDeposit } from './admin/admin-create-deposit';
+export { createRefund } from './admin/admin-create-refund';

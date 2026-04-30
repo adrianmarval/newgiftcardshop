@@ -252,9 +252,10 @@ model Payment {
   id              String          @id @default(cuid())
   amount          Decimal         @db.Decimal(10, 2)
   balanceAfter    Decimal         @default(0) @db.Decimal(10, 2)
-  status          PaymentStatus
-  transactionType TransactionType
+  direction          PaymentDirection
+  category           PaymentCategory
   transactionId   String?
+  binanceTxId     String?
 
   orderId String?
   order   Order?  @relation(fields: [orderId], references: [id])
@@ -262,10 +263,21 @@ model Payment {
   batchId Int?
   batch   GiftcardBatch? @relation(fields: [batchId], references: [id])
 
+  relatedUserId String?
+  notes          String?
+  referenceType  PaymentReferenceType?
+  referenceId   String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("payment")
+}
+
+enum PaymentReferenceType {
+  ORDER
+  BATCH
+  MANUAL
 }
 
 model PaymentMethod {
@@ -357,15 +369,19 @@ enum GiftcardIssueType {
   WRONG_AMOUNT
 }
 
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
+
+
+enum PaymentDirection {
+  CREDIT
+  DEBIT
 }
 
-enum TransactionType {
-  DEBIT
-  CREDIT
+enum PaymentCategory {
+  ORDER
+  BATCH
+  DEPOSIT
+  REFUND_BUYER
+  REFUND_SELLER
 }
 
 enum SupportedNetworks {

@@ -5,7 +5,7 @@
 import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import type { Giftcard, GiftcardStatus } from '@/types/domain/giftcard';
-import type { Payment, PaymentStatus } from '@/types/domain/payment';
+import type { Payment, PaymentDirection, PaymentCategory } from '@/types/domain/payment';
 
 /**
  * Serializes a giftcard for client output.
@@ -73,14 +73,16 @@ export function serializePayment(payment: {
   id: string;
   amount: Prisma.Decimal;
   balanceAfter: Prisma.Decimal;
-  status: string;
+  direction: string;
+  category: string;
   createdAt: Date;
 }): Payment {
   return {
     id: payment.id,
     amount: Number(payment.amount),
     balanceAfter: Number(payment.balanceAfter),
-    status: payment.status as PaymentStatus,
+    direction: payment.direction as PaymentDirection,
+    category: payment.category as PaymentCategory,
     createdAt: payment.createdAt.toISOString(),
-  } as Payment;
+  };
 }

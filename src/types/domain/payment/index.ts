@@ -2,5 +2,10 @@
 // Payment — Barrel export
 // ─────────────────────────────────────────────────────────────────────────────
 
-export { paymentStatusEnum, paymentSchema } from './Payment';
-export type { PaymentStatus, Payment } from './Payment';
+export {
+  paymentSchema,
+  paymentDirectionEnum,
+  paymentCategoryEnum,
+} from './Payment';
+
+export type { Payment, PaymentDirection, PaymentCategory } from './Payment';

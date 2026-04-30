@@ -70,6 +70,19 @@ export const adminGetBuyersOutputSchema = z.object({
 
 export type AdminGetBuyersOutput = z.infer<typeof adminGetBuyersOutputSchema>;
 
+export const adminGetAdminsOutputSchema = z.object({
+  success: z.literal(true),
+  admins: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      email: z.string(),
+    }),
+  ),
+});
+
+export type AdminGetAdminsOutput = z.infer<typeof adminGetAdminsOutputSchema>;
+
 export const adminReportManageInputSchema = z.object({
   action: z.enum(['ADD', 'UPDATE', 'DELETE']),
   giftcardId: z.string(),
