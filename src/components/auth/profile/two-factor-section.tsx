@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,7 +34,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
 
   const handleEnable2FA = async () => {
     if (!password) {
-      toast.error(isSpanish ? 'Se requiere contraseña' : 'Password is required');
+      showAlert.toast.error(isSpanish ? 'Se requiere contraseña' : 'Password is required');
       return;
     }
     setIs2FAPending(true);
@@ -42,7 +42,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     try {
       const { data, error } = await authClient.twoFactor.enable({ password });
       if (error) {
-        toast.error(error.message || (isSpanish ? 'Error al habilitar' : 'Failed to enable'));
+        showAlert.error('Error', error.message || (isSpanish ? 'Error al habilitar' : 'Failed to enable'));
       } else if (data) {
         setQrCodeData(data.totpURI);
         setTwoStepEnable(true);
@@ -50,7 +50,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
         setPassword('');
       }
     } catch (err) {
-      toast.error(isSpanish ? 'Error inesperado' : 'Unexpected error');
+      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
     } finally {
       setIs2FAPending(false);
     }
@@ -62,7 +62,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     try {
       const { data, error } = await authClient.twoFactor.verifyTotp({ code: totpCode });
       if (error) {
-        toast.error(error.message || (isSpanish ? 'Código inválido' : 'Invalid code'));
+        showAlert.error('Error', error.message || (isSpanish ? 'Código inválido' : 'Invalid code'));
       } else {
         setIs2FAEnabled(true);
         const codes = (data as { backupCodes?: string[] })?.backupCodes;
@@ -71,7 +71,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
         setTotpCode('');
       }
     } catch (err) {
-      toast.error(isSpanish ? 'Error inesperado' : 'Unexpected error');
+      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
     } finally {
       setIs2FAPending(false);
     }
@@ -79,7 +79,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
 
   const handleRegenerateBackupCodes = async () => {
     if (!password) {
-      toast.error(isSpanish ? 'Se requiere contraseña' : 'Password required');
+      showAlert.toast.error(isSpanish ? 'Se requiere contraseña' : 'Password required');
       return;
     }
     setIs2FAPending(true);
@@ -87,14 +87,14 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     try {
       const { data, error } = await authClient.twoFactor.generateBackupCodes({ password });
       if (error) {
-        toast.error(error.message || (isSpanish ? 'Error al regenerar' : 'Failed to regenerate'));
+        showAlert.error('Error', error.message || (isSpanish ? 'Error al regenerar' : 'Failed to regenerate'));
       } else if (data) {
         setBackupCodes(data.backupCodes);
         setShowBackupCodes(true);
         setPassword('');
       }
     } catch (err) {
-      toast.error(isSpanish ? 'Error inesperado' : 'Unexpected error');
+      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
     } finally {
       setIs2FAPending(false);
     }
@@ -102,7 +102,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
 
   const handleDisable2FA = async () => {
     if (!password) {
-      toast.error(isSpanish ? 'Se requiere contraseña' : 'Password required');
+      showAlert.toast.error(isSpanish ? 'Se requiere contraseña' : 'Password required');
       return;
     }
     setIs2FAPending(true);
@@ -110,14 +110,14 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     try {
       const { error } = await authClient.twoFactor.disable({ password });
       if (error) {
-        toast.error(error.message || (isSpanish ? 'Error al deshabilitar' : 'Failed to disable'));
+        showAlert.error('Error', error.message || (isSpanish ? 'Error al deshabilitar' : 'Failed to disable'));
       } else {
         setIs2FAEnabled(false);
         setShowDisableDialog(false);
         setPassword('');
       }
     } catch (err) {
-      toast.error(isSpanish ? 'Error inesperado' : 'Unexpected error');
+      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
     } finally {
       setIs2FAPending(false);
     }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +28,7 @@ export const ProfileInfoSection = ({ name, email }: ProfileInfoSectionProps) => 
     },
     onError: ({ error }) => {
       const defaultError = isSpanish ? 'Error al actualizar' : 'Failed to update';
-      toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 

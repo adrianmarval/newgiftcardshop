@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,7 +63,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: { portal?: 'admin' | 'buy'
     },
     onError: ({ error }) => {
       const defaultError = isSpanish ? 'Error al restablecer' : 'Failed to reset';
-      toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 

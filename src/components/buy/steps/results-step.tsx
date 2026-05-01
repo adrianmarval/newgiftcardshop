@@ -25,7 +25,7 @@ import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { Brand } from '@/types';
 import { formatCurrency } from '@/lib/currency-formatter';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 
 export const ResultsStep = () => {
   const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount, setOrderId, setFoundGiftcards } = useBuyFlow();
@@ -48,9 +48,7 @@ export const ResultsStep = () => {
       }
     },
     onError: ({ error }) => {
-      toast.error('Error al obtener la marca', {
-        description: error.serverError || error.validationErrors?._errors?.[0],
-      });
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || 'Error al obtener la marca');
     },
   });
 
@@ -61,9 +59,7 @@ export const ResultsStep = () => {
       }
     },
     onError: ({ error }) => {
-      toast.error('Error al obtener la tasa de compra', {
-        description: error.serverError || error.validationErrors?.formErrors?.[0],
-      });
+      showAlert.error('Error', error.serverError || error.validationErrors?.formErrors?.[0] || 'Error al obtener la tasa de compra');
     },
   });
 
@@ -73,7 +69,7 @@ export const ResultsStep = () => {
         setFoundGiftcards(data.giftcards);
         setStep(3);
       } else {
-        toast.error('Error al obtener las tarjetas de la orden');
+        showAlert.error('Error', 'No se pudieron obtener las tarjetas de la orden');
       }
       setResultsState((prev) => ({
         ...prev,
@@ -82,9 +78,7 @@ export const ResultsStep = () => {
       }));
     },
     onError: ({ error }) => {
-      toast.error('Error al obtener las tarjetas de la orden', {
-        description: error.serverError || error.validationErrors?._errors?.[0],
-      });
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || 'Error al obtener las tarjetas de la orden');
       setResultsState((prev) => ({
         ...prev,
         isConfirming: false,
@@ -110,9 +104,7 @@ export const ResultsStep = () => {
       }
     },
     onError: ({ error }) => {
-      toast.error('Error al crear la orden', {
-        description: error.serverError || error.validationErrors?._errors?.[0],
-      });
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || 'Error al crear la orden');
       setResultsState((prev) => ({ ...prev, isConfirming: false }));
     },
   });

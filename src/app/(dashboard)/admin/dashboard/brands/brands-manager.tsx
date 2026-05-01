@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAction } from 'next-safe-action/hooks';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import Image from 'next/image';
 import {
   getAllBrands,
@@ -68,66 +68,66 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
 
   const { execute: executeCreate, status: createStatus } = useAction(createBrand, {
     onSuccess: () => {
-      toast.success('Brand created');
+      showAlert.toast.success('Brand created');
       setIsCreateDialogOpen(false);
       setNewBrand({ name: '', slug: '', icon: '📦', image: '' });
       refreshBrands();
     },
-    onError: (e) => toast.error(e.error?.serverError || 'Error creating brand'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error creating brand'),
   });
 
   const { execute: executeUpdate, status: updateStatus } = useAction(updateBrand, {
     onSuccess: () => {
-      toast.success('Brand updated');
+      showAlert.toast.success('Brand updated');
       refreshBrands();
     },
-    onError: (e) => toast.error(e.error?.serverError || 'Error updating brand'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error updating brand'),
   });
 
   const { execute: executeDelete, status: deleteStatus } = useAction(deleteBrand, {
     onSuccess: () => {
-      toast.success('Brand deleted');
+      showAlert.toast.success('Brand deleted');
       setSelectedBrandId(null);
       refreshBrands();
     },
-    onError: (e) => toast.error(e.error?.serverError || 'Error deleting brand'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error deleting brand'),
   });
 
   const { execute: executeAddCountry, status: addCountryStatus } = useAction(addCountryToBrand, {
     onSuccess: () => {
-      toast.success('Country added');
+      showAlert.toast.success('Country added');
       setIsAddCountryDialogOpen(false);
       setNewCountry({ countryId: '', minAmount: '', maxAmount: '' });
       refreshBrands();
     },
-    onError: (e) => toast.error(e.error?.serverError || 'Error adding country'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error adding country'),
   });
 
   const { execute: executeUpdateLimits, status: updateLimitsStatus } = useAction(updateBrandCountryLimits, {
     onSuccess: () => {
-      toast.success('Limits updated');
+      showAlert.toast.success('Limits updated');
       setEditingCountryId(null);
       refreshBrands();
     },
-    onError: (e) => toast.error(e.error?.serverError || 'Error updating limits'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error updating limits'),
   });
 
   const { execute: executeRemoveCountry, status: removeCountryStatus } = useAction(removeCountryFromBrand, {
     onSuccess: () => {
-      toast.success('Country removed');
+      showAlert.toast.success('Country removed');
       refreshBrands();
     },
-    onError: (e) => toast.error(e.error?.serverError || 'Error removing country'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error removing country'),
   });
 
   const { execute: executeToggleBrand, status: toggleBrandStatus } = useAction(toggleBrandActive, {
     onSuccess: () => refreshBrands(),
-    onError: (e) => toast.error(e.error?.serverError || 'Error toggling brand'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error toggling brand'),
   });
 
   const { execute: executeToggleCountry, status: toggleCountryStatus } = useAction(toggleBrandCountryActive, {
     onSuccess: () => refreshBrands(),
-    onError: (e) => toast.error(e.error?.serverError || 'Error toggling country'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error toggling country'),
   });
 
   const refreshBrands = async () => {
@@ -317,8 +317,8 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => {
-                      if (confirm('Delete this brand?')) {
+                    onClick={async () => {
+                      if (await showAlert.confirm('Delete brand', 'Delete this brand?')) {
                         executeDelete({ id: selectedBrand.id });
                       }
                     }}
@@ -463,8 +463,8 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => {
-                              if (confirm('Remove this country from brand?')) {
+                            onClick={async () => {
+                              if (await showAlert.confirm('Remove country', 'Remove this country from brand?')) {
                                 executeRemoveCountry({ brandId: selectedBrand.id, countryId: bc.countryId });
                               }
                             }}

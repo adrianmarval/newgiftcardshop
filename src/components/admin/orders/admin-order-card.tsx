@@ -6,7 +6,7 @@ import { RegistryCard } from '@/components/ui/registry-card';
 import { formatDateTime } from '@/lib/date-formatter';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { AdminOrderDetails } from '@/components/admin/orders/admin-order-details';
 import { adminCancelOrder } from '@/actions/admin/admin-order-cancel';
 import { Spinner } from '@/components/ui/spinner';
@@ -64,18 +64,22 @@ export const AdminOrderCard = ({
 
   const handleCancelOrder = async (e: MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('¿Seguro que quieres cancelar esta orden?')) return;
+    const confirmed = await showAlert.confirm(
+      '¿Seguro que quieres cancelar esta orden?',
+      'Esta acción no se puede deshacer.'
+    );
+    if (!confirmed) return;
     setIsCancelling(true);
     try {
       const result = await adminCancelOrder({ orderId: order.id });
       if (result.serverError || result.validationErrors) {
-        toast.error('Error al cancelar la orden');
+        showAlert.error('Error al cancelar la orden');
       } else {
-        toast.success('Orden cancelada con éxito');
+        showAlert.toast.success('Orden cancelada con éxito');
         router.refresh();
       }
     } catch {
-      toast.error('Error al cancelar');
+      showAlert.error('Error al cancelar');
     } finally {
       setIsCancelling(false);
     }

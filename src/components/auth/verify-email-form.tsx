@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { CheckCircle, Mail, RefreshCw } from 'lucide-react';
@@ -28,7 +28,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
     },
     onError: ({ error }) => {
       const defaultError = isSpanish ? 'La verificación falló' : 'Verification failed';
-      toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 
@@ -40,7 +40,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
     },
     onError: ({ error }) => {
       const defaultError = isSpanish ? 'Error al reenviar' : 'Failed to resend';
-      toast.error(error.serverError || error.validationErrors?._errors?.[0] || defaultError);
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || defaultError);
     },
   });
 

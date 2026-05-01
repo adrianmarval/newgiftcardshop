@@ -15,7 +15,7 @@ import type { ReviewStepProps } from '@/components/sell/types';
 import { cn } from '@/lib/utils';
 import { useAction } from 'next-safe-action/hooks';
 import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard/ocr';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
 
 // ─── Status config ──────────────────────────────────────────────────────────
@@ -108,9 +108,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         }
 
         if (!isMatch) {
-          toast.error('Code mismatch', {
-            description: 'The screenshot code does not match this gift card.',
-          });
+          showAlert.error('Code mismatch', 'The screenshot code does not match this gift card.');
         } else {
           // It's a match (exact or fuzzy) -> Add to store
           // Amount mismatch will be handled by the resolution boxes
@@ -125,16 +123,16 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
               extracted.rawExtractedCode ?? extracted.claimCode ?? null,
               extracted.rawExtractedAmount ?? extracted.amount ?? null,
             );
-            toast.success('Evidence linked');
+            showAlert.toast.success('Evidence linked');
           }
         }
       } else {
-        toast.error('Could not read code', { description: 'Try a clearer screenshot.' });
+        showAlert.error('Could not read code', 'Try a clearer screenshot.');
       }
       setProcessingCardId(null);
     },
     onError: () => {
-      toast.error('Extraction failed');
+      showAlert.error('Extraction failed', 'Error reading image');
       setProcessingCardId(null);
     },
   });
@@ -162,7 +160,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         images: [{ id: imageId, compressedData: uploadRes.data.compressedData }],
       });
     } else {
-      toast.error('Upload failed');
+      showAlert.error('Upload failed', 'Error uploading image');
       setProcessingCardId(null);
     }
 

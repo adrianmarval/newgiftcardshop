@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,11 +34,11 @@ export const LoginForm = ({
       if (data?.success && data.redirectTo) {
         router.push(data.redirectTo);
       } else if (data?.error) {
-        toast.error(data.error);
+        showAlert.error('Error', data.error);
       }
     },
     onError: ({ error }) => {
-      toast.error(error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'));
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'));
     },
   });
 

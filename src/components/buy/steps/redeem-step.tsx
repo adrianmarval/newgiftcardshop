@@ -13,8 +13,8 @@ import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { getUserBuyRate } from '@/actions/order/get-user-buy-rate';
 import { reportGiftcardIssue, undoGiftcardIssue } from '@/actions/giftcard/issues';
 import { GiftcardIssueType } from '@/generated/prisma/enums';
-import { toast } from 'sonner';
 import { BuyFlowGiftcardStatus } from '@/types';
+import { showAlert } from '@/lib/swal';
 import { Spinner } from '@/components/ui/spinner';
 import { useAction } from 'next-safe-action/hooks';
 import { formatCurrency } from '@/lib/currency-formatter';
@@ -77,12 +77,11 @@ export const RedeemStep = () => {
       issueType: status,
     });
     if (!result.data) {
-      toast.error('Error al reportar el problema', {
-        description: result.serverError || result.validationErrors?._errors,
-      });
+      showAlert.error('Error', result.serverError || result.validationErrors?._errors?.join('') || 'Error al reportar el problema');
       reportIssue(id, 'UNUSED');
+    } else {
+      showAlert.toast.success('Problema reportado con éxito');
     }
-    toast.success('Problema reportado con éxito');
     setLoading(id, false);
   };
 
@@ -114,12 +113,11 @@ export const RedeemStep = () => {
       reportedAmount: val,
     });
     if (!result.data) {
-      toast.error('Error al reportar el problema', {
-        description: result.serverError || result.validationErrors?._errors,
-      });
+      showAlert.error('Error', result.serverError || result.validationErrors?._errors?.join('') || 'Error al reportar el problema');
       reportIssue(id, 'UNUSED');
+    } else {
+      showAlert.toast.success('Problema reportado con éxito');
     }
-    toast.success('Problema reportado con éxito');
     setLoading(id, false);
   };
 
@@ -131,13 +129,12 @@ export const RedeemStep = () => {
     setLoading(giftcardId, true);
     const result = await undoGiftcardIssue({ giftcardId, orderId });
     if (!result.data) {
-      toast.error('Error al deshacer el problema de la tarjeta', {
-        description: result.serverError || result.validationErrors?._errors,
-      });
+      showAlert.error('Error', result.serverError || result.validationErrors?._errors?.join('') || 'Error al deshacer el problema');
       // Retornar al status en el que estaba
       reportIssue(giftcardId, status);
+    } else {
+      showAlert.toast.success('Problema deshecho con éxito');
     }
-    toast.success('Problema deshecho con éxito');
     setLoading(giftcardId, false);
   };
 

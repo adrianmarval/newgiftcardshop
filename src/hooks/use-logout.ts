@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { useAction } from 'next-safe-action/hooks';
 import { logout } from '@/actions';
 
@@ -12,12 +12,12 @@ export const useLogout = (portal: 'buy' | 'sell' | 'admin') => {
   const { execute, status } = useAction(logout, {
     onSuccess: ({ data }) => {
       if (data?.success && data.redirectTo) {
-        toast.success(isSpanish ? 'Sesión cerrada correctamente' : 'Logged out successfully');
+        showAlert.toast.success(isSpanish ? 'Sesión cerrada correctamente' : 'Logged out successfully');
         router.push(data.redirectTo);
       }
     },
     onError: ({ error }) => {
-      toast.error(error.serverError || (isSpanish ? 'Error al cerrar sesión' : 'Logout failed'));
+      showAlert.error('Error', error.serverError || (isSpanish ? 'Error al cerrar sesión' : 'Logout failed'));
     },
   });
 

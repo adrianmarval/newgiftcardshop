@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +26,7 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: { portal?: 'admin' | 'buy
       }
     },
     onError: ({ error }) => {
-      toast.error(error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al enviar' : 'Failed to send'));
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al enviar' : 'Failed to send'));
     },
   });
 

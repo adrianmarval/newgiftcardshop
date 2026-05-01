@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { X, Plus } from 'lucide-react';
 
 interface SearchPreferencesFormProps {
@@ -31,12 +31,12 @@ export function SearchPreferencesForm({ minAmount, maxAmount, onSave, disabled =
       const maxVal = max ? parseFloat(max) : null;
 
       if (minVal !== null && maxVal !== null && minVal > maxVal) {
-        toast.error('El monto mínimo no puede ser mayor al máximo');
+        showAlert.error('Error', 'El monto mínimo no puede ser mayor al máximo');
         return;
       }
 
       if (minVal === null && maxVal === null) {
-        toast.error('Configura al menos una preferencia');
+        showAlert.error('Error', 'Configura al menos una preferencia');
         return;
       }
 
@@ -44,9 +44,9 @@ export function SearchPreferencesForm({ minAmount, maxAmount, onSave, disabled =
         minAmount: minVal,
         maxAmount: maxVal,
       });
-      toast.success('Preferencias guardadas');
+      showAlert.toast.success('Preferencias guardadas');
     } catch (error) {
-      toast.error('Error al guardar preferencias');
+      showAlert.error('Error', 'Error al guardar preferencias');
     } finally {
       setSaving(false);
     }

@@ -5,7 +5,7 @@ import { Trash2 } from 'lucide-react';
 import { RegistryCard } from '@/components/ui/registry-card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { adminBatchDelete } from '@/actions/admin/admin-batch-delete';
 import { AdminBatchDetails } from './admin-batch-details';
 import type { AdminBatch } from '@/types/domain/admin';
@@ -45,18 +45,19 @@ export function AdminBatchCard({
 
   const handleDelete = async (e: MouseEvent) => {
     e.stopPropagation();
-    if (!confirm(`¿Eliminar lote #${batch.id}?`)) return;
+    const confirmed = await showAlert.confirm('Eliminar lote', `¿Eliminar lote #${batch.id}?`);
+    if (!confirmed) return;
     setIsDeleting(true);
     try {
       const result = await adminBatchDelete({ batchId: batch.id });
       if (result.serverError) {
-        toast.error('Error', { description: result.serverError });
+        showAlert.error('Error', result.serverError);
       } else {
-        toast.success('Lote eliminado');
+        showAlert.toast.success('Lote eliminado');
         onDeleted();
       }
     } catch (error) {
-      toast.error('Error al eliminar');
+      showAlert.error('Error', 'Error al eliminar');
     } finally {
       setIsDeleting(false);
     }
@@ -89,9 +90,7 @@ export function AdminBatchCard({
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">
-            {formatCurrency(batch.effectiveTotal, { currency })}
-          </span>
+          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(batch.effectiveTotal, { currency })}</span>
           <span className="text-muted-foreground text-xs md:text-sm">
             A Pagar: {formatCurrency(batch.estimatedPayout, { currency: 'USD' })}
           </span>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { ShieldCheck, KeyRound, Laptop } from 'lucide-react';
@@ -43,7 +43,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
 
         if (authError) {
           const defaultError = isSpanish ? 'Código inválido' : 'Invalid code';
-          toast.error(authError.message || defaultError);
+          showAlert.error('Error', authError.message || defaultError);
           setIsPending(false);
           return;
         }
@@ -55,7 +55,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
 
         if (authError) {
           const defaultError = isSpanish ? 'Código inválido' : 'Invalid code';
-          toast.error(authError.message || defaultError);
+          showAlert.error('Error', authError.message || defaultError);
           setIsPending(false);
           return;
         }
@@ -65,7 +65,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
       router.refresh();
     } catch (err) {
       console.error('2FA verification error:', err);
-      toast.error(isSpanish ? 'Error inesperado' : 'Unexpected error');
+      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
       setIsPending(false);
     }
   };

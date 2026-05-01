@@ -15,8 +15,8 @@ import { searchGiftcards } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { SearchStepProps } from '@/components/buy/types';
-import { toast } from 'sonner';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/user/search-preferences';
+import { showAlert } from '@/lib/swal';
 
 export function SearchStep({ brandCountries }: SearchStepProps) {
   const { data: session } = useSession();
@@ -78,9 +78,9 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       });
 
       if (result?.serverError) {
-        toast.error('Error al limpiar filtros');
+        showAlert.toast.error('Error al limpiar filtros');
       } else {
-        toast.success('Filtros limpiados correctamente');
+        showAlert.toast.success('Filtros limpiados correctamente');
       }
     }
   };
@@ -92,7 +92,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     const maxVal = prefMax ? parseFloat(prefMax) : null;
 
     if (minVal !== null && maxVal !== null && minVal > maxVal) {
-      toast.error('El monto mínimo no puede ser mayor al máximo');
+      showAlert.toast.error('El monto mínimo no puede ser mayor al máximo');
       return;
     }
 
@@ -102,21 +102,21 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     });
 
     if (result.serverError) {
-      toast.error('Error al guardar preferencias');
+      showAlert.toast.error('Error al guardar preferencias');
     } else {
       let brUpdated = true;
       if (allowBuyRateAdjustment && prefBuyRate) {
         const brVal = parseFloat(prefBuyRate) / 100;
         if (brVal < 0.8) {
-          toast.error('La tarifa de compra no puede ser inferior a 80%');
+          showAlert.toast.error('La tarifa de compra no puede ser inferior a 80%');
           return;
         }
         const brResult = await updateBuyRate({ buyRate: brVal });
         if (brResult?.data?.error) {
-          toast.error(brResult.data.error);
+          showAlert.toast.error(brResult.data.error);
           brUpdated = false;
         } else if (brResult?.serverError) {
-          toast.error('Error al actualizar tarifa');
+          showAlert.toast.error('Error al actualizar tarifa');
           brUpdated = false;
         } else {
           setSavedBuyRate(prefBuyRate);
@@ -124,7 +124,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       }
 
       if (brUpdated) {
-        toast.success('Ajustes guardados correctamente');
+        showAlert.toast.success('Ajustes guardados correctamente');
         setSavedMin(prefMin);
         setSavedMax(prefMax);
       }
@@ -158,16 +158,17 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         setFoundGiftcards(data.giftcards);
         setStep(2);
       } else if (data?.error) {
-        toast.error(data.error);
+        showAlert.error('Error', data.error);
       } else {
-        toast.warning('No se encontraron tarjetas disponibles');
+        showAlert.warning('Sin stock', 'No se encontraron tarjetas disponibles con los criterios seleccionados.');
       }
       setIsSearching(false);
     },
     onError: ({ error }) => {
-      toast.error('Error al buscar las tarjetas', {
-        description: error.serverError || error.validationErrors?._errors?.[0] || 'Ocurrio un error al buscar las tarjetas',
-      });
+      showAlert.error(
+        'Error al buscar',
+        error.serverError || error.validationErrors?._errors?.[0] || 'Ocurrio un error al buscar las tarjetas'
+      );
       setIsSearching(false);
     },
   });

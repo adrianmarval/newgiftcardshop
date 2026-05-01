@@ -19,7 +19,7 @@ import { BrandStep } from '@/components/sell/steps/brand-step';
 import { DataEntryStep } from '@/components/sell/steps/data-entry-step';
 import { ReviewStep } from '@/components/sell/steps/review-step';
 import type { SellBatchManagerProps } from './types';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 
@@ -41,17 +41,19 @@ export const SellBatchManager = ({ brandCountries, sellRate }: SellBatchManagerP
       if (data?.success) {
         if (data.duplicates && data.duplicates.length > 0) {
           setDuplicates(data.duplicates);
-          toast.info('Some cards were duplicates', {
-            description: `${data.duplicates.length} duplicate code${data.duplicates.length !== 1 ? 's' : ''}. They were not added to the batch.`,
-          });
+          showAlert.toast.info(
+            'Some cards were duplicates',
+            `${data.duplicates.length} duplicate code${data.duplicates.length !== 1 ? 's' : ''}. They were not added to the batch.`
+          );
         }
         setShowSuccessDialog(true);
       }
     },
     onError: ({ error }) => {
-      toast.error('Error publishing batch', {
-        description: error.serverError || error.validationErrors?._errors?.[0] || 'Could not publish batch',
-      });
+      const valError = error.validationErrors
+        ? Object.values(error.validationErrors).flat()[0] as string
+        : null;
+      showAlert.error('Error publishing batch', error.serverError || valError || 'Could not publish batch');
     },
   });
 

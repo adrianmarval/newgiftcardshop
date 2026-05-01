@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { adminBatchPay } from '@/actions/admin/admin-batch-pay';
 import { Spinner } from '@/components/ui/spinner';
 import type { AdminBatch } from '@/types/domain/admin';
@@ -25,16 +25,16 @@ export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPay
     try {
       const result = await adminBatchPay({ batchIds: batches.map((b) => b.id) });
       if (result.serverError) {
-        toast.error('Pago fallido', { description: result.serverError });
+        showAlert.error('Pago fallido', result.serverError);
       } else if (!result.data?.success) {
-        toast.error('Pago fallido', { description: 'Error desconocido' });
+        showAlert.error('Pago fallido', 'Error desconocido');
       } else {
-        toast.success(`${batches.length} lote(s) pagado(s) exitosamente`);
+        showAlert.toast.success(`${batches.length} lote(s) pagado(s) exitosamente`);
         onOpenChange(false);
         onPaid();
       }
     } catch (error) {
-      toast.error('Pago fallido', { description: error instanceof Error ? error.message : 'Error desconocido' });
+      showAlert.error('Pago fallido', error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setIsPaying(false);
     }

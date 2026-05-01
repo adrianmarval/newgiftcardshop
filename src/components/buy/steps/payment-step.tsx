@@ -11,7 +11,7 @@ import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { completeOrder } from '@/actions/order/complete';
 import { getPlatformSetting } from '@/actions/platform/settings';
 import { useAction } from 'next-safe-action/hooks';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Spinner } from '@/components/ui/spinner';
 import { copyToClipboard } from '@/lib/clipboard';
 
@@ -28,14 +28,14 @@ export const PaymentStep = () => {
       if (data?.success && data.settings) {
         const binancePayIdSetting = data.settings.find((setting) => setting.key === 'binance_pay_id');
         if (!binancePayIdSetting) {
-          toast.error('No se encontró la configuración de Binance Pay');
+          showAlert.error('Configuración faltante', 'No se encontró la configuración de Binance Pay');
           return;
         }
         setBinancePayId(binancePayIdSetting.value);
       }
     },
     onError: () => {
-      toast.error('Error al obtener la configuración de Binance Pay');
+      showAlert.error('Error', 'Error al obtener la configuración de Binance Pay');
     },
   });
 
@@ -51,9 +51,7 @@ export const PaymentStep = () => {
     },
     onError: ({ error }) => {
       const errorDescription = error.serverError || error.validationErrors?._errors?.join('') || 'Error al completar orden';
-      toast.error('Error al completar orden', {
-        description: errorDescription,
-      });
+      showAlert.error('Error al completar orden', errorDescription);
       setErrorMessage(errorDescription);
     },
   });

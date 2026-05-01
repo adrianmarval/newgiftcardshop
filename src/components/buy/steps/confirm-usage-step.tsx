@@ -9,7 +9,7 @@ import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { getUserBuyRate, confirmOrderUsage, cancelOrder } from '@/actions/order';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Spinner } from '@/components/ui/spinner';
 import { formatCurrency } from '@/lib/currency-formatter';
 
@@ -26,9 +26,7 @@ export const ConfirmUsageStep = () => {
       }
     },
     onError: ({ error }) => {
-      toast.error('Error al obtener la tasa de compra', {
-        description: error.serverError || error.validationErrors?.formErrors?.[0],
-      });
+      showAlert.error('Error', error.serverError || error.validationErrors?.formErrors?.[0] || 'Error al obtener la tasa de compra');
     },
   });
 
@@ -54,10 +52,9 @@ export const ConfirmUsageStep = () => {
       }
     },
     onError: ({ error }) => {
-      toast.error('Error al confirmar uso de tarjetas', {
-        description: error.serverError || error.validationErrors?._errors?.[0] || 'Error al confirmar uso de tarjetas',
-      });
-      setErrorMessage(error.serverError || error.validationErrors?._errors?.join('') || 'Error al confirmar uso de tarjetas');
+      const errorDescription = error.serverError || error.validationErrors?._errors?.[0] || 'Error al confirmar uso de tarjetas';
+      showAlert.error('Error', errorDescription);
+      setErrorMessage(errorDescription);
     },
   });
 
@@ -69,15 +66,14 @@ export const ConfirmUsageStep = () => {
 
   const { execute: cancelExecute, status: cancelStatus } = useAction(cancelOrder, {
     onSuccess: () => {
-      toast.success('Orden cancelada con éxito');
+      showAlert.toast.success('Orden cancelada con éxito');
       resetForm();
       router.push('/buy/dashboard/orders');
     },
     onError: ({ error }) => {
-      toast.error('Error al cancelar la orden', {
-        description: error.serverError || error.validationErrors?._errors?.[0] || 'Error al cancelar la orden',
-      });
-      setErrorMessage(error.serverError || 'Error al cancelar la orden');
+      const errorDescription = error.serverError || error.validationErrors?._errors?.[0] || 'Error al cancelar la orden';
+      showAlert.error('Error', errorDescription);
+      setErrorMessage(errorDescription);
     },
   });
 

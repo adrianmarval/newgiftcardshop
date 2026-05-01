@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAction } from 'next-safe-action/hooks';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { updateUser } from '@/actions/admin/users';
 import { MoreVertical, Edit2, Power, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -50,21 +50,21 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({ role: '', creditLimit: '', buyRate: '', sellRate: '', minAmount: '', maxAmount: '', allowSearchPreferences: false, allowBuyRateAdjustment: false });
 
-  const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
+   const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
     onSuccess: () => {
-      toast.success('Usuario actualizado');
+      showAlert.toast.success('Usuario actualizado');
       router.refresh();
       setEditUser(null);
     },
-    onError: (e) => toast.error(e.error?.serverError || 'Error actualizando usuario'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error actualizando usuario'),
   });
 
   const { execute: executeToggle, status: toggleStatus } = useAction(updateUser, {
     onSuccess: () => {
-      toast.success('Estado actualizado');
+      showAlert.toast.success('Estado actualizado');
       router.refresh();
     },
-    onError: (e) => toast.error(e.error?.serverError || 'Error actualizando usuario'),
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error actualizando usuario'),
   });
 
   const openEditDialog = (user: User) => {

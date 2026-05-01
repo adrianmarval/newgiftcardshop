@@ -1,5 +1,5 @@
 import { CardFooter } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
 import { adminCardDelete } from '@/actions/admin/admin-card-delete';
 import type { AdminBatch } from '@/types/domain/admin';
@@ -12,19 +12,20 @@ interface AdminBatchDetailsProps {
 
 export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) {
   const handleDeleteCard = async (cardId: string) => {
-    if (!confirm('¿Eliminar esta tarjeta? Esta acción no se puede deshacer.')) return;
+    const confirmed = await showAlert.confirm('¿Eliminar tarjeta?', '¿Eliminar esta tarjeta? Esta acción no se puede deshacer.');
+    if (!confirmed) return;
     try {
       const result = await adminCardDelete({ cardId });
       if (result.serverError) {
-        toast.error('Error', { description: result.serverError });
+        showAlert.error('Error', result.serverError);
       } else if (result.data?.error) {
-        toast.error('Error', { description: result.data.error });
+        showAlert.error('Error', result.data.error);
       } else {
-        toast.success('Tarjeta eliminada');
+        showAlert.toast.success('Tarjeta eliminada');
         onDeleted();
       }
     } catch (error) {
-      toast.error('Error', { description: error instanceof Error ? error.message : 'Error desconocido' });
+      showAlert.error('Error', error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 

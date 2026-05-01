@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { adminReportManage } from '@/actions/admin/admin-report-manage';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { Spinner } from '@/components/ui/spinner';
 import type { AdminReportDialogProps } from './types';
 
@@ -50,19 +50,19 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
       }
 
       if (!result) {
-        toast.error('Error al gestionar el reporte');
+        showAlert.error('Error al gestionar el reporte');
         return;
       }
 
       if (result.serverError || result.validationErrors) {
-        toast.error('Error al gestionar el reporte');
+        showAlert.error('Error al gestionar el reporte');
       } else {
-        toast.success(currentMode === 'ADD' ? 'Reporte agregado' : currentMode === 'EDIT' ? 'Reporte actualizado' : 'Reporte eliminado');
+        showAlert.toast.success(currentMode === 'ADD' ? 'Reporte agregado' : currentMode === 'EDIT' ? 'Reporte actualizado' : 'Reporte eliminado');
         onSuccess?.();
         onOpenChange(false);
       }
     } catch {
-      toast.error('Error al gestionar el reporte');
+      showAlert.error('Error al gestionar el reporte');
     } finally {
       setIsLoading(false);
     }

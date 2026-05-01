@@ -13,7 +13,7 @@ import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard/ocr
 import { checkExistingCodes } from '@/actions/seller/check-codes';
 import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
 import type { SellFlowImage } from '@/types/application/sell-flow';
-import { toast } from 'sonner';
+import { showAlert } from '@/lib/swal';
 import { cn } from '@/lib/utils';
 
 // ─── Processing stage labels ────────────────────────────────────────────────
@@ -75,7 +75,7 @@ export function DataEntryStep() {
     (files: FileList | File[]) => {
       const filesArray = Array.from(files).filter((f) => f.type.startsWith('image/'));
       if (filesArray.length === 0) {
-        toast.error('Select valid images');
+        showAlert.toast.error('Select valid images');
         return;
       }
 
@@ -97,12 +97,12 @@ export function DataEntryStep() {
       }
 
       if (uniqueFiles.length === 0 && filesArray.length > 0) {
-        toast.info('Selected images are already attached');
+        showAlert.toast.info('Selected images are already attached');
         return;
       }
 
       if (duplicateCount > 0) {
-        toast.info(`${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} skipped`);
+        showAlert.toast.info(`${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} skipped`);
       }
 
       const newImages = uniqueFiles.map((file) => ({
@@ -199,7 +199,7 @@ export function DataEntryStep() {
         ingestOCRDraft(onlyMatchExisting, []);
 
         if (onlyMatchExisting.length > 0) {
-          toast.success(`${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`);
+          showAlert.toast.success(`${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`);
         }
 
         // Phase 3.5: Check DB for existing codes (text codes only, not OCR)
@@ -223,13 +223,13 @@ export function DataEntryStep() {
         setTimeout(() => setStep(3), 600);
       } else if (data?.error) {
         console.error(`[AI-OCR-BATCH] Extraction logic error:`, data.error);
-        toast.error('Extraction error', { description: data.error });
+        showAlert.error('Extraction error', data.error);
         setStage('idle');
       }
     },
     onError: ({ error }) => {
       console.error(`[AI-OCR-BATCH] Server/Network error:`, error.serverError);
-      toast.error('Extraction error', { description: error.serverError || 'Could not read images' });
+      showAlert.error('Extraction error', error.serverError || 'Could not read images');
       setStage('idle');
     },
   });
@@ -268,20 +268,18 @@ export function DataEntryStep() {
                 console.log(`[UPLOAD] Success for ${localImg.file.name} (ID: ${imageId})`);
               } else {
                 console.error(`[UPLOAD] Failed for ${localImg.file.name}:`, result.data?.error);
-                toast.error(`Error with ${localImg.file.name}`, {
-                  description: result.data?.error || 'Upload failed',
-                });
+                showAlert.error(`Error with ${localImg.file.name}`, result.data?.error || 'Upload failed');
               }
             } catch (error) {
               console.error(`[UPLOAD] Fatal error for ${localImg.file.name}:`, error);
-              toast.error(`Error with ${localImg.file.name}`);
+              showAlert.error(`Error with ${localImg.file.name}`, 'Critical upload error');
             }
           }
 
           setLocalImages([]);
 
           if (uploaded > 0) {
-            toast.success(`${uploaded} screenshot${uploaded > 1 ? 's' : ''} uploaded`);
+            showAlert.toast.success(`${uploaded} screenshot${uploaded > 1 ? 's' : ''} uploaded`);
           }
 
           // Phase 3: Run OCR to associate images with existing text codes
@@ -298,7 +296,7 @@ export function DataEntryStep() {
               setStage('done');
               setTimeout(() => setStep(3), 400);
             } else {
-              toast.info('No cards to process');
+              showAlert.toast.info('No cards to process');
               setStage('idle');
             }
           }
@@ -310,7 +308,7 @@ export function DataEntryStep() {
           setStage('done');
           setTimeout(() => setStep(3), 400);
         } else {
-          toast.info('No cards to process');
+          showAlert.toast.info('No cards to process');
           setStage('idle');
         }
       }
@@ -320,7 +318,7 @@ export function DataEntryStep() {
 
   const handleProcessCards = async () => {
     if (!hasContent) {
-      toast.info('Paste codes or attach screenshots first');
+      showAlert.toast.info('Paste codes or attach screenshots first');
       return;
     }
 
