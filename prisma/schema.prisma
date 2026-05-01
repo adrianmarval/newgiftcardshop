@@ -329,7 +329,7 @@ model PlatformSettings {
   key         String  @unique
   value       String
   description String?
-  balance     Decimal  @default(0) @db.Decimal(10, 2)
+  balance     Decimal @default(0) @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
