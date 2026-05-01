@@ -12,10 +12,9 @@ export default async function BuyerOrdersPage({ searchParams }: { searchParams: 
   const params = await searchParams;
   const parsed = orderSearchParamsCache.parse(params);
 
-  const page = parsed.page ?? 1;
+  const { page, sort } = parsed;
   const status = parsed.status === 'ALL' ? undefined : parsed.status;
   const search = parsed.search || undefined;
-  const sort = parsed.sort ?? 'newest';
 
   const result = await getBuyerOrders({
     page,

@@ -1,10 +1,7 @@
 import { Metadata } from 'next';
 import { adminPayments, adminGetSellers, adminGetBuyers, adminGetAdmins } from '@/actions';
 import { AdminPaymentsView } from '@/components/admin/payments/admin-payments-view';
-import { adminPaymentsSearchParamsParsers } from '@/types/domain/admin';
-import { createSearchParamsCache } from 'nuqs/server';
-
-const searchParamsCache = createSearchParamsCache(adminPaymentsSearchParamsParsers);
+import { adminPaymentsSearchParamsCache } from '@/lib/search-params-cache';
 
 export const metadata: Metadata = {
   title: 'Admin Payments | Solmaira Cards',
@@ -17,10 +14,9 @@ export default async function AdminPaymentsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const parsed = searchParamsCache.parse(params);
+  const parsed = adminPaymentsSearchParamsCache.parse(params);
 
-  const page = parsed.page ?? 1;
-  const limit = parsed.limit ?? 20;
+  const { page, limit } = parsed;
   const direction = parsed.direction === 'ALL' ? undefined : parsed.direction;
   const category = parsed.category === 'ALL' ? undefined : parsed.category;
   const userId = parsed.userId || null;

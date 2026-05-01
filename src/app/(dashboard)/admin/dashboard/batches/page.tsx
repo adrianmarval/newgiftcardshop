@@ -2,10 +2,7 @@ import { Metadata } from 'next';
 import { adminBatches } from '@/actions/admin/admin-batches';
 import { adminGetSellers } from '@/actions/admin/admin-get-sellers';
 import { AdminBatchesView } from '@/components/admin/batches/admin-batches-view';
-import { adminBatchesSearchParamsParsers } from '@/types/domain/admin';
-import { createSearchParamsCache } from 'nuqs/server';
-
-const searchParamsCache = createSearchParamsCache(adminBatchesSearchParamsParsers);
+import { adminBatchesSearchParamsCache } from '@/lib/search-params-cache';
 
 export const metadata: Metadata = {
   title: 'Admin Batches | Solmaira Cards',
@@ -14,14 +11,11 @@ export const metadata: Metadata = {
 
 export default async function AdminBatchesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
-  const parsed = searchParamsCache.parse(params);
+  const parsed = adminBatchesSearchParamsCache.parse(params);
 
-  const page = parsed.page ?? 1;
-  const limit = parsed.limit ?? 10;
+  const { page, limit, sort, status } = parsed;
   const search = parsed.search || undefined;
-  const sort = parsed.sort ?? 'newest';
   const sellerId = parsed.sellerId || null;
-  const status = parsed.status ?? 'ALL';
   const dateFrom = parsed.dateFrom || null;
   const dateTo = parsed.dateTo || null;
   const amountMin = parsed.amountMin ? Number(parsed.amountMin) : null;

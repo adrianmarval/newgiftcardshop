@@ -2,10 +2,7 @@ import { Metadata } from 'next';
 import { adminOrders } from '@/actions/admin/admin-orders-list';
 import { adminGetBuyers } from '@/actions/admin/admin-get-buyers';
 import { AdminOrdersView } from '@/components/admin/orders';
-import { adminOrdersSearchParamsParsers } from '@/components/admin/orders/admin-orders-search-params';
-import { createSearchParamsCache } from 'nuqs/server';
-
-const searchParamsCache = createSearchParamsCache(adminOrdersSearchParamsParsers);
+import { adminOrdersSearchParamsCache } from '@/lib/search-params-cache';
 
 export const metadata: Metadata = {
   title: 'Admin Orders | Solmaira Cards',
@@ -14,10 +11,9 @@ export const metadata: Metadata = {
 
 export default async function AdminOrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
-  const parsed = searchParamsCache.parse(params);
+  const parsed = adminOrdersSearchParamsCache.parse(params);
 
-  const page = parsed.page ?? 1;
-  const limit = parsed.limit ?? 10;
+  const { page, limit } = parsed;
   const search = parsed.search || undefined;
   const status = parsed.status === 'ALL' ? undefined : parsed.status;
   const buyerId = parsed.buyerId || null;

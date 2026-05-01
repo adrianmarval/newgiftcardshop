@@ -1,10 +1,7 @@
 import { Metadata } from 'next';
 import { listUsers } from '@/actions/admin/users';
 import { UsersManager } from './users-manager';
-import { adminUsersSearchParamsParsers } from '@/components/admin/users/admin-users-search-params';
-import { createSearchParamsCache } from 'nuqs/server';
-
-const searchParamsCache = createSearchParamsCache(adminUsersSearchParamsParsers);
+import { adminUsersSearchParamsCache } from '@/lib/search-params-cache';
 
 export const metadata: Metadata = {
   title: 'Usuarios | Panel de Administración',
@@ -13,10 +10,9 @@ export const metadata: Metadata = {
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
-  const parsed = searchParamsCache.parse(params);
+  const parsed = adminUsersSearchParamsCache.parse(params);
 
-  const page = parsed.page ?? 1;
-  const limit = parsed.limit ?? 10;
+  const { page, limit } = parsed;
   const search = parsed.search || undefined;
   const role = parsed.role === 'ALL' ? undefined : parsed.role;
 
