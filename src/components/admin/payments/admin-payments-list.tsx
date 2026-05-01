@@ -1,20 +1,28 @@
 'use client';
 
-import { History, ArrowUpRight, ArrowDownRight, Banknote, RotateCcw } from 'lucide-react';
+import { History, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { AdminPayment } from '@/types/domain/admin';
 import type { AdminPaymentsListProps } from './types';
 
 const categoryConfig: Record<string, { label: string; icon: typeof ArrowUpRight; badge: string }> = {
-  ORDER: { label: 'Orden', icon: ArrowUpRight, badge: 'text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-950' },
-  BATCH: { label: 'Batch', icon: ArrowDownRight, badge: 'text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-950' },
-  DEPOSIT: { label: 'Depósito', icon: Banknote, badge: 'text-blue-700 bg-blue-100 dark:text-blue-400 dark:bg-blue-950' },
-  REFUND_BUYER: { label: 'Refund Buyer', icon: RotateCcw, badge: 'text-orange-700 bg-orange-100 dark:text-orange-400 dark:bg-orange-950' },
+  ORDER: { label: 'Orden', icon: ArrowUpRight, badge: 'text-green-700 bg-green-600/10 dark:text-green-400 dark:bg-green-400/10' },
+  BATCH: { label: 'Batch', icon: ArrowDownRight, badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10' },
+  DEPOSIT: {
+    label: 'Depósito',
+    icon: ArrowUpRight,
+    badge: 'text-green-700 bg-green-600/10 dark:text-green-400 dark:bg-green-400/10',
+  },
+  REFUND_BUYER: {
+    label: 'Refund Buyer',
+    icon: ArrowDownRight,
+    badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10',
+  },
   REFUND_SELLER: {
     label: 'Refund Seller',
-    icon: RotateCcw,
-    badge: 'text-purple-700 bg-purple-100 dark:text-purple-400 dark:bg-purple-950',
+    icon: ArrowDownRight,
+    badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10',
   },
 };
 
