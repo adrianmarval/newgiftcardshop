@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 import { refundSchema } from '@/types/domain/payment/Payment';
 import { z } from 'zod';
+import { getPlatformBalance } from '../platform/settings';
 
 const createRefundInputSchema = refundSchema;
 
@@ -54,18 +55,16 @@ export const createRefund = adminActionClient
       batchId = batch.id;
     }
 
-    const lastPayment = await prisma.payment.findFirst({
-      orderBy: { createdAt: 'desc' },
-      select: { balanceAfter: true },
-    });
+    const response = await getPlatformBalance();
 
-    const lastBalance = lastPayment ? Number(lastPayment.balanceAfter) : 0;
-    const newBalance = lastBalance - amount;
+    const balanceAfter = response.data
+      ? response.data.balance.sub(new Prisma.Decimal(amount))
+      : new Prisma.Decimal(0).sub(new Prisma.Decimal(amount));
 
     const payment = await prisma.payment.create({
       data: {
         amount: new Prisma.Decimal(amount),
-        balanceAfter: new Prisma.Decimal(newBalance),
+        balanceAfter: balanceAfter,
         direction: 'DEBIT',
         category,
         relatedUserId,

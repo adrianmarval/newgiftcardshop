@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 import { depositSchema } from '@/types/domain/payment/Payment';
 import { z } from 'zod';
+import { getPlatformBalance, updatePlatformBalance } from '../platform/settings';
 
 const createDepositInputSchema = depositSchema;
 
@@ -33,25 +34,28 @@ export const createDeposit = adminActionClient
       throw new Error('El depósito debe estar asociado a un administrador');
     }
 
-    const lastPayment = await prisma.payment.findFirst({
-      orderBy: { createdAt: 'desc' },
-      select: { balanceAfter: true },
-    });
+    const response = await getPlatformBalance();
 
-    const lastBalance = lastPayment ? Number(lastPayment.balanceAfter) : 0;
-    const newBalance = lastBalance + amount;
+    const balanceAfter = response.data?.balance ? response.data.balance.add(new Prisma.Decimal(amount)) : new Prisma.Decimal(amount);
 
-    const payment = await prisma.payment.create({
-      data: {
-        amount: new Prisma.Decimal(amount),
-        balanceAfter: new Prisma.Decimal(newBalance),
-        direction: 'CREDIT',
-        category: 'DEPOSIT',
-        relatedUserId,
-        binanceTxId: binanceTxId ?? null,
-        notes: notes ?? null,
-        referenceType: 'MANUAL',
-      },
+    const payment = await prisma.$transaction(async (tx) => {
+      // update balance de la plataforma
+      const response = await updatePlatformBalance({ amount: new Prisma.Decimal(amount), type: 'add' });
+      if (!response.data?.success) {
+        throw new Error('Error al actualizar el balance de la plataforma');
+      }
+      return await tx.payment.create({
+        data: {
+          amount: new Prisma.Decimal(amount),
+          balanceAfter: balanceAfter,
+          direction: 'CREDIT',
+          category: 'DEPOSIT',
+          relatedUserId,
+          binanceTxId: binanceTxId ?? null,
+          notes: notes ?? null,
+          referenceType: 'MANUAL',
+        },
+      });
     });
 
     return {

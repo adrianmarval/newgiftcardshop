@@ -7,6 +7,7 @@ import { AdminPaymentsList } from '@/components/admin/payments/admin-payments-li
 import { AdminDepositDialog } from '@/components/admin/payments/admin-deposit-dialog';
 import { AdminRefundDialog } from '@/components/admin/payments/admin-refund-dialog';
 import type { AdminPaymentsViewProps } from './types';
+import { Button } from '@/components/ui/button';
 
 export const AdminPaymentsView = ({ payments, pagination, sellers, buyers, admins }: AdminPaymentsViewProps) => {
   const router = useRouter();
@@ -24,12 +25,10 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers, admin
       <AdminPaymentsFilters sellers={sellers} buyers={buyers} />
       <AdminPaymentsList payments={payments} totalPages={pagination.totalPages} />
       <div className="flex gap-2">
-        <button onClick={() => setDepositOpen(true)} className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700">
-          + Registrar Depósito
-        </button>
-        <button onClick={() => setRefundOpen(true)} className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+        <Button onClick={() => setDepositOpen(true)}>+ Registrar Depósito</Button>
+        <Button variant={'secondary'} onClick={() => setRefundOpen(true)}>
           + Registrar Refund
-        </button>
+        </Button>
       </div>
       <AdminDepositDialog open={depositOpen} onOpenChange={setDepositOpen} admins={admins} onSuccess={handleSuccess} />
       <AdminRefundDialog open={refundOpen} onOpenChange={setRefundOpen} sellers={sellers} buyers={buyers} onSuccess={handleSuccess} />

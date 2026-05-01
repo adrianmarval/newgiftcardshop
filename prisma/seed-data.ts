@@ -7,6 +7,7 @@ interface SeedData {
   countryData: Prisma.CountryCreateInput[];
   brandData: Prisma.BrandCreateInput[];
   brandCountryData: Prisma.BrandCountryCreateInput[];
+  platformSettingData: Prisma.PlatformSettingsCreateInput[];
 }
 
 export const seedData: SeedData = {
@@ -124,5 +125,13 @@ export const seedData: SeedData = {
     { brand: { connect: { slug: 'target' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 500 },
     { brand: { connect: { slug: 'walmart' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500 },
     { brand: { connect: { slug: 'walmart' } }, country: { connect: { code: 'CA' } }, minAmount: 5, maxAmount: 500 },
+  ],
+  platformSettingData: [
+    {
+      balance: 0,
+      key: 'platformBalance',
+      description: 'Saldo disponible en la plataforma',
+      value: '0',
+    },
   ],
 };

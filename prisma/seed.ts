@@ -29,6 +29,7 @@ export async function main() {
   await prisma.brandCountry.deleteMany();
   await prisma.country.deleteMany();
   await prisma.brand.deleteMany();
+  await prisma.platformSettings.deleteMany();
 
   // 1. Crear marcas
   await prisma.brand.createMany({
@@ -57,6 +58,12 @@ export async function main() {
     });
     console.log(`Usuario creado: ${user.email} (ID: ${user.id})`);
   }
+
+  // 5. Crear platformSettings
+  await prisma.platformSettings.createMany({
+    data: seedData.platformSettingData,
+  });
+  console.log('PlatformSettings creados.');
 
   console.log(`Seed finalizado con éxito.`);
 }

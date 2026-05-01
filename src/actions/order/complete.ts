@@ -3,6 +3,8 @@
 import prisma from '@/lib/prisma';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { completeOrderInputSchema, completeOrderOutputSchema } from '@/types/domain/order';
+import { getPlatformBalance, updatePlatformBalance } from '@/actions/platform/settings';
+import { Prisma } from '@/generated/prisma/client';
 
 export const completeOrder = buyerActionClient
   .inputSchema(completeOrderInputSchema)
@@ -22,14 +24,20 @@ export const completeOrder = buyerActionClient
     const { order } = ctx;
     const paymentAmount = order.adjustedTotal ?? order.total;
     await prisma.$transaction(async (tx) => {
+      const platformBalance = await getPlatformBalance();
+
+      const balanceAfter = platformBalance.data?.balance
+        ? platformBalance.data.balance.add(new Prisma.Decimal(paymentAmount))
+        : new Prisma.Decimal(paymentAmount);
+
       await tx.payment.create({
         data: {
           amount: paymentAmount,
-          balanceAfter: 0,
+          balanceAfter: balanceAfter,
           direction: 'CREDIT',
           category: 'ORDER',
           orderId: order.id,
-          transactionId: _transactionId,
+          binanceTxId: _transactionId,
           relatedUserId: order.userId,
         },
       });
@@ -49,6 +57,11 @@ export const completeOrder = buyerActionClient
             data: { isConfirmed: true, status: card.status },
           });
         }
+      }
+      // actualizar balance de la plataforma
+      const res = await updatePlatformBalance({ amount: paymentAmount, type: 'add' });
+      if (!res.data?.success) {
+        throw new Error('Error al actualizar el balance de la plataforma');
       }
     });
     return {
