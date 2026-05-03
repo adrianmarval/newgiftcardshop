@@ -14,6 +14,7 @@ import z from 'zod';
 
 export const getPlatformSetting = adminActionClient.outputSchema(getPlatformSettingOutputSchema).action(async () => {
   const settings = await prisma.platformSettings.findMany();
+
   return {
     success: true as const,
     settings: settings.map((s) => ({
@@ -23,6 +24,18 @@ export const getPlatformSetting = adminActionClient.outputSchema(getPlatformSett
       description: s.description ?? null,
       balance: s.balance.toNumber(),
     })),
+  };
+});
+
+export const getBinancePayPaymentId = authActionClient.outputSchema(z.object({ binancePayId: z.string() })).action(async () => {
+  const binancePayId = await prisma.platformSettings.findFirst({
+    where: { key: 'binance_pay_id' },
+    select: { value: true },
+  });
+
+  return {
+    success: true as const,
+    binancePayId: binancePayId?.value ?? '',
   };
 });
 

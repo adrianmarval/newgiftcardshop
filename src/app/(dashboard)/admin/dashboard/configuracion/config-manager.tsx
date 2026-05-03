@@ -9,14 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { IconTrash, IconEdit, IconPlus } from '@tabler/icons-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -31,7 +24,7 @@ import { Spinner } from '@/components/ui/spinner';
 
 export function ConfigManager({ initialSettings }: { initialSettings: PlatformSetting[] }) {
   const [settings, setSettings] = useState<PlatformSetting[]>(initialSettings);
-  
+
   // States para el modal de Crear/Editar
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSetting, setEditingSetting] = useState<PlatformSetting | null>(null);
@@ -47,7 +40,12 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
   const handleOpenForm = (setting?: PlatformSetting) => {
     if (setting) {
       setEditingSetting(setting);
-      setFormData({ key: setting.key, value: setting.value, description: setting.description || '', balance: setting.balance?.toString() || '0' });
+      setFormData({
+        key: setting.key,
+        value: setting.value,
+        description: setting.description || '',
+        balance: setting.balance?.toString() || '0',
+      });
     } else {
       setEditingSetting(null);
       setFormData({ key: '', value: '', description: '', balance: '' });
@@ -64,18 +62,18 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
         key: formData.key,
         value: formData.value,
         description: formData.description,
-        ...(formData.balance !== '' && { balance: Number(formData.balance) })
+        ...(formData.balance !== '' && { balance: Number(formData.balance) }),
       });
 
       if (result?.data?.success) {
-        setSettings(prev => {
-          const existingIndex = prev.findIndex(s => s.key === formData.key);
+        setSettings((prev) => {
+          const existingIndex = prev.findIndex((s) => s.key === formData.key);
           const newSetting = {
-             id: editingSetting?.id || `temp-${Date.now()}`,
-             key: formData.key,
-             value: formData.value,
-             description: formData.description || null,
-             balance: formData.balance !== '' ? Number(formData.balance) : 0,
+            id: editingSetting?.id || `temp-${Date.now()}`,
+            key: formData.key,
+            value: formData.value,
+            description: formData.description || null,
+            balance: formData.balance !== '' ? Number(formData.balance) : 0,
           };
           if (existingIndex >= 0) {
             const newSettings = [...prev];
@@ -101,7 +99,7 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
     try {
       const result = await executeDeleteSetting({ key: deletingKey });
       if (result?.data?.success) {
-        setSettings(prev => prev.filter(s => s.key !== deletingKey));
+        setSettings((prev) => prev.filter((s) => s.key !== deletingKey));
         setIsAlertOpen(false);
         setDeletingKey(null);
       }
@@ -116,24 +114,22 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Configuraciones de la Plataforma</CardTitle>
           <Button onClick={() => handleOpenForm()} className="gap-2">
-            <IconPlus size={16} /> Nueva Configuración
+            <IconPlus size={16} /> Nueva
           </Button>
         </CardHeader>
         <CardContent>
           {settings.length === 0 ? (
-            <div className="text-center text-muted-foreground p-8">
-              No hay configuraciones registradas.
-            </div>
+            <div className="text-muted-foreground p-8 text-center">No hay configuraciones registradas.</div>
           ) : (
-            <div className="rounded-md border overflow-hidden">
-              <table className="w-full text-sm text-left">
+            <div className="overflow-hidden rounded-md border">
+              <table className="w-full text-left text-sm">
                 <thead className="bg-muted/50 text-muted-foreground">
                   <tr>
-                    <th className="h-12 px-4 font-medium align-middle">Clave</th>
-                    <th className="h-12 px-4 font-medium align-middle">Valor</th>
-                    <th className="h-12 px-4 font-medium align-middle">Balance</th>
-                    <th className="h-12 px-4 font-medium align-middle">Descripción</th>
-                    <th className="h-12 px-4 font-medium align-middle w-[100px]">Acciones</th>
+                    <th className="h-12 px-4 align-middle font-medium">Clave</th>
+                    <th className="h-12 px-4 align-middle font-medium">Valor</th>
+                    <th className="h-12 px-4 align-middle font-medium">Balance</th>
+                    <th className="h-12 px-4 align-middle font-medium">Descripción</th>
+                    <th className="h-12 w-[100px] px-4 align-middle font-medium">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -142,13 +138,18 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
                       <td className="p-4 align-middle font-medium">{setting.key}</td>
                       <td className="p-4 align-middle break-all">{setting.value}</td>
                       <td className="p-4 align-middle">{setting.balance !== undefined ? setting.balance : '-'}</td>
-                      <td className="p-4 align-middle text-muted-foreground">{setting.description || '-'}</td>
+                      <td className="text-muted-foreground p-4 align-middle">{setting.description || '-'}</td>
                       <td className="p-4 align-middle">
                         <div className="flex gap-2">
                           <Button variant="ghost" size="icon" onClick={() => handleOpenForm(setting)}>
                             <IconEdit size={16} />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleOpenAlert(setting.key)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleOpenAlert(setting.key)}
+                          >
                             <IconTrash size={16} />
                           </Button>
                         </div>
@@ -169,51 +170,53 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
             <DialogHeader>
               <DialogTitle>{editingSetting ? 'Editar Configuración' : 'Nueva Configuración'}</DialogTitle>
               <DialogDescription>
-                {editingSetting 
-                  ? 'Modifica los valores de esta configuración.' 
+                {editingSetting
+                  ? 'Modifica los valores de esta configuración.'
                   : 'Agrega un nuevo par clave-valor a las configuraciones globales del sistema.'}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="key">Clave (Key)</Label>
-                <Input 
-                  id="key" 
-                  required 
+                <Input
+                  id="key"
+                  required
                   disabled={!!editingSetting}
-                  placeholder="Ej: MIN_BUY_AMOUNT" 
+                  placeholder="Ej: MIN_BUY_AMOUNT"
                   value={formData.key}
-                  onChange={(e) => setFormData(prev => ({ ...prev, key: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, key: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="value">Valor</Label>
-                <Input 
-                  id="value" 
-                  required 
-                  placeholder="Ej: 10" 
+                <Input
+                  id="value"
+                  required
+                  placeholder="Ej: 10"
                   value={formData.value}
-                  onChange={(e) => setFormData(prev => ({ ...prev, value: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, value: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="desc">Descripción</Label>
-                <Input 
-                  id="desc" 
-                  placeholder="Descripción opcional" 
+                <Input
+                  id="desc"
+                  placeholder="Descripción opcional"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="balance">Balance <span className="text-muted-foreground font-normal">(Opcional)</span></Label>
-                <Input 
-                  id="balance" 
+                <Label htmlFor="balance">
+                  Balance <span className="text-muted-foreground font-normal">(Opcional)</span>
+                </Label>
+                <Input
+                  id="balance"
                   type="number"
                   step="0.01"
-                  placeholder="Ej: 1500.50" 
+                  placeholder="Ej: 1500.50"
                   value={formData.balance}
-                  onChange={(e) => setFormData(prev => ({ ...prev, balance: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, balance: e.target.value }))}
                 />
               </div>
             </div>
@@ -241,8 +244,8 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              variant="destructive" 
+            <AlertDialogAction
+              variant="destructive"
               onClick={(e) => {
                 e.preventDefault();
                 handleDeleteConfirm();

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { completeOrder } from '@/actions/order/complete';
-import { getPlatformSetting } from '@/actions/platform/settings';
+import { getBinancePayPaymentId, getPlatformSetting } from '@/actions/platform/settings';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/swal';
 import { Spinner } from '@/components/ui/spinner';
@@ -23,15 +23,16 @@ export const PaymentStep = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [binancePayId, setBinancePayId] = useState<string>('—');
 
-  const { execute: executeGetPlatformSetting } = useAction(getPlatformSetting, {
+  const { execute: executeGetPlatformSetting } = useAction(getBinancePayPaymentId, {
     onSuccess: ({ data }) => {
-      if (data?.success && data.settings) {
-        const binancePayIdSetting = data.settings.find((setting) => setting.key === 'binance_pay_id');
+      console.log({ data });
+      if (data?.success) {
+        const binancePayIdSetting = data.binancePayId;
         if (!binancePayIdSetting) {
           showAlert.error('Configuración faltante', 'No se encontró la configuración de Binance Pay');
           return;
         }
-        setBinancePayId(binancePayIdSetting.value);
+        setBinancePayId(binancePayIdSetting);
       }
     },
     onError: () => {
@@ -120,7 +121,10 @@ export const PaymentStep = () => {
                   size="icon"
                   variant="ghost"
                   className="text-primary hover:bg-primary/10 h-6 w-6"
-                  onClick={() => copyToClipboard(binancePayId)}
+                  onClick={async () => {
+                    const success = await copyToClipboard(binancePayId);
+                    success && showAlert.toast.success('ID de Binance Pay copiado al portapapeles');
+                  }}
                 >
                   <Clipboard className="h-3 w-3" />
                 </Button>

@@ -55,10 +55,11 @@ export const searchGiftcards = buyerActionClient
 
       const amountDecimal = new Decimal(amount);
       if (unpaidTotal.plus(amountDecimal).gt(creditLimit)) {
+        const pendingText = unpaidTotal.gt(0) ? ` Ya tienes $${unpaidTotal.toFixed(2)} pendiente.` : '';
         return {
           success: true as const,
           giftcards: [],
-          error: `Esta compra excedería tu límite de crédito ($${creditLimit.toNumber()}). Tienes $${unpaidTotal.toFixed(2)} pendiente.`,
+          error: `Esta compra excedería tu límite de crédito ($${creditLimit.toNumber()}).${pendingText}`,
         };
       }
     }

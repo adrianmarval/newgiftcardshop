@@ -197,6 +197,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Create New Brand</DialogTitle>
+                  <DialogDescription className="sr-only">Detalles de la nueva marca</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div>
@@ -341,6 +342,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Add Country to {selectedBrand.name}</DialogTitle>
+                      <DialogDescription className="sr-only">Configuración del país a añadir</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div>
