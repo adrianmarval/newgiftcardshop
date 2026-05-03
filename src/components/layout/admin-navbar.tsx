@@ -11,6 +11,7 @@ import {
   IconMoon,
   IconTag,
   IconBell,
+  IconSettings,
 } from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
@@ -40,6 +41,11 @@ export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
       title: 'Analiticas',
       url: '/admin/dashboard/analytics',
       icon: IconChartBar,
+    },
+    {
+      title: 'Config',
+      url: '/admin/dashboard/configuracion',
+      icon: IconSettings,
     },
     {
       title: theme === 'dark' ? 'Light' : 'Dark',

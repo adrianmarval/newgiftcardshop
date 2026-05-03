@@ -18,6 +18,7 @@ export const platformSettingSchema = z.object({
   value: z.string(),
   /** Descripción del setting. Nullable porque la columna DB permite NULL. */
   description: z.string().nullable().optional(),
+  balance: z.number().optional(),
 });
 
 export type PlatformSetting = z.infer<typeof platformSettingSchema>;
@@ -35,11 +36,22 @@ export const setPlatformSettingInputSchema = z.object({
   key: z.string(),
   value: z.string(),
   description: z.string().optional(),
+  balance: z.number().optional(),
 });
 
 export type SetPlatformSettingInput = z.infer<typeof setPlatformSettingInputSchema>;
 
 /** Schema de salida para setPlatformSetting */
 export const setPlatformSettingOutputSchema = z.object({
+  success: z.literal(true),
+});
+
+/** Schema de entrada para deletePlatformSetting */
+export const deletePlatformSettingInputSchema = z.object({
+  key: z.string(),
+});
+
+/** Schema de salida para deletePlatformSetting */
+export const deletePlatformSettingOutputSchema = z.object({
   success: z.literal(true),
 });

@@ -133,5 +133,10 @@ export const seedData: SeedData = {
       description: 'Saldo disponible en la plataforma',
       value: '0',
     },
+    {
+      key: 'binance_pay_id',
+      value: '57038454',
+      description: 'ID de pago de Binance',
+    },
   ],
 };
