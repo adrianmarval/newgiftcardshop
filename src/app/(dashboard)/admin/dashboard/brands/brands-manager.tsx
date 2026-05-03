@@ -182,9 +182,9 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
   };
 
   return (
-    <div className="flex h-full gap-4">
+    <div className="flex flex-col md:flex-row md:h-[calc(100vh-120px)] gap-4">
       {/* Left Panel: Brands List */}
-      <Card className="w-1/3 min-w-80">
+      <Card className="w-full md:w-1/3 md:min-w-[320px] flex flex-col overflow-hidden h-[400px] md:h-full shrink-0">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle>Brands</CardTitle>
@@ -236,7 +236,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
             <Input placeholder="Search brands..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 flex-1 overflow-y-auto custom-scrollbar">
           <AnimatePresence>
             {filteredBrands.map((brand) => (
               <motion.div
@@ -280,7 +280,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       </Card>
 
       {/* Right Panel: Brand Details */}
-      <Card className="flex-1">
+      <Card className="flex-1 w-full md:w-auto">
         {selectedBrand ? (
           <>
             <CardHeader className="pb-2">
