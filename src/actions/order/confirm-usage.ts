@@ -35,13 +35,33 @@ export const confirmOrderUsage = buyerActionClient
     const order = ctx.order;
     const adjustedTotal = computeEffectiveTotal(order.giftcards, order.buyRate);
 
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        status: 'AWAITING_PAYMENT',
-        adjustedTotal,
-      },
+    const orderUpdated = await prisma.$transaction(async (tx) => {
+      const updatedOrder = await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'AWAITING_PAYMENT',
+          adjustedTotal,
+        },
+      });
+      for (const card of order.giftcards) {
+        if (card.status === 'UNUSED') {
+          await tx.giftcard.update({
+            where: { id: card.id },
+            data: { status: 'USED', isConfirmed: true },
+          });
+        } else {
+          await tx.giftcard.update({
+            where: { id: card.id },
+            data: { isConfirmed: true, status: card.status },
+          });
+        }
+      }
+      return updatedOrder;
     });
+
+    if (!orderUpdated) {
+      throw new ActionError('Error al actualizar la orden');
+    }
 
     return { success: true as const, adjustedTotal: adjustedTotal.toNumber() };
   });

@@ -45,19 +45,6 @@ export const completeOrder = buyerActionClient
         where: { id: order.id },
         data: { status: 'COMPLETED' },
       });
-      for (const card of order.giftcards) {
-        if (card.status === 'UNUSED') {
-          await tx.giftcard.update({
-            where: { id: card.id },
-            data: { status: 'USED', isConfirmed: true },
-          });
-        } else {
-          await tx.giftcard.update({
-            where: { id: card.id },
-            data: { isConfirmed: true, status: card.status },
-          });
-        }
-      }
       // actualizar balance de la plataforma
       const res = await updatePlatformBalance({ amount: paymentAmount, type: 'add' });
       if (!res.data?.success) {

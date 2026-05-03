@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, AlertCircle, ArrowLeft, XCircle, Ban, Info } from 'lucide-react';
+import { Check, ArrowLeft, XCircle, Ban, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
