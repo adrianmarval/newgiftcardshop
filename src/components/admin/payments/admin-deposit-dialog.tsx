@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { AdminDepositDialogProps } from './types';
 
-export const AdminDepositDialog = ({ open, onOpenChange, admins, onSuccess }: AdminDepositDialogProps) => {
+export const AdminDepositDialog = ({ open, onOpenChange, onSuccess }: Omit<AdminDepositDialogProps, 'admins'>) => {
   const [amount, setAmount] = useState('');
-  const [adminId, setAdminId] = useState('');
+
   const [binanceTxId, setBinanceTxId] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,14 +23,13 @@ export const AdminDepositDialog = ({ open, onOpenChange, admins, onSuccess }: Ad
     try {
       const result = await createDeposit({
         amount: parseFloat(amount),
-        relatedUserId: adminId,
         binanceTxId: binanceTxId || undefined,
         notes: notes || undefined,
       });
 
       if (result.data?.success) {
         setAmount('');
-        setAdminId('');
+
         setBinanceTxId('');
         setNotes('');
         onSuccess();
@@ -55,22 +54,6 @@ export const AdminDepositDialog = ({ open, onOpenChange, admins, onSuccess }: Ad
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="rounded bg-red-100 p-2 text-sm text-red-600">{error}</p>}
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">Administrador Responsable</label>
-            <select
-              value={adminId}
-              onChange={(e) => setAdminId(e.target.value)}
-              required
-              className="bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-            >
-              <option value="">Seleccionar administrador...</option>
-              {admins.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name} ({a.email})
-                </option>
-              ))}
-            </select>
-          </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium">Monto (USDT)</label>

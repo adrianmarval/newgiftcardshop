@@ -1,19 +1,27 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { AlertTriangle, Bitcoin, DollarSign, Equal, TrendingDown, TrendingUp } from 'lucide-react';
-import { AdminDepositDialog, AdminRefundDialog, AdminWithdrawDialog } from '../admin/payments/dialogs';
+import { AdminDepositDialog } from '../admin/payments/admin-deposit-dialog';
+import { AdminRefundDialog } from '../admin/payments/admin-refund-dialog';
+import { AdminWithdrawDialog } from '../admin/payments/admin-withdraw-dialog';
+import { Button } from '@/components/ui/button';
 import { Decimal } from '@/generated/prisma/internal/prismaNamespaceBrowser';
-
 
 interface BalanceCardProps {
   platformBalance: number | string | typeof Decimal;
   binanceBalance: string | number | typeof Decimal;
   error?: string;
+  sellers?: Array<{ id: string; name: string; email: string }>;
+  buyers?: Array<{ id: string; name: string; email: string }>;
 }
 
-export const BalanceCard = ({ platformBalance, binanceBalance, error }: BalanceCardProps) => {
+export const BalanceCard = ({ platformBalance, binanceBalance, error, sellers = [], buyers = [] }: BalanceCardProps) => {
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [isRefundOpen, setIsRefundOpen] = useState(false);
   let safePlatformBal = new Decimal(0);
   let safeBinanceBal = new Decimal(0);
 
@@ -82,9 +90,29 @@ export const BalanceCard = ({ platformBalance, binanceBalance, error }: BalanceC
         </div>
       </CardContent>
       <CardFooter className="flex items-center justify-around gap-2 bg-transparent">
-        <AdminDepositDialog />
-        <AdminWithdrawDialog />
-        <AdminRefundDialog />
+        <Button onClick={() => setIsDepositOpen(true)}>+ Deposit</Button>
+        <Button variant="secondary" onClick={() => setIsWithdrawOpen(true)}>- Withdraw</Button>
+        <Button variant="secondary" onClick={() => setIsRefundOpen(true)}>- Refund</Button>
+
+        <AdminDepositDialog 
+          open={isDepositOpen} 
+          onOpenChange={setIsDepositOpen} 
+          onSuccess={() => setIsDepositOpen(false)} 
+        />
+        
+        <AdminWithdrawDialog 
+          open={isWithdrawOpen} 
+          onOpenChange={setIsWithdrawOpen} 
+          onSuccess={() => setIsWithdrawOpen(false)} 
+        />
+        
+        <AdminRefundDialog 
+          open={isRefundOpen} 
+          onOpenChange={setIsRefundOpen} 
+          sellers={sellers}
+          buyers={buyers}
+          onSuccess={() => setIsRefundOpen(false)} 
+        />
       </CardFooter>
     </Card>
   );
