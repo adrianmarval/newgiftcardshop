@@ -5,8 +5,8 @@ import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';
 export default async function SellerDashboardLayout({ children }: { children: React.ReactNode }) {
   await authorizeByRequiredRole(['SELLER', 'ADMIN']);
   return (
-    <AutoRefreshProvider interval={5000}>
-      <nav className="grid h-svh w-full grid-cols-1 grid-rows-[1fr_auto] gap-1 p-1 md:gap-4">
+    <AutoRefreshProvider interval={15000}>
+      <nav className="grid h-svh w-full grid-cols-1 grid-rows-[1fr_auto] gap-1 p-2 md:gap-4">
         <main className="bg-background relative col-span-1 mx-auto w-full max-w-6xl overflow-hidden rounded-lg md:col-span-1">
           <div className="custom-scrollbar text-muted-foreground h-full overflow-y-auto italic md:p-2">{children}</div>
         </main>

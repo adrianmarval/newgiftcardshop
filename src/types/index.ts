@@ -48,3 +48,6 @@ export { paginatedOutputSchema } from './application/shared/Pagination';
 
 // ── Backwards compatibility aliases ──────────────────────────────────────────
 export type { PaginationMeta as PaginationInfo } from './application/shared/Pagination';
+
+// ── Binance ────────────────────────────────────────────────────────────────────
+export * from './binance.types';

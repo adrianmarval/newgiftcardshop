@@ -1,5 +1,8 @@
-import { IconUsers, IconCreditCard, IconCurrencyDollar, IconAlertTriangle } from '@tabler/icons-react';
+import { BalanceCard } from '@/components/ui/balance-card';
+import { IconUsers, IconCreditCard, IconCurrencyDollar } from '@tabler/icons-react';
 import { Metadata } from 'next';
+import { getBinanceBalancesAction } from '@/actions/admin/binance';
+import { getPlatformBalance } from '@/actions/platform/settings';
 
 export const metadata: Metadata = {
   title: 'Panel de Administración | Solmaira Cards',
@@ -7,12 +10,21 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
+  const [{ data: binanceBalance, serverError }, platformBalanceResponse] = await Promise.all([
+    getBinanceBalancesAction(),
+    getPlatformBalance(),
+  ]);
+
+  const platformBalance = platformBalanceResponse.data?.balance.toNumber() || 0;
+
   return (
     <div>
       <div className="space-y-1">
         <h1 className="text-4xl font-bold">Panel de Administración</h1>
         <p className="text-muted-foreground">Resumen y gestión de la plataforma</p>
       </div>
+
+      <BalanceCard platformBalance={platformBalance} binanceBalance={binanceBalance?.total || 0} error={serverError} />
 
       <div className="grid auto-rows-min gap-4 md:grid-cols-4">
         <div className="bg-muted/50 flex flex-col gap-2 rounded-xl p-6">
