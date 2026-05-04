@@ -14,8 +14,8 @@ export const withdrawBalanceAction = adminActionClient.inputSchema(z.object({ am
   const WITHDRAW_COIN = process.env.WITHDRAW_COIN as Asset;
   const WITHDRAW_NETWORK = process.env.WITHDRAW_NETWORK as Network;
 
-  if (!WITHDRAW_WALLET || !WITHDRAW_COIN) {
-    throw new Error('WITHDRAW_WALLET or WITHDRAW_COIN is not defined');
+  if (!WITHDRAW_WALLET || !WITHDRAW_COIN || !WITHDRAW_NETWORK) {
+    throw new Error('WITHDRAW_WALLET or WITHDRAW_COIN or WITHDRAW_NETWORK is not defined');
   }
 
   const { amount } = parsedInput;

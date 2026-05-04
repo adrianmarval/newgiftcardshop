@@ -7,7 +7,7 @@ import { depositSchema } from '@/types/domain/payment/Payment';
 import { z } from 'zod';
 import { getPlatformBalance, updatePlatformBalance } from '../platform/settings';
 
-const createDepositInputSchema = depositSchema;
+const createDepositInputSchema = depositSchema.omit({ relatedUserId: true });
 
 const createDepositOutputSchema = z.object({
   success: z.literal(true),
@@ -18,8 +18,9 @@ const createDepositOutputSchema = z.object({
 export const createDeposit = adminActionClient
   .inputSchema(createDepositInputSchema)
   .outputSchema(createDepositOutputSchema)
-  .action(async ({ parsedInput }) => {
-    const { amount, relatedUserId, binanceTxId, notes } = parsedInput;
+  .action(async ({ parsedInput, ctx }) => {
+    const { amount, binanceTxId, notes } = parsedInput;
+    const relatedUserId = ctx.auth.user.id;
 
     const user = await prisma.user.findUnique({
       where: { id: relatedUserId },

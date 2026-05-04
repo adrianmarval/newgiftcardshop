@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 import { refundSchema } from '@/types/domain/payment/Payment';
 import { z } from 'zod';
-import { getPlatformBalance } from '../platform/settings';
+import { getPlatformBalance, updatePlatformBalance } from '../platform/settings';
 
 const createRefundInputSchema = refundSchema;
 
@@ -61,19 +61,26 @@ export const createRefund = adminActionClient
       ? response.data.balance.sub(new Prisma.Decimal(amount))
       : new Prisma.Decimal(0).sub(new Prisma.Decimal(amount));
 
-    const payment = await prisma.payment.create({
-      data: {
-        amount: new Prisma.Decimal(amount),
-        balanceAfter: balanceAfter,
-        direction: 'DEBIT',
-        category,
-        relatedUserId,
-        orderId,
-        batchId,
-        notes: notes ?? null,
-        referenceType: referenceType as 'ORDER' | 'BATCH' | 'MANUAL',
-        referenceId,
-      },
+    const payment = await prisma.$transaction(async (tx) => {
+      const updateResponse = await updatePlatformBalance({ amount: new Prisma.Decimal(amount), type: 'substract' });
+      if (!updateResponse.data?.success) {
+        throw new Error('Error al actualizar el balance de la plataforma');
+      }
+
+      return await tx.payment.create({
+        data: {
+          amount: new Prisma.Decimal(amount),
+          balanceAfter: balanceAfter,
+          direction: 'DEBIT',
+          category,
+          relatedUserId,
+          orderId,
+          batchId,
+          notes: notes ?? null,
+          referenceType: referenceType as 'ORDER' | 'BATCH' | 'MANUAL',
+          referenceId,
+        },
+      });
     });
 
     return {

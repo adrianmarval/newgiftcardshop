@@ -3,7 +3,7 @@
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { AlertTriangle, Bitcoin, DollarSign, Equal, TrendingDown, TrendingUp } from 'lucide-react';
-import { Button } from './button';
+import { AdminDepositDialog, AdminRefundDialog, AdminWithdrawDialog } from '../admin/payments/dialogs';
 import { Decimal } from '@/generated/prisma/internal/prismaNamespaceBrowser';
 
 
@@ -82,12 +82,9 @@ export const BalanceCard = ({ platformBalance, binanceBalance, error }: BalanceC
         </div>
       </CardContent>
       <CardFooter className="flex items-center justify-around gap-2 bg-transparent">
-        {/* <DepositDialogButton />
-        <RefundDialogButton />
-        <WithdrawalDialogButton /> */}
-        <Button>+ Deposit</Button>
-        <Button variant="secondary">- Withdraw</Button>
-        <Button variant="secondary">- Refund</Button>
+        <AdminDepositDialog />
+        <AdminWithdrawDialog />
+        <AdminRefundDialog />
       </CardFooter>
     </Card>
   );
