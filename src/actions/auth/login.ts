@@ -61,6 +61,6 @@ export const login = actionClient
       return { error: 'Invalid email or password' };
     } catch (error) {
       console.error('Login error:', error);
-      return { error: 'Invalid email or password' };
+      return { error: 'Unexpected error occurred. Please try again later.' };
     }
   });

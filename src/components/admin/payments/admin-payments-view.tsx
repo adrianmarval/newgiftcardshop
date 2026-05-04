@@ -9,7 +9,7 @@ import { AdminRefundDialog } from '@/components/admin/payments/admin-refund-dial
 import type { AdminPaymentsViewProps } from './types';
 import { Button } from '@/components/ui/button';
 
-export const AdminPaymentsView = ({ payments, pagination, sellers, buyers, admins }: AdminPaymentsViewProps) => {
+export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: AdminPaymentsViewProps) => {
   const router = useRouter();
   const [depositOpen, setDepositOpen] = useState(false);
   const [refundOpen, setRefundOpen] = useState(false);
@@ -30,7 +30,7 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers, admin
           + Registrar Refund
         </Button>
       </div>
-      <AdminDepositDialog open={depositOpen} onOpenChange={setDepositOpen} admins={admins} onSuccess={handleSuccess} />
+      <AdminDepositDialog open={depositOpen} onOpenChange={setDepositOpen} onSuccess={handleSuccess} />
       <AdminRefundDialog open={refundOpen} onOpenChange={setRefundOpen} sellers={sellers} buyers={buyers} onSuccess={handleSuccess} />
     </div>
   );
