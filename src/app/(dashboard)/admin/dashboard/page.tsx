@@ -3,12 +3,14 @@ import { formatCurrency } from '@/lib/currency-formatter';
 import { Metadata } from 'next';
 import { getBinanceBalancesAction } from '@/actions/admin/binance';
 import { getPlatformBalance } from '@/actions/platform/settings';
-import { adminGetSellers, adminGetBuyers } from '@/actions';
 import { getInventoryStatsAction, getProfitStatsAction } from '@/actions/admin/dashboard-stats';
 import { InventoryChart } from '@/components/admin/dashboard/inventory-chart';
 import { ProfitChart } from '@/components/admin/dashboard/profit-chart';
 
-import { BalanceCard } from '@/components/ui/balance-card';
+// import { BalanceCard } from '@/components/ui/balance-card';
+import { Bitcoin, CircleDollarSignIcon, Equal, TrendingDown, TrendingUp } from 'lucide-react';
+import { Decimal } from '@/generated/prisma/internal/prismaNamespaceBrowser';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
   title: 'Panel de Administración | Solmaira Cards',
@@ -16,11 +18,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  const [binanceRes, platformBalanceResponse, sellersResult, buyersResult, inventoryRes, profitRes] = await Promise.all([
+  const [binanceRes, platformBalanceResponse, inventoryRes, profitRes] = await Promise.all([
     getBinanceBalancesAction(),
     getPlatformBalance(),
-    adminGetSellers(),
-    adminGetBuyers(),
     getInventoryStatsAction(),
     getProfitStatsAction(),
   ]);
@@ -28,11 +28,10 @@ export default async function AdminDashboardPage() {
   const { data: binanceBalance, serverError } = binanceRes;
   const platformBalance = platformBalanceResponse.data?.balance.toNumber() || 0;
 
-  const sellers = sellersResult.data?.success ? sellersResult.data.sellers : [];
-  const buyers = buyersResult.data?.success ? buyersResult.data.buyers : [];
-
   const inventoryData = inventoryRes.data || [];
   const profitData = profitRes.data || { summary: { today: 0, week: 0, month: 0, todayVolume: 0 }, chartData: [] };
+  const differential = new Decimal(binanceBalance?.total || 0).minus(new Decimal(platformBalance));
+  const diffColor = differential.greaterThan(0) ? 'text-green-400' : differential.lessThan(0) ? 'text-red-400' : 'text-white/80';
 
   return (
     <div className="space-y-4">
@@ -41,46 +40,96 @@ export default async function AdminDashboardPage() {
         <p className="text-muted-foreground">Resumen y gestión de la plataforma</p>
       </div>
 
-      <BalanceCard
-        platformBalance={platformBalance}
-        binanceBalance={binanceBalance?.total || 0}
-        error={serverError}
-        sellers={sellers}
-        buyers={buyers}
-      />
+      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+        <Card className="bg-muted/50 flex flex-col justify-between gap-1">
+          <CardHeader>
+            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+              <Bitcoin className="h-5 w-5" />
+              Balance Binance
+            </CardTitle>
+            <CardDescription className="sr-only">Saldo en Binance</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <span className="text-4xl font-bold">{formatCurrency(binanceBalance?.total || 0)}</span>
+              {!serverError && (
+                <div className={`mt-1 flex items-center text-xs font-medium ${diffColor}`}>
+                  {differential.greaterThan(0) ? (
+                    <TrendingUp className="mr-1 h-3 w-3" />
+                  ) : differential.lessThan(0) ? (
+                    <TrendingDown className="mr-1 h-3 w-3" />
+                  ) : (
+                    <Equal className="mr-1 h-3 w-3" />
+                  )}
+                  <span>{formatCurrency(differential.abs().toNumber())} diff</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-muted/50 flex flex-col justify-between gap-1">
+          <CardHeader>
+            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+              <CircleDollarSignIcon className="h-5 w-5" />
+              Balance Plataforma
+            </CardTitle>
+            <CardDescription className="sr-only">Saldo en la plataforma</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <span className="text-4xl font-bold">{formatCurrency(platformBalance)}</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-muted/50 flex flex-col justify-between gap-1">
+          <CardHeader>
+            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+              <IconCreditCard className="h-5 w-5" />
+              Volumen (Hoy)
+            </CardTitle>
+            <CardDescription className="sr-only">Volumen transaccionado hoy</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <span className="text-4xl font-bold">{formatCurrency(profitData.summary.todayVolume)}</span>
+          </CardContent>
+        </Card>
 
-      <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-        <div className="bg-muted/50 flex flex-col gap-2 rounded-xl p-6">
-          <div className="text-muted-foreground flex items-center gap-2">
-            <IconCreditCard className="h-5 w-5" />
-            <span className="text-base font-medium">Volumen (Hoy)</span>
-          </div>
-          <span className="text-4xl font-bold">{formatCurrency(profitData.summary.todayVolume)}</span>
-        </div>
+        <Card className="bg-muted/50 flex flex-col justify-between gap-1">
+          <CardHeader>
+            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+              <IconCurrencyDollar className="h-5 w-5" />
+              Ganancia (Hoy)
+            </CardTitle>
+            <CardDescription className="sr-only">Ganancia de hoy</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <span className="text-4xl font-bold text-green-500">{formatCurrency(profitData.summary.today)}</span>
+          </CardContent>
+        </Card>
 
-        <div className="bg-muted/50 flex flex-col gap-2 rounded-xl p-6">
-          <div className="text-muted-foreground flex items-center gap-2">
-            <IconCurrencyDollar className="h-5 w-5" />
-            <span className="text-base font-medium">Ganancia (Hoy)</span>
-          </div>
-          <span className="text-4xl font-bold text-green-500">{formatCurrency(profitData.summary.today)}</span>
-        </div>
+        <Card className="bg-muted/50 flex flex-col justify-between gap-1">
+          <CardHeader>
+            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+              <IconChartBar className="h-5 w-5" />
+              Ganancia (Semana)
+            </CardTitle>
+            <CardDescription className="sr-only">Ganancia de la semana</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <span className="text-4xl font-bold text-green-500">{formatCurrency(profitData.summary.week)}</span>
+          </CardContent>
+        </Card>
 
-        <div className="bg-muted/50 flex flex-col gap-2 rounded-xl p-6">
-          <div className="text-muted-foreground flex items-center gap-2">
-            <IconChartBar className="h-5 w-5" />
-            <span className="text-base font-medium">Ganancia (Semana)</span>
-          </div>
-          <span className="text-4xl font-bold text-green-500">{formatCurrency(profitData.summary.week)}</span>
-        </div>
-
-        <div className="bg-muted/50 flex flex-col gap-2 rounded-xl p-6">
-          <div className="text-muted-foreground flex items-center gap-2">
-            <IconCalendarEvent className="h-5 w-5" />
-            <span className="text-base font-medium">Ganancia (Mes)</span>
-          </div>
-          <span className="text-4xl font-bold text-green-500">{formatCurrency(profitData.summary.month)}</span>
-        </div>
+        <Card className="bg-muted/50 flex flex-col justify-between gap-1">
+          <CardHeader>
+            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+              <IconCalendarEvent className="h-5 w-5" />
+              Ganancia (Mes)
+            </CardTitle>
+            <CardDescription className="sr-only">Ganancia del mes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <span className="text-4xl font-bold text-green-500">{formatCurrency(profitData.summary.month)}</span>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
