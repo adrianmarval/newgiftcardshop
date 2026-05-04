@@ -83,7 +83,7 @@ export default async function AdminDashboardPage() {
           <CardHeader>
             <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
               <IconCreditCard className="h-5 w-5" />
-              Volumen (Hoy)
+              Volumen de Giftcards (HOY)
             </CardTitle>
             <CardDescription className="sr-only">Volumen transaccionado hoy</CardDescription>
           </CardHeader>
