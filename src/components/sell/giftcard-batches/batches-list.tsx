@@ -11,7 +11,16 @@ export function BatchesList({ batches }: BatchesListProps) {
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
   const [lastExpandedId, setLastExpandedId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const savedScrollTop = useRef<number>(0);
+
+  // Scroll to top when expanding
+  useEffect(() => {
+    if (expandedBatch !== null) {
+      const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
+      if (container) {
+        container.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    }
+  }, [expandedBatch]);
 
   // Auto-expand batch if it contains a search match
   useEffect(() => {
@@ -22,14 +31,6 @@ export function BatchesList({ batches }: BatchesListProps) {
   }, [batches]);
 
   const handleToggle = (id: string) => {
-    // Guardar el scroll actual antes de expandir si no hay nada expandido
-    if (expandedBatch === null) {
-      const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
-      if (container) {
-        savedScrollTop.current = container.scrollTop;
-      }
-    }
-
     setExpandedBatch((prev) => {
       const next = prev === id ? null : id;
       if (next === null) {
@@ -44,17 +45,11 @@ export function BatchesList({ batches }: BatchesListProps) {
   useEffect(() => {
     if (expandedBatch === null && lastExpandedId !== null) {
       const timer = setTimeout(() => {
-        const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
-        if (container && savedScrollTop.current > 0) {
-          container.scrollTo({ top: savedScrollTop.current, behavior: 'auto' });
-          savedScrollTop.current = 0;
-        } else {
-          const element = document.getElementById(`registry-card-${lastExpandedId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'auto', block: 'start' });
-          }
+        const element = document.getElementById(`registry-card-${lastExpandedId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 200);
+      }, 250);
       return () => clearTimeout(timer);
     }
   }, [expandedBatch, lastExpandedId]);
@@ -80,7 +75,7 @@ export function BatchesList({ batches }: BatchesListProps) {
               initial={{ opacity: 0, height: 0, y: -10 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
               exit={{ opacity: 0, height: 0, y: -10 }}
-              transition={{ duration: 0.15, ease: 'easeInOut' }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
               <BatchCard

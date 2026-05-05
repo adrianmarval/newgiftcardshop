@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { AdminOrderCard } from '@/components/admin/orders/admin-order-card';
 import { UrlPagination } from '@/components/ui/url-pagination';
@@ -12,8 +12,18 @@ export function AdminOrdersList({ orders, totalPages, onViewBuyer, onAddReport, 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [lastExpandedId, setLastExpandedId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const savedScrollTop = useRef<number>(0);
 
+  // Scroll to top when expanding
+  useEffect(() => {
+    if (expandedId !== null) {
+      const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
+      if (container) {
+        container.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    }
+  }, [expandedId]);
+
+  // Auto-expand order if it contains a search match
   useEffect(() => {
     const orderWithMatch = orders.find((o) => o.giftcards.some((g) => g.isSearchMatch));
     if (orderWithMatch) {
@@ -22,14 +32,6 @@ export function AdminOrdersList({ orders, totalPages, onViewBuyer, onAddReport, 
   }, [orders]);
 
   const handleToggle = (orderId: string) => {
-    // Guardar el scroll actual antes de expandir si no hay nada expandido
-    if (expandedId === null) {
-      const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
-      if (container) {
-        savedScrollTop.current = container.scrollTop;
-      }
-    }
-
     setExpandedId((prev) => {
       const next = prev === orderId ? null : orderId;
       if (next === null) {
@@ -44,17 +46,11 @@ export function AdminOrdersList({ orders, totalPages, onViewBuyer, onAddReport, 
   useEffect(() => {
     if (expandedId === null && lastExpandedId !== null) {
       const timer = setTimeout(() => {
-        const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
-        if (container && savedScrollTop.current > 0) {
-          container.scrollTo({ top: savedScrollTop.current, behavior: 'auto' });
-          savedScrollTop.current = 0;
-        } else {
-          const element = document.getElementById(`registry-card-${lastExpandedId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'auto', block: 'start' });
-          }
+        const element = document.getElementById(`registry-card-${lastExpandedId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 200);
+      }, 250);
       return () => clearTimeout(timer);
     }
   }, [expandedId, lastExpandedId]);
@@ -71,17 +67,16 @@ export function AdminOrdersList({ orders, totalPages, onViewBuyer, onAddReport, 
 
   return (
     <div className="space-y-2" ref={listRef}>
-      <div className="flex flex-col gap-2">
+      <AnimatePresence>
         {orders
           .filter((order) => expandedId === null || expandedId === order.id)
           .map((order) => (
             <motion.div
               key={order.id}
-              layout
               initial={{ opacity: 0, height: 0, y: -10 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
               exit={{ opacity: 0, height: 0, y: -10 }}
-              transition={{ duration: 0.15, ease: 'easeInOut' }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
               <AdminOrderCard
@@ -96,7 +91,7 @@ export function AdminOrdersList({ orders, totalPages, onViewBuyer, onAddReport, 
               />
             </motion.div>
           ))}
-      </div>
+      </AnimatePresence>
       <UrlPagination totalPages={totalPages} />
     </div>
   );

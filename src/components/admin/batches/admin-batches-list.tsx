@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { History } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -20,7 +21,16 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [lastExpandedId, setLastExpandedId] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const savedScrollTop = useRef<number>(0);
+
+  // Scroll to top when expanding
+  useEffect(() => {
+    if (expandedId !== null) {
+      const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
+      if (container) {
+        container.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    }
+  }, [expandedId]);
 
   // Auto-expand batch if it contains a search match
   useEffect(() => {
@@ -31,14 +41,6 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
   }, [batches]);
 
   const handleToggle = (batchId: number) => {
-    // Guardar el scroll actual antes de expandir si no hay nada expandido
-    if (expandedId === null) {
-      const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
-      if (container) {
-        savedScrollTop.current = container.scrollTop;
-      }
-    }
-
     setExpandedId((prev) => {
       const next = prev === batchId ? null : batchId;
       if (next === null) {
@@ -53,19 +55,11 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
   useEffect(() => {
     if (expandedId === null && lastExpandedId !== null) {
       const timer = setTimeout(() => {
-        const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
-        if (container && savedScrollTop.current > 0) {
-          container.scrollTo({ top: savedScrollTop.current, behavior: 'auto' });
-          // Limpiamos el scroll guardado después de usarlo
-          savedScrollTop.current = 0;
-        } else {
-          // Fallback por si falla el guardado de scroll
-          const element = document.getElementById(`registry-card-${lastExpandedId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'auto', block: 'start' });
-          }
+        const element = document.getElementById(`registry-card-${lastExpandedId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 200);
+      }, 250);
       return () => clearTimeout(timer);
     }
   }, [expandedId, lastExpandedId]);
@@ -108,7 +102,7 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
               initial={{ opacity: 0, height: 0, y: -10 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
               exit={{ opacity: 0, height: 0, y: -10 }}
-              transition={{ duration: 0.15, ease: 'easeInOut' }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
               <AdminBatchCard
