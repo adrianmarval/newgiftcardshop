@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { motion, useDragControls, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { IconChevronUp } from '@tabler/icons-react';
 
 export interface BottomNavItem {
@@ -17,11 +17,10 @@ export interface BottomNavItem {
 interface BottomNavProps {
   items: BottomNavItem[];
   className?: string;
-  variant?: 'default' | 'compact';
   isFixed?: boolean;
 }
 
-export function BottomNav({ items, className, variant = 'default', isFixed = false }: BottomNavProps) {
+export function BottomNav({ items, className, isFixed = false }: BottomNavProps) {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
@@ -34,7 +33,6 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
   const dragY = useMotionValue(0);
   const springY = useSpring(dragY, { stiffness: 400, damping: 40 });
 
-  const isCompact = variant === 'compact';
   const mainItems = items.slice(0, 5);
   const extraItems = items.slice(5);
   const hasExtra = extraItems.length > 0;
@@ -85,7 +83,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
       onPan={handlePan}
       onPanEnd={onDragEnd}
       className={cn(
-        'p-1 border-border bg-background/95 supports-backdrop-filter:bg-background/95 z-50 backdrop-blur-xl transition-all duration-300',
+        'border-border bg-background/95 supports-backdrop-filter:bg-background/95 z-50 p-1 backdrop-blur-xl transition-all duration-300',
         'relative touch-none overflow-visible select-none',
         isFixed
           ? 'fixed right-0 bottom-0 left-0 border-t shadow-[0_-2px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-2px_30px_rgba(0,0,0,0.3)]'
@@ -119,7 +117,7 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
           <motion.div style={{ height: drawerHeight }} className="overflow-hidden">
             <motion.div style={{ opacity: contentOpacity }} className="grid grid-cols-4 gap-2 px-1 pt-2 pb-2">
               {extraItems.map((item, idx) => (
-                <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={false} />
+                <NavItem key={idx} item={item} isActive={pathname === item.url} />
               ))}
             </motion.div>
 
@@ -129,16 +127,16 @@ export function BottomNav({ items, className, variant = 'default', isFixed = fal
       )}
 
       {/* Main Bar */}
-      <div className={cn('flex h-14 items-center justify-around', isCompact ? 'px-0.5 md:px-1' : 'px-1')}>
+      <div className={'flex h-14 items-center justify-around px-1'}>
         {mainItems.map((item, idx) => (
-          <NavItem key={idx} item={item} isActive={pathname === item.url} isCompact={false} />
+          <NavItem key={idx} item={item} isActive={pathname === item.url} />
         ))}
       </div>
     </motion.nav>
   );
 }
 
-function NavItem({ item, isActive, isCompact }: { item: BottomNavItem; isActive: boolean; isCompact: boolean }) {
+function NavItem({ item, isActive }: { item: BottomNavItem; isActive: boolean }) {
   const Content = (
     <>
       <item.icon className={cn('h-6 w-6', isActive && 'fill-primary/20')} />

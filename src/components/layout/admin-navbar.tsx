@@ -5,7 +5,6 @@ import {
   IconUsers,
   IconShoppingCart,
   IconCreditCard,
-  IconChartBar,
   IconCash,
   IconSun,
   IconMoon,
@@ -15,7 +14,6 @@ import {
 } from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
-// import { useLogout } from '@/hooks/use-logout';
 
 export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
   const { theme, setTheme } = useTheme();
@@ -38,11 +36,6 @@ export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
       icon: IconTag,
     },
     {
-      title: 'Analiticas',
-      url: '/admin/dashboard/analytics',
-      icon: IconChartBar,
-    },
-    {
       title: 'Config',
       url: '/admin/dashboard/configuracion',
       icon: IconSettings,
@@ -52,12 +45,7 @@ export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
       icon: theme === 'dark' ? IconSun : IconMoon,
       onClick: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
     },
-    // {
-    //   title: 'Salir',
-    //   icon: IconLogout,
-    //   onClick: handleLogout,
-    // },
   ];
 
-  return <BottomNav items={navItems} variant="compact" isFixed={isFixed} />;
+  return <BottomNav items={navItems} isFixed={isFixed} />;
 };

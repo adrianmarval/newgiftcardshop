@@ -28,12 +28,6 @@ export const SellerNavbar = ({ isFixed }: { isFixed?: boolean }) => {
       icon: theme === 'dark' ? IconSun : IconMoon,
       onClick: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
     },
-
-    // {
-    //   title: 'Logout',
-    //   icon: IconLogout,
-    //   onClick: handleLogout,
-    // },
   ];
 
   return <BottomNav items={navItems} isFixed={isFixed} />;
