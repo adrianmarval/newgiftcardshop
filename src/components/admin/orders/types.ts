@@ -33,6 +33,7 @@ export interface AdminOrderCardProps {
   onEditReport?: (card: Giftcard) => void;
   onDeleteReport?: (card: Giftcard) => void;
   isExpanded?: boolean;
+  isHighlighted?: boolean;
   onToggle: () => void;
 }
 

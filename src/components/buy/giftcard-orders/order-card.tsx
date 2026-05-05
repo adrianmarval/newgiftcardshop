@@ -36,7 +36,7 @@ const statusConfig: Record<string, { label: string; color: string; activeBg: str
   },
 };
 
-export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: OrderCardProps) => {
+export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, onToggle = () => {} }: OrderCardProps) => {
   const router = useRouter();
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -96,6 +96,7 @@ export const OrderCard = ({ order, isExpanded = false, onToggle = () => {} }: Or
       }
       date={formatDateTime(order.createdAt, 'es-AR')}
       isExpanded={isExpanded}
+      isHighlighted={isHighlighted}
       onToggle={onToggle}
       hasReport={hasReport}
       activeBgClass={status.activeBg}

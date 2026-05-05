@@ -14,6 +14,7 @@ export interface RegistryCardProps {
   topRightContent?: ReactNode;
   date?: Date | string | ReactNode;
   isExpanded: boolean;
+  isHighlighted?: boolean;
   onToggle: () => void;
   hasReport?: boolean;
   progress?: {
@@ -35,6 +36,7 @@ export function RegistryCard({
   topRightContent,
   date,
   isExpanded,
+  isHighlighted,
   onToggle,
   hasReport,
   progress,
@@ -45,10 +47,11 @@ export function RegistryCard({
 }: RegistryCardProps) {
   return (
     <Card
+      id={`registry-card-${id}`}
       onClick={onToggle}
-      className={`hover:border-primary/30 relative cursor-pointer gap-1 overflow-hidden border py-2 transition-all duration-200 ease-out ${
-        isExpanded ? `${activeBgClass || 'bg-primary/10 dark:bg-primary/15'} shadow-md` : ''
-      } ${className}`}
+      className={`hover:border-primary/30 relative cursor-pointer gap-1 overflow-hidden border py-2 transition-all duration-200 ease-out scroll-mt-2 ${
+        isExpanded || isHighlighted ? `${activeBgClass || 'bg-primary/10 dark:bg-primary/15'} shadow-sm` : ''
+      } ${isHighlighted ? 'border-primary/50 ring-1 ring-primary/20' : ''} ${className}`}
     >
       {hasReport && !isExpanded && (
         <div className="text-muted-foreground/80 absolute right-1 bottom-4 z-20 flex items-center justify-center gap-1 text-[10px] font-black tracking-widest uppercase">

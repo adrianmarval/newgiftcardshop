@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { OrderCard } from '@/components/buy/giftcard-orders/order-card';
@@ -10,6 +10,9 @@ import type { OrdersListProps } from './types';
 
 export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [lastExpandedId, setLastExpandedId] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const savedScrollTop = useRef<number>(0);
 
   // Auto-expand order if it contains a search match
   useEffect(() => {
@@ -20,8 +23,42 @@ export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
   }, [orders]);
 
   const handleToggle = (orderId: string) => {
-    setExpandedId((prev) => (prev === orderId ? null : orderId));
+    // Guardar el scroll actual antes de expandir si no hay nada expandido
+    if (expandedId === null) {
+      const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
+      if (container) {
+        savedScrollTop.current = container.scrollTop;
+      }
+    }
+
+    setExpandedId((prev) => {
+      const next = prev === orderId ? null : orderId;
+      if (next === null) {
+        setLastExpandedId(orderId);
+      } else {
+        setLastExpandedId(null);
+      }
+      return next;
+    });
   };
+
+  useEffect(() => {
+    if (expandedId === null && lastExpandedId !== null) {
+      const timer = setTimeout(() => {
+        const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
+        if (container && savedScrollTop.current > 0) {
+          container.scrollTo({ top: savedScrollTop.current, behavior: 'auto' });
+          savedScrollTop.current = 0;
+        } else {
+          const element = document.getElementById(`registry-card-${lastExpandedId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'auto', block: 'start' });
+          }
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [expandedId, lastExpandedId]);
 
   if (orders.length === 0) {
     return (
@@ -34,7 +71,7 @@ export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
   }
 
   return (
-    <>
+    <div ref={listRef}>
       <div className="space-y-2">
         <AnimatePresence>
           {orders
@@ -42,18 +79,23 @@ export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
             .map((order) => (
               <motion.div
                 key={order.id}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
+                initial={{ opacity: 0, height: 0, y: -10 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -10 }}
+                transition={{ duration: 0.15, ease: 'easeInOut' }}
                 className="overflow-hidden"
               >
-                <OrderCard order={order} isExpanded={expandedId === order.id} onToggle={() => handleToggle(order.id)} />
+                <OrderCard
+                  order={order}
+                  isExpanded={expandedId === order.id}
+                  isHighlighted={lastExpandedId === order.id}
+                  onToggle={() => handleToggle(order.id)}
+                />
               </motion.div>
             ))}
         </AnimatePresence>
       </div>
       <UrlPagination totalPages={totalPages} />
-    </>
+    </div>
   );
 };

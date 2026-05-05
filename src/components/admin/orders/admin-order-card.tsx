@@ -44,6 +44,7 @@ export const AdminOrderCard = ({
   onEditReport,
   onDeleteReport,
   isExpanded = false,
+  isHighlighted = false,
   onToggle,
 }: AdminOrderCardProps & {
   onAddReport?: (card: Giftcard) => void;
@@ -126,6 +127,7 @@ export const AdminOrderCard = ({
       }
       date={formatDateTime(order.createdAt, 'es-AR')}
       isExpanded={isExpanded}
+      isHighlighted={isHighlighted}
       onToggle={() => onToggle?.()}
       hasReport={hasReports}
       activeBgClass={status.activeBg}

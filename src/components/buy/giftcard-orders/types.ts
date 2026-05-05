@@ -38,6 +38,7 @@ export interface OrdersFiltersProps {
 export interface OrderCardProps {
   order: BuyerOrder;
   isExpanded?: boolean;
+  isHighlighted?: boolean;
   onToggle?: () => void;
 }
 

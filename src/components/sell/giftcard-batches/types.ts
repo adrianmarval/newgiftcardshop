@@ -21,6 +21,7 @@ export interface BatchesFiltersProps {
 export interface BatchCardProps {
   batch: SellerBatch;
   isExpanded: boolean;
+  isHighlighted?: boolean;
   onToggle: () => void;
 }
 

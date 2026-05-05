@@ -20,6 +20,7 @@ interface AdminBatchCardProps {
   onDeleted: () => void;
   onViewSeller?: (batch: AdminBatch) => void;
   isExpanded?: boolean;
+  isHighlighted?: boolean;
   onToggle?: () => void;
 }
 
@@ -30,6 +31,7 @@ export function AdminBatchCard({
   onDeleted,
   onViewSeller,
   isExpanded = false,
+  isHighlighted = false,
   onToggle = () => {},
 }: AdminBatchCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -113,6 +115,7 @@ export function AdminBatchCard({
         </div>
       }
       isExpanded={isExpanded}
+      isHighlighted={isHighlighted}
       onToggle={onToggle}
       hasReport={batch.hasIssues}
       activeBgClass={getActiveBg()}

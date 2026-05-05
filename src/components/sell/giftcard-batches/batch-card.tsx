@@ -7,7 +7,7 @@ import type { BatchCardProps } from './types';
 import { formatCurrency } from '@/lib/currency-formatter';
 import Image from 'next/image';
 
-export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
+export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchCardProps) {
   const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
   const totalItems = batch.giftcards.length;
   const allConfirmed = confirmedCount === totalItems && totalItems > 0;
@@ -65,6 +65,7 @@ export function BatchCard({ batch, isExpanded, onToggle }: BatchCardProps) {
       }
       date={formatDateTime(batch.createdAt, 'en-US')}
       isExpanded={isExpanded}
+      isHighlighted={isHighlighted}
       onToggle={onToggle}
       hasReport={batch.giftcards.some((g) => g.status === 'WRONG_AMOUNT')}
       activeBgClass={status.activeBg}

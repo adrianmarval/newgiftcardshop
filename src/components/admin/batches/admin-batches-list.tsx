@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,6 +18,9 @@ interface AdminBatchesListProps {
 
 export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, onViewSeller }: AdminBatchesListProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [lastExpandedId, setLastExpandedId] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const savedScrollTop = useRef<number>(0);
 
   // Auto-expand batch if it contains a search match
   useEffect(() => {
@@ -26,6 +29,47 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
       setExpandedId(batchWithMatch.id);
     }
   }, [batches]);
+
+  const handleToggle = (batchId: number) => {
+    // Guardar el scroll actual antes de expandir si no hay nada expandido
+    if (expandedId === null) {
+      const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
+      if (container) {
+        savedScrollTop.current = container.scrollTop;
+      }
+    }
+
+    setExpandedId((prev) => {
+      const next = prev === batchId ? null : batchId;
+      if (next === null) {
+        setLastExpandedId(batchId);
+      } else {
+        setLastExpandedId(null);
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (expandedId === null && lastExpandedId !== null) {
+      const timer = setTimeout(() => {
+        const container = listRef.current?.closest('.overflow-y-scroll, .overflow-y-auto');
+        if (container && savedScrollTop.current > 0) {
+          container.scrollTo({ top: savedScrollTop.current, behavior: 'auto' });
+          // Limpiamos el scroll guardado después de usarlo
+          savedScrollTop.current = 0;
+        } else {
+          // Fallback por si falla el guardado de scroll
+          const element = document.getElementById(`registry-card-${lastExpandedId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'auto', block: 'start' });
+          }
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [expandedId, lastExpandedId]);
+
   const payableBatches = batches.filter((b) => !b.isPaid && b.confirmedCount === b.cardsCount && b.cardsCount > 0);
   const allPayableSelected = payableBatches.length > 0 && payableBatches.every((b) => selectedIds.has(b.id));
 
@@ -35,10 +79,6 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
     } else {
       payableBatches.forEach((b) => onSelect(b.id, true));
     }
-  };
-
-  const handleToggle = (batchId: number) => {
-    setExpandedId((prev) => (prev === batchId ? null : batchId));
   };
 
   if (batches.length === 0) {
@@ -52,7 +92,7 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" ref={listRef}>
       {payableBatches.length > 0 && (
         <div className="flex items-center gap-2 px-1">
           <Checkbox checked={allPayableSelected} onCheckedChange={handleSelectAll} className="cursor-pointer" />
@@ -65,10 +105,10 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
           .map((batch) => (
             <motion.div
               key={batch.id}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              initial={{ opacity: 0, height: 0, y: -10 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -10 }}
+              transition={{ duration: 0.15, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
               <AdminBatchCard
@@ -78,6 +118,7 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
                 onDeleted={onDeleted}
                 onViewSeller={onViewSeller}
                 isExpanded={expandedId === batch.id}
+                isHighlighted={lastExpandedId === batch.id}
                 onToggle={() => handleToggle(batch.id)}
               />
             </motion.div>
