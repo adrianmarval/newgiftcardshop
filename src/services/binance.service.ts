@@ -62,10 +62,14 @@ class BinanceService {
       const msg = err.data?.msg || err.response?.statusText || err.message;
       const code = err.data?.code || err.response?.status;
       console.error(`❌ BinanceService Error (${context}):`, { code, msg });
-      throw new Error(`Binance error (${context}): ${msg}`);
+      const apiError = new Error(`Binance error (${context}): ${msg}`);
+      (apiError as any).isBinanceApiError = true;
+      throw apiError;
     }
     console.error(`❌ Unexpected Error (${context}):`, err);
-    throw err instanceof Error ? err : new Error(String(err));
+    const genericError = err instanceof Error ? err : new Error(String(err));
+    (genericError as any).isNetworkError = true;
+    throw genericError;
   }
 
   /* -------------------------- SIGNED REQUESTS -------------------------- */
@@ -164,8 +168,17 @@ class BinanceService {
 
   /* -------------------------- WITHDRAWALS -------------------------- */
 
-  public async withdrawFunds(params: BinanceWithdrawRequestParams) {
-    return this.sendSignedRequest<BinanceWithdrawResponse>('POST', '/sapi/v1/capital/withdraw/apply', params);
+  public async withdrawFunds(params: BinanceWithdrawRequestParams): Promise<{ success: true; data: BinanceWithdrawResponse } | { success: false; error: string; isNetworkError?: boolean }> {
+    try {
+      const data = await this.sendSignedRequest<BinanceWithdrawResponse>('POST', '/sapi/v1/capital/withdraw/apply', params);
+      return { success: true, data };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error.message || 'Unknown error during Binance withdrawal',
+        isNetworkError: error.isNetworkError === true
+      };
+    }
   }
 
   public async getWithdrawHistory(params: BinanceWithdrawHistoryRequestParams) {

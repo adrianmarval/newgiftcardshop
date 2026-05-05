@@ -254,6 +254,7 @@ model Payment {
   balanceAfter  Decimal          @default(0) @db.Decimal(10, 2)
   direction     PaymentDirection
   category      PaymentCategory
+  status        PaymentStatus    @default(COMPLETED)
   transactionId String?
   binanceTxId   String?
 
@@ -379,8 +380,15 @@ enum PaymentCategory {
   ORDER
   BATCH
   DEPOSIT
+  WITHDRAWAL
   REFUND_BUYER
   REFUND_SELLER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }
 
 enum SupportedNetworks {
