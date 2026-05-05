@@ -1,4 +1,5 @@
 import { AdminNavbar } from '@/components/layout/admin-navbar';
+import { Card, CardContent } from '@/components/ui/card';
 import { authorizeByRequiredRole } from '@/lib/authorization';
 import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';
 
@@ -6,14 +7,17 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
   await authorizeByRequiredRole(['ADMIN']);
   return (
     <AutoRefreshProvider interval={15000}>
-      <nav className="grid h-svh w-full grid-cols-1 grid-rows-[1fr_auto] gap-1 p-2 md:gap-4">
-        <main className="bg-background relative col-span-1 overflow-hidden rounded-lg md:col-span-1">
-          <div className="custom-scrollbar text-muted-foreground mx-auto h-full max-w-6xl overflow-y-auto italic md:p-2">{children}</div>
-        </main>
-        <footer className="col-span-1 mx-auto flex w-full max-w-6xl items-center justify-center md:col-span-1">
+      <Card className="bg-background flex h-svh flex-col gap-2 p-1 ring-0 lg:flex-row lg:gap-4 lg:p-4">
+        {/* Sidebar / Bottom Bar Container */}
+        <Card className="order-2 flex shrink-0 items-center justify-center p-0 lg:order-1">
           <AdminNavbar />
-        </footer>
-      </nav>
+        </Card>
+
+        {/* Main Content */}
+        <Card className="relative order-1 flex-1 overflow-hidden lg:order-2">
+          <CardContent className="h-full w-full overflow-y-scroll p-2 md:p-4">{children}</CardContent>
+        </Card>
+      </Card>
     </AutoRefreshProvider>
   );
 }

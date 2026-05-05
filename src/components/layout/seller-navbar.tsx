@@ -1,13 +1,11 @@
 'use client';
 
-import { IconDashboard, IconCreditCard, IconUser, IconSun, IconMoon, IconSettings, IconCash, IconBell } from '@tabler/icons-react';
+import { IconDashboard, IconCreditCard, IconUser, IconSun, IconMoon, IconCash, IconBell } from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
-// import { useLogout } from '@/hooks/use-logout';
 
-export const SellerNavbar = ({ isFixed }: { isFixed?: boolean }) => {
+export const SellerNavbar = () => {
   const { theme, setTheme } = useTheme();
-  // const { handleLogout } = useLogout('sell');
 
   const navItems: BottomNavItem[] = [
     { title: 'Home', url: '/sell/dashboard', icon: IconDashboard },
@@ -30,5 +28,5 @@ export const SellerNavbar = ({ isFixed }: { isFixed?: boolean }) => {
     },
   ];
 
-  return <BottomNav items={navItems} isFixed={isFixed} />;
+  return <BottomNav items={navItems} />;
 };

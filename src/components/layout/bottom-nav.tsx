@@ -4,8 +4,8 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { IconChevronUp } from '@tabler/icons-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { IconDots, IconX } from '@tabler/icons-react';
 
 export interface BottomNavItem {
   title: string;
@@ -17,157 +17,117 @@ export interface BottomNavItem {
 interface BottomNavProps {
   items: BottomNavItem[];
   className?: string;
-  isFixed?: boolean;
 }
 
-export function BottomNav({ items, className, isFixed = false }: BottomNavProps) {
+export function BottomNav({ items, className }: BottomNavProps) {
   const pathname = usePathname();
-  const [isExpanded, setIsExpanded] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
-  // Safe hydration
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const dragY = useMotionValue(0);
-  const springY = useSpring(dragY, { stiffness: 400, damping: 40 });
-
-  const mainItems = items.slice(0, 5);
-  const extraItems = items.slice(5);
-  const hasExtra = extraItems.length > 0;
-
-  const baseHeight = 0;
-  const rows = Math.ceil(extraItems.length / 4);
-  const maxExpansion = Math.min(rows * 65 + 10, 240);
-
-  const drawerHeight = useTransform(springY, [0, -maxExpansion], [baseHeight, maxExpansion]);
-  const contentOpacity = useTransform(springY, [0, -40], [0, 1]);
-
-  React.useEffect(() => {
-    return dragY.on('change', (v) => {
-      if (v < -maxExpansion / 2 && !isExpanded) setIsExpanded(true);
-      if (v > -20 && isExpanded) setIsExpanded(false);
-    });
-  }, [dragY, isExpanded, maxExpansion]);
-
-  const onDragEnd = (_: any, info: any) => {
-    if (info.offset.y < -40 || info.velocity.y < -500) {
-      dragY.set(-maxExpansion);
-      setIsExpanded(true);
-    } else {
-      dragY.set(0);
-      setIsExpanded(false);
-    }
-  };
-
-  const toggleMenu = () => {
-    if (isExpanded) {
-      dragY.set(0);
-      setIsExpanded(false);
-    } else {
-      dragY.set(-maxExpansion);
-      setIsExpanded(true);
-    }
-  };
-
+  React.useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
-  const handlePan = (_: any, info: { delta: { y: number } }) => {
-    const newY = dragY.get() + info.delta.y;
-    dragY.set(Math.max(-maxExpansion, Math.min(0, newY)));
-  };
+  // En mobile limitamos a 5 items (4 + botón "Más")
+  const limit = 5;
+  const hasMore = items.length > limit;
+  const mainItems = hasMore ? items.slice(0, limit - 1) : items;
+  const extraItems = hasMore ? items.slice(limit - 1) : [];
 
   return (
-    <motion.nav
-      onPan={handlePan}
-      onPanEnd={onDragEnd}
-      className={cn(
-        'border-border bg-background/95 supports-backdrop-filter:bg-background/95 z-50 p-1 backdrop-blur-xl transition-all duration-300',
-        'relative touch-none overflow-visible select-none',
-        isFixed
-          ? 'fixed right-0 bottom-0 left-0 border-t shadow-[0_-2px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-2px_30px_rgba(0,0,0,0.3)]'
-          : 'w-full rounded-t-2xl border-x border-t shadow-lg',
-        isExpanded ? 'rounded-t-3xl' : '',
-        className,
-      )}
-    >
-      {hasExtra && (
-        <>
-          {/* Floating Handle */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleMenu();
-            }}
-            className={cn(
-              'border-border bg-background absolute -top-3 left-1/2 z-60 flex h-3 w-10 -translate-x-1/2 cursor-grab items-center justify-center rounded-t-lg border-x border-t shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)] active:cursor-grabbing',
-            )}
+    <div className={cn(className)}>
+      {/* Menú "Más" para Mobile */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
           >
-            <motion.div
-              animate={{ rotate: isExpanded ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-              className="text-primary/60 hover:text-primary transition-colors"
-            >
-              <IconChevronUp size={18} stroke={2.5} />
-            </motion.div>
-          </div>
-
-          {/* Expandable Content Container */}
-          <motion.div style={{ height: drawerHeight }} className="overflow-hidden">
-            <motion.div style={{ opacity: contentOpacity }} className="grid grid-cols-4 gap-2 px-1 pt-2 pb-2">
-              {extraItems.map((item, idx) => (
-                <NavItem key={idx} item={item} isActive={pathname === item.url} />
-              ))}
-            </motion.div>
-
-            {isExpanded && <div className="border-t border-dashed py-0.5 opacity-50" />}
+            {extraItems.map((item, idx) => (
+              <NavItem key={idx} item={item} isActive={pathname === item.url} onAction={() => setIsMenuOpen(false)} />
+            ))}
           </motion.div>
-        </>
-      )}
+        )}
+      </AnimatePresence>
 
-      {/* Main Bar */}
-      <div className={'flex h-14 items-center justify-around px-1'}>
+      <nav
+        className={cn(
+          'flex items-center backdrop-blur-xl transition-all duration-300',
+          // Mobile: Barra flotante redondeada y más sustancial
+          'w-full justify-between rounded-[2.5rem]',
+          // Desktop: Dock lateral vertical
+          'lg:h-auto lg:w-20 lg:flex-col lg:gap-5 lg:rounded-3xl lg:py-6',
+        )}
+      >
+        {/* En Mobile mostramos los principales + botón Más */}
         {mainItems.map((item, idx) => (
           <NavItem key={idx} item={item} isActive={pathname === item.url} />
         ))}
-      </div>
-    </motion.nav>
+
+        {hasMore && (
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={cn(
+              'relative flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl p-2 transition-all duration-200 lg:hidden',
+              isMenuOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/80',
+            )}
+          >
+            <motion.div animate={{ rotate: isMenuOpen ? 90 : 0 }}>
+              {isMenuOpen ? <IconX className="h-7 w-7" /> : <IconDots className="h-7 w-7" />}
+            </motion.div>
+            <span className="text-[10px] font-medium">Más</span>
+          </button>
+        )}
+
+        {/* En Desktop mostramos todos los items de una */}
+        <div className="hidden lg:flex lg:flex-col lg:gap-5">
+          {extraItems.map((item, idx) => (
+            <NavItem key={`extra-${idx}`} item={item} isActive={pathname === item.url} />
+          ))}
+        </div>
+      </nav>
+    </div>
   );
 }
 
-function NavItem({ item, isActive }: { item: BottomNavItem; isActive: boolean }) {
-  const Content = (
-    <>
-      <item.icon className={cn('h-6 w-6', isActive && 'fill-primary/20')} />
-      <span className={cn('text-[10px] md:text-sm', 'font-semibold tracking-tight', isActive ? 'text-primary' : '')}>{item.title}</span>
-    </>
-  );
-
-  const baseClasses = cn(
-    'flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all duration-200 w-full',
-    'px-2 py-1.5',
-    isActive ? 'bg-primary/10 text-primary border-primary/10 border' : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
-  );
-
-  if (item.onClick) {
-    return (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
+function NavItem({ item, isActive, onAction }: { item: BottomNavItem; isActive: boolean; onAction?: () => void }) {
+  const Component = item.onClick ? 'button' : Link;
+  const props = item.onClick
+    ? {
+        onClick: () => {
           item.onClick?.();
-        }}
-        className={baseClasses}
-      >
-        {Content}
-      </button>
-    );
-  }
+          onAction?.();
+        },
+        type: 'button' as const,
+      }
+    : { href: item.url || '#', onClick: onAction };
 
   return (
-    <Link href={item.url || '#'} className={baseClasses} onClick={(e) => e.stopPropagation()}>
-      {Content}
-    </Link>
+    <Component
+      {...(props as any)}
+      className={cn(
+        'group relative flex w-full flex-1 flex-col items-center justify-center gap-1 rounded-2xl p-2 transition-all duration-200 lg:w-auto lg:max-w-none lg:flex-none',
+        isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+      )}
+    >
+      <item.icon className={cn('h-7 w-7 transition-all duration-300', isActive ? 'text-primary scale-110' : 'group-hover:scale-110')} />
+
+      <span
+        className={cn(
+          'w-full truncate px-0.5 text-center text-[10px] font-semibold transition-colors duration-200 lg:text-xs',
+          isActive ? 'text-primary font-bold' : 'text-muted-foreground group-hover:text-foreground',
+        )}
+      >
+        {item.title}
+      </span>
+
+      {isActive && (
+        <motion.div
+          layoutId="nav-active"
+          className="bg-primary absolute bottom-0 h-1.5 w-6 rounded-full lg:bottom-auto lg:left-0 lg:h-8 lg:w-1.5"
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        />
+      )}
+    </Component>
   );
 }

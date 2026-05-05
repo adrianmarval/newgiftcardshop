@@ -60,7 +60,7 @@ export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteRe
         <span className="text-muted-foreground text-xs font-medium md:text-sm">Tasa: {(order.buyRate * 100).toFixed(1)}%</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {order.giftcards.map((card) => (
           <GiftcardItem
             key={card.id}

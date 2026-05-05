@@ -7,7 +7,6 @@ import { getInventoryStatsAction, getProfitStatsAction } from '@/actions/admin/d
 import { InventoryChart } from '@/components/admin/dashboard/inventory-chart';
 import { ProfitChart } from '@/components/admin/dashboard/profit-chart';
 
-// import { BalanceCard } from '@/components/ui/balance-card';
 import { Bitcoin, CircleDollarSignIcon, Equal, TrendingDown, TrendingUp } from 'lucide-react';
 import { Decimal } from '@/generated/prisma/internal/prismaNamespaceBrowser';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

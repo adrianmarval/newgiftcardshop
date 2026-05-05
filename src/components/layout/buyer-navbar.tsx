@@ -3,11 +3,9 @@
 import { IconDashboard, IconUser, IconHistory, IconShoppingCart, IconSun, IconMoon, IconBell } from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
-// import { useLogout } from '@/hooks/use-logout';
 
-export const BuyerNavbar = ({ isFixed }: { isFixed?: boolean }) => {
+export const BuyerNavbar = () => {
   const { theme, setTheme } = useTheme();
-  // const { handleLogout } = useLogout('buy');
 
   const navItems: BottomNavItem[] = [
     { title: 'Inicio', url: '/buy/dashboard', icon: IconDashboard },
@@ -30,5 +28,5 @@ export const BuyerNavbar = ({ isFixed }: { isFixed?: boolean }) => {
     },
   ];
 
-  return <BottomNav items={navItems} isFixed={isFixed} />;
+  return <BottomNav items={navItems} />;
 };

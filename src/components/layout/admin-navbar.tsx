@@ -15,9 +15,8 @@ import {
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
 
-export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
+export const AdminNavbar = () => {
   const { theme, setTheme } = useTheme();
-  // const { handleLogout } = useLogout('admin');
 
   const navItems: BottomNavItem[] = [
     { title: 'Home', url: '/admin/dashboard', icon: IconDashboard },
@@ -47,5 +46,5 @@ export const AdminNavbar = ({ isFixed }: { isFixed?: boolean }) => {
     },
   ];
 
-  return <BottomNav items={navItems} isFixed={isFixed} />;
+  return <BottomNav items={navItems} />;
 };
