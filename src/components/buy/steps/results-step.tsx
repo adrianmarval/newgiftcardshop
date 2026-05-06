@@ -141,19 +141,14 @@ export const ResultsStep = () => {
             </div>
             <div className="border-border/50 flex items-center justify-between border-t border-dashed pt-1.5 text-xs md:text-base">
               <span className="text-foreground font-semibold">Disponible</span>
-              <span className="text-foreground text-lg font-bold md:text-xl">
-                {formatCurrency(rawTotal, { currency })}
-              </span>
+              <span className="text-foreground text-lg font-bold md:text-xl">{formatCurrency(rawTotal, { currency })}</span>
             </div>
             <div className="border-border flex items-center justify-between border-t pt-1.5 text-xs md:text-base">
               <span className="text-primary">Total a Pagar</span>
               <div className="text-right">
-                <span className="text-primary text-xl font-black md:text-2xl">
-                  {formatCurrency(discountedTotal, { currency: 'USD' })}
-                </span>
+                <span className="text-primary text-xl font-black md:text-2xl">{formatCurrency(discountedTotal, { currency: 'USD' })}</span>
                 <p className="text-muted-foreground mt-0.5 text-[10px] leading-none md:text-xs">
-                  Tasa: {(resultsState.buyRate * 100).toFixed(1)}% · Ahorrás{' '}
-                  {formatCurrency(rawTotal - discountedTotal, { currency })}
+                  Tasa: {(resultsState.buyRate * 100).toFixed(1)}% · Ahorrás {formatCurrency(rawTotal - discountedTotal, { currency })}
                 </p>
               </div>
             </div>

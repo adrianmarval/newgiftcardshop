@@ -38,7 +38,10 @@ export const LoginForm = ({
       }
     },
     onError: ({ error }) => {
-      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'));
+      showAlert.error(
+        'Error',
+        error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'),
+      );
     },
   });
 

@@ -166,7 +166,9 @@ export const adminBatches = adminActionClient
             icon: card.brandCountry.brand.icon,
             image: card.brandCountry.brand.image,
           },
-          country: card.brandCountry.country ? { name: card.brandCountry.country.name, code: card.brandCountry.country.code, currency: card.brandCountry.country.currency } : null,
+          country: card.brandCountry.country
+            ? { name: card.brandCountry.country.name, code: card.brandCountry.country.code, currency: card.brandCountry.country.currency }
+            : null,
           buyer,
           order: card.order ? { id: card.order.id, status: card.order.status } : null,
           issues: card.issues.map((issue) => ({

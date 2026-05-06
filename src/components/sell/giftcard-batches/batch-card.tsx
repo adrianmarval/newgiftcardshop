@@ -55,9 +55,7 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">
-            {formatCurrency(batchTotal, { currency })}
-          </span>
+          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(batchTotal, { currency })}</span>
           <span className="text-muted-foreground text-xs md:text-sm">
             You get: {formatCurrency(batch.estimatedPayout, { currency: 'USD' })}
           </span>

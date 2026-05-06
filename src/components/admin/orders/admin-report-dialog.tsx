@@ -57,7 +57,9 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
       if (result.serverError || result.validationErrors) {
         showAlert.error('Error al gestionar el reporte');
       } else {
-        showAlert.toast.success(currentMode === 'ADD' ? 'Reporte agregado' : currentMode === 'EDIT' ? 'Reporte actualizado' : 'Reporte eliminado');
+        showAlert.toast.success(
+          currentMode === 'ADD' ? 'Reporte agregado' : currentMode === 'EDIT' ? 'Reporte actualizado' : 'Reporte eliminado',
+        );
         onSuccess?.();
         onOpenChange(false);
       }

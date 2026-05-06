@@ -49,9 +49,9 @@ export function RegistryCard({
     <Card
       id={`registry-card-${id}`}
       onClick={onToggle}
-      className={`hover:border-primary/30 relative cursor-pointer gap-1 overflow-hidden border py-2 transition-all duration-200 ease-out scroll-mt-2 ${
+      className={`hover:border-primary/30 relative cursor-pointer scroll-mt-2 gap-1 overflow-hidden border py-2 transition-all duration-200 ease-out ${
         isExpanded || isHighlighted ? `${activeBgClass || 'bg-primary/10 dark:bg-primary/15'} shadow-sm` : ''
-      } ${isHighlighted ? 'border-primary/50 ring-1 ring-primary/20' : ''} ${className}`}
+      } ${isHighlighted ? 'border-primary/50 ring-primary/20 ring-1' : ''} ${className}`}
     >
       {hasReport && !isExpanded && (
         <div className="text-muted-foreground/80 absolute right-1 bottom-4 z-20 flex items-center justify-center gap-1 text-[10px] font-black tracking-widest uppercase">

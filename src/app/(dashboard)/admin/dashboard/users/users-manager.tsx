@@ -48,9 +48,18 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   const [search, setSearch] = useState(searchParams?.search || '');
   const [role, setRole] = useState(searchParams?.role || 'ALL');
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState({ role: '', creditLimit: '', buyRate: '', sellRate: '', minAmount: '', maxAmount: '', allowSearchPreferences: false, allowBuyRateAdjustment: false });
+  const [editForm, setEditForm] = useState({
+    role: '',
+    creditLimit: '',
+    buyRate: '',
+    sellRate: '',
+    minAmount: '',
+    maxAmount: '',
+    allowSearchPreferences: false,
+    allowBuyRateAdjustment: false,
+  });
 
-   const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
+  const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
     onSuccess: () => {
       showAlert.toast.success('Usuario actualizado');
       router.refresh();
@@ -289,9 +298,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
               <div className="flex flex-row items-center justify-between rounded-lg border p-3">
                 <div className="space-y-0.5">
                   <label className="text-sm font-medium">Filtros de Búsqueda</label>
-                  <p className="text-muted-foreground text-xs">
-                    Permite al usuario configurar filtros de denominación mínima y máxima.
-                  </p>
+                  <p className="text-muted-foreground text-xs">Permite al usuario configurar filtros de denominación mínima y máxima.</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input
@@ -308,9 +315,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
               <div className="flex flex-row items-center justify-between rounded-lg border p-3">
                 <div className="space-y-0.5">
                   <label className="text-sm font-medium">Ajuste de Tarifa</label>
-                  <p className="text-muted-foreground text-xs">
-                    Permite al usuario ajustar su propia tarifa de compra (Buy Rate).
-                  </p>
+                  <p className="text-muted-foreground text-xs">Permite al usuario ajustar su propia tarifa de compra (Buy Rate).</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input

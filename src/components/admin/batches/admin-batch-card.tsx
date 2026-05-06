@@ -80,13 +80,13 @@ export function AdminBatchCard({
             },
             onClick: (e) => {
               e.stopPropagation();
-            }
+            },
           })}
           whileTap={{ scale: 0.95 }}
-          className="text-muted-foreground hover:text-primary relative text-left transition-colors select-none touch-manipulation"
+          className="text-muted-foreground hover:text-primary relative touch-manipulation text-left transition-colors select-none"
         >
           {batch.seller.email}
-          <span className="text-[10px] opacity-0 transition-opacity group-hover:opacity-50 block leading-none">
+          <span className="block text-[10px] leading-none opacity-0 transition-opacity group-hover:opacity-50">
             (Mantén presionado para ver info)
           </span>
         </motion.button>

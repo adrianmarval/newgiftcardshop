@@ -146,7 +146,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
             </div>
             <div>
               <CardTitle className="text-sm md:text-lg">2FA</CardTitle>
-              <p className="hidden text-xs text-muted-foreground md:block md:text-sm">
+              <p className="text-muted-foreground hidden text-xs md:block md:text-sm">
                 {isSpanish ? 'Verificación en dos pasos' : 'Two-factor authentication'}
               </p>
             </div>
@@ -175,7 +175,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
           {is2FAEnabled && (
-            <div className="flex items-center justify-between border-t border-border pt-2 md:pt-3">
+            <div className="border-border flex items-center justify-between border-t pt-2 md:pt-3">
               <p className="text-xs text-emerald-400 md:text-sm">{isSpanish ? 'Protegida' : 'Protected'}</p>
               <Button
                 variant="outline"
@@ -194,7 +194,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
           )}
 
           {!is2FAEnabled && (
-            <p className="text-xs text-muted-foreground md:text-sm">
+            <p className="text-muted-foreground text-xs md:text-sm">
               {isSpanish ? 'Habilita 2FA para mayor seguridad' : 'Enable 2FA for better security'}
             </p>
           )}
@@ -217,7 +217,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                     ? 'Escanear QR'
                     : 'Scan QR Code'}
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground md:text-sm">
+            <DialogDescription className="text-muted-foreground text-xs md:text-sm">
               {showBackupCodes
                 ? isSpanish
                   ? 'Guarda estos códigos en un lugar seguro'
@@ -238,12 +238,12 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10">
                   <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 </div>
-                <p className="text-xs text-muted-foreground md:text-sm">
+                <p className="text-muted-foreground text-xs md:text-sm">
                   {isSpanish ? 'Cada código se usa solo una vez' : 'Each code can be used once'}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted/50 p-2 font-mono text-xs md:gap-1.5 md:p-2.5 md:text-sm">
+              <div className="border-border bg-muted/50 grid grid-cols-2 gap-1 rounded-md border p-2 font-mono text-xs md:gap-1.5 md:p-2.5 md:text-sm">
                 {backupCodes.map((code, i) => (
                   <div key={i} className="flex items-center justify-between p-0.5">
                     <span>{code}</span>
@@ -273,10 +273,10 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
           ) : !twoStepEnable ? (
             <div className="space-y-3">
               <div className="flex flex-col items-center justify-center gap-2 text-center">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
-                  <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-full">
+                  <ShieldCheck className="text-muted-foreground h-4 w-4" />
                 </div>
-                <p className="text-xs text-muted-foreground md:text-sm">
+                <p className="text-muted-foreground text-xs md:text-sm">
                   {is2FAEnabled
                     ? isSpanish
                       ? 'Verifica tu contraseña para generar nuevos códigos'
@@ -304,7 +304,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-9 md:h-10 text-sm md:text-base"
+                  className="h-9 text-sm md:h-10 md:text-base"
                 />
               </div>
 
@@ -334,7 +334,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
             <div className="space-y-3">
               <div className="flex flex-col items-center justify-center gap-2">
                 <div className="rounded-md bg-white p-2">{qrCodeData && <QRCodeSVG value={qrCodeData} size={120} />}</div>
-                <p className="text-xs break-all text-muted-foreground md:text-sm">{qrCodeData}</p>
+                <p className="text-muted-foreground text-xs break-all md:text-sm">{qrCodeData}</p>
               </div>
 
               {twoFactorError && (
@@ -381,10 +381,8 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
       <Dialog open={showDisableDialog} onOpenChange={(open) => setShowDisableDialog(open)}>
         <DialogContent className="max-w-sm rounded-lg p-4 md:rounded-xl md:p-5">
           <DialogHeader>
-            <DialogTitle className="text-sm font-medium md:text-base">
-              {isSpanish ? 'Deshabilitar 2FA' : 'Disable 2FA'}
-            </DialogTitle>
-            <DialogDescription className="text-[10px] text-muted-foreground md:text-xs">
+            <DialogTitle className="text-sm font-medium md:text-base">{isSpanish ? 'Deshabilitar 2FA' : 'Disable 2FA'}</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-[10px] md:text-xs">
               {isSpanish ? '¿Estás seguro? Tu cuenta será menos segura.' : 'Are you sure? Your account will be less secure.'}
             </DialogDescription>
           </DialogHeader>
@@ -400,7 +398,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-9 md:h-10 text-xs md:text-sm"
+                className="h-9 text-xs md:h-10 md:text-sm"
               />
             </div>
 

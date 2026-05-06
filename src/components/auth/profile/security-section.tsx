@@ -108,7 +108,7 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
             <LogoutButton
               portal={portal}
               variant="outline"
-              className="w-full justify-start border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive md:justify-between"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start md:justify-between"
             />
           </div>
         )}

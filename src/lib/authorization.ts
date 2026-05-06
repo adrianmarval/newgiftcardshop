@@ -28,7 +28,7 @@ export async function authorizeByRequiredRole(requiredRoles: Role[]) {
 export async function authorizeOrRedirect(requiredRoles: Role[], redirectTo: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) redirect(redirectTo);
-  
+
   if (!session.user.isActive && session.user.role !== 'ADMIN') {
     redirect('/pending-activation');
   }

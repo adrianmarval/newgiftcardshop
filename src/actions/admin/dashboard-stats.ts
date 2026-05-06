@@ -7,7 +7,7 @@ import { startOfDay, startOfWeek, startOfMonth, subDays, format } from 'date-fns
 export const getInventoryStatsAction = adminActionClient.action(async () => {
   const giftcards = await prisma.giftcard.findMany({
     where: { inStock: true },
-    select: { amount: true }
+    select: { amount: true },
   });
 
   const buckets = [
@@ -46,16 +46,16 @@ export const getProfitStatsAction = adminActionClient.action(async () => {
       orderId: { not: null },
       order: {
         status: 'COMPLETED',
-        createdAt: { gte: thirtyDaysAgo }
+        createdAt: { gte: thirtyDaysAgo },
       },
-      batchId: { not: null }
+      batchId: { not: null },
     },
     select: {
       amount: true,
       reportedAmount: true,
       order: { select: { buyRate: true, createdAt: true } },
-      batch: { select: { sellRate: true } }
-    }
+      batch: { select: { sellRate: true } },
+    },
   });
 
   let todayProfit = 0;
@@ -78,9 +78,9 @@ export const getProfitStatsAction = adminActionClient.action(async () => {
     const effectiveAmount = gc.reportedAmount !== null ? gc.reportedAmount.toNumber() : gc.amount.toNumber();
     const buyRate = gc.order.buyRate.toNumber();
     const sellRate = gc.batch.sellRate.toNumber();
-    
+
     // Profit = (lo que paga el buyer) - (lo que se le paga al seller)
-    const profit = (effectiveAmount * buyRate) - (effectiveAmount * sellRate);
+    const profit = effectiveAmount * buyRate - effectiveAmount * sellRate;
 
     const saleDate = gc.order.createdAt;
 
@@ -99,7 +99,7 @@ export const getProfitStatsAction = adminActionClient.action(async () => {
 
   const chartData = Object.entries(chartMap).map(([date, profit]) => ({
     date,
-    profit: Number(profit.toFixed(2))
+    profit: Number(profit.toFixed(2)),
   }));
 
   return {
@@ -109,6 +109,6 @@ export const getProfitStatsAction = adminActionClient.action(async () => {
       month: Number(monthProfit.toFixed(2)),
       todayVolume: Number(todayVolume.toFixed(2)),
     },
-    chartData
+    chartData,
   };
 });

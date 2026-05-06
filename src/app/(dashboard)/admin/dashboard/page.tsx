@@ -33,13 +33,13 @@ export default async function AdminDashboardPage() {
   const diffColor = differential.greaterThan(0) ? 'text-green-400' : differential.lessThan(0) ? 'text-red-400' : 'text-white/80';
 
   return (
-    <div className="space-y-4">
+    <div className="container mx-auto w-full space-y-2">
       <div className="space-y-1">
         <h1 className="text-4xl font-bold">Panel de Administración</h1>
         <p className="text-muted-foreground">Resumen y gestión de la plataforma</p>
       </div>
 
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+      <div className="grid auto-rows-min gap-2 md:grid-cols-3">
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
             <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
@@ -131,7 +131,7 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-6">
         <div className="col-span-1 md:col-span-1 lg:col-span-3">
           <InventoryChart data={inventoryData} />
         </div>

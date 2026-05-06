@@ -54,7 +54,6 @@ export const AdminDepositDialog = ({ open, onOpenChange, onSuccess }: Omit<Admin
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="rounded bg-red-100 p-2 text-sm text-red-600">{error}</p>}
 
-
           <div>
             <label className="mb-1 block text-sm font-medium">Monto (USDT)</label>
             <Input

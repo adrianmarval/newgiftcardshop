@@ -15,7 +15,7 @@ export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongP
     (e: any) => {
       // Prevent default browser behavior like text selection or context menu on mobile
       if (e.type === 'touchstart') e.preventDefault();
-      
+
       isLongPressHappened.current = false;
       timerRef.current = setTimeout(() => {
         onLongPress(e);
@@ -23,7 +23,7 @@ export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongP
         setIsLongPressActive(true);
       }, threshold);
     },
-    [onLongPress, threshold]
+    [onLongPress, threshold],
   );
 
   const stop = useCallback(
@@ -32,14 +32,14 @@ export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongP
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      
+
       if (!isLongPressHappened.current && onClick) {
         onClick(e);
       }
-      
+
       setIsLongPressActive(false);
     },
-    [onClick]
+    [onClick],
   );
 
   const cancel = useCallback((e: any) => {

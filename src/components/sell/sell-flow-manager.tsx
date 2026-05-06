@@ -43,16 +43,14 @@ export const SellBatchManager = ({ brandCountries, sellRate }: SellBatchManagerP
           setDuplicates(data.duplicates);
           showAlert.toast.info(
             'Some cards were duplicates',
-            `${data.duplicates.length} duplicate code${data.duplicates.length !== 1 ? 's' : ''}. They were not added to the batch.`
+            `${data.duplicates.length} duplicate code${data.duplicates.length !== 1 ? 's' : ''}. They were not added to the batch.`,
           );
         }
         setShowSuccessDialog(true);
       }
     },
     onError: ({ error }) => {
-      const valError = error.validationErrors
-        ? Object.values(error.validationErrors).flat()[0] as string
-        : null;
+      const valError = error.validationErrors ? (Object.values(error.validationErrors).flat()[0] as string) : null;
       showAlert.error('Error publishing batch', error.serverError || valError || 'Could not publish batch');
     },
   });

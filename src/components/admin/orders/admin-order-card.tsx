@@ -67,10 +67,7 @@ export const AdminOrderCard = ({
 
   const handleCancelOrder = async (e: MouseEvent) => {
     e.stopPropagation();
-    const confirmed = await showAlert.confirm(
-      '¿Seguro que quieres cancelar esta orden?',
-      'Esta acción no se puede deshacer.'
-    );
+    const confirmed = await showAlert.confirm('¿Seguro que quieres cancelar esta orden?', 'Esta acción no se puede deshacer.');
     if (!confirmed) return;
     setIsCancelling(true);
     try {
@@ -102,13 +99,13 @@ export const AdminOrderCard = ({
             onClick: (e) => {
               e.stopPropagation();
               // No hacemos nada en click simple
-            }
+            },
           })}
           whileTap={{ scale: 0.95 }}
-          className="text-muted-foreground hover:text-primary relative text-left text-xs transition-colors select-none touch-manipulation md:text-sm"
+          className="text-muted-foreground hover:text-primary relative touch-manipulation text-left text-xs transition-colors select-none md:text-sm"
         >
           {order.buyer.email}
-          <span className="text-[10px] opacity-0 transition-opacity group-hover:opacity-50 block leading-none">
+          <span className="block text-[10px] leading-none opacity-0 transition-opacity group-hover:opacity-50">
             (Mantén presionado para ver info)
           </span>
         </motion.button>
@@ -129,12 +126,8 @@ export const AdminOrderCard = ({
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">
-            {formatCurrency(order.faceValueTotal, { currency })}
-          </span>
-          <span className="text-muted-foreground text-xs md:text-sm">
-            Precio: {formatCurrency(order.effectiveTotal, { currency })}
-          </span>
+          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(order.faceValueTotal, { currency })}</span>
+          <span className="text-muted-foreground text-xs md:text-sm">Precio: {formatCurrency(order.effectiveTotal, { currency })}</span>
         </>
       }
       date={formatDateTime(order.createdAt, 'es-AR')}

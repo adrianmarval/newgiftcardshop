@@ -19,22 +19,22 @@
  */
 export enum SupportedNetworks {
   /** Binance Smart Chain */
-  BSC = "BSC",
+  BSC = 'BSC',
 
   /** Red Tron con estándar de token TRC20 */
-  TRX = "Tron (TRC20)",
+  TRX = 'Tron (TRC20)',
 
   /** Red Polygon Proof of Stake */
-  MATIC = "Polygon POS",
+  MATIC = 'Polygon POS',
 
   /** Cadena C de Avalanche */
-  AVAXC = "AVAX C-Chain",
+  AVAXC = 'AVAX C-Chain',
 
   //**  */
-  PLASMA = "Plasma",
+  PLASMA = 'Plasma',
 
   //** Litecoin network */
-  LTC = "Litecoin",
+  LTC = 'Litecoin',
 }
 
 /**
@@ -49,10 +49,10 @@ export enum SupportedNetworks {
  */
 export enum SupportedAssets {
   /** Tether - Stablecoin vinculado al dólar estadounidense */
-  USDT = "USDT",
+  USDT = 'USDT',
 
   /** Litecoin - Criptomoneda peer-to-peer */
-  LTC = "LTC",
+  LTC = 'LTC',
 }
 
 /**
@@ -670,51 +670,51 @@ export type BinanceWithdrawHistoryResponse = BinanceWithdrawHistoryRecord[];
  */
 export type BinanceUniversalTransferType =
   // Transferencias desde/hacia Spot (MAIN)
-  | "MAIN_UMFUTURE" // Spot → USD-M Futures
-  | "MAIN_CMFUTURE" // Spot → COIN-M Futures
-  | "MAIN_MARGIN" // Spot → Cross Margin
-  | "MAIN_FUNDING" // Spot → Funding
-  | "MAIN_OPTION" // Spot → Options
-  | "MAIN_PORTFOLIO_MARGIN" // Spot → Portfolio Margin
+  | 'MAIN_UMFUTURE' // Spot → USD-M Futures
+  | 'MAIN_CMFUTURE' // Spot → COIN-M Futures
+  | 'MAIN_MARGIN' // Spot → Cross Margin
+  | 'MAIN_FUNDING' // Spot → Funding
+  | 'MAIN_OPTION' // Spot → Options
+  | 'MAIN_PORTFOLIO_MARGIN' // Spot → Portfolio Margin
 
   // Transferencias desde/hacia USD-M Futures (UMFUTURE)
-  | "UMFUTURE_MAIN" // USD-M Futures → Spot
-  | "UMFUTURE_MARGIN" // USD-M Futures → Cross Margin
-  | "UMFUTURE_FUNDING" // USD-M Futures → Funding
-  | "UMFUTURE_OPTION" // USD-M Futures → Options
+  | 'UMFUTURE_MAIN' // USD-M Futures → Spot
+  | 'UMFUTURE_MARGIN' // USD-M Futures → Cross Margin
+  | 'UMFUTURE_FUNDING' // USD-M Futures → Funding
+  | 'UMFUTURE_OPTION' // USD-M Futures → Options
 
   // Transferencias desde/hacia COIN-M Futures (CMFUTURE)
-  | "CMFUTURE_MAIN" // COIN-M Futures → Spot
-  | "CMFUTURE_MARGIN" // COIN-M Futures → Cross Margin
-  | "CMFUTURE_FUNDING" // COIN-M Futures → Funding
+  | 'CMFUTURE_MAIN' // COIN-M Futures → Spot
+  | 'CMFUTURE_MARGIN' // COIN-M Futures → Cross Margin
+  | 'CMFUTURE_FUNDING' // COIN-M Futures → Funding
 
   // Transferencias desde/hacia Cross Margin (MARGIN)
-  | "MARGIN_MAIN" // Cross Margin → Spot
-  | "MARGIN_UMFUTURE" // Cross Margin → USD-M Futures
-  | "MARGIN_CMFUTURE" // Cross Margin → COIN-M Futures
-  | "MARGIN_ISOLATEDMARGIN" // Cross Margin → Isolated Margin
-  | "MARGIN_FUNDING" // Cross Margin → Funding
-  | "MARGIN_OPTION" // Cross Margin → Options
+  | 'MARGIN_MAIN' // Cross Margin → Spot
+  | 'MARGIN_UMFUTURE' // Cross Margin → USD-M Futures
+  | 'MARGIN_CMFUTURE' // Cross Margin → COIN-M Futures
+  | 'MARGIN_ISOLATEDMARGIN' // Cross Margin → Isolated Margin
+  | 'MARGIN_FUNDING' // Cross Margin → Funding
+  | 'MARGIN_OPTION' // Cross Margin → Options
 
   // Transferencias con Isolated Margin (ISOLATEDMARGIN)
-  | "ISOLATEDMARGIN_MARGIN" // Isolated Margin → Cross Margin
-  | "ISOLATEDMARGIN_ISOLATEDMARGIN" // Entre cuentas Isolated Margin
+  | 'ISOLATEDMARGIN_MARGIN' // Isolated Margin → Cross Margin
+  | 'ISOLATEDMARGIN_ISOLATEDMARGIN' // Entre cuentas Isolated Margin
 
   // Transferencias desde/hacia Funding (FUNDING)
-  | "FUNDING_MAIN" // Funding → Spot
-  | "FUNDING_UMFUTURE" // Funding → USD-M Futures
-  | "FUNDING_MARGIN" // Funding → Cross Margin
-  | "FUNDING_CMFUTURE" // Funding → COIN-M Futures
-  | "FUNDING_OPTION" // Funding → Options
+  | 'FUNDING_MAIN' // Funding → Spot
+  | 'FUNDING_UMFUTURE' // Funding → USD-M Futures
+  | 'FUNDING_MARGIN' // Funding → Cross Margin
+  | 'FUNDING_CMFUTURE' // Funding → COIN-M Futures
+  | 'FUNDING_OPTION' // Funding → Options
 
   // Transferencias desde/hacia Options (OPTION)
-  | "OPTION_MAIN" // Options → Spot
-  | "OPTION_UMFUTURE" // Options → USD-M Futures
-  | "OPTION_MARGIN" // Options → Cross Margin
-  | "OPTION_FUNDING" // Options → Funding
+  | 'OPTION_MAIN' // Options → Spot
+  | 'OPTION_UMFUTURE' // Options → USD-M Futures
+  | 'OPTION_MARGIN' // Options → Cross Margin
+  | 'OPTION_FUNDING' // Options → Funding
 
   // Transferencias con Portfolio Margin
-  | "PORTFOLIO_MARGIN_MAIN"; // Portfolio Margin → Spot
+  | 'PORTFOLIO_MARGIN_MAIN'; // Portfolio Margin → Spot
 
 /**
  * Parámetros requeridos para ejecutar una transferencia universal de activos en Binance.
@@ -873,13 +873,13 @@ export interface QuoteRequest {
    * Tipo de billetera a usar. Por defecto es 'SPOT'.
    * Opciones: 'SPOT', 'FUNDING', 'EARN', o combinaciones como 'SPOT_FUNDING'.
    */
-  walletType?: "SPOT" | "FUNDING" | "EARN" | "SPOT_FUNDING" | "FUNDING_EARN" | "SPOT_FUNDING_EARN" | "SPOT_EARN";
+  walletType?: 'SPOT' | 'FUNDING' | 'EARN' | 'SPOT_FUNDING' | 'FUNDING_EARN' | 'SPOT_FUNDING_EARN' | 'SPOT_EARN';
 
   /**
    * Tiempo de validez de la cotización. Por defecto es '10s'.
    * Opciones: '10s', '30s', '1m'.
    */
-  validTime?: "10s" | "30s" | "1m";
+  validTime?: '10s' | '30s' | '1m';
 
   /**
    * Ventana de tiempo en milisegundos (ms) para la solicitud. Máximo: 60000.
@@ -929,7 +929,7 @@ export interface AcceptQuoteResponse {
   /** Marca de tiempo de la creación de la orden. */
   createTime: number;
   /** Estado de la orden: PROCESS / ACCEPT_SUCCESS / SUCCESS / FAIL. */
-  orderStatus: "PROCESS" | "ACCEPT_SUCCESS" | "SUCCESS" | "FAIL";
+  orderStatus: 'PROCESS' | 'ACCEPT_SUCCESS' | 'SUCCESS' | 'FAIL';
 }
 
 /**
@@ -945,31 +945,31 @@ export interface AcceptQuoteResponse {
  */
 export enum PayOrderType {
   /** C2B Merchant Acquiring Payment (Pago de Consumidor a Negocio) */
-  PAY = "PAY",
+  PAY = 'PAY',
 
   /** PAY, refund (Reembolso de Pago C2B) */
-  PAY_REFUND = "PAY_REFUND",
+  PAY_REFUND = 'PAY_REFUND',
 
   /** C2C Transfer Payment (Transferencia de Consumidor a Consumidor) */
-  C2C = "C2C",
+  C2C = 'C2C',
 
   /** Crypto box (Caja Cripto) */
-  CRYPTO_BOX = "CRYPTO_BOX",
+  CRYPTO_BOX = 'CRYPTO_BOX',
 
   /** Crypto Box, refund (Reembolso de Caja Cripto) */
-  CRYPTO_BOX_RF = "CRYPTO_BOX_RF",
+  CRYPTO_BOX_RF = 'CRYPTO_BOX_RF',
 
   /** Transfer to new Binance user (Transferencia a nuevo usuario Binance) */
-  C2C_HOLDING = "C2C_HOLDING",
+  C2C_HOLDING = 'C2C_HOLDING',
 
   /** Transfer to new Binance user, refund (Reembolso de Transferencia a nuevo usuario) */
-  C2C_HOLDING_RF = "C2C_HOLDING_RF",
+  C2C_HOLDING_RF = 'C2C_HOLDING_RF',
 
   /** B2C Disbursement Payment (Pago de Desembolso de Negocio a Consumidor) */
-  PAYOUT = "PAYOUT",
+  PAYOUT = 'PAYOUT',
 
   /** Send cash (Envío de efectivo) */
-  REMITTANCE = "REMITTANCE",
+  REMITTANCE = 'REMITTANCE',
 }
 
 /**
@@ -1064,7 +1064,7 @@ export interface GetPayTradeHistoryRequestParams {
  *
  * @typedef {'USER' | 'MERCHANT'} AccountType
  */
-export type AccountType = "USER" | "MERCHANT";
+export type AccountType = 'USER' | 'MERCHANT';
 
 /**
  * Detalle del costo de un activo por billetera en una transacción.

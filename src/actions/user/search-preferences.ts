@@ -60,12 +60,10 @@ export async function getUserSearchPreferences(userId: string) {
 }
 
 const updateBuyRateSchema = z.object({
-  buyRate: z.number().min(0.80, "La tarifa no puede ser inferior a 0.80 (80%)"),
+  buyRate: z.number().min(0.8, 'La tarifa no puede ser inferior a 0.80 (80%)'),
 });
 
-export const updateBuyRate = authActionClient.inputSchema(updateBuyRateSchema).action(async function ({
-  parsedInput: { buyRate },
-}) {
+export const updateBuyRate = authActionClient.inputSchema(updateBuyRateSchema).action(async function ({ parsedInput: { buyRate } }) {
   try {
     const headersList = await headers();
     const session = await import('@/lib/auth').then((m) => m.auth.api.getSession({ headers: headersList }));

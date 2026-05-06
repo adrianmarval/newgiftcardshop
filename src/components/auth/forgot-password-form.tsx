@@ -26,7 +26,10 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: { portal?: 'admin' | 'buy
       }
     },
     onError: ({ error }) => {
-      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al enviar' : 'Failed to send'));
+      showAlert.error(
+        'Error',
+        error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al enviar' : 'Failed to send'),
+      );
     },
   });
 

@@ -11,14 +11,9 @@ export function formatCurrency(
     locale?: string;
     minimumFractionDigits?: number;
     maximumFractionDigits?: number;
-  } = {}
+  } = {},
 ): string {
-  const {
-    currency = 'USD',
-    locale = 'en-US',
-    minimumFractionDigits = 2,
-    maximumFractionDigits = 2,
-  } = options;
+  const { currency = 'USD', locale = 'en-US', minimumFractionDigits = 2, maximumFractionDigits = 2 } = options;
 
   const value = typeof amount === 'string' ? parseFloat(amount) : amount;
 
@@ -34,10 +29,7 @@ export function formatCurrency(
  * Formats a number as a simple currency string without the currency symbol if needed,
  * or with a specific symbol.
  */
-export function formatAmount(
-  amount: number | string,
-  minimumFractionDigits = 2
-): string {
+export function formatAmount(amount: number | string, minimumFractionDigits = 2): string {
   const value = typeof amount === 'string' ? parseFloat(amount) : amount;
   return value.toLocaleString('en-US', {
     minimumFractionDigits,

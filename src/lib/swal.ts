@@ -5,7 +5,8 @@ export const showSwal = Swal.mixin({
     popup: 'bg-card border border-border text-foreground rounded-2xl shadow-2xl backdrop-blur-sm',
     title: 'text-foreground font-bold',
     htmlContainer: 'text-muted-foreground',
-    confirmButton: 'bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-primary/20',
+    confirmButton:
+      'bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-primary/20',
     cancelButton: 'bg-muted text-muted-foreground hover:bg-muted/80 px-6 py-2 rounded-xl font-bold transition-all',
   },
   buttonsStyling: false,
@@ -32,18 +33,14 @@ const toastSwal = Swal.mixin({
 });
 
 export const showAlert = {
-  success: (title: string, text?: string) => 
-    showSwal.fire({ icon: 'success', title, text }),
-  
-  error: (title: string, text?: string) => 
-    showSwal.fire({ icon: 'error', title, text }),
-  
-  warning: (title: string, text?: string) => 
-    showSwal.fire({ icon: 'warning', title, text }),
-  
-  info: (title: string, text?: string) => 
-    showSwal.fire({ icon: 'info', title, text }),
-    
+  success: (title: string, text?: string) => showSwal.fire({ icon: 'success', title, text }),
+
+  error: (title: string, text?: string) => showSwal.fire({ icon: 'error', title, text }),
+
+  warning: (title: string, text?: string) => showSwal.fire({ icon: 'warning', title, text }),
+
+  info: (title: string, text?: string) => showSwal.fire({ icon: 'info', title, text }),
+
   confirm: async (title: string, text: string) => {
     const result = await showSwal.fire({
       title,
@@ -62,5 +59,5 @@ export const showAlert = {
     error: (title: string, text?: string) => toastSwal.fire({ icon: 'error', title, text }),
     warning: (title: string, text?: string) => toastSwal.fire({ icon: 'warning', title, text }),
     info: (title: string, text?: string) => toastSwal.fire({ icon: 'info', title, text }),
-  }
+  },
 };

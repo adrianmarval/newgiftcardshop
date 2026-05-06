@@ -79,13 +79,7 @@ export function GiftcardItem({
           )}
           {card.brand.image ? (
             <>
-              <Image
-                src={card.brand.image}
-                alt={card.brand.name}
-                fill
-                className="object-contain"
-                loading="eager"
-              />
+              <Image src={card.brand.image} alt={card.brand.name} fill className="object-contain" loading="eager" />
               <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-black/40" />
             </>
           ) : (

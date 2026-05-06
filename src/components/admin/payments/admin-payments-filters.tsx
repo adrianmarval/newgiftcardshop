@@ -13,8 +13,6 @@ import { adminPaymentsSearchParamsParsers } from '@/types/domain/admin';
 import type { AdminPaymentsFiltersProps } from './types';
 import { cn } from '@/lib/utils';
 
-
-
 export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersProps) => {
   const [params, setParams] = useQueryStates(
     {
@@ -34,21 +32,13 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
   const [openUser, setOpenUser] = useState(false);
 
   const hasActiveFilters =
-    params.direction !== 'ALL' ||
-    params.category !== 'ALL' ||
-    params.userId ||
-    params.search ||
-    params.dateFrom ||
-    params.dateTo;
+    params.direction !== 'ALL' || params.category !== 'ALL' || params.userId || params.search || params.dateFrom || params.dateTo;
 
   const handleClearFilters = () => {
     setParams({ direction: 'ALL', category: 'ALL', userId: '', search: '', dateFrom: '', dateTo: '' });
   };
 
-  const allUsers = [
-    ...sellers.map((s) => ({ ...s, role: 'Seller' as const })),
-    ...buyers.map((b) => ({ ...b, role: 'Buyer' as const })),
-  ];
+  const allUsers = [...sellers.map((s) => ({ ...s, role: 'Seller' as const })), ...buyers.map((b) => ({ ...b, role: 'Buyer' as const }))];
 
   const selectedUser = allUsers.find((u) => u.id === params.userId);
 
@@ -158,7 +148,10 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
             {/* Dirección contable */}
             <div className="space-y-2">
               <Label className="text-xs">Dirección</Label>
-              <Select value={params.direction || 'ALL'} onValueChange={(value) => setParams({ direction: value as typeof params.direction })}>
+              <Select
+                value={params.direction || 'ALL'}
+                onValueChange={(value) => setParams({ direction: value as typeof params.direction })}
+              >
                 <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>

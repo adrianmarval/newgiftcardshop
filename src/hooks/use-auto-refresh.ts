@@ -55,11 +55,11 @@ export function useAutoRefresh(options: UseAutoRefreshOptions = {}) {
   const resume = useCallback(() => setIsManualActive(true), []);
   const toggle = useCallback(() => setIsManualActive((prev) => !prev), []);
 
-  return { 
-    isActive: isManualActive && isTabVisible, 
+  return {
+    isActive: isManualActive && isTabVisible,
     isPaused: !isManualActive,
-    pause, 
-    resume, 
-    toggle 
+    pause,
+    resume,
+    toggle,
   };
 }

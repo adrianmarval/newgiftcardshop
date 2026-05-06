@@ -18,13 +18,13 @@ interface ProfitChartProps {
 
 export function ProfitChart({ chartData }: ProfitChartProps) {
   return (
-    <Card className="flex h-full flex-col">
+    <Card>
       <CardHeader>
         <CardTitle>Historial de Ganancias (30 días)</CardTitle>
         <CardDescription>Diferencial generado entre la compra y venta de tarjetas</CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
-        <ChartContainer config={chartConfig} className="h-full min-h-[300px] w-full">
+        <ChartContainer config={chartConfig}>
           <AreaChart data={chartData} margin={{ top: 10, left: 12, right: 12, bottom: 0 }}>
             <defs>
               <linearGradient id="fillProfit" x1="0" y1="0" x2="0" y2="1">

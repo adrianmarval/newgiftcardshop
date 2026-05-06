@@ -168,15 +168,17 @@ class BinanceService {
 
   /* -------------------------- WITHDRAWALS -------------------------- */
 
-  public async withdrawFunds(params: BinanceWithdrawRequestParams): Promise<{ success: true; data: BinanceWithdrawResponse } | { success: false; error: string; isNetworkError?: boolean }> {
+  public async withdrawFunds(
+    params: BinanceWithdrawRequestParams,
+  ): Promise<{ success: true; data: BinanceWithdrawResponse } | { success: false; error: string; isNetworkError?: boolean }> {
     try {
       const data = await this.sendSignedRequest<BinanceWithdrawResponse>('POST', '/sapi/v1/capital/withdraw/apply', params);
       return { success: true, data };
     } catch (error: any) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error.message || 'Unknown error during Binance withdrawal',
-        isNetworkError: error.isNetworkError === true
+        isNetworkError: error.isNetworkError === true,
       };
     }
   }

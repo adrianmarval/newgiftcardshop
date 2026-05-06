@@ -116,29 +116,33 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
                     setSelectedBrandCountry(`${bc.brandId}|${bc.countryId}`, { minAmount: bc.minAmount, maxAmount: bc.maxAmount })
                   }
                   className={`group relative flex h-20 flex-col items-center justify-center overflow-hidden rounded-xl border-2 pb-1 transition-all md:h-32 ${
-                    !bc.isActive 
-                      ? 'border-border bg-muted/10 cursor-not-allowed opacity-80' 
+                    !bc.isActive
+                      ? 'border-border bg-muted/10 cursor-not-allowed opacity-80'
                       : selectedBrandCountry === `${bc.brandId}|${bc.countryId}`
-                        ? 'border-primary bg-primary/10 shadow-primary/20 shadow-lg cursor-pointer'
+                        ? 'border-primary bg-primary/10 shadow-primary/20 cursor-pointer shadow-lg'
                         : 'border-border bg-muted/20 hover:border-muted-foreground/30 hover:bg-muted/40 cursor-pointer'
                   } `}
                   whileHover={bc.isActive ? { scale: 1.02, y: -2 } : {}}
                   whileTap={bc.isActive ? { scale: 0.98 } : {}}
                 >
-                  <div className={`relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 ${bc.isActive ? 'group-hover:scale-110' : 'grayscale opacity-40'} dark:bg-white`}>
+                  <div
+                    className={`relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 ${bc.isActive ? 'group-hover:scale-110' : 'opacity-40 grayscale'} dark:bg-white`}
+                  >
                     {bc.brandImage ? (
                       <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-contain" loading="eager" />
                     ) : (
                       <span className="text-xl md:text-5xl">{bc.brandIcon}</span>
                     )}
                   </div>
-                  <div className={`w-full truncate px-1 text-center text-[11px] font-bold tracking-tight md:text-base ${!bc.isActive ? 'text-muted-foreground' : ''}`}>
+                  <div
+                    className={`w-full truncate px-1 text-center text-[11px] font-bold tracking-tight md:text-base ${!bc.isActive ? 'text-muted-foreground' : ''}`}
+                  >
                     {bc.brandName}
                   </div>
 
                   {!bc.isActive && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center overflow-hidden pointer-events-none">
-                      <div className="w-[300%] py-2 bg-black/60 text-white text-[9px] font-black uppercase tracking-[0.4em] text-center -rotate-45 shadow-2xl backdrop-blur-md border-y border-white/10 md:text-[14px] md:py-3 whitespace-nowrap">
+                    <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden">
+                      <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-2 text-center text-[9px] font-black tracking-[0.4em] whitespace-nowrap text-white uppercase shadow-2xl backdrop-blur-md md:py-3 md:text-[14px]">
                         Coming Soon
                       </div>
                     </div>
