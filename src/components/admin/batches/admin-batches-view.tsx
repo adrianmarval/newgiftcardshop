@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AdminBatchesFilters } from './admin-batches-filters';
 import { AdminBatchesList } from './admin-batches-list';
@@ -19,6 +19,7 @@ interface AdminBatchesClientProps {
 }
 
 export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesClientProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [payDialogOpen, setPayDialogOpen] = useState(false);
@@ -63,12 +64,12 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
   }, []);
 
   const handleDeleted = () => {
-    window.location.reload();
+    router.refresh();
   };
 
   const handlePaid = () => {
     setSelectedIds(new Set());
-    window.location.reload();
+    router.refresh();
   };
 
   return (

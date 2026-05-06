@@ -5,6 +5,7 @@ import { Prisma } from '@/generated/prisma/client';
 import { decrypt, hashCode } from '@/lib/encryption';
 import { adminActionClient } from '@/lib/safe-action';
 import { getAdminBatchesInputSchema, getAdminBatchesOutputSchema } from '@/types/domain/admin';
+import { PaymentDirection, PaymentCategory } from '@/types/domain/payment';
 
 export const adminBatches = adminActionClient
   .inputSchema(getAdminBatchesInputSchema)
@@ -159,7 +160,7 @@ export const adminBatches = adminActionClient
           amount: Number(card.amount),
           status: card.status,
           isConfirmed: card.isConfirmed,
-          reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+          reportedAmount: card.reportedAmount !== null ? Number(card.reportedAmount) : null,
           orderId: card.orderId,
           brand: {
             name: card.brandCountry.brand.name,
@@ -174,7 +175,7 @@ export const adminBatches = adminActionClient
           issues: card.issues.map((issue) => ({
             id: issue.id,
             issueType: issue.issueType,
-            reportedAmount: issue.reportedAmount ? Number(issue.reportedAmount) : null,
+            reportedAmount: issue.reportedAmount !== null ? Number(issue.reportedAmount) : null,
             proofImageUrl: issue.proofImageUrl,
             giftcardId: issue.giftcardId,
             orderId: issue.orderId,
@@ -207,8 +208,13 @@ export const adminBatches = adminActionClient
           id: p.id,
           amount: Number(p.amount),
           balanceAfter: Number(p.balanceAfter),
-          direction: p.direction,
-          category: p.category,
+          direction: p.direction as PaymentDirection,
+          category: p.category as PaymentCategory,
+          binanceTxId: p.binanceTxId ?? undefined,
+          relatedUserId: p.relatedUserId ?? undefined,
+          notes: p.notes ?? undefined,
+          referenceType: p.referenceType ?? undefined,
+          referenceId: p.referenceId ?? undefined,
           createdAt: p.createdAt.toISOString(),
         })),
         effectiveTotal,

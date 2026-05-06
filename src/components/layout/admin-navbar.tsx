@@ -9,7 +9,7 @@ import {
   IconSun,
   IconMoon,
   IconTag,
-  IconBell,
+  // IconBell,
   IconSettings,
 } from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
@@ -27,7 +27,7 @@ export const AdminNavbar = () => {
       url: '/admin/dashboard/batches',
       icon: IconCreditCard,
     },
-    { title: 'Alertas', url: '/buy/dashboard/notifications', icon: IconBell },
+    // { title: 'Alertas', url: '/buy/dashboard/notifications', icon: IconBell },
     { title: 'Pagos', url: '/admin/dashboard/payments', icon: IconCash },
     {
       title: 'Brands',

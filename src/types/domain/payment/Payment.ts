@@ -7,7 +7,7 @@ import { z } from 'zod';
 export const paymentDirectionEnum = z.enum(['CREDIT', 'DEBIT']);
 export type PaymentDirection = z.infer<typeof paymentDirectionEnum>;
 
-export const paymentCategoryEnum = z.enum(['ORDER', 'BATCH', 'DEPOSIT', 'REFUND_BUYER', 'REFUND_SELLER']);
+export const paymentCategoryEnum = z.enum(['ORDER', 'BATCH', 'DEPOSIT', 'WITHDRAWAL', 'REFUND_BUYER', 'REFUND_SELLER']);
 export type PaymentCategory = z.infer<typeof paymentCategoryEnum>;
 
 export const paymentReferenceTypeEnum = z.enum(['ORDER', 'BATCH', 'MANUAL']);

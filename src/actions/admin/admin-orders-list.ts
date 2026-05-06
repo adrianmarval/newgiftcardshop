@@ -6,7 +6,7 @@ import { decrypt, hashCode } from '@/lib/encryption';
 import { adminActionClient } from '@/lib/safe-action';
 import type { OrderStatus } from '@/types/domain/order';
 import type { GiftcardStatus } from '@/types/domain/giftcard';
-import type { Payment } from '@/types/domain/payment';
+import type { Payment, PaymentDirection, PaymentCategory } from '@/types/domain/payment';
 import { getAdminOrdersInputSchema, getAdminOrdersOutputSchema } from '@/types/domain/admin';
 
 function computeTotals(
@@ -69,25 +69,24 @@ export const adminOrders = adminActionClient
       ];
     }
 
-    const [orders, totalCount] = await prisma.$transaction([
-      prisma.order.findMany({
-        where,
-        include: {
-          user: { select: { id: true, name: true, email: true, buyRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
-          giftcards: {
-            include: {
-              brandCountry: { include: { brand: true, country: true } },
-              batch: { include: { user: { select: { id: true, name: true, email: true } } } },
-            },
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true, buyRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
+        giftcards: {
+          include: {
+            brandCountry: { include: { brand: true, country: true } },
+            batch: { include: { user: { select: { id: true, name: true, email: true } } } },
           },
-          payments: true,
         },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.order.count({ where }),
-    ]);
+        payments: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    });
+
+    const totalCount = await prisma.order.count({ where });
 
     const buyerIds = [...new Set(orders.map((o) => o.userId))];
     const buyerOrderCounts =
@@ -137,7 +136,7 @@ export const adminOrders = adminActionClient
             amount: Number(card.amount),
             status: card.status as GiftcardStatus,
             isConfirmed: card.isConfirmed,
-            reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
+            reportedAmount: card.reportedAmount !== null ? Number(card.reportedAmount) : null,
             orderId: card.orderId,
             batchId: card.batchId ?? undefined,
             brand: {
@@ -159,8 +158,13 @@ export const adminOrders = adminActionClient
           id: p.id,
           amount: Number(p.amount),
           balanceAfter: Number(p.balanceAfter),
-          direction: p.direction,
-          category: p.category,
+          direction: p.direction as PaymentDirection,
+          category: p.category as PaymentCategory,
+          binanceTxId: p.binanceTxId ?? undefined,
+          relatedUserId: p.relatedUserId ?? undefined,
+          notes: p.notes ?? undefined,
+          referenceType: p.referenceType ?? undefined,
+          referenceId: p.referenceId ?? undefined,
           createdAt: p.createdAt.toISOString(),
         }));
 
@@ -168,7 +172,7 @@ export const adminOrders = adminActionClient
           id: order.id,
           status: order.status as OrderStatus,
           total: Number(order.total),
-          adjustedTotal: order.adjustedTotal ? Number(order.adjustedTotal) : null,
+          adjustedTotal: order.adjustedTotal !== null ? Number(order.adjustedTotal) : null,
           buyRate: Number(order.buyRate),
           effectiveTotal: totals.effectiveTotal,
           faceValueTotal: totals.faceValueTotal,
