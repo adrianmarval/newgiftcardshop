@@ -63,6 +63,5 @@ export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongP
       }
     },
     onContextMenu: (e: any) => e.preventDefault(),
-    isLongPressActive,
   };
 }
