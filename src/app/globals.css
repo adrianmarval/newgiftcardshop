@@ -166,6 +166,8 @@
 
   --animate-collapsible-down: collapsible-down 0.2s ease-out;
   --animate-collapsible-up: collapsible-up 0.2s ease-out;
+  --animate-square-jelly-box: square-jelly-box-animate 0.6s -0.1s linear infinite;
+  --animate-square-jelly-box-shadow: square-jelly-box-shadow 0.6s -0.1s linear infinite;
 
   @keyframes collapsible-down {
     from {
@@ -181,6 +183,28 @@
     }
     to {
       height: 0;
+    }
+  }
+  @keyframes square-jelly-box-animate {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      border-radius: 10%;
+    }
+    17% {
+      border-radius: 10%;
+    }
+    50% {
+      transform: translateY(50%) rotate(45deg);
+      border-radius: 100%;
+    }
+    100% {
+      transform: translateY(0) rotate(90deg);
+      border-radius: 10%;
+    }
+  }
+  @keyframes square-jelly-box-shadow {
+    50% {
+      transform: scale(1.25, 1);
     }
   }
 }
