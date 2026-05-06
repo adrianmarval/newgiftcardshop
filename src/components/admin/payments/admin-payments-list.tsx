@@ -1,10 +1,13 @@
 'use client';
 
-import { History, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { History, ArrowUpRight, ArrowDownRight, Copy } from 'lucide-react';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { AdminPayment } from '@/types/domain/admin';
 import type { AdminPaymentsListProps } from './types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import { showAlert } from '@/lib/swal';
 
 const categoryConfig: Record<string, { label: string; icon: typeof ArrowUpRight; badge: string }> = {
   ORDER: { label: 'Orden', icon: ArrowUpRight, badge: 'text-green-700 bg-green-600/10 dark:text-green-400 dark:bg-green-400/10' },
@@ -24,6 +27,11 @@ const categoryConfig: Record<string, { label: string; icon: typeof ArrowUpRight;
     icon: ArrowDownRight,
     badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10',
   },
+  WITHDRAWAL: {
+    label: 'Retiro',
+    icon: ArrowDownRight,
+    badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10',
+  },
 };
 
 export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListProps) => {
@@ -36,6 +44,11 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
       />
     );
   }
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    showAlert.toast.success(`${label} copiado`);
+  };
 
   return (
     <>
@@ -57,7 +70,7 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
               {payments.map((payment) => {
                 return (
                   <tr key={payment.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm whitespace-nowrap">
                       {new Date(payment.createdAt).toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: 'short',
@@ -78,9 +91,9 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                       })()}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <div>
-                        <p className="font-medium">{payment.relatedUserName || 'N/A'}</p>
-                        <p className="text-muted-foreground text-xs">{payment.relatedUserEmail || '-'}</p>
+                      <div className="min-w-[120px]">
+                        <p className="font-medium truncate">{payment.relatedUserName || 'N/A'}</p>
+                        <p className="text-muted-foreground text-xs truncate">{payment.relatedUserEmail || '-'}</p>
                       </div>
                     </td>
                     <td
@@ -92,16 +105,44 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {payment.referenceType && payment.referenceId ? (
-                        <span className="bg-muted rounded px-1.5 py-0.5 text-xs">
-                          {payment.referenceType}:{payment.referenceId.slice(-6)}
-                        </span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span 
+                              className="bg-muted cursor-pointer hover:bg-muted-foreground/10 transition-colors rounded px-1.5 py-0.5 text-xs"
+                              onClick={() => handleCopy(payment.referenceId!, 'ID')}
+                            >
+                              {payment.referenceType}:{payment.referenceId.slice(-6)}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="flex flex-col gap-1 p-1">
+                              <span className="text-[10px] text-muted-foreground">Click para copiar ID completo</span>
+                              <span className="text-xs font-mono">{payment.referenceId}</span>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {payment.binanceTxId ? (
-                        <span className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">{payment.binanceTxId.slice(-10)}...</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span 
+                              className="bg-muted cursor-pointer hover:bg-muted-foreground/10 transition-colors rounded px-1.5 py-0.5 font-mono text-xs"
+                              onClick={() => handleCopy(payment.binanceTxId!, 'TX ID')}
+                            >
+                              {payment.binanceTxId.slice(-10)}...
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="flex flex-col gap-1 p-1">
+                              <span className="text-[10px] text-muted-foreground">Click para copiar TX completo</span>
+                              <span className="text-xs font-mono">{payment.binanceTxId}</span>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}

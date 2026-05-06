@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, MouseEvent } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Copy } from 'lucide-react';
 import { RegistryCard } from '@/components/ui/registry-card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -70,7 +70,23 @@ export function AdminBatchCard({
   return (
     <RegistryCard
       id={batch.id}
-      title={`Lote #${batch.id}`}
+      title={
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="truncate">Lote #{batch.id}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(batch.id.toString());
+              showAlert.toast.success('ID copiado');
+            }}
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
+      }
       subtitle={
         <motion.button
           {...useLongPress({

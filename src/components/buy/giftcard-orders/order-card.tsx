@@ -6,6 +6,7 @@ import { RegistryCard } from '@/components/ui/registry-card';
 import { formatDateTime } from '@/lib/date-formatter';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { Button } from '@/components/ui/button';
+import { Copy } from 'lucide-react';
 import { showAlert } from '@/lib/swal';
 import { OrderDetails } from '@/components/buy/giftcard-orders/order-details';
 import { cancelOrder } from '@/actions/order/cancel';
@@ -77,7 +78,23 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
   return (
     <RegistryCard
       id={order.id}
-      title={`Orden #${order.id.slice(-8).toUpperCase()}`}
+      title={
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="truncate">Orden #{order.id.slice(-8).toUpperCase()}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(order.id);
+              showAlert.toast.success('ID copiado');
+            }}
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
+      }
       icon={
         <Image
           src={order.giftcards?.[0]?.brand?.image || '/'}

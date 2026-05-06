@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, MouseEvent } from 'react';
 import { motion } from 'framer-motion';
+import { Copy } from 'lucide-react';
 import { useLongPress } from '@/hooks/use-long-press';
 import { RegistryCard } from '@/components/ui/registry-card';
 import { formatDateTime } from '@/lib/date-formatter';
@@ -88,7 +89,23 @@ export const AdminOrderCard = ({
   return (
     <RegistryCard
       id={order.id}
-      title={`Orden #${order.id.slice(-8).toUpperCase()}`}
+      title={
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="truncate">Orden #{order.id.slice(-8).toUpperCase()}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(order.id);
+              showAlert.toast.success('ID copiado');
+            }}
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
+      }
       subtitle={
         <motion.button
           {...useLongPress({

@@ -66,7 +66,7 @@ export function RegistryCard({
             {icon && <div className="flex h-10 w-10 shrink-0 items-center justify-center">{icon}</div>}
 
             <div className="flex min-w-0 flex-col gap-0.5">
-              <div className="text-md text-foreground truncate font-medium md:text-base">{title}</div>
+              <div className="text-md text-foreground font-medium md:text-base min-w-0">{title}</div>
               {subtitle && <div className="text-muted-foreground truncate text-xs md:text-sm">{subtitle}</div>}
             </div>
 

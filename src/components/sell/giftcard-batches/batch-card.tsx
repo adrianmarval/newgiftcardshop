@@ -6,6 +6,9 @@ import { BatchDetails } from './batch-details';
 import type { BatchCardProps } from './types';
 import { formatCurrency } from '@/lib/currency-formatter';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Copy } from 'lucide-react';
+import { showAlert } from '@/lib/swal';
 
 export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchCardProps) {
   const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
@@ -42,7 +45,23 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
   return (
     <RegistryCard
       id={batch.id}
-      title={`Batch #${batch.id}`}
+      title={
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="truncate">Batch #{batch.id}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(batch.id.toString());
+              showAlert.toast.success('ID copiado');
+            }}
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
+      }
       icon={
         <Image
           src={batch.giftcards[0]?.brand?.image || '/'}
