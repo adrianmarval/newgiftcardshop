@@ -21,13 +21,13 @@ interface InventoryChartProps {
 
 export function InventoryChart({ data }: InventoryChartProps) {
   return (
-    <Card>
+    <Card className="flex h-full flex-col">
       <CardHeader>
         <CardTitle>Inventario por Denominación</CardTitle>
         <CardDescription>Valor disponible en stock agrupado por rangos de tarjetas.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+      <CardContent className="flex-1">
+        <ChartContainer config={chartConfig} className="h-full min-h-[300px] w-full">
           <BarChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis

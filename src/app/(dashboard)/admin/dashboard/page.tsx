@@ -131,11 +131,11 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <div className="col-span-1 md:col-span-1 lg:col-span-3">
           <InventoryChart data={inventoryData} />
         </div>
-        <div className="col-span-1 md:col-span-1 lg:col-span-4">
+        <div className="col-span-1 md:col-span-1 lg:col-span-3">
           <ProfitChart chartData={profitData.chartData} />
         </div>
       </div>

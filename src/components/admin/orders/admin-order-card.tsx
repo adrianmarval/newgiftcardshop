@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, MouseEvent } from 'react';
+import { motion } from 'framer-motion';
+import { useLongPress } from '@/hooks/use-long-press';
 import { RegistryCard } from '@/components/ui/registry-card';
 import { formatDateTime } from '@/lib/date-formatter';
 import { formatCurrency } from '@/lib/currency-formatter';
@@ -91,15 +93,25 @@ export const AdminOrderCard = ({
       id={order.id}
       title={`Orden #${order.id.slice(-8).toUpperCase()}`}
       subtitle={
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewBuyer?.(order);
-          }}
-          className="text-muted-foreground hover:text-primary text-left text-xs md:text-sm"
+        <motion.button
+          {...useLongPress({
+            onLongPress: (e) => {
+              e.stopPropagation();
+              onViewBuyer?.(order);
+            },
+            onClick: (e) => {
+              e.stopPropagation();
+              // No hacemos nada en click simple
+            }
+          })}
+          whileTap={{ scale: 0.95 }}
+          className="text-muted-foreground hover:text-primary relative text-left text-xs transition-colors select-none touch-manipulation md:text-sm"
         >
           {order.buyer.email}
-        </button>
+          <span className="text-[10px] opacity-0 transition-opacity group-hover:opacity-50 block leading-none">
+            (Mantén presionado para ver info)
+          </span>
+        </motion.button>
       }
       icon={
         order.giftcards?.[0]?.brand?.image ? (

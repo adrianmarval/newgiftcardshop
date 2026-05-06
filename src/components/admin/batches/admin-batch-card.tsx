@@ -12,6 +12,8 @@ import type { AdminBatch } from '@/types/domain/admin';
 import { Spinner } from '@/components/ui/spinner';
 import { formatDateTime } from '@/lib/date-formatter';
 import { formatCurrency } from '@/lib/currency-formatter';
+import { useLongPress } from '@/hooks/use-long-press';
+import { motion } from 'framer-motion';
 
 interface AdminBatchCardProps {
   batch: AdminBatch;
@@ -70,15 +72,24 @@ export function AdminBatchCard({
       id={batch.id}
       title={`Lote #${batch.id}`}
       subtitle={
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewSeller?.(batch);
-          }}
-          className="text-muted-foreground hover:text-primary text-left"
+        <motion.button
+          {...useLongPress({
+            onLongPress: (e) => {
+              e.stopPropagation();
+              onViewSeller?.(batch);
+            },
+            onClick: (e) => {
+              e.stopPropagation();
+            }
+          })}
+          whileTap={{ scale: 0.95 }}
+          className="text-muted-foreground hover:text-primary relative text-left transition-colors select-none touch-manipulation"
         >
           {batch.seller.email}
-        </button>
+          <span className="text-[10px] opacity-0 transition-opacity group-hover:opacity-50 block leading-none">
+            (Mantén presionado para ver info)
+          </span>
+        </motion.button>
       }
       icon={
         canPay ? (
