@@ -130,6 +130,7 @@ export function parseClaimCodes(raw: string): ParseClaimCodesResult {
       claimCode: formatClaimCodeCanonical(foundCode),
       amount,
       pinCode,
+      line: lineIdx + 1,
     });
   }
 

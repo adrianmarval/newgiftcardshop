@@ -57,10 +57,7 @@ export async function handleBrandSelected(ctx: SellerContext) {
   }
   kb.text('⬅️ Back', 'sell_start').row().text('❌ Cancel', 'sell_cancel');
 
-  await ctx.editMessageText(
-    `🌍 <b>Country for ${brand.icon} ${brand.name}:</b>`,
-    { parse_mode: 'HTML', reply_markup: kb },
-  );
+  await ctx.editMessageText(`🌍 <b>Country for ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery();
 }
 
@@ -87,14 +84,15 @@ export async function handleCountrySelected(ctx: SellerContext) {
   ctx.session.wizard.step = 'awaitingCodes';
 
   await ctx.editMessageText(
-    `📝 <b>Enter the codes</b>\n\n` +
+    `📝 <b>Enter the codes</b> (max 50)\n\n` +
       `Brand: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
       `Format (one per line):\n` +
       `<code>CODE AMOUNT</code>\n` +
       `<code>CODE AMOUNT PIN</code>\n\n` +
       `Example:\n` +
       `<code>ABCD-123456-7890 25</code>\n` +
-      `<code>EFGH-098765-4321 50 1234</code>`,
+      `<code>EFGH-098765-4321 50 1234</code>\n\n` +
+      `⚠️ <i>Maximum 50 codes per batch.</i>`,
     { parse_mode: 'HTML' },
   );
   return ctx.answerCallbackQuery();
@@ -110,43 +108,81 @@ export async function handleCodesText(ctx: SellerContext) {
 
   const { parsed: cards, errors } = parseClaimCodes(text);
 
-  if (cards.length === 0) {
+  if (cards.length > 50) {
     return ctx.reply(
-      `❌ <b>No valid codes found.</b>\n\n` +
-        `${errors.length > 0 ? `<b>Errors detected:</b>\n${errors.join('\n')}\n\n` : ''}` +
-        `Check the format and try again.`,
+      `❌ <b>Batch too large.</b>\n\n` +
+        `You can only publish up to <b>50 codes</b> at a time via Telegram to ensure message stability.\n\n` +
+        `Please split your batch and try again.`,
       { parse_mode: 'HTML' },
     );
   }
 
-  const totalFace = cards.reduce((sum, c) => sum + parseFloat(c.amount || '0'), 0);
+  // Validar duplicados en DB
+  const { brandCountryId } = ctx.session.wizard;
+  const duplicateInDbLines: string[] = [];
+  const validCards: ParsedGiftcard[] = [];
+
+  if (cards.length > 0 && brandCountryId) {
+    const hashes = cards.map((c) => hashCode(c.claimCode.toUpperCase()));
+    const existing = await prisma.giftcard.findMany({
+      where: { codeHash: { in: hashes }, brandCountryId },
+      select: { codeHash: true },
+    });
+    const existingSet = new Set(existing.map((e) => e.codeHash));
+
+    for (const card of cards) {
+      if (existingSet.has(hashCode(card.claimCode.toUpperCase()))) {
+        duplicateInDbLines.push(`Line ${card.line}: <code>${card.claimCode}</code> already exists in database.`);
+      } else {
+        validCards.push(card);
+      }
+    }
+  } else {
+    validCards.push(...cards);
+  }
+
+  if (validCards.length === 0) {
+    return ctx.reply(
+      `❌ <b>No valid codes to publish.</b>\n\n` +
+        `${errors.length > 0 ? `<b>Parsing errors:</b>\n<code>${errors.join('\n')}</code>\n\n` : ''}` +
+        `${duplicateInDbLines.length > 0 ? `<b>Duplicates found:</b>\n<code>${duplicateInDbLines.join('\n')}</code>\n\n` : ''}` +
+        `Please check your list and try again.`,
+      { parse_mode: 'HTML' },
+    );
+  }
+
+  const totalFace = validCards.reduce((sum, c) => sum + parseFloat(c.amount || '0'), 0);
 
   let confirmMsg =
-    `✅ <b>PROCESSED: ${cards.length} valid card(s)</b>\n` +
+    `✅ <b>PROCESSED: ${validCards.length} valid card(s)</b>\n` +
     `💰 Total value: <b>${fmt$(totalFace)}</b>\n\n` +
-    cards.map((c, i) => `${i + 1}. <code>${c.claimCode}</code> — ${fmt$(c.amount || '0')}${c.pinCode ? ` (PIN: <code>${c.pinCode}</code>)` : ''}`).join('\n') +
+    validCards
+      .map(
+        (c, i) => `${i + 1}. <code>${c.claimCode}</code> — ${fmt$(c.amount || '0')}${c.pinCode ? ` (PIN: <code>${c.pinCode}</code>)` : ''}`,
+      )
+      .join('\n') +
     '\n\n';
 
-  if (errors.length > 0) {
+  const allErrors = [...errors, ...duplicateInDbLines];
+
+  if (allErrors.length > 0) {
     confirmMsg +=
-      `🚨 <b>WARNING! ERRORS FOUND (${errors.length})</b>\n` +
+      `🚨 <b>WARNING! ISSUES FOUND (${allErrors.length})</b>\n` +
       `<i>These lines will NOT be published:</i>\n` +
-      `<code>${errors.join('\n')}</code>\n\n` +
+      `<code>${allErrors.join('\n')}</code>\n\n` +
       `⚠️ <b>Do you want to continue with only the valid cards?</b>`;
   } else {
     confirmMsg += 'Publish these cards?';
   }
 
-  // Guardar en sesión temporalmente usando storedMessageIds como indicador
+  // Guardar en sesión temporalmente
   ctx.session.storedMessageIds = ctx.session.storedMessageIds ?? [];
 
-  const kb = new InlineKeyboard()
-    .text('✅ Publish', 'sell_confirm')
-    .text('❌ Cancel', 'sell_cancel');
+  const kb = new InlineKeyboard().text('✅ Publish', 'sell_confirm').text('❌ Cancel', 'sell_cancel');
 
   const sent = await ctx.reply(confirmMsg, { parse_mode: 'HTML', reply_markup: kb });
   ctx.session.storedMessageIds = [sent.message_id];
-  (ctx.session as any)._pendingCards = JSON.stringify(cards);
+  (ctx.session as any)._pendingCards = JSON.stringify(validCards);
 }
 
 // ── Step 5: Publish ──────────────────────────────────────────────────────────
@@ -169,15 +205,14 @@ export async function handleSellConfirm(ctx: SellerContext) {
 
   if (!user) return ctx.answerCallbackQuery('User not found');
 
+  // Filtro de seguridad final por si hubo una carrera
   const codeHashes = cards.map((c) => hashCode(c.claimCode.toUpperCase()));
   const existing = await prisma.giftcard.findMany({
     where: { codeHash: { in: codeHashes }, brandCountryId },
     select: { codeHash: true },
   });
   const existingSet = new Set(existing.map((e) => e.codeHash));
-
   const uniqueCards = cards.filter((c, i) => !existingSet.has(codeHashes[i]));
-  const duplicates = cards.length - uniqueCards.length;
 
   if (uniqueCards.length === 0) {
     await ctx.editMessageText('⚠️ All codes already exist in inventory.');
@@ -220,12 +255,7 @@ export async function handleSellConfirm(ctx: SellerContext) {
     `📦 ${uniqueCards.length} card(s) · ${fmt$(totalFace)} face value\n` +
     `💸 You earn: <b>${fmt$(payout)}</b> (rate ${fmtRate(user.sellRate)})\n`;
 
-  if (duplicates > 0) msg += `\n⚠️ ${duplicates} duplicate code(s) ignored.`;
-
-  const kb = new InlineKeyboard()
-    .text('📦 View My Batches', 'my_batches')
-    .row()
-    .text('➕ Publish More', 'sell_start');
+  const kb = new InlineKeyboard().text('📦 View My Batches', 'my_batches').row().text('➕ Publish More', 'sell_start');
 
   await ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery('✅ Published');

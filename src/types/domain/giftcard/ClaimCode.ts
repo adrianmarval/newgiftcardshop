@@ -14,6 +14,8 @@ export interface ClaimCodeParseResult {
   claimCode: string;
   /** Código PIN opcional. */
   pinCode?: string;
+  /** Número de línea original. */
+  line?: number;
 }
 
 /**
