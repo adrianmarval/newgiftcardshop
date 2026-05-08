@@ -99,7 +99,7 @@ export function createBuyerBot() {
   bot.callbackQuery('buy_cancel', handleBuyCancel);
 
   // Orders
-  bot.callbackQuery('my_orders', handleOrders);
+  bot.callbackQuery(/^my_orders(_\d+)?$/, handleOrders);
   bot.callbackQuery(/^order_detail_/, handleOrderDetail);
   bot.callbackQuery(/^confirm_usage_/, handleConfirmUsage);
   bot.callbackQuery(/^make_payment_/, handleMakePayment);

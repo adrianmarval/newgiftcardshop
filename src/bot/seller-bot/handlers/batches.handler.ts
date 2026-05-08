@@ -8,23 +8,31 @@ const PAGE_SIZE = 5;
 
 export async function handleBatches(ctx: SellerContext) {
   const userId = ctx.user.id;
+  const page = parseInt(ctx.callbackQuery?.data?.split('_').pop() || '1') || 1;
+  const skip = (page - 1) * PAGE_SIZE;
 
-  const batches = await prisma.giftcardBatch.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' },
-    take: PAGE_SIZE,
-    include: {
-      _count: { select: { giftcards: true } },
-      giftcards: { select: { amount: true, inStock: true, status: true, reportedAmount: true } },
-    },
-  });
+  const [batches, totalCount] = await Promise.all([
+    prisma.giftcardBatch.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: PAGE_SIZE,
+      include: {
+        _count: { select: { giftcards: true } },
+        giftcards: { select: { amount: true, inStock: true, status: true, reportedAmount: true } },
+      },
+    }),
+    prisma.giftcardBatch.count({ where: { userId } }),
+  ]);
 
-  if (batches.length === 0) {
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  if (batches.length === 0 && page === 1) {
     const kb = new InlineKeyboard().text('➕ Sell Giftcards', 'sell_start');
     return ctx.reply("📭 You haven't published any batches yet.", { reply_markup: kb });
   }
 
-  let msg = '📦 <b>Your recent batches:</b>\n\n';
+  let msg = `📦 <b>Your recent batches (Page ${page} of ${totalPages}):</b>\n\n`;
   const kb = new InlineKeyboard();
 
   for (const batch of batches) {
@@ -36,9 +44,11 @@ export async function handleBatches(ctx: SellerContext) {
     const sold = batch.giftcards.filter((c) => !c.inStock).length;
     const payout = total * Number(batch.sellRate);
 
-    const hasReport = batch.giftcards.some((c) => ['WRONG_AMOUNT', 'ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status));
+    const hasReport = batch.giftcards.some((c) =>
+      ['WRONG_AMOUNT', 'ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)
+    );
 
-    msg += `<b>Batch #${batch.id}</b> · ${fmtDate(batch.createdAt, 'en')}\n`;
+    msg += `<b>Batch #${batch.id}</b> · 🔵 ${fmtDate(batch.createdAt, 'en')}\n`;
     msg += `   ${batch._count.giftcards} cards · ${fmt$(total)} face value\n`;
     msg += `   Sold: ${sold}/${batch._count.giftcards} · Rate: ${fmtRate(batch.sellRate)}\n`;
     msg += `   ${fmtBatchStatus(batch.isPaid, 'en')}`;
@@ -46,9 +56,22 @@ export async function handleBatches(ctx: SellerContext) {
     if (hasReport) msg += `\n   ⚠️ <b>With Reports</b>`;
     msg += '\n\n';
 
-    kb.text(`🔍 View Batch #${batch.id} Details`, `view_batch_${batch.id}`).row();
+    kb.text(`🔍 View #${batch.id}`, `view_batch_${batch.id}`).row();
   }
 
+  // Pagination buttons
+  const hasNext = skip + PAGE_SIZE < totalCount;
+  const hasPrev = page > 1;
+
+  if (hasPrev || hasNext) {
+    if (hasPrev) kb.text('⬅️ Newer', `my_batches_${page - 1}`);
+    if (hasNext) kb.text('Older ➡️', `my_batches_${page + 1}`);
+    kb.row();
+  }
+
+  if (ctx.callbackQuery) {
+    return ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
+  }
   return ctx.reply(msg, { parse_mode: 'HTML', reply_markup: kb });
 }
 

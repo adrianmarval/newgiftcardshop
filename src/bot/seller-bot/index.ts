@@ -99,7 +99,7 @@ export function createSellerBot() {
   bot.callbackQuery('sell_cancel', handleSellCancel);
 
   // Batches
-  bot.callbackQuery('my_batches', handleBatches);
+  bot.callbackQuery(/^my_batches(_\d+)?$/, handleBatches);
   bot.callbackQuery(/^view_batch_/, handleViewBatch);
 
   // ── Mensajes de texto post-auth (wizard de venta) ────────────────────────
