@@ -91,7 +91,24 @@ function isValidPassword(password: string): boolean {
 // ── Flow ─────────────────────────────────────────────────────────────────────
 
 export async function startRegistration(ctx: RegContext, role: BotRole): Promise<void> {
+  const telegramId = ctx.from!.id.toString();
   const lang = getLang(role);
+
+  const existing = await prisma.user.findUnique({
+    where: { telegramId },
+    select: { role: true },
+  });
+
+  if (existing && existing.role !== role) {
+    const errorMsg =
+      role === 'SELLER'
+        ? '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot. Please contact the administrator if you think this is a mistake.'
+        : '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot. Por favor, contactá al administrador si creés que es un error.';
+
+    await ctx.reply(errorMsg, { parse_mode: 'HTML' });
+    return;
+  }
+
   ctx.session.wizard.step = 'awaitingName';
   await ctx.reply(i18n[lang].welcome, { parse_mode: 'HTML' });
 }

@@ -10,8 +10,15 @@ export async function startSeller(ctx: SellerContext) {
   // ¿Ya tiene cuenta vinculada?
   const user = await prisma.user.findUnique({
     where: { telegramId },
-    select: { name: true, isActive: true, emailVerified: true },
+    select: { name: true, isActive: true, emailVerified: true, role: true },
   });
+
+  if (user && user.role === 'BUYER') {
+    return ctx.reply(
+      '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot. Please contact the administrator if you think this is a mistake.',
+      { parse_mode: 'HTML' },
+    );
+  }
 
   if (user) {
     if (!user.isActive) {

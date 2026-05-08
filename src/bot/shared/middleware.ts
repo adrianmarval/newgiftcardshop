@@ -33,7 +33,7 @@ export const authenticateSeller = async (ctx: SellerContext, next: NextFunction)
   }
 
   if (user.role !== 'SELLER' && user.role !== 'ADMIN') {
-    return ctx.reply('🚫 <b>Acceso no autorizado.</b> Este bot es solo para vendedores.', {
+    return ctx.reply('🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot.', {
       parse_mode: 'HTML',
     });
   }
@@ -71,7 +71,7 @@ export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) =
   }
 
   if (user.role !== 'BUYER' && user.role !== 'ADMIN') {
-    return ctx.reply('🚫 <b>Acceso no autorizado.</b> Este bot es solo para compradores.', {
+    return ctx.reply('🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot.', {
       parse_mode: 'HTML' },
     );
   }
