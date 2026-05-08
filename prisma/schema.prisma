@@ -25,6 +25,10 @@ model User {
   role          Role    @default(BUYER)
   isActive      Boolean @default(false)
 
+  // Telegram Integration
+  telegramId       String? @unique // Telegram user ID
+  telegramUsername String?         // Telegram username (sin @)
+
   // Perfil de Trading (Tasas de cambio con precisión)
   buyRate                Decimal @default(0.85) @db.Decimal(10, 4)
   allowBuyRateAdjustment Boolean @default(false)
@@ -39,13 +43,13 @@ model User {
   maxAmountPreference    Decimal? @db.Decimal(10, 2)
 
   // Relaciones
-  sessions        Session[]
-  accounts        Account[]
-  giftcards       Giftcard[]
-  orders          Order[]
-  paymentMethod   PaymentMethod?
-  giftcardBatches GiftcardBatch[]
-  reportedIssues  GiftcardIssue[]
+  sessions           Session[]
+  accounts           Account[]
+  giftcards          Giftcard[]
+  orders             Order[]
+  paymentMethod      PaymentMethod?
+  giftcardBatches    GiftcardBatch[]
+  reportedIssues     GiftcardIssue[]
 
   twoFactor        TwoFactor?
   twoFactorEnabled Boolean    @default(false)
@@ -411,4 +415,26 @@ model TwoFactor {
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("twoFactor")
+}
+
+// Bot session persistence for @grammyjs/storage-prisma
+model BotSession {
+  key       String   @id      // formato: "seller:<telegramId>" | "buyer:<telegramId>"
+  value     String            // JSON serializado por @grammyjs/storage-prisma
+  updatedAt DateTime @updatedAt
+
+  @@map("bot_session")
+}
+
+// OTP temporal para registro via Telegram bot
+model TelegramOtp {
+  id         String   @id @default(cuid())
+  telegramId String   @unique
+  email      String
+  name       String
+  otp        String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@map("telegram_otp")
 }

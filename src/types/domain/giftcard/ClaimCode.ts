@@ -12,6 +12,8 @@ export interface ClaimCodeParseResult {
   amount?: string;
   /** Código de reclamo parseado y canonicalizado (uppercase, sin guiones). */
   claimCode: string;
+  /** Código PIN opcional. */
+  pinCode?: string;
 }
 
 /**

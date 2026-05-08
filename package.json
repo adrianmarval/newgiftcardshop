@@ -4,15 +4,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx --tsconfig tsconfig.json server.ts",
     "build": "next build",
     "postinstall": "prisma generate",
-    "start": "next start",
+    "start": "NODE_ENV=production tsx --tsconfig tsconfig.json server.ts",
     "lint": "eslint",
     "format": "prettier --write ."
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@grammyjs/ratelimiter": "^1.2.1",
+    "@grammyjs/storage-prisma": "^2.5.1",
     "@next-safe-action/adapter-better-auth": "^0.1.5",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
@@ -26,6 +28,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.2",
     "framer-motion": "^12.38.0",
+    "grammy": "^1.42.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.7.0",
     "next": "^16.2.3",

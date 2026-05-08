@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 import { depositSchema } from '@/types/domain/payment/Payment';
 import { z } from 'zod';
-import { getPlatformBalance, updatePlatformBalance } from '../platform/settings';
+import { getPlatformBalance, updatePlatformBalance } from '@/actions/platform/settings';
 
 const createDepositInputSchema = depositSchema.omit({ relatedUserId: true });
 
