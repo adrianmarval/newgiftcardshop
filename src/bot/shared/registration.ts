@@ -15,7 +15,8 @@ const i18n = {
     nameShort: '❌ Name too short. Please enter your full name.',
     helloName: '✅ Hello, <b>{name}</b>!\n\n📧 <b>What is your email address?</b>',
     invalidEmail: '❌ Invalid email format.\nExample: <code>user@gmail.com</code>',
-    emailInUse: '⚠️ That email is already registered.\n\nIf you have an account, contact the admin to link your Telegram.',
+    emailInUse: '⚠️ That email is already registered.\n\nTo link your Telegram account, we will send a verification code to your email.',
+    emailLinkedElsewhere: '⚠️ This email is already linked to another Telegram account. Contact the administrator if you need help.',
     otpSent: '📬 We sent a 6-digit code to <b>{email}</b>.\n\n🔐 <b>Enter the code:</b>\n\n<i>Code expires in 5 minutes. Check your spam folder if it doesn\'t arrive.</i>',
     otpSubject: '🔐 Your verification code',
     otpEmailError: '❌ Could not send the code. Please check the email and try again.',
@@ -26,6 +27,7 @@ const i18n = {
     invalidPassword: '❌ Invalid password. It needs at least:\n• 8 characters\n• 1 uppercase\n• 1 lowercase\n• 1 number',
     sessionIncomplete: '❌ Incomplete session. Start over with /start.',
     accountCreated: '🎉 <b>Account created!</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Your account is <b>awaiting activation</b> by the administrator.',
+    accountLinked: '🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\n⏳ Awaiting activation by the administrator.',
     contactAdmin: 'Contact Admin',
     emailError: '❌ The email is already in use. Contact the administrator.',
     genericError: '❌ Error creating account. Try again or contact the administrator.',
@@ -35,17 +37,19 @@ const i18n = {
     nameShort: '❌ Nombre muy corto. Ingresá tu nombre completo.',
     helloName: '✅ ¡Hola, <b>{name}</b>!\n\n📧 <b>¿Cuál es tu correo electrónico?</b>',
     invalidEmail: '❌ Email inválido. Ingresá un email con formato correcto.\nEjemplo: <code>usuario@gmail.com</code>',
-    emailInUse: '⚠️ Ese email ya está registrado.\n\nSi ya tenés cuenta, contactá al administrador para vincular tu Telegram.',
+    emailInUse: '⚠️ Ese email ya está registrado.\n\nPara vincular tu cuenta de Telegram, te enviamos un código de verificación al correo.',
+    emailLinkedElsewhere: '⚠️ Este email ya está vinculado a otra cuenta de Telegram. Contactá al administrador si necesitás ayuda.',
     otpSent: '📬 Te enviamos un código de 6 dígitos a <b>{email}</b>.\n\n🔐 <b>Ingresá el código:</b>\n\n<i>El código expira en 5 minutos. Si no llega, revisá spam.</i>',
     otpSubject: '🔐 Tu código de verificación',
     otpEmailError: '❌ No pude enviar el código. Verificá el email e intentá de nuevo.',
     otpNotFound: '❌ No encontré un código pendiente. Ingresá tu email de nuevo.',
     otpExpired: '⏰ El código expiró. Ingresá tu email de nuevo para recibir uno nuevo.',
     otpIncorrect: '❌ Código incorrecto. Revisá el email e intentá de nuevo.',
-    emailVerified: '✅ <b>¡Email verificado!</b>\n\n🔑 <b>Creá tu contraseña:</b>\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i>⚠️ Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
+    emailVerified: '✅ ¡Email verificado!\n\n🔑 Creá tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i>⚠️ Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
     invalidPassword: '❌ Contraseña inválida. Necesita al menos:\n• 8 caracteres\n• 1 mayúscula\n• 1 minúscula\n• 1 número',
     sessionIncomplete: '❌ Sesión incompleta. Empezá de nuevo con /start.',
-    accountCreated: '🎉 <b>¡Cuenta creada!</b>\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está <b>pendiente de activación</b> por el administrador.',
+    accountCreated: '🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.',
+    accountLinked: '🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.',
     contactAdmin: 'Contactar administrador',
     emailError: '❌ El email ya está en uso. Contactá al administrador.',
     genericError: '❌ Error al crear la cuenta. Intentá de nuevo o contactá al administrador.',
@@ -136,16 +140,21 @@ export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<vo
     return;
   }
 
-  const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+  const existing = await prisma.user.findUnique({ where: { email }, select: { id: true, telegramId: true, name: true } });
+
   if (existing) {
+    if (existing.telegramId) {
+      await ctx.reply(i18n[lang].emailLinkedElsewhere, { parse_mode: 'HTML' });
+      return;
+    }
+    // Si ya existe pero no tiene telegramId, procedemos enviando OTP para vincular
     await ctx.reply(i18n[lang].emailInUse, { parse_mode: 'HTML' });
-    return;
   }
 
   ctx.session.wizard.regEmail = email;
   ctx.session.wizard.step = 'awaitingOtp';
 
-  const name = ctx.session.wizard.regName ?? (lang === 'en' ? 'User' : 'Usuario');
+  const name = existing?.name ?? ctx.session.wizard.regName ?? (lang === 'en' ? 'User' : 'Usuario');
   const otp = generateOtp();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
   const telegramId = ctx.from!.id.toString();
@@ -171,6 +180,7 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole): Promise<void
   const lang = getLang(role);
   const inputOtp = (ctx.message as any)?.text?.trim() as string | undefined;
   const telegramId = ctx.from!.id.toString();
+  const telegramUsername = ctx.from!.username;
 
   const record = await prisma.telegramOtp.findUnique({ where: { telegramId } });
 
@@ -192,6 +202,32 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole): Promise<void
     return;
   }
 
+  // Verificar si ya existe el usuario para ver si es flujo de vinculación
+  const existingUser = await prisma.user.findUnique({
+    where: { email: record.email },
+    select: { id: true, role: true, isActive: true },
+  });
+
+  if (existingUser) {
+    // VINCULACIÓN: El usuario ya existe, solo asociamos el Telegram
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: { telegramId, telegramUsername, emailVerified: true },
+    });
+
+    await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});
+    ctx.session.wizard = { step: 'idle' };
+
+    await ctx.reply(i18n[lang].accountLinked.replace('{email}', record.email), {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
+      },
+    });
+    return;
+  }
+
+  // REGISTRO NUEVO: Continuar a contraseña
   ctx.session.wizard.regEmail = record.email;
   ctx.session.wizard.regName = record.name;
   ctx.session.wizard.step = 'awaitingPassword';

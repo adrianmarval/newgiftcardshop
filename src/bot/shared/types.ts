@@ -23,7 +23,8 @@ export type BuyerWizardStep =
   // Flujo de compra
   | 'awaitingAmount'
   | 'awaitingPaymentId'
-  | 'awaitingReportAmount';
+  | 'awaitingReportAmount'
+  | 'awaitingReportProof';
 
 // ── Session ──────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,8 @@ export interface BuyerSessionData {
     orderId?: string;
     reportCardId?: string;
     reportIssueType?: 'INVALID' | 'ALREADY_USED' | 'DEACTIVATED' | 'WRONG_AMOUNT';
+    reportAmount?: number;
+    reportProofUrl?: string;
     selectedGiftcardIds?: string[];
   };
   storedMessageIds: number[];

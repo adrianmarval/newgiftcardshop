@@ -9,8 +9,17 @@ import {
   handleOrders,
   handleOrderDetail,
   handleConfirmUsage,
+  handleCancelOrder,
   handleMakePayment,
   handlePaymentText,
+  handleReportIssues,
+  handleReportCardSelect,
+  handleReportModify,
+  handleReportDelete,
+  handleReportTypeSelect,
+  handleReportAmountText,
+  handleReportProofPhoto,
+  handleReportProofSkip,
 } from './handlers/orders.handler.js';
 import {
   startBuyWizard,
@@ -20,12 +29,7 @@ import {
   handleBuyConfirm,
   handleBuyCancel,
 } from './handlers/buy.handler.js';
-import {
-  handleRegName,
-  handleRegEmail,
-  handleRegOtp,
-  handleRegPassword,
-} from '@/bot/shared/registration.js';
+import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
 
 export function createBuyerBot() {
   const token = process.env.BUYER_BOT_TOKEN;
@@ -52,8 +56,7 @@ export function createBuyerBot() {
         storedMessageIds: [],
       }),
       storage: new PrismaAdapter<BuyerSessionData>(prisma.botSession as any),
-      getSessionKey: (ctx) =>
-        ctx.from ? `buyer:${ctx.from.id}` : undefined,
+      getSessionKey: (ctx) => (ctx.from ? `buyer:${ctx.from.id}` : undefined),
     }),
   );
 
@@ -63,9 +66,9 @@ export function createBuyerBot() {
   // Wizard de registro: captura texto ANTES del auth middleware
   bot.on(':text', async (ctx, next) => {
     const step = ctx.session.wizard.step;
-    if (step === 'awaitingName')     return handleRegName(ctx, 'BUYER');
-    if (step === 'awaitingEmail')    return handleRegEmail(ctx, 'BUYER');
-    if (step === 'awaitingOtp')      return handleRegOtp(ctx, 'BUYER');
+    if (step === 'awaitingName') return handleRegName(ctx, 'BUYER');
+    if (step === 'awaitingEmail') return handleRegEmail(ctx, 'BUYER');
+    if (step === 'awaitingOtp') return handleRegOtp(ctx, 'BUYER');
     if (step === 'awaitingPassword') return handleRegPassword(ctx, 'BUYER');
     return next();
   });
@@ -102,21 +105,34 @@ export function createBuyerBot() {
   bot.callbackQuery(/^my_orders(_\d+)?$/, handleOrders);
   bot.callbackQuery(/^order_detail_/, handleOrderDetail);
   bot.callbackQuery(/^confirm_usage_/, handleConfirmUsage);
+  bot.callbackQuery(/^cancel_order_/, handleCancelOrder);
   bot.callbackQuery(/^make_payment_/, handleMakePayment);
 
-  // ── Mensajes de texto post-auth (wizard de compra) ────────────────────────
+  // Report
+  bot.callbackQuery(/^report_issues(_.*)?$/, handleReportIssues);
+  bot.callbackQuery(/^report_card_/, handleReportCardSelect);
+  bot.callbackQuery(/^report_type_/, handleReportTypeSelect);
+  bot.callbackQuery('report_modify', handleReportModify);
+  bot.callbackQuery('report_delete', handleReportDelete);
+  bot.callbackQuery('report_proof_skip', handleReportProofSkip);
+
+  // ── Mensajes de texto y multimedia post-auth ──────────────────────────────
   bot.on(':text', async (ctx) => {
     const step = ctx.session.wizard.step;
-    if (step === 'awaitingAmount')    return handleAmountText(ctx);
+    if (step === 'awaitingAmount') return handleAmountText(ctx);
     if (step === 'awaitingPaymentId') return handlePaymentText(ctx);
+    if (step === 'awaitingReportAmount') return handleReportAmountText(ctx);
+  });
+
+  bot.on(':photo', async (ctx) => {
+    const step = ctx.session.wizard.step;
+    if (step === 'awaitingReportProof') return handleReportProofPhoto(ctx);
   });
 
   // ── Error handler ─────────────────────────────────────────────────────────
   bot.catch((err) => {
     console.error('[BuyerBot] Error:', err.message, err.ctx?.update);
-    err.ctx
-      ?.reply('❌ Ocurrió un error inesperado. Intentá de nuevo o usá /start.')
-      .catch(() => {});
+    err.ctx?.reply('❌ Ocurrió un error inesperado. Intentá de nuevo o usá /start.').catch(() => {});
   });
 
   const webhookPath = `/api/bot/buyer/${token.split(':')[0]}`;
