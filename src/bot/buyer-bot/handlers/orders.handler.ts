@@ -15,7 +15,9 @@ const PAGE_SIZE = 5;
 
 export async function handleOrders(ctx: BuyerContext) {
   const userId = ctx.user.id;
-  const page = parseInt(ctx.callbackQuery?.data?.split('_').pop() || '1') || 1;
+  const cbData = ctx.callbackQuery?.data || '';
+  const pageMatch = cbData.match(/^my_orders_(\d+)$/);
+  const page = pageMatch ? parseInt(pageMatch[1]) : 1;
   const skip = (page - 1) * PAGE_SIZE;
 
   const [orders, totalCount] = await Promise.all([
@@ -37,7 +39,7 @@ export async function handleOrders(ctx: BuyerContext) {
   }
 
   const kb = new InlineKeyboard();
-  let msg = '📋 <b>Tus Órdenes</b>\n';
+  let msg = `📋 <b>Tus Órdenes</b> (Página ${page}/${totalPages})\n`;
   msg += '🟢 Completada · 🔵 Esperando Pago\n';
   msg += '🟡 Pendiente · 🔴 Cancelada\n\n';
   msg += 'Seleccioná una orden para ver sus detalles:';
@@ -54,9 +56,9 @@ export async function handleOrders(ctx: BuyerContext) {
 
     const shortId = order.id.slice(-8).toUpperCase();
     const dateStr = fmtDate(order.createdAt);
-    const label = `Orden #${shortId} · ${icon} ${dateStr}`;
-    
-    kb.text(label, `order_detail_${order.id}`).row();
+    const label = `${icon} Orden #${shortId} · ${dateStr}`;
+
+    kb.text(label, `order_detail_${order.id}_${page}`).row();
   }
 
   // Pagination buttons
@@ -79,7 +81,10 @@ export async function handleOrders(ctx: BuyerContext) {
 }
 
 export async function handleOrderDetail(ctx: BuyerContext) {
-  const orderId = ctx.callbackQuery?.data?.replace('order_detail_', '');
+  const data = ctx.callbackQuery?.data?.split('_') || [];
+  const orderId = data[2];
+  const fromPage = parseInt(data[3] || '1');
+
   if (!orderId) return ctx.answerCallbackQuery();
 
   ctx.session.wizard.orderId = orderId;
@@ -98,85 +103,99 @@ export async function handleOrderDetail(ctx: BuyerContext) {
   }
 
   const { Prisma } = await import('@/generated/prisma/client');
-  
-  const nullifiedCards = order.giftcards.filter(c => c.status !== 'UNUSED' && c.status !== 'USED' && c.status !== 'WRONG_AMOUNT');
-  const availableCards = order.giftcards.filter(c => c.status === 'UNUSED' || c.status === 'USED' || c.status === 'WRONG_AMOUNT');
+
+  const nullifiedCards = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED' && c.status !== 'WRONG_AMOUNT');
+  const availableCards = order.giftcards.filter((c) => c.status === 'UNUSED' || c.status === 'USED' || c.status === 'WRONG_AMOUNT');
 
   const totalGiftcardAmount = order.giftcards.reduce((sum, c) => {
     const amt = c.reportedAmount ?? c.amount;
     return sum.plus(amt);
   }, new Prisma.Decimal(0));
 
-  const currentTotalToPay = order.giftcards.reduce((sum, card) => {
-    if (card.status === 'UNUSED' || card.status === 'USED') {
-      return sum.plus(card.amount.mul(order.buyRate));
-    }
-    if (card.status === 'WRONG_AMOUNT' && card.reportedAmount) {
-      return sum.plus(card.reportedAmount.mul(order.buyRate));
-    }
-    return sum;
-  }, new Prisma.Decimal(0));
+  const totalToPay =
+    order.status === 'PENDING'
+      ? order.giftcards.reduce((sum, card) => {
+          if (card.status === 'UNUSED' || card.status === 'USED') return sum.plus(card.amount.mul(order.buyRate));
+          if (card.status === 'WRONG_AMOUNT' && card.reportedAmount) return sum.plus(card.reportedAmount.mul(order.buyRate));
+          return sum;
+        }, new Prisma.Decimal(0))
+      : (order.adjustedTotal ?? order.total);
 
   const discountPercent = (1 - order.buyRate.toNumber()) * 100;
   const discountAmount = totalGiftcardAmount.mul(new Prisma.Decimal(1).minus(order.buyRate));
 
-  const invalidBlock = nullifiedCards.length > 0
-    ? `<b>❌ Tarjetas invalidadas / sin saldo</b>\n` + nullifiedCards.map(c => {
-        const claimCode = decrypt(c.claimCode);
-        return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount))} - ${fmtGiftcardStatus(c.status)}`;
-      }).join('\n') + '\n\n'
-    : "";
+  const invalidBlock =
+    nullifiedCards.length > 0
+      ? `<b>❌ Tarjetas inválidas / reportadas</b>\n` +
+        nullifiedCards
+          .map((c) => {
+            const claimCode = decrypt(c.claimCode);
+            return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount))} - ${c.status}`;
+          })
+          .join('\n') +
+        '\n\n'
+      : '';
 
-  const validBlock = availableCards.length > 0
-    ? `<b>✅ Tarjetas disponibles / con saldo</b>\n` + availableCards.map(c => {
-        const claimCode = decrypt(c.claimCode);
-        const isWrong = c.status === 'WRONG_AMOUNT';
-        const amt = c.reportedAmount ?? c.amount;
-        
-        if (isWrong) {
-          return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount))} → ${fmt$(amt)}`;
-        }
-        return `• <code>${claimCode}</code> - ${fmt$(amt)}`;
-      }).join('\n') + '\n\n'
-    : "";
+  const validBlock =
+    availableCards.length > 0
+      ? `<b>✅ Tarjetas verificadas</b>\n` +
+        availableCards
+          .map((c) => {
+            const claimCode = decrypt(c.claimCode);
+            const isWrong = c.status === 'WRONG_AMOUNT';
+            const amt = c.reportedAmount ?? c.amount;
+
+            if (isWrong) {
+              return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount))} → ${fmt$(amt)}`;
+            }
+            return `• <code>${claimCode}</code> - ${fmt$(amt)}`;
+          })
+          .join('\n') +
+        '\n\n'
+      : '';
 
   const summary = `<b>💰 Resumen financiero</b>
 • Valor tarjetas: ${fmt$(totalGiftcardAmount)}
 • Descuento (${discountPercent.toFixed(0)}%): -${fmt$(discountAmount)}
-• <b>Total ${order.status === 'COMPLETED' ? "pagado" : "a pagar"}: ${fmt$(order.status === 'PENDING' ? currentTotalToPay : (order.adjustedTotal ?? order.total))}</b>`;
+• <b>Total ${order.status === 'COMPLETED' ? 'pagado' : 'a pagar'}: ${fmt$(totalToPay)}</b>`;
 
-  let instructions = "";
+  let instructions = '';
   if (order.status === 'PENDING') {
-    if (currentTotalToPay.isZero()) {
+    if (totalToPay.isZero()) {
       instructions = `\n\n<b>⚠️ Total Cero</b>\nEl total de tu orden es $0.00. No se requiere pago. Podés <b>cancelar la orden</b> si ya no la necesitás.`;
+    } else if (order.giftcards.every((c) => c.isConfirmed)) {
+      instructions = `\n\n<b>🎉 ¡Listo para pagar!</b>\nTodas las tarjetas han sido confirmadas. Presioná <b>"✅ Pagar ahora"</b> para proceder.`;
     } else {
       instructions = `\n\n<b>📝 Instrucciones</b>
 1. Aplicá los códigos en tu cuenta.
 2. Si alguno falla, usá el botón <b>"🚩 Reportar problema"</b>.
-3. Al terminar, presioná <b>"✅ Confirmar uso"</b> para proceder al pago.`;
+3. Al terminar, presioná <b>"✅ Confirmar uso exitoso"</b> para continuar.`;
     }
   } else if (order.status === 'AWAITING_PAYMENT') {
     instructions = `\n\n<b>💳 Pago Pendiente</b>\nPresioná el botón de abajo para informar el ID de transacción de tu pago.`;
   }
 
-  const msg = `<b>Orden #<code>${order.id.slice(0, 8)}</code></b>\n\n${invalidBlock}${validBlock}${summary}${instructions}`;
+  const msg = `<b>Orden #<code>${order.id}</code></b>\n\n${invalidBlock}${validBlock}${summary}${instructions}`;
 
   const kb = new InlineKeyboard();
 
   if (order.status === 'PENDING') {
-    if (currentTotalToPay.isZero()) {
-      kb.text('❌ Cancelar orden ($0)', `cancel_order_${order.id}`).row();
+    if (totalToPay.isZero()) {
+      kb.text('❌ Cancelar orden', `cancel_order_${order.id}`).row();
+    } else if (order.giftcards.every((c) => c.isConfirmed)) {
+      kb.text('✅ Pagar ahora', `confirm_usage_${order.id}`).row();
     } else {
-      kb.text('✅ Confirmar uso', `confirm_usage_${order.id}`).row();
+      kb.text('✅ Confirmar uso exitoso', `confirm_usage_${order.id}`).row();
     }
-    kb.text('🚩 Reportar problema', `report_issues_${order.id}`).row();
+    kb.text('🚩 Reportar Problemas con Tarjetas', `report_issues_${order.id}`).row();
   }
-  
+
   if (order.status === 'AWAITING_PAYMENT') {
     kb.text('💳 Informar pago', `make_payment_${order.id}`).row();
   }
 
-  kb.text('⬅️ Volver', 'my_orders');
+  kb.text('📞 Contactar a Soporte', `https://t.me/admin`).row(); // Ajustar según env si existe
+  kb.text('🔙 Regresar al historial', `my_orders_${fromPage}`);
 
   await ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery();
