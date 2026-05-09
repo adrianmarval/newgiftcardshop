@@ -19,7 +19,7 @@ export async function handleBatches(ctx: SellerContext) {
       take: PAGE_SIZE,
       include: {
         _count: { select: { giftcards: true } },
-        giftcards: { select: { amount: true, inStock: true, status: true, reportedAmount: true } },
+        giftcards: { select: { amount: true, inStock: true, status: true, reportedAmount: true, isConfirmed: true } },
       },
     }),
     prisma.giftcardBatch.count({ where: { userId } }),
@@ -32,31 +32,27 @@ export async function handleBatches(ctx: SellerContext) {
     return ctx.reply("📭 You haven't published any batches yet.", { reply_markup: kb });
   }
 
-  let msg = `📦 <b>Your recent batches (Page ${page} of ${totalPages}):</b>\n\n`;
+  let msg = '📊 <b>Your Batches</b>\n';
+  msg += '\n🟡 Processing · 🔵 Confirmed · 🟢 Paid\n\n';
+  msg += 'Select a batch to see detailed information:';
   const kb = new InlineKeyboard();
 
   for (const batch of batches) {
-    const total = batch.giftcards.reduce((s, c) => {
-      if (c.status === 'WRONG_AMOUNT') return s + Number(c.reportedAmount || 0);
-      if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)) return s;
-      return s + Number(c.amount);
-    }, 0);
-    const sold = batch.giftcards.filter((c) => !c.inStock).length;
-    const payout = total * Number(batch.sellRate);
+    const totalItems = batch.giftcards.length;
+    const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
+    const allConfirmed = totalItems > 0 && confirmedCount === totalItems;
 
-    const hasReport = batch.giftcards.some((c) =>
-      ['WRONG_AMOUNT', 'ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)
-    );
+    let icon = '🟡'; // PROCESSING (Amber)
+    if (batch.isPaid) {
+      icon = '🟢'; // PAID (Emerald)
+    } else if (allConfirmed) {
+      icon = '🔵'; // CONFIRMED (Blue)
+    }
 
-    msg += `<b>Batch #${batch.id}</b> · 🔵 ${fmtDate(batch.createdAt, 'en')}\n`;
-    msg += `   ${batch._count.giftcards} cards · ${fmt$(total)} face value\n`;
-    msg += `   Sold: ${sold}/${batch._count.giftcards} · Rate: ${fmtRate(batch.sellRate)}\n`;
-    msg += `   ${fmtBatchStatus(batch.isPaid, 'en')}`;
-    if (!batch.isPaid) msg += ` — You earn: <b>${fmt$(payout)}</b>`;
-    if (hasReport) msg += `\n   ⚠️ <b>With Reports</b>`;
-    msg += '\n\n';
+    const dateStr = fmtDate(batch.createdAt, 'en');
+    const label = `Batch #${batch.id} · ${icon} ${dateStr}`;
 
-    kb.text(`🔍 View #${batch.id}`, `view_batch_${batch.id}`).row();
+    kb.text(label, `view_batch_${batch.id}`).row();
   }
 
   // Pagination buttons
@@ -64,10 +60,13 @@ export async function handleBatches(ctx: SellerContext) {
   const hasPrev = page > 1;
 
   if (hasPrev || hasNext) {
+    kb.row();
     if (hasPrev) kb.text('⬅️ Newer', `my_batches_${page - 1}`);
     if (hasNext) kb.text('Older ➡️', `my_batches_${page + 1}`);
     kb.row();
   }
+
+  kb.text('🏠 Back to Menu', 'start');
 
   if (ctx.callbackQuery) {
     return ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
@@ -90,6 +89,7 @@ export async function handleViewBatch(ctx: SellerContext) {
           status: true,
           claimCode: true,
           reportedAmount: true,
+          isConfirmed: true,
         },
         orderBy: { amount: 'desc' },
       },

@@ -36,14 +36,27 @@ export async function handleOrders(ctx: BuyerContext) {
     return ctx.reply('📭 No tenés órdenes todavía.', { reply_markup: kb });
   }
 
-  let msg = `📋 <b>Tus órdenes (Página ${page} de ${totalPages}):</b>\n\n`;
   const kb = new InlineKeyboard();
+  let msg = '📋 <b>Tus Órdenes</b>\n';
+  msg += '🟢 Completada · 🔵 Esperando Pago\n';
+  msg += '🟡 Pendiente · 🔴 Cancelada\n\n';
+  msg += 'Seleccioná una orden para ver sus detalles:';
 
   for (const order of orders) {
-    const total = order.adjustedTotal ?? order.total;
-    msg += `<b>${order.id.slice(0, 8)}…</b> — ${fmtOrderStatus(order.status)}\n`;
-    msg += `   ${order._count.giftcards} tarjeta(s) · <b>${fmt$(total)}</b> · 🔵 ${fmtDate(order.createdAt)}\n\n`;
-    kb.text(`🔍 Ver #${order.id.slice(0, 8)}…`, `order_detail_${order.id}`).row();
+    let icon = '🟡'; // PENDING
+    if (order.status === 'COMPLETED') {
+      icon = '🟢';
+    } else if (order.status === 'AWAITING_PAYMENT') {
+      icon = '🔵';
+    } else if (order.status === 'CANCELLED') {
+      icon = '🔴';
+    }
+
+    const shortId = order.id.slice(-8).toUpperCase();
+    const dateStr = fmtDate(order.createdAt);
+    const label = `Orden #${shortId} · ${icon} ${dateStr}`;
+    
+    kb.text(label, `order_detail_${order.id}`).row();
   }
 
   // Pagination buttons
@@ -51,10 +64,13 @@ export async function handleOrders(ctx: BuyerContext) {
   const hasPrev = page > 1;
 
   if (hasPrev || hasNext) {
+    kb.row();
     if (hasPrev) kb.text('⬅️ Más recientes', `my_orders_${page - 1}`);
     if (hasNext) kb.text('Anteriores ➡️', `my_orders_${page + 1}`);
     kb.row();
   }
+
+  kb.text('🏠 Volver al Menú', 'start');
 
   if (ctx.callbackQuery) {
     return ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
