@@ -31,15 +31,9 @@ export async function startBuyer(ctx: BuyerContext) {
     // Reinicia wizard y muestra menú
     ctx.session.wizard = { step: 'idle' };
 
-    const kb = new InlineKeyboard()
-      .text('🛒 Comprar tarjetas', 'buy_start')
-      .row()
-      .text('📋 Mis órdenes', 'my_orders');
+    const kb = new InlineKeyboard().text('📋 Mis órdenes', 'my_orders').row().text('🛒 Comprar tarjetas', 'buy_start');
 
-    return ctx.reply(
-      `👋 ¡Hola de nuevo, <b>${user.name}</b>!\n\nUsá los botones para navegar.`,
-      { parse_mode: 'HTML', reply_markup: kb },
-    );
+    return ctx.reply(`👋 ¡Hola de nuevo, <b>${user.name}</b>!\n\nUsá los botones para navegar.`, { parse_mode: 'HTML', reply_markup: kb });
   }
 
   // Sin cuenta → iniciar wizard de registro
