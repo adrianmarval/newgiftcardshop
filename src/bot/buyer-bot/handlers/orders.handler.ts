@@ -40,10 +40,8 @@ export async function handleOrders(ctx: BuyerContext) {
 
   const kb = new InlineKeyboard();
   let msg = `📋 <b>Tus Órdenes</b> (Página ${page}/${totalPages})\n\n`;
-  msg += '🟢 Completada\n';
-  msg += '🔵 Esperando Pago\n';
-  msg += '🟡 Pendiente\n';
-  msg += '🔴 Cancelada\n\n';
+  msg += '<b>Leyenda:</b>\n';
+  msg += '<pre>🟢 Completada\n🔵 Esperando Pago\n🟡 Pendiente\n🔴 Cancelada</pre>\n\n';
   msg += 'Seleccioná una orden para ver sus detalles:';
 
   for (const order of orders) {
