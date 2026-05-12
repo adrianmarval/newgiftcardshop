@@ -1,7 +1,7 @@
 'use server';
 
 import { sellerActionClient } from '@/lib/safe-action';
-import { extractGiftCardData, levenshtein } from '@/lib/giftcard-vision';
+import { extractGiftCardData } from '@/lib/giftcard-vision';
 import { extractDraftBatchInputSchema, extractDraftBatchOutputSchema } from '@/types/application/sell-flow';
 
 interface ExtractionWithId {
@@ -45,7 +45,7 @@ export const extractDraftBatch = sellerActionClient
         claimCode?: string;
         amount?: string;
         imageId?: string;
-        ocrConfidence: 'high' | 'fuzzy' | 'manual';
+        ocrConfidence: 'high' | 'manual';
         rawExtractedCode?: string;
         rawExtractedAmount?: string;
       }> = [];
@@ -60,7 +60,7 @@ export const extractDraftBatch = sellerActionClient
         const raw = ext.claimCode.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
         const isValidLength = raw.length === 14 || raw.length === 15;
 
-        let ocrConfidence: 'high' | 'fuzzy' | 'manual';
+        let ocrConfidence: 'high' | 'manual' = 'manual';
         let normalizedCode: string | undefined;
 
         if (isValidLength) {
@@ -69,13 +69,8 @@ export const extractDraftBatch = sellerActionClient
             raw.length === 14
               ? `${raw.slice(0, 4)}-${raw.slice(4, 10)}-${raw.slice(10, 14)}`
               : `${raw.slice(0, 4)}-${raw.slice(4, 10)}-${raw.slice(10, 15)}`;
-        } else if (raw.length >= 12 && raw.length <= 17) {
-          const target14 = raw.slice(0, 14).padEnd(14, '0');
-          const dist = levenshtein(raw, target14);
-          ocrConfidence = dist <= 3 ? 'fuzzy' : 'manual';
-          normalizedCode = ext.claimCode;
         } else {
-          ocrConfidence = 'manual';
+          normalizedCode = ext.claimCode;
         }
 
         cards.push({

@@ -68,7 +68,7 @@ export function createBuyerBot() {
     const step = ctx.session.wizard.step;
     if (step === 'awaitingName') return handleRegName(ctx, 'BUYER');
     if (step === 'awaitingEmail') return handleRegEmail(ctx, 'BUYER');
-    if (step === 'awaitingOtp') return handleRegOtp(ctx, 'BUYER');
+    if (step === 'awaitingOtp') return handleRegOtp(ctx, 'BUYER', () => startBuyer(ctx));
     if (step === 'awaitingPassword') return handleRegPassword(ctx, 'BUYER');
     return next();
   });

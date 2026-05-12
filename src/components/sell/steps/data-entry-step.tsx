@@ -239,7 +239,7 @@ export function DataEntryStep() {
   // IMPORTANT: We clear ALL store state (giftcards + images) before each
   // processing run. This guarantees:
   //   - No stale evidence blocks correct amount_mismatch detection (Scenario 6)
-  //   - No stale usedMatches prevents fuzzy matching (Scenario 4)
+  //   - No stale usedMatches prevents mismatches
   //   - No image duplication from previous runs
   //
   // After uploading, localImages are cleared so they don't show as duplicates

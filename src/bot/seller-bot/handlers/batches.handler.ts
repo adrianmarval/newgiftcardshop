@@ -47,7 +47,7 @@ export async function handleBatches(ctx: SellerContext) {
   }
 
   let msg = `📊 <b>Your Batches</b> (Page ${page}/${totalPages})\n\n`;
-  msg += `🟡 Processing · 🔵 Confirmed · 🟢 Paid\n\n`;
+  msg += `🟡 Processing\n🔵 Confirmed\n🟢 Paid\n\n`;
   msg += 'Select a batch to see detailed information:';
   const kb = new InlineKeyboard();
 

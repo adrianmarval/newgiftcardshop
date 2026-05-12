@@ -28,6 +28,7 @@ const i18n = {
     sessionIncomplete: '❌ Incomplete session. Start over with /start.',
     accountCreated: '🎉 <b>Account created!</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Your account is <b>awaiting activation</b> by the administrator.',
     accountLinked: '🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\n⏳ Awaiting activation by the administrator.',
+    accountLinkedActive: '🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\nYou can now use the bot.',
     contactAdmin: 'Contact Admin',
     emailError: '❌ The email is already in use. Contact the administrator.',
     genericError: '❌ Error creating account. Try again or contact the administrator.',
@@ -50,6 +51,7 @@ const i18n = {
     sessionIncomplete: '❌ Sesión incompleta. Empezá de nuevo con /start.',
     accountCreated: '🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.',
     accountLinked: '🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.',
+    accountLinkedActive: '🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.',
     contactAdmin: 'Contactar administrador',
     emailError: '❌ El email ya está en uso. Contactá al administrador.',
     genericError: '❌ Error al crear la cuenta. Intentá de nuevo o contactá al administrador.',
@@ -176,7 +178,7 @@ export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<vo
   await ctx.reply(i18n[lang].otpSent.replace('{email}', email), { parse_mode: 'HTML' });
 }
 
-export async function handleRegOtp(ctx: RegContext, role: BotRole): Promise<void> {
+export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: () => Promise<any>): Promise<void> {
   const lang = getLang(role);
   const inputOtp = (ctx.message as any)?.text?.trim() as string | undefined;
   const telegramId = ctx.from!.id.toString();
@@ -218,12 +220,21 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole): Promise<void
     await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});
     ctx.session.wizard = { step: 'idle' };
 
-    await ctx.reply(i18n[lang].accountLinked.replace('{email}', record.email), {
-      parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
-      },
-    });
+    if (existingUser.isActive) {
+      await ctx.reply(i18n[lang].accountLinkedActive.replace('{email}', record.email), {
+        parse_mode: 'HTML',
+      });
+      if (onFinish) {
+        await onFinish();
+      }
+    } else {
+      await ctx.reply(i18n[lang].accountLinked.replace('{email}', record.email), {
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
+        },
+      });
+    }
     return;
   }
 

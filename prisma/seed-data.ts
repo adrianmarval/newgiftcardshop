@@ -57,7 +57,7 @@ export const seedData: SeedData = {
     },
     {
       name: 'Dunia Marcano',
-      email: 'dunia@prisma.io',
+      email: 'gaget85reingerk542@gmail.com',
       emailVerified: true,
       isActive: true,
       buyRate: 0.85,

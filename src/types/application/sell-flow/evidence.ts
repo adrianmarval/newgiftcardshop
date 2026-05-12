@@ -25,7 +25,6 @@ export const validationStateEnum = z.enum([
   'code_new_detected', // Código encontrado en imagen pero no coincide con ningún card
   'capture_mismatch', // Screenshot no coincide con el card
   'processing_error', // Error en procesamiento
-  'fuzzy_match', // Código encontrado pero con match fuzzy ( requiere confirmación)
   'skipped', // Validación saltada por el seller
   'amount_not_found', // No se pudo extraer monto de la imagen
   'error', // Estado genérico de error
@@ -129,7 +128,7 @@ export const extractDraftBatchOutputSchema = z.union([
         claimCode: z.string().optional(),
         amount: z.string().optional(),
         imageId: z.string().optional(),
-        ocrConfidence: z.enum(['high', 'fuzzy', 'manual']),
+        ocrConfidence: z.enum(['high', 'manual']),
         rawExtractedCode: z.string().optional(),
         rawExtractedAmount: z.string().optional(),
       }),

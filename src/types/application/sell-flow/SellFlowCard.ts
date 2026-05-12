@@ -19,7 +19,7 @@ import type { ValidationState } from './evidence';
  *
  * Flujo de evidence:
  * 1. Seller sube screenshot → status: no_capture inicialmente
- * 2. OCR extrae código/monto → si match alto: verified, si match bajo: fuzzy_match
+ * 2. OCR extrae código/monto → si match: verified
  * 3. Si monto extraído ≠ monto declarado → amount_mismatch (BLOQUEA)
  * 4. Seller decide: accept-extracted o keep-declared
  */
@@ -34,8 +34,6 @@ export interface SellFlowCardEvidence {
   extractedAmount?: string;
   /** Decisión del seller en amount_mismatch: accept-extracted o keep-declared. */
   amountDecision?: 'accept-extracted' | 'keep-declared';
-  /** Si el seller confirmó un fuzzy match. */
-  fuzzyConfirmed?: boolean;
 }
 
 // ── Unmatched image record ────────────────────────────────────────────────────
@@ -80,7 +78,6 @@ export interface SellFlowCard {
  *
  * ocrConfidence determina el estado inicial:
  * - 'high' → código y monto exactos, verified
- * - 'fuzzy' → match fuzzy, seller debe confirmar
  * - 'manual' → extracción falló, seller debe completar manualmente
  */
 export interface OCRDraftCard {
@@ -91,8 +88,8 @@ export interface OCRDraftCard {
   /** ID de la imagen source. */
   imageId?: string;
   /** Nivel de confianza del OCR. */
-  ocrConfidence: 'high' | 'fuzzy' | 'manual';
-  /** Código antes de normalization (para mostrar al seller en fuzzy match). */
+  ocrConfidence: 'high' | 'manual';
+  /** Código antes de normalization. */
   rawExtractedCode?: string;
   /** Monto antes de normalization (para mostrar al seller). */
   rawExtractedAmount?: string;

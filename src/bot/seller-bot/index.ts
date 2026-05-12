@@ -62,7 +62,7 @@ export function createSellerBot() {
     const step = ctx.session.wizard.step;
     if (step === 'awaitingName')     return handleRegName(ctx, 'SELLER');
     if (step === 'awaitingEmail')    return handleRegEmail(ctx, 'SELLER');
-    if (step === 'awaitingOtp')      return handleRegOtp(ctx, 'SELLER');
+    if (step === 'awaitingOtp')      return handleRegOtp(ctx, 'SELLER', () => startSeller(ctx));
     if (step === 'awaitingPassword') return handleRegPassword(ctx, 'SELLER');
     // Resto de steps → pasan al siguiente handler (que ya requiere auth)
     return next();

@@ -216,10 +216,6 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       }),
     })),
 
-  confirmFuzzyMatch: () => {},
-
-  rejectFuzzyMatch: () => {},
-
   resolveAmountMismatch: (cardId, choice) => {
     if (choice === 'remove') {
       get().removeGiftcard(cardId);

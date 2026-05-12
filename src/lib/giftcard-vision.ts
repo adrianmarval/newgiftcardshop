@@ -1,9 +1,4 @@
-// lib/giftcard-vision.ts
-// Direct AI vision extraction for gift card provenance validation
-
 import { createProvider, type AIProvider, type ProviderName, type AIProviderConfig } from './ai-providers';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ParsedClaimCode {
   formatted: string;
@@ -17,16 +12,6 @@ export interface ExtractionResult {
   claimCode: string | null;
   amount: string | null;
 }
-
-export interface MatchResult {
-  matched: boolean;
-  exactMatch: boolean;
-  fuzzyMatch: boolean;
-  matchedCardId?: string; // cardId for fuzzy_match
-  matchedCode?: string;
-}
-
-// ─── parseClaimCode ──────────────────────────────────────────────────────────
 
 export function parseClaimCode(raw: string): ParsedClaimCode | null {
   if (!raw || typeof raw !== 'string') return null;
@@ -45,41 +30,6 @@ export function parseClaimCode(raw: string): ParsedClaimCode | null {
   return null;
 }
 
-// ─── Levenshtein distance (inline, no library) ───────────────────────────────
-
-export function levenshtein(a: string, b: string): number {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-
-  const matrix: number[][] = [];
-
-  // Initialize first column
-  for (let i = 0; i <= a.length; i++) {
-    matrix[i] = [i];
-  }
-
-  // Initialize first row
-  for (let j = 0; j <= b.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  // Fill in the rest of the matrix
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1, // deletion
-        matrix[i][j - 1] + 1, // insertion
-        matrix[i - 1][j - 1] + cost, // substitution
-      );
-    }
-  }
-
-  return matrix[a.length][b.length];
-}
-
-// ─── buildVisionProvider ─────────────────────────────────────────────────────
-
 export function buildVisionProvider(): AIProvider {
   const providerName = (process.env.PROVENANCE_PROVIDER || 'openrouter') as ProviderName;
   const model = process.env.PROVENANCE_MODEL || 'google/gemini-2.0-flash-001';
@@ -92,13 +42,6 @@ export function buildVisionProvider(): AIProvider {
   return createProvider(providerName, config);
 }
 
-// ─── extractGiftCardData ─────────────────────────────────────────────────────
-
-/**
- * Brand-agnostic system prompt.
- * Accepts any gift card — Amazon, Google Play, iTunes, etc.
- * The claim code pattern (14–15 alphanumeric chars) is universal.
- */
 const VISION_SYSTEM_PROMPT = `You are an expert at reading gift card screenshots.
 Look at the provided image carefully and extract ONLY the gift card claim code and monetary amount.
 
@@ -114,11 +57,8 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
   const provider = buildVisionProvider();
   const imageUrl = `data:${mimeType};base64,${imageBase64}`;
 
-  // Retry with exponential backoff
   const maxAttempts = 3;
   let lastError: any;
-
-  // Extract a truly unique identifier from the end of the base64 (entropy is highest there)
   const imgId = imageBase64.slice(-10);
   const modelName = (provider as any).model || 'default';
 
@@ -141,7 +81,7 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
           },
         ],
         VISION_SYSTEM_PROMPT,
-        true, // Enable JSON mode for structured output
+        true,
       );
 
       console.log(`[AI-VISION] [${imgId}] Raw response:`, text);
@@ -149,17 +89,12 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
       const parsed = JSON.parse(text);
       const claimCode = parsed.claim_code || null;
 
-      // If AI returns null for claim code, it might be a transient failure/hesitation.
-      // Force a retry if we have attempts left.
       if (!claimCode && attempt < maxAttempts) {
         throw new Error('AI returned empty claim_code (Null-Retry triggered)');
       }
 
       console.log(`[AI-VISION] [${imgId}] ✅ Extraction successful.`);
-      return {
-        claimCode,
-        amount: parsed.amount || null,
-      };
+      return { claimCode, amount: parsed.amount || null };
     } catch (err) {
       lastError = err;
       if (attempt < maxAttempts) {
@@ -175,43 +110,4 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
   }
 
   throw lastError || new Error('Extraction failed after retries');
-}
-
-// ─── matchClaimCode ───────────────────────────────────────────────────────────
-
-export function matchClaimCode(
-  extracted: string,
-  cardClaimCode: string,
-  allCardCodes: Array<{ id: string; claimCode: string }>,
-): MatchResult {
-  if (!extracted) {
-    return { matched: false, exactMatch: false, fuzzyMatch: false };
-  }
-
-  const normalizedExtracted = extracted.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-
-  // Exact match against the primary card
-  const primaryNormalized = cardClaimCode.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  if (normalizedExtracted === primaryNormalized) {
-    return { matched: true, exactMatch: true, fuzzyMatch: false };
-  }
-
-  // Fuzzy match: Levenshtein distance ≤ 2 against all cards (including primary).
-  // The exact-match short-circuit above already handles the primary card's happy path;
-  // including it here allows a fuzzy_match result when OCR misses by 1–2 characters.
-  for (const card of allCardCodes) {
-    const normalizedCard = card.claimCode.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    const distance = levenshtein(normalizedExtracted, normalizedCard);
-    if (distance <= 2) {
-      return {
-        matched: true,
-        exactMatch: false,
-        fuzzyMatch: true,
-        matchedCardId: card.id,
-        matchedCode: card.claimCode,
-      };
-    }
-  }
-
-  return { matched: false, exactMatch: false, fuzzyMatch: false };
 }

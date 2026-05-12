@@ -52,7 +52,7 @@ export interface SellFlowState {
       claimCode?: string;
       amount?: string;
       imageId?: string;
-      ocrConfidence: 'high' | 'fuzzy' | 'manual';
+      ocrConfidence: 'high' | 'manual';
       rawExtractedCode?: string;
       rawExtractedAmount?: string;
     }>,
@@ -63,10 +63,6 @@ export interface SellFlowState {
   acceptExtractedAmount: (cardId: string) => void;
   /** Seller mantiene el monto declarado originalmente (para amount_mismatch). */
   keepDeclaredAmount: (cardId: string) => void;
-  /** Seller confirma match fuzzy (código similar pero no idéntico). */
-  confirmFuzzyMatch: (cardId: string) => void;
-  /** Seller rechaza match fuzzy. */
-  rejectFuzzyMatch: (cardId: string) => void;
   /** Resuelve un amount_mismatch: accept-extracted, keep-declared, o remove card. */
   resolveAmountMismatch: (cardId: string, choice: 'accept-extracted' | 'keep-declared' | 'remove') => void;
 
