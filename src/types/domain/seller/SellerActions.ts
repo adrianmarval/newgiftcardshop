@@ -28,6 +28,7 @@ export const publishBatchSchema = z.object({
   ),
   brandId: z.string(),
   countryId: z.string(),
+  unmatchedImages: z.array(z.object({ data: z.string() })).optional(),
 });
 
 export type PublishBatchInput = z.infer<typeof publishBatchSchema>;

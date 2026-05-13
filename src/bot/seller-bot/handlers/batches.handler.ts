@@ -65,7 +65,7 @@ export async function handleBatches(ctx: SellerContext) {
     }
 
     const dateStr = fmtDate(batch.createdAt, 'en');
-    const label = `${icon} Batch #${batch.id} · ${dateStr}`;
+    const label = `${icon} View BATCH #${batch.id} · ${dateStr}`;
 
     kb.text(label, `view_batch_${batch.id}_${page}`).row();
   }

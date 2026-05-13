@@ -11,7 +11,9 @@ export type SellerWizardStep =
   | 'awaitingOtp'
   | 'awaitingPassword'
   // Flujo de venta
-  | 'awaitingCodes';
+  | 'awaitingCodes'
+  | 'awaitingImages'
+  | 'awaitingConfirm';
 
 export type BuyerWizardStep =
   | 'idle'
@@ -40,6 +42,9 @@ export interface SellerSessionData {
     countryId?: string;
     countryName?: string;
     brandCountryId?: string;
+    pendingImages?: string[];
+    currentMediaGroupId?: string;
+    statusMessageId?: number;
   };
   storedMessageIds: number[];
 }

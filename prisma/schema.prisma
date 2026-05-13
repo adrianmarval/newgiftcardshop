@@ -241,11 +241,12 @@ model GiftcardBatch {
 
 model ProvenanceImage {
   id         String     @id @default(cuid())
-  data       Bytes // AES-256-GCM encrypted image buffer
-  mimeType   String // "image/jpeg" post-compression
-  size       Int // Original file size for audit
+  data       Bytes? // AES-256-GCM encrypted image buffer
+  mimeType   String? // "image/jpeg" post-compression
+  size       Int? // Original file size for audit
   giftcardId String? // Puede ser null si no se linked
   batchId    String? // Todas las imágenes van al batch
+  telegramFileId String? // Added for Telegram Bot image uploads
   createdAt  DateTime   @default(now())
   giftcards  Giftcard[]
 

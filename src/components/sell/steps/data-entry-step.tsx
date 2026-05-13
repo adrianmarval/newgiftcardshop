@@ -188,15 +188,27 @@ export function DataEntryStep() {
           console.table(deduped.map((c) => ({ code: c.claimCode, amount: c.amount, confidence: c.ocrConfidence })));
         }
 
+        const unmatchedImageIds: string[] = [];
+
+        if (data.ignoredImages && data.ignoredImages.length > 0) {
+          unmatchedImageIds.push(...data.ignoredImages.map((img) => img.imageId));
+        }
+
         //Solo vincular a las já criadas del texto - no criar novas tarjetas desde OCR
-        //Las imágenes sin match se ignoran silenciosamente
+        //Las imágenes sin match se mandan a unmatchedImages
         const onlyMatchExisting = deduped.filter((c) => {
           const normCode = c.claimCode?.toUpperCase().replace(/[^A-Z0-9]/g, '') ?? '';
           const existing = useSellFlow.getState().giftcards.filter((g) => g.claimCode.toUpperCase().replace(/[^A-Z0-9]/g, '') === normCode);
-          return existing.length > 0;
+          if (existing.length > 0) {
+            return true;
+          } else {
+            if (c.imageId) unmatchedImageIds.push(c.imageId);
+            return false;
+          }
         });
 
-        ingestOCRDraft(onlyMatchExisting, []);
+        ingestOCRDraft(onlyMatchExisting);
+        useSellFlow.getState().setUnmatchedImages(unmatchedImageIds.map((id) => ({ imageId: id })));
 
         if (onlyMatchExisting.length > 0) {
           showAlert.toast.success(`${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`);

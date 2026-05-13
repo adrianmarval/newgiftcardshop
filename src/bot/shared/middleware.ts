@@ -4,6 +4,33 @@ import prisma from '@/lib/prisma';
 
 const ADMIN_USERNAME = process.env.ADMIN_TELEGRAM_USERNAME ?? '';
 
+// ── Sequentialize middleware ──────────────────────────────────────────────────
+const locks = new Map<string, Promise<void>>();
+
+export function sequentialize(getSessionKey: (ctx: any) => string | undefined) {
+  return async (ctx: any, next: NextFunction) => {
+    const key = getSessionKey(ctx);
+    if (!key) return next();
+    
+    const current = locks.get(key) || Promise.resolve();
+    let resolveLock!: () => void;
+    const nextPromise = new Promise<void>((resolve) => { resolveLock = resolve; });
+    
+    const lockPromise = current.then(() => nextPromise);
+    locks.set(key, lockPromise);
+    
+    await current;
+    try {
+      await next();
+    } finally {
+      resolveLock();
+      if (locks.get(key) === lockPromise) {
+        locks.delete(key);
+      }
+    }
+  };
+}
+
 // ── Seller middleware ─────────────────────────────────────────────────────────
 
 export const authenticateSeller = async (ctx: SellerContext, next: NextFunction) => {

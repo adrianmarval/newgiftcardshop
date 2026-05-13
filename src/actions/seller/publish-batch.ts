@@ -10,7 +10,7 @@ import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-
 export const publishBatch = sellerActionClient
   .inputSchema(publishBatchSchema)
   .outputSchema(publishBatchOutputSchema)
-  .useValidated(async ({ parsedInput: { brandId, cards, countryId }, ctx, next }) => {
+  .useValidated(async ({ parsedInput: { brandId, cards, countryId, unmatchedImages }, ctx, next }) => {
     if (!brandId || !countryId) throw new ActionError('Brand and country are required');
 
     const validCards = cards.filter((card) => {
@@ -97,10 +97,10 @@ export const publishBatch = sellerActionClient
 
     if (uniqueCards.length === 0) throw new ActionError('All provided cards already exist in the inventory.');
 
-    return next({ ctx: { uniqueCards, duplicates, dbUser, brandCountryId: brandCountry.id } });
+    return next({ ctx: { uniqueCards, duplicates, dbUser, brandCountryId: brandCountry.id, unmatchedImages } });
   })
   .action(async ({ parsedInput: { brandId, countryId }, ctx }) => {
-    const { uniqueCards, duplicates, dbUser, brandCountryId } = ctx;
+    const { uniqueCards, duplicates, dbUser, brandCountryId, unmatchedImages } = ctx;
 
     const sellRateSnapshot = dbUser.sellRate;
 
@@ -141,6 +141,22 @@ export const publishBatch = sellerActionClient
               mimeType: 'image/jpeg',
               size: rawBuffer.length,
               giftcardId: createdGiftcard.id,
+              batchId: createdBatch.id.toString(),
+            },
+          });
+        }
+      }
+
+      if (unmatchedImages && unmatchedImages.length > 0) {
+        for (const img of unmatchedImages) {
+          const rawBuffer = Buffer.from(img.data, 'base64');
+          const { data: encryptedImageBuffer } = encryptBuffer(rawBuffer);
+          await tx.provenanceImage.create({
+            data: {
+              data: new Uint8Array(encryptedImageBuffer),
+              mimeType: 'image/jpeg',
+              size: rawBuffer.length,
+              batchId: createdBatch.id.toString(),
             },
           });
         }

@@ -4,6 +4,7 @@ import { GiftcardItem } from '@/components/ui/giftcard-item';
 import { adminCardDelete } from '@/actions/admin/admin-card-delete';
 import type { AdminBatch } from '@/types/domain/admin';
 import { formatCurrency } from '@/lib/currency-formatter';
+import { AdminBatchGallery } from './admin-batch-gallery';
 
 interface AdminBatchDetailsProps {
   batch: AdminBatch;
@@ -37,6 +38,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
           <span>Confirmadas: {batch.confirmedCount}</span>
           <span>Tasa: {(batch.sellRate * 100).toFixed(1)}%</span>
         </div>
+        <AdminBatchGallery batchId={batch.id.toString()} />
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

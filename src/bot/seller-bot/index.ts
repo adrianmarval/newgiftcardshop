@@ -4,7 +4,7 @@ import { limit } from '@grammyjs/ratelimiter';
 import { InlineKeyboard } from 'grammy';
 import type { SellerContext, SellerSessionData } from '@/bot/shared/types.js';
 import prisma from '@/lib/prisma';
-import { authenticateSeller } from '@/bot/shared/middleware.js';
+import { authenticateSeller, sequentialize } from '@/bot/shared/middleware.js';
 import { startSeller } from './handlers/start.handler.js';
 import { handleStats } from './handlers/stats.handler.js';
 import { handleBatches, handleViewBatch } from './handlers/batches.handler.js';
@@ -13,6 +13,11 @@ import {
   handleBrandSelected,
   handleCountrySelected,
   handleCodesText,
+  handleUploadPhotosStart,
+  handleAddMorePhotosStart,
+  handlePhotosDone,
+  handleDeletePhotos,
+  handleSellPhotos,
   handleSellConfirm,
   handleSellCancel,
 } from './handlers/sell.handler.js';
@@ -42,7 +47,8 @@ export function createSellerBot() {
 
   // ── Middlewares globales ───────────────────────────────────────────────────
   bot.use(
-    limit(),
+    limit({ timeFrame: 3000, limit: 30 }),
+    sequentialize((ctx) => (ctx.from ? `seller:${ctx.from.id}` : undefined)),
     session<SellerSessionData, SellerContext>({
       initial: (): SellerSessionData => ({
         wizard: { step: 'idle' },
@@ -95,6 +101,10 @@ export function createSellerBot() {
   bot.callbackQuery('sell_start', startSellWizard);
   bot.callbackQuery(/^sell_brand_/, handleBrandSelected);
   bot.callbackQuery(/^sell_country_/, handleCountrySelected);
+  bot.callbackQuery('sell_upload_photos', handleUploadPhotosStart);
+  bot.callbackQuery('sell_add_photos', handleAddMorePhotosStart);
+  bot.callbackQuery('sell_photos_done', handlePhotosDone);
+  bot.callbackQuery('sell_delete_photos', handleDeletePhotos);
   bot.callbackQuery('sell_confirm', handleSellConfirm);
   bot.callbackQuery('sell_cancel', handleSellCancel);
 
@@ -102,8 +112,9 @@ export function createSellerBot() {
   bot.callbackQuery(/^my_batches(_\d+)?$/, handleBatches);
   bot.callbackQuery(/^view_batch_/, handleViewBatch);
 
-  // ── Mensajes de texto post-auth (wizard de venta) ────────────────────────
+  // ── Mensajes de texto y fotos post-auth (wizard de venta) ────────────────
   bot.on(':text', handleCodesText);
+  bot.on(':photo', handleSellPhotos);
 
   // ── Error handler ─────────────────────────────────────────────────────────
   bot.catch((err) => {

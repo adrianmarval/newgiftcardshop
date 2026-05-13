@@ -100,6 +100,53 @@ export async function handleCountrySelected(ctx: SellerContext) {
 
 // ── Step 4: Parse and confirm ────────────────────────────────────────────────
 
+async function renderSummaryMessage(ctx: SellerContext) {
+  const pendingCardsRaw = (ctx.session as any)._pendingCards as string | undefined;
+  if (!pendingCardsRaw) return null;
+  const validCards: ParsedGiftcard[] = JSON.parse(pendingCardsRaw);
+  
+  const pendingErrorsRaw = (ctx.session as any)._pendingErrors as string | undefined;
+  const allErrors: string[] = pendingErrorsRaw ? JSON.parse(pendingErrorsRaw) : [];
+
+  const pendingImagesCount = await prisma.provenanceImage.count({
+    where: { batchId: `temp_${ctx.from?.id}` }
+  });
+  
+  const totalFace = validCards.reduce((sum, c) => sum + parseFloat(c.amount || '0'), 0);
+
+  let confirmMsg =
+    `✅ <b>PROCESSED: ${validCards.length} valid card(s)</b>\n` +
+    `💰 Total value: <b>${fmt$(totalFace)}</b>\n\n` +
+    validCards
+      .map(
+        (c, i) => `${i + 1}. <code>${c.claimCode}</code> — ${fmt$(c.amount || '0')}${c.pinCode ? ` (PIN: <code>${c.pinCode}</code>)` : ''}`,
+      )
+      .join('\n') +
+    '\n\n';
+
+  if (allErrors.length > 0) {
+    confirmMsg +=
+      `🚨 <b>WARNING! ISSUES FOUND (${allErrors.length})</b>\n` +
+      `<i>These lines will NOT be published:</i>\n` +
+      `<code>${allErrors.join('\n')}</code>\n\n` +
+      `⚠️ <b>Do you want to continue with only the valid cards?</b>`;
+  } else {
+    confirmMsg += `Publish these cards?`;
+  }
+
+  const kb = new InlineKeyboard();
+  kb.text('✅ Publish', 'sell_confirm').text('❌ Cancel', 'sell_cancel').row();
+  
+  if (pendingImagesCount > 0) {
+    kb.text(`🗑 Delete Batch Screenshots (${pendingImagesCount})`, 'sell_delete_photos').row();
+    kb.text('➕ Add more Screenshots', 'sell_add_photos').row();
+  } else {
+    kb.text('📸 Upload Batch Screenshots', 'sell_upload_photos').row();
+  }
+
+  return { text: confirmMsg, kb };
+}
+
 export async function handleCodesText(ctx: SellerContext) {
   if (ctx.session.wizard.step !== 'awaitingCodes') return;
 
@@ -151,38 +198,118 @@ export async function handleCodesText(ctx: SellerContext) {
     );
   }
 
-  const totalFace = validCards.reduce((sum, c) => sum + parseFloat(c.amount || '0'), 0);
-
-  let confirmMsg =
-    `✅ <b>PROCESSED: ${validCards.length} valid card(s)</b>\n` +
-    `💰 Total value: <b>${fmt$(totalFace)}</b>\n\n` +
-    validCards
-      .map(
-        (c, i) => `${i + 1}. <code>${c.claimCode}</code> — ${fmt$(c.amount || '0')}${c.pinCode ? ` (PIN: <code>${c.pinCode}</code>)` : ''}`,
-      )
-      .join('\n') +
-    '\n\n';
-
   const allErrors = [...errors, ...duplicateInDbLines];
-
-  if (allErrors.length > 0) {
-    confirmMsg +=
-      `🚨 <b>WARNING! ISSUES FOUND (${allErrors.length})</b>\n` +
-      `<i>These lines will NOT be published:</i>\n` +
-      `<code>${allErrors.join('\n')}</code>\n\n` +
-      `⚠️ <b>Do you want to continue with only the valid cards?</b>`;
-  } else {
-    confirmMsg += 'Publish these cards?';
-  }
 
   // Guardar en sesión temporalmente
   ctx.session.storedMessageIds = ctx.session.storedMessageIds ?? [];
-
-  const kb = new InlineKeyboard().text('✅ Publish', 'sell_confirm').text('❌ Cancel', 'sell_cancel');
-
-  const sent = await ctx.reply(confirmMsg, { parse_mode: 'HTML', reply_markup: kb });
-  ctx.session.storedMessageIds = [sent.message_id];
   (ctx.session as any)._pendingCards = JSON.stringify(validCards);
+  (ctx.session as any)._pendingErrors = JSON.stringify(allErrors);
+  
+  ctx.session.wizard.step = 'awaitingConfirm';
+
+  const summary = await renderSummaryMessage(ctx);
+  if (summary) {
+    const sent = await ctx.reply(summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
+    ctx.session.storedMessageIds = [sent.message_id];
+  }
+}
+
+// ── Step 4.5: Catch Photos ───────────────────────────────────────────────────
+
+export async function handleUploadPhotosStart(ctx: SellerContext) {
+  ctx.session.wizard.step = 'awaitingImages';
+  await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
+  ctx.session.wizard.currentMediaGroupId = undefined;
+  ctx.session.wizard.statusMessageId = undefined;
+  const kb = new InlineKeyboard().text('⬅️ Back to Summary', 'sell_photos_done');
+  await ctx.editMessageText(
+    `📸 <b>Send your screenshots now.</b>\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
+    { parse_mode: 'HTML', reply_markup: kb }
+  );
+  return ctx.answerCallbackQuery();
+}
+
+export async function handleAddMorePhotosStart(ctx: SellerContext) {
+  ctx.session.wizard.step = 'awaitingImages';
+  ctx.session.wizard.currentMediaGroupId = undefined;
+  ctx.session.wizard.statusMessageId = undefined;
+  const kb = new InlineKeyboard().text('⬅️ Back to Summary', 'sell_photos_done');
+  await ctx.editMessageText(
+    `📸 <b>Send your additional screenshots now.</b>\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
+    { parse_mode: 'HTML', reply_markup: kb }
+  );
+  return ctx.answerCallbackQuery();
+}
+
+export async function handlePhotosDone(ctx: SellerContext) {
+  ctx.session.wizard.step = 'awaitingConfirm';
+  const summary = await renderSummaryMessage(ctx);
+  if (summary) {
+    await ctx.editMessageText(summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
+  }
+  return ctx.answerCallbackQuery();
+}
+
+export async function handleDeletePhotos(ctx: SellerContext) {
+  await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
+  const summary = await renderSummaryMessage(ctx);
+  if (summary) {
+    await ctx.editMessageText(summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
+  }
+  return ctx.answerCallbackQuery('✅ Screenshots deleted');
+}
+
+export async function handleSellPhotos(ctx: SellerContext) {
+  if (ctx.session.wizard.step !== 'awaitingImages') return;
+  if (!ctx.message?.photo) return;
+
+  // Telegram sends photos in multiple sizes, the last one is the largest
+  const photo = ctx.message.photo[ctx.message.photo.length - 1];
+  
+  // Guardar en la DB de forma atómica para evitar conflictos en serverless
+  await prisma.provenanceImage.create({
+    data: {
+      batchId: `temp_${ctx.from?.id}`,
+      telegramFileId: photo.file_id,
+    }
+  });
+  
+  const total = await prisma.provenanceImage.count({
+    where: { batchId: `temp_${ctx.from?.id}` }
+  });
+  const kb = new InlineKeyboard().text('✅ Done sending photos', 'sell_photos_done');
+  const msgText = `📸 <b>Photo received!</b> (Total saved: ${total})\n\nSend more, or click the button below when finished.`;
+  
+  const groupId = ctx.message.media_group_id;
+  
+  if (groupId) {
+    // Es un album
+    if (ctx.session.wizard.currentMediaGroupId === groupId && ctx.session.wizard.statusMessageId) {
+      // Edit existing message
+      try {
+        await ctx.api.editMessageText(ctx.chat!.id, ctx.session.wizard.statusMessageId, msgText, { parse_mode: 'HTML', reply_markup: kb });
+      } catch (e) {
+        // Ignorar error de mensaje no modificado
+      }
+    } else {
+      // Nuevo album
+      const sent = await ctx.reply(msgText, { parse_mode: 'HTML', reply_markup: kb });
+      ctx.session.wizard.currentMediaGroupId = groupId;
+      ctx.session.wizard.statusMessageId = sent.message_id;
+    }
+  } else {
+    // Foto individual
+    if (ctx.session.wizard.statusMessageId) {
+      try {
+        await ctx.api.editMessageText(ctx.chat!.id, ctx.session.wizard.statusMessageId, msgText, { parse_mode: 'HTML', reply_markup: kb });
+      } catch (e) {
+        // Ignorar error de mensaje no modificado
+      }
+    } else {
+      const sent = await ctx.reply(msgText, { parse_mode: 'HTML', reply_markup: kb });
+      ctx.session.wizard.statusMessageId = sent.message_id;
+    }
+  }
 }
 
 // ── Step 5: Publish ──────────────────────────────────────────────────────────
@@ -240,11 +367,23 @@ export async function handleSellConfirm(ctx: SellerContext) {
       });
     }
 
+    const pendingImagesCount = await tx.provenanceImage.count({
+      where: { batchId: `temp_${ctx.from?.id}` }
+    });
+
+    if (pendingImagesCount > 0) {
+      await tx.provenanceImage.updateMany({
+        where: { batchId: `temp_${ctx.from?.id}` },
+        data: { batchId: createdBatch.id.toString() }
+      });
+    }
+
     return createdBatch;
   });
 
   ctx.session.wizard.step = 'idle';
   (ctx.session as any)._pendingCards = undefined;
+  (ctx.session as any)._pendingErrors = undefined;
   ctx.session.storedMessageIds = [];
 
   const totalFace = uniqueCards.reduce((s, c) => s + parseFloat(c.amount || '0'), 0);
@@ -266,6 +405,8 @@ export async function handleSellConfirm(ctx: SellerContext) {
 export async function handleSellCancel(ctx: SellerContext) {
   ctx.session.wizard.step = 'idle';
   (ctx.session as any)._pendingCards = undefined;
+  (ctx.session as any)._pendingErrors = undefined;
+  await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
 
   await ctx.editMessageText('❌ Operation cancelled.');
   return ctx.answerCallbackQuery();

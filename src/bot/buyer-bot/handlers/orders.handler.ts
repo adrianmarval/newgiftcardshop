@@ -307,18 +307,17 @@ export async function handlePaymentText(ctx: BuyerContext) {
   const { Prisma } = await import('@/generated/prisma/client');
   const paymentAmount = order.adjustedTotal ?? order.total;
 
-  const platformSettings = await prisma.platformSettings.findFirst({
-    where: { key: 'balance' },
-  });
-
-  const currentBalance = platformSettings ? new Prisma.Decimal(platformSettings.balance) : new Prisma.Decimal(0);
-  const balanceAfter = currentBalance.add(new Prisma.Decimal(paymentAmount));
-
   await prisma.$transaction(async (tx) => {
+    const updatedSettings = await tx.platformSettings.upsert({
+      where: { key: 'platformBalance' },
+      update: { balance: { increment: paymentAmount } },
+      create: { key: 'platformBalance', value: '', description: 'Balance General', balance: paymentAmount },
+    });
+
     await tx.payment.create({
       data: {
         amount: paymentAmount,
-        balanceAfter,
+        balanceAfter: updatedSettings.balance,
         direction: 'CREDIT',
         category: 'ORDER',
         orderId: order.id,
@@ -327,12 +326,6 @@ export async function handlePaymentText(ctx: BuyerContext) {
       },
     });
     await tx.order.update({ where: { id: order.id }, data: { status: 'COMPLETED' } });
-    if (platformSettings) {
-      await tx.platformSettings.update({
-        where: { id: platformSettings.id },
-        data: { balance: balanceAfter },
-      });
-    }
   });
 
   ctx.session.wizard.step = 'idle';

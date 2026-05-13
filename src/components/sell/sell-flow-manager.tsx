@@ -58,6 +58,8 @@ export const SellBatchManager = ({ brandCountries, sellRate }: SellBatchManagerP
   const handlePublish = async () => {
     if (!selectedBrandCountryData) return;
     const storeImages = useSellFlow.getState().images;
+    const unmatchedImagesIds = useSellFlow.getState().unmatchedImages.map((u) => u.imageId);
+    
     execute({
       cards: giftcards.map((g) => {
         const matchedImageId = g.evidence?.matchedImageId;
@@ -71,6 +73,10 @@ export const SellBatchManager = ({ brandCountries, sellRate }: SellBatchManagerP
       }),
       brandId: selectedBrandCountryData.brandId,
       countryId: selectedBrandCountryData.countryId,
+      unmatchedImages: unmatchedImagesIds
+        .map((id) => storeImages.find((img) => img.id === id)?.compressedData)
+        .filter(Boolean)
+        .map((data) => ({ data: data as string })),
     });
   };
 
