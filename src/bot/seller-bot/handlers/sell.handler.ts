@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
 import { encrypt, hashCode } from '@/lib/encryption';
-import { normalizeClaimCode, formatClaimCodeCanonical, parseClaimCodes } from '@/lib/utils/claim-code-parser';
+import { parseClaimCodes } from '@/lib/utils/claim-code-parser';
 import type { ParsedGiftcard } from '@/types/domain/giftcard';
 import { Prisma } from '@/generated/prisma/client';
 import type { SellerContext } from '@/bot/shared/types.js';
@@ -105,14 +105,14 @@ async function renderSummaryMessage(ctx: SellerContext) {
   const pendingCardsRaw = (ctx.session as any)._pendingCards as string | undefined;
   if (!pendingCardsRaw) return null;
   const validCards: ParsedGiftcard[] = JSON.parse(pendingCardsRaw);
-  
+
   const pendingErrorsRaw = (ctx.session as any)._pendingErrors as string | undefined;
   const allErrors: string[] = pendingErrorsRaw ? JSON.parse(pendingErrorsRaw) : [];
 
   const pendingImagesCount = await prisma.provenanceImage.count({
-    where: { batchId: `temp_${ctx.from?.id}` }
+    where: { batchId: `temp_${ctx.from?.id}` },
   });
-  
+
   const totalFace = validCards.reduce((sum, c) => sum + parseFloat(c.amount || '0'), 0);
 
   let confirmMsg =
@@ -137,7 +137,7 @@ async function renderSummaryMessage(ctx: SellerContext) {
 
   const kb = new InlineKeyboard();
   kb.text('✅ Publish', 'sell_confirm').text('❌ Cancel', 'sell_cancel').row();
-  
+
   if (pendingImagesCount > 0) {
     kb.text(`🗑 Delete Batch Screenshots (${pendingImagesCount})`, 'sell_delete_photos').row();
     kb.text('➕ Add more Screenshots', 'sell_add_photos').row();
@@ -205,7 +205,7 @@ export async function handleCodesText(ctx: SellerContext) {
   ctx.session.storedMessageIds = ctx.session.storedMessageIds ?? [];
   (ctx.session as any)._pendingCards = JSON.stringify(validCards);
   (ctx.session as any)._pendingErrors = JSON.stringify(allErrors);
-  
+
   ctx.session.wizard.step = 'awaitingConfirm';
 
   const summary = await renderSummaryMessage(ctx);
@@ -221,13 +221,13 @@ export async function handleUploadPhotosStart(ctx: SellerContext) {
   ctx.session.wizard.step = 'awaitingImages';
   await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
   ctx.session.wizard.currentMediaGroupId = undefined;
-  
+
   const kb = new InlineKeyboard().text('⬅️ Back to Summary', 'sell_photos_done');
   await ctx.editMessageText(
     `📸 <b>Send your screenshots now.</b> (Total saved: 0)\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
-    { parse_mode: 'HTML', reply_markup: kb }
+    { parse_mode: 'HTML', reply_markup: kb },
   );
-  
+
   if (ctx.callbackQuery?.message) {
     ctx.session.wizard.statusMessageId = ctx.callbackQuery.message.message_id;
   }
@@ -237,15 +237,15 @@ export async function handleUploadPhotosStart(ctx: SellerContext) {
 export async function handleAddMorePhotosStart(ctx: SellerContext) {
   ctx.session.wizard.step = 'awaitingImages';
   ctx.session.wizard.currentMediaGroupId = undefined;
-  
+
   const total = await prisma.provenanceImage.count({ where: { batchId: `temp_${ctx.from?.id}` } });
-  
+
   const kb = new InlineKeyboard().text('⬅️ Back to Summary', 'sell_photos_done');
   await ctx.editMessageText(
     `📸 <b>Send your additional screenshots now.</b> (Total saved: ${total})\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
-    { parse_mode: 'HTML', reply_markup: kb }
+    { parse_mode: 'HTML', reply_markup: kb },
   );
-  
+
   if (ctx.callbackQuery?.message) {
     ctx.session.wizard.statusMessageId = ctx.callbackQuery.message.message_id;
   }
@@ -276,22 +276,22 @@ export async function handleSellPhotos(ctx: SellerContext) {
 
   // Telegram sends photos in multiple sizes, the last one is the largest
   const photo = ctx.message.photo[ctx.message.photo.length - 1];
-  
+
   // Guardar en la DB de forma atómica para evitar conflictos en serverless
   await prisma.provenanceImage.create({
     data: {
       batchId: `temp_${ctx.from?.id}`,
       telegramFileId: photo.file_id,
-    }
+    },
   });
-  
+
   const total = await prisma.provenanceImage.count({
-    where: { batchId: `temp_${ctx.from?.id}` }
+    where: { batchId: `temp_${ctx.from?.id}` },
   });
-  
+
   const kb = new InlineKeyboard().text('✅ Done sending photos', 'sell_photos_done');
   const msgText = `📸 <b>Photo received!</b> (Total saved: ${total})\n\nSend more, or click the button below when finished.`;
-  
+
   if (total === 1) {
     // Primera foto del batch: borramos el mensaje de instrucciones y mandamos uno nuevo abajo
     if (ctx.session.wizard.statusMessageId) {
@@ -371,13 +371,13 @@ export async function handleSellConfirm(ctx: SellerContext) {
     }
 
     const pendingImagesCount = await tx.provenanceImage.count({
-      where: { batchId: `temp_${ctx.from?.id}` }
+      where: { batchId: `temp_${ctx.from?.id}` },
     });
 
     if (pendingImagesCount > 0) {
       await tx.provenanceImage.updateMany({
         where: { batchId: `temp_${ctx.from?.id}` },
-        data: { batchId: createdBatch.id.toString() }
+        data: { batchId: createdBatch.id.toString() },
       });
     }
 
