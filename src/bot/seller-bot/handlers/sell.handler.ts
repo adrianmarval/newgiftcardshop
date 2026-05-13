@@ -28,6 +28,7 @@ export async function startSellWizard(ctx: SellerContext) {
   kb.text('❌ Cancel', 'sell_cancel');
 
   ctx.session.wizard.step = 'idle';
+  await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
 
   return ctx.reply('🏷️ <b>Which brand are you publishing?</b>', {
     parse_mode: 'HTML',
@@ -220,24 +221,34 @@ export async function handleUploadPhotosStart(ctx: SellerContext) {
   ctx.session.wizard.step = 'awaitingImages';
   await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
   ctx.session.wizard.currentMediaGroupId = undefined;
-  ctx.session.wizard.statusMessageId = undefined;
+  
   const kb = new InlineKeyboard().text('⬅️ Back to Summary', 'sell_photos_done');
   await ctx.editMessageText(
-    `📸 <b>Send your screenshots now.</b>\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
+    `📸 <b>Send your screenshots now.</b> (Total saved: 0)\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
     { parse_mode: 'HTML', reply_markup: kb }
   );
+  
+  if (ctx.callbackQuery?.message) {
+    ctx.session.wizard.statusMessageId = ctx.callbackQuery.message.message_id;
+  }
   return ctx.answerCallbackQuery();
 }
 
 export async function handleAddMorePhotosStart(ctx: SellerContext) {
   ctx.session.wizard.step = 'awaitingImages';
   ctx.session.wizard.currentMediaGroupId = undefined;
-  ctx.session.wizard.statusMessageId = undefined;
+  
+  const total = await prisma.provenanceImage.count({ where: { batchId: `temp_${ctx.from?.id}` } });
+  
   const kb = new InlineKeyboard().text('⬅️ Back to Summary', 'sell_photos_done');
   await ctx.editMessageText(
-    `📸 <b>Send your additional screenshots now.</b>\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
+    `📸 <b>Send your additional screenshots now.</b> (Total saved: ${total})\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
     { parse_mode: 'HTML', reply_markup: kb }
   );
+  
+  if (ctx.callbackQuery?.message) {
+    ctx.session.wizard.statusMessageId = ctx.callbackQuery.message.message_id;
+  }
   return ctx.answerCallbackQuery();
 }
 
@@ -277,37 +288,29 @@ export async function handleSellPhotos(ctx: SellerContext) {
   const total = await prisma.provenanceImage.count({
     where: { batchId: `temp_${ctx.from?.id}` }
   });
+  
   const kb = new InlineKeyboard().text('✅ Done sending photos', 'sell_photos_done');
   const msgText = `📸 <b>Photo received!</b> (Total saved: ${total})\n\nSend more, or click the button below when finished.`;
   
-  const groupId = ctx.message.media_group_id;
-  
-  if (groupId) {
-    // Es un album
-    if (ctx.session.wizard.currentMediaGroupId === groupId && ctx.session.wizard.statusMessageId) {
-      // Edit existing message
+  if (total === 1) {
+    // Primera foto del batch: borramos el mensaje de instrucciones y mandamos uno nuevo abajo
+    if (ctx.session.wizard.statusMessageId) {
       try {
-        await ctx.api.editMessageText(ctx.chat!.id, ctx.session.wizard.statusMessageId, msgText, { parse_mode: 'HTML', reply_markup: kb });
+        await ctx.api.deleteMessage(ctx.chat!.id, ctx.session.wizard.statusMessageId);
       } catch (e) {
-        // Ignorar error de mensaje no modificado
+        // Ignorar si ya fue borrado
       }
-    } else {
-      // Nuevo album
-      const sent = await ctx.reply(msgText, { parse_mode: 'HTML', reply_markup: kb });
-      ctx.session.wizard.currentMediaGroupId = groupId;
-      ctx.session.wizard.statusMessageId = sent.message_id;
     }
+    const sent = await ctx.reply(msgText, { parse_mode: 'HTML', reply_markup: kb });
+    ctx.session.wizard.statusMessageId = sent.message_id;
   } else {
-    // Foto individual
+    // Siguientes fotos: editamos el mensaje que ya está abajo
     if (ctx.session.wizard.statusMessageId) {
       try {
         await ctx.api.editMessageText(ctx.chat!.id, ctx.session.wizard.statusMessageId, msgText, { parse_mode: 'HTML', reply_markup: kb });
       } catch (e) {
-        // Ignorar error de mensaje no modificado
+        // Ignorar error de rate limit
       }
-    } else {
-      const sent = await ctx.reply(msgText, { parse_mode: 'HTML', reply_markup: kb });
-      ctx.session.wizard.statusMessageId = sent.message_id;
     }
   }
 }

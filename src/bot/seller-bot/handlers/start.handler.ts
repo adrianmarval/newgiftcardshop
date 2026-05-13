@@ -28,8 +28,9 @@ export async function startSeller(ctx: SellerContext) {
       );
     }
 
-    // Reinicia wizard y muestra menú
+    // Reinicia wizard, limpia basura temporal y muestra menú
     ctx.session.wizard = { step: 'idle' };
+    await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
 
     const kb = new InlineKeyboard()
       .text('📦 My Batches', 'my_batches')
