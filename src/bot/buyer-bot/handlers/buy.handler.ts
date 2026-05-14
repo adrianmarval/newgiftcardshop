@@ -23,9 +23,7 @@ export async function startBuyWizard(ctx: BuyerContext) {
   });
 
   // Solo marcas con stock
-  const brandsWithStock = brands.filter((b) =>
-    b.countries.some((c) => c.giftcards.length > 0),
-  );
+  const brandsWithStock = brands.filter((b) => b.countries.some((c) => c.giftcards.length > 0));
 
   if (brandsWithStock.length === 0) {
     return ctx.reply('😔 No hay tarjetas disponibles en este momento. Intentá más tarde.');
@@ -82,10 +80,7 @@ export async function handleBuyBrandSelected(ctx: BuyerContext) {
   }
   kb.text('⬅️ Volver', 'buy_start').row().text('❌ Cancelar', 'buy_cancel');
 
-  await ctx.editMessageText(
-    `🌍 <b>País para ${brand.icon} ${brand.name}:</b>`,
-    { parse_mode: 'HTML', reply_markup: kb },
-  );
+  await ctx.editMessageText(`🌍 <b>País para ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery();
 }
 
@@ -141,10 +136,7 @@ export async function handleAmountText(ctx: BuyerContext) {
     where: { userId: ctx.user.id, status: 'AWAITING_PAYMENT' },
     select: { adjustedTotal: true, total: true },
   });
-  const unpaidTotal = unpaidOrders.reduce(
-    (s, o) => s.plus(o.adjustedTotal ?? o.total),
-    new Decimal(0),
-  );
+  const unpaidTotal = unpaidOrders.reduce((s, o) => s.plus(o.adjustedTotal ?? o.total), new Decimal(0));
 
   const amountDec = new Decimal(amount);
   const creditCost = amountDec.mul(user.buyRate);
@@ -184,10 +176,7 @@ export async function handleAmountText(ctx: BuyerContext) {
   );
 
   if (result.selectedCards.length === 0) {
-    return ctx.reply(
-      `😔 No hay tarjetas disponibles para <b>${fmt$(amount)}</b> con tus preferencias actuales.`,
-      { parse_mode: 'HTML' },
-    );
+    return ctx.reply(`😔 No hay tarjetas disponibles para <b>${fmt$(amount)}</b> con tus preferencias actuales.`, { parse_mode: 'HTML' });
   }
 
   const cards = result.selectedCards as typeof allCards;
@@ -207,9 +196,7 @@ export async function handleAmountText(ctx: BuyerContext) {
   ctx.session.wizard.selectedGiftcardIds = cards.map((c) => c.id);
   ctx.session.wizard.step = 'idle';
 
-  const kb = new InlineKeyboard()
-    .text('✅ Confirmar orden', 'buy_confirm')
-    .text('❌ Cancelar', 'buy_cancel');
+  const kb = new InlineKeyboard().text('✅ Confirmar orden', 'buy_confirm').text('❌ Cancelar', 'buy_cancel');
 
   return ctx.reply(msg, { parse_mode: 'HTML', reply_markup: kb });
 }
@@ -238,10 +225,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     return ctx.editMessageText('😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.');
   }
 
-  const total = giftcards.reduce(
-    (s, c) => s.plus(c.amount.mul(user.buyRate)),
-    new Prisma.Decimal(0),
-  );
+  const total = giftcards.reduce((s, c) => s.plus(c.amount.mul(user.buyRate)), new Prisma.Decimal(0));
 
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
@@ -262,13 +246,10 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   ctx.session.wizard.selectedGiftcardIds = undefined;
 
-  const kb = new InlineKeyboard()
-    .text('📋 Ver orden', `order_detail_${order.id}`)
-    .row()
-    .text('📋 Mis órdenes', 'my_orders');
+  const kb = new InlineKeyboard().text('📋 Ver orden', `order_detail_${order.id}`).row().text('📋 Mis órdenes', 'my_orders');
 
   await ctx.editMessageText(
-    `✅ <b>¡Orden creada!</b>\n\nID: <code>${order.id.slice(0, 8)}…</code>\nTotal: <b>${fmt$(total)}</b>\n\n` +
+    `✅ <b>¡Orden creada!</b>\n\nID: <code>${order.id}</code>\nTotal: <b>${fmt$(total)}</b>\n\n` +
       `Aplicá las tarjetas y luego confirmá el uso desde el detalle de la orden.`,
     { parse_mode: 'HTML', reply_markup: kb },
   );

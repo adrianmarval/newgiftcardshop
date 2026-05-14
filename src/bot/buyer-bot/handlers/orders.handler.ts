@@ -93,6 +93,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
     where: { id: orderId },
     include: {
       giftcards: {
+        orderBy: { id: 'asc' },
         include: { brandCountry: { include: { brand: true, country: true } } },
       },
     },
@@ -213,19 +214,20 @@ export async function handleCancelOrder(ctx: BuyerContext) {
   if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery('Orden no encontrada');
   if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Solo se pueden cancelar órdenes pendientes');
 
-  await prisma.$transaction(async (tx) => {
-    await tx.order.update({
-      where: { id: orderId },
-      data: { status: 'CANCELLED' },
-    });
-    await tx.giftcard.updateMany({
-      where: { id: { in: order.giftcards.map((c) => c.id) } },
-      data: { inStock: true, status: 'UNUSED' },
-    });
-    await tx.giftcardIssue.deleteMany({ where: { orderId } });
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { 
+      status: 'CANCELLED',
+      giftcards: {
+        updateMany: {
+          where: { id: { in: order.giftcards.map((c) => c.id) } },
+          data: { isConfirmed: true },
+        },
+      },
+    },
   });
 
-  await ctx.editMessageText('❌ <b>Orden cancelada.</b>\n\nLas tarjetas han sido liberadas.', {
+  await ctx.editMessageText('❌ <b>Orden cancelada.</b>\n\nLas tarjetas reportadas han sido guardadas y la orden cerrada.', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
   });
@@ -350,7 +352,7 @@ export async function handleReportIssues(ctx: BuyerContext) {
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { giftcards: { include: { brandCountry: { include: { brand: true } } } } },
+    include: { giftcards: { orderBy: { id: 'asc' }, include: { brandCountry: { include: { brand: true } } } } },
   });
 
   if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery?.('Orden no encontrada');
@@ -379,7 +381,7 @@ export async function handleReportIssues(ctx: BuyerContext) {
       }
     }
 
-    const label = `${icon} ...${suffix} - ${amountTxt} ${statusTxt}`;
+    const label = `${icon} ${suffix} - ${amountTxt} ${statusTxt}`;
     const truncatedLabel = label.length > 60 ? label.slice(0, 57) + '...' : label;
     kb.text(truncatedLabel, `report_card_${card.id}`).row();
   }
@@ -489,7 +491,9 @@ export async function handleReportTypeSelect(ctx: BuyerContext) {
 
   if (type === 'WRONG_AMOUNT') {
     ctx.session.wizard.step = 'awaitingReportAmount';
-    await ctx.editMessageText('📉 <b>¿Cuál es el monto real que tiene la tarjeta?</b>\n\nIngresá solo el número (ejemplo: 50):');
+    await ctx.editMessageText('📉 <b>¿Cuál es el monto real que tiene la tarjeta?</b>\n\nIngresá solo el número (ejemplo: 50):', {
+      parse_mode: 'HTML',
+    });
     return ctx.answerCallbackQuery();
   }
 

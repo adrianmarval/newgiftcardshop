@@ -17,12 +17,7 @@ console.log('[Server] Next.js listo.');
 // ── Bots (opcionales — Next.js arranca igual si faltan los tokens) ─────────────
 type BotEntry = { bot: any; webhookPath: string; name: string };
 
-async function tryInitBot(
-  name: string,
-  tokenVar: string,
-  importPath: string,
-  factoryFn: string,
-): Promise<BotEntry | null> {
+async function tryInitBot(name: string, tokenVar: string, importPath: string, factoryFn: string): Promise<BotEntry | null> {
   const token = process.env[tokenVar];
   if (!token) {
     console.warn(`[Server] ⚠️  ${tokenVar} no configurado — ${name} deshabilitado`);
@@ -40,7 +35,7 @@ async function tryInitBot(
 
 const [sellerEntry, buyerEntry] = await Promise.all([
   tryInitBot('SellerBot', 'SELLER_BOT_TOKEN', './src/bot/seller-bot/index.js', 'createSellerBot'),
-  tryInitBot('BuyerBot',  'BUYER_BOT_TOKEN',  './src/bot/buyer-bot/index.js',  'createBuyerBot'),
+  tryInitBot('BuyerBot', 'BUYER_BOT_TOKEN', './src/bot/buyer-bot/index.js', 'createBuyerBot'),
 ]);
 
 // ── HTTP Server ────────────────────────────────────────────────────────────────
@@ -78,25 +73,28 @@ async function startBot(entry: BotEntry): Promise<void> {
   if (isProd) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '');
     if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL es obligatorio en producción');
-    await entry.bot.api.setWebhook(`${appUrl}${entry.webhookPath}`);
+    await entry.bot.api.setWebhook(`${appUrl}${entry.webhookPath}`, {
+      drop_pending_updates: true,
+    });
     console.log(`[${entry.name}] Webhook registrado: ${appUrl}${entry.webhookPath} ✓`);
   } else {
-    // Borra webhook previo
+    // Borra webhook previo y limpia cola
     await entry.bot.api
-      .deleteWebhook({ drop_pending_updates: false })
+      .deleteWebhook({ drop_pending_updates: true })
       .catch((err: any) => console.warn(`[${entry.name}] deleteWebhook warning (ignorado):`, err.message));
 
     entry.bot
-      .start({ onStart: () => console.log(`[${entry.name}] Polling activo ✓`) })
+      .start({
+        drop_pending_updates: true,
+        onStart: () => console.log(`[${entry.name}] Polling activo ✓`),
+      })
       .catch((err: any) => console.error(`[${entry.name}] ❌ Token inválido o error de red:`, err.message));
   }
 }
 
 for (const entry of [sellerEntry, buyerEntry]) {
   if (entry) {
-    startBot(entry).catch((err) =>
-      console.error(`[${entry.name}] Error en startup:`, err.message),
-    );
+    startBot(entry).catch((err) => console.error(`[${entry.name}] Error en startup:`, err.message));
   }
 }
 
