@@ -246,7 +246,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   ctx.session.wizard.selectedGiftcardIds = undefined;
 
-  const kb = new InlineKeyboard().text('📋 Ver orden', `order_detail_${order.id}`).row().text('📋 Mis órdenes', 'my_orders');
+  const kb = new InlineKeyboard().text('📋 Ver orden', `order_detail_${order.id}`).row().text('📋 Ver Mis órdenes', 'my_orders');
 
   await ctx.editMessageText(
     `✅ <b>¡Orden creada!</b>\n\nID: <code>${order.id}</code>\nTotal: <b>${fmt$(total)}</b>\n\n` +
