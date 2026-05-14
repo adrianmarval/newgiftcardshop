@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import type { SellerContext, BuyerContext } from './types.js';
 import { TelegramOtpTemplate } from '@/emails/telegram-otp';
 import React from 'react';
+import { renderUI, deleteUserInput } from './ui.js';
 
 type BotRole = 'SELLER' | 'BUYER';
 type Lang = 'en' | 'es';
@@ -119,34 +120,42 @@ export async function startRegistration(ctx: RegContext, role: BotRole): Promise
         ? '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot. Please contact the administrator if you think this is a mistake.'
         : '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot. Por favor, contactá al administrador si creés que es un error.';
 
-    await ctx.reply(errorMsg, { parse_mode: 'HTML' });
+    await renderUI(ctx, errorMsg, { parse_mode: 'HTML' });
     return;
   }
 
+  if (!ctx.session.wizard) {
+    ctx.session.wizard = { step: 'idle' };
+  }
   ctx.session.wizard.step = 'awaitingName';
-  await ctx.reply(i18n[lang].welcome, { parse_mode: 'HTML' });
+  await renderUI(ctx, i18n[lang].welcome, { parse_mode: 'HTML', forceNew: true });
 }
 
 export async function handleRegName(ctx: RegContext, role: BotRole): Promise<void> {
   const lang = getLang(role);
   const name = (ctx.message as any)?.text?.trim() as string | undefined;
+  
+  await deleteUserInput(ctx);
+  
   if (!name || name.length < 2) {
-    await ctx.reply(i18n[lang].nameShort);
+    await renderUI(ctx, i18n[lang].nameShort);
     return;
   }
 
   ctx.session.wizard.regName = name;
   ctx.session.wizard.step = 'awaitingEmail';
 
-  await ctx.reply(i18n[lang].helloName.replace('{name}', name), { parse_mode: 'HTML' });
+  await renderUI(ctx, i18n[lang].helloName.replace('{name}', name), { parse_mode: 'HTML' });
 }
 
 export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<void> {
   const lang = getLang(role);
   const email = (ctx.message as any)?.text?.trim()?.toLowerCase() as string | undefined;
 
+  await deleteUserInput(ctx);
+
   if (!email || !isValidEmail(email)) {
-    await ctx.reply(i18n[lang].invalidEmail, { parse_mode: 'HTML' });
+    await renderUI(ctx, i18n[lang].invalidEmail, { parse_mode: 'HTML' });
     return;
   }
 
@@ -154,11 +163,11 @@ export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<vo
 
   if (existing) {
     if (existing.telegramId) {
-      await ctx.reply(i18n[lang].emailLinkedElsewhere, { parse_mode: 'HTML' });
+      await renderUI(ctx, i18n[lang].emailLinkedElsewhere, { parse_mode: 'HTML' });
       return;
     }
     // Si ya existe pero no tiene telegramId, procedemos enviando OTP para vincular
-    await ctx.reply(i18n[lang].emailInUse, { parse_mode: 'HTML' });
+    await renderUI(ctx, i18n[lang].emailInUse, { parse_mode: 'HTML' });
   }
 
   ctx.session.wizard.regEmail = email;
@@ -179,11 +188,11 @@ export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<vo
     await sendOtpEmail(email, name, otp, lang);
   } catch (err) {
     ctx.session.wizard.step = 'awaitingEmail';
-    await ctx.reply(i18n[lang].otpEmailError);
+    await renderUI(ctx, i18n[lang].otpEmailError);
     return;
   }
 
-  await ctx.reply(i18n[lang].otpSent.replace('{email}', email), { parse_mode: 'HTML' });
+  await renderUI(ctx, i18n[lang].otpSent.replace('{email}', email), { parse_mode: 'HTML' });
 }
 
 export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: () => Promise<any>): Promise<void> {
@@ -192,23 +201,25 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
   const telegramId = ctx.from!.id.toString();
   const telegramUsername = ctx.from!.username;
 
+  await deleteUserInput(ctx);
+
   const record = await prisma.telegramOtp.findUnique({ where: { telegramId } });
 
   if (!record) {
     ctx.session.wizard.step = 'awaitingEmail';
-    await ctx.reply(i18n[lang].otpNotFound);
+    await renderUI(ctx, i18n[lang].otpNotFound);
     return;
   }
 
   if (record.expiresAt < new Date()) {
     await prisma.telegramOtp.delete({ where: { telegramId } });
     ctx.session.wizard.step = 'awaitingEmail';
-    await ctx.reply(i18n[lang].otpExpired);
+    await renderUI(ctx, i18n[lang].otpExpired);
     return;
   }
 
   if (inputOtp !== record.otp) {
-    await ctx.reply(i18n[lang].otpIncorrect);
+    await renderUI(ctx, i18n[lang].otpIncorrect);
     return;
   }
 
@@ -229,14 +240,14 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
     ctx.session.wizard = { step: 'idle' };
 
     if (existingUser.isActive) {
-      await ctx.reply(i18n[lang].accountLinkedActive.replace('{email}', record.email), {
+      await renderUI(ctx, i18n[lang].accountLinkedActive.replace('{email}', record.email), {
         parse_mode: 'HTML',
       });
       if (onFinish) {
         await onFinish();
       }
     } else {
-      await ctx.reply(i18n[lang].accountLinked.replace('{email}', record.email), {
+      await renderUI(ctx, i18n[lang].accountLinked.replace('{email}', record.email), {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
@@ -251,15 +262,17 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
   ctx.session.wizard.regName = record.name;
   ctx.session.wizard.step = 'awaitingPassword';
 
-  await ctx.reply(i18n[lang].emailVerified, { parse_mode: 'HTML' });
+  await renderUI(ctx, i18n[lang].emailVerified, { parse_mode: 'HTML' });
 }
 
 export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise<void> {
   const lang = getLang(role);
   const password = (ctx.message as any)?.text?.trim() as string | undefined;
 
+  await deleteUserInput(ctx);
+
   if (!password || !isValidPassword(password)) {
-    await ctx.reply(i18n[lang].invalidPassword);
+    await renderUI(ctx, i18n[lang].invalidPassword);
     return;
   }
 
@@ -269,7 +282,7 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
 
   if (!name || !email) {
     ctx.session.wizard.step = 'awaitingName';
-    await ctx.reply(i18n[lang].sessionIncomplete);
+    await renderUI(ctx, i18n[lang].sessionIncomplete);
     return;
   }
 
@@ -295,11 +308,7 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
     await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});
     ctx.session.wizard = { step: 'idle' };
 
-    try {
-      await ctx.deleteMessage();
-    } catch {}
-
-    await ctx.reply(i18n[lang].accountCreated.replace('{name}', name).replace('{email}', email), {
+    await renderUI(ctx, i18n[lang].accountCreated.replace('{name}', name).replace('{email}', email), {
       parse_mode: 'HTML',
       reply_markup: {
         remove_keyboard: true,
@@ -312,9 +321,9 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
 
     const msg = err?.body?.message ?? err?.message ?? '';
     if (msg.toLowerCase().includes('email')) {
-      await ctx.reply(i18n[lang].emailError);
+      await renderUI(ctx, i18n[lang].emailError);
     } else {
-      await ctx.reply(i18n[lang].genericError);
+      await renderUI(ctx, i18n[lang].genericError);
     }
   }
 }

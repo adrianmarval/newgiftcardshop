@@ -1,8 +1,11 @@
 import prisma from '@/lib/prisma';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
+import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
+import { InlineKeyboard } from 'grammy';
 
 export async function handleStats(ctx: SellerContext) {
+  await deleteUserInput(ctx);
   const userId = ctx.user.id;
 
   const [rateData, batchCount, paidBatchCount, cards] = await Promise.all([
@@ -48,5 +51,6 @@ export async function handleStats(ctx: SellerContext) {
     `  Pending Payment: ${fmt$(earnedPending)}\n\n` +
     `<b>Your current rate:</b> ${fmtRate(rateData?.sellRate ?? 0)}`;
 
-  return ctx.reply(msg, { parse_mode: 'HTML' });
+  const kb = new InlineKeyboard().text('🏠 Back to Menu', 'start');
+  return renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
 }

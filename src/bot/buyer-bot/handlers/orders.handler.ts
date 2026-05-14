@@ -3,6 +3,7 @@ import { InlineKeyboard } from 'grammy';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtOrderStatus, fmtGiftcardStatus, fmtDate } from '@/bot/shared/formatters.js';
 import { decrypt } from '@/lib/encryption';
+import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 
 function strike(text: string) {
   return text
@@ -14,6 +15,7 @@ function strike(text: string) {
 const PAGE_SIZE = 5;
 
 export async function handleOrders(ctx: BuyerContext) {
+  await deleteUserInput(ctx);
   const userId = ctx.user.id;
   const cbData = ctx.callbackQuery?.data || '';
   const pageMatch = cbData.match(/^my_orders_(\d+)$/);
@@ -34,8 +36,13 @@ export async function handleOrders(ctx: BuyerContext) {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   if (orders.length === 0 && page === 1) {
-    const kb = new InlineKeyboard().text('🛒 Comprar tarjetas', 'buy_start');
-    return ctx.reply('📭 No tenés órdenes todavía.', { reply_markup: kb });
+    const kb = new InlineKeyboard()
+      .text('🛒 Comprar tarjetas', 'buy_start')
+      .row()
+      .text('🏠 Volver al Menú', 'start');
+    await renderUI(ctx, '📭 No tenés órdenes todavía.', { reply_markup: kb });
+    if (ctx.callbackQuery) return ctx.answerCallbackQuery();
+    return;
   }
 
   const kb = new InlineKeyboard();
@@ -74,10 +81,8 @@ export async function handleOrders(ctx: BuyerContext) {
 
   kb.text('🏠 Volver al Menú', 'start');
 
-  if (ctx.callbackQuery) {
-    return ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
-  }
-  return ctx.reply(msg, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
+  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 export async function handleOrderDetail(ctx: BuyerContext) {
@@ -198,7 +203,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
   kb.text('📞 Contactar a Soporte', `https://t.me/admin`).row(); // Ajustar según env si existe
   kb.text('🔙 Regresar al historial', `my_orders_${fromPage}`);
 
-  await ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery();
 }
 
@@ -214,6 +219,17 @@ export async function handleCancelOrder(ctx: BuyerContext) {
   if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery('Orden no encontrada');
   if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Solo se pueden cancelar órdenes pendientes');
 
+  const hasActiveCards = order.giftcards.some((g) => {
+    if (g.status === 'UNUSED' || g.status === 'USED') return true;
+    if (g.status === 'WRONG_AMOUNT' && g.reportedAmount && g.reportedAmount.toNumber() > 0) return true;
+    return false;
+  });
+
+  if (hasActiveCards) {
+    await ctx.answerCallbackQuery('Error: No se puede cancelar porque contiene tarjetas con saldo activo.');
+    return;
+  }
+
   await prisma.order.update({
     where: { id: orderId },
     data: { 
@@ -227,7 +243,7 @@ export async function handleCancelOrder(ctx: BuyerContext) {
     },
   });
 
-  await ctx.editMessageText('❌ <b>Orden cancelada.</b>\n\nLas tarjetas reportadas han sido guardadas y la orden cerrada.', {
+  await renderUI(ctx, '❌ <b>Orden cancelada.</b>\n\nLas tarjetas reportadas han sido guardadas y la orden cerrada.', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
   });
@@ -271,7 +287,8 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
 
   const kb = new InlineKeyboard().text('💳 Enviar pago ahora', `make_payment_${orderId}`).row().text('⬅️ Ver mis órdenes', 'my_orders');
 
-  await ctx.editMessageText(
+  await renderUI(
+    ctx,
     `✅ <b>Uso confirmado.</b>\n\nTotal a pagar: <b>${fmt$(adjustedTotal)}</b>\n\n` +
       `Enviá el pago en USDT a la dirección del administrador y confirmá con el botón.`,
     { parse_mode: 'HTML', reply_markup: kb },
@@ -286,8 +303,9 @@ export async function handleMakePayment(ctx: BuyerContext) {
   ctx.session.wizard.step = 'awaitingPaymentId';
   ctx.session.wizard.orderId = orderId;
 
-  await ctx.editMessageText('💳 <b>Enviá el ID de transacción de Binance:</b>\n\n' + '<i>Ejemplo: 5A3F2E1D4C6B...</i>', {
+  await renderUI(ctx, '💳 <b>Enviá el ID de transacción de Binance:</b>\n\n' + '<i>Ejemplo: 5A3F2E1D4C6B...</i>', {
     parse_mode: 'HTML',
+    reply_markup: new InlineKeyboard().text('⬅️ Volver', `order_detail_${orderId}`)
   });
   return ctx.answerCallbackQuery();
 }
@@ -298,12 +316,14 @@ export async function handlePaymentText(ctx: BuyerContext) {
   const txId = (ctx.message as any)?.text?.trim() as string | undefined;
   if (!txId) return;
 
+  await deleteUserInput(ctx);
+
   const orderId = ctx.session.wizard.orderId;
-  if (!orderId) return ctx.reply('❌ Sesión expirada. Usá /orders para ver tu orden.');
+  if (!orderId) return renderUI(ctx, '❌ Sesión expirada. Usá /orders para ver tu orden.', { reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start') });
 
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order || order.userId !== ctx.user.id || order.status !== 'AWAITING_PAYMENT') {
-    return ctx.reply('❌ Orden no encontrada o en estado inválido.');
+    return renderUI(ctx, '❌ Orden no encontrada o en estado inválido.', { reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start') });
   }
 
   const { Prisma } = await import('@/generated/prisma/client');
@@ -335,7 +355,7 @@ export async function handlePaymentText(ctx: BuyerContext) {
 
   const kb = new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders');
 
-  return ctx.reply(`✅ <b>¡Pago registrado!</b>\n\nOrden completada por <b>${fmt$(paymentAmount)}</b>.\n\n<i>TxID: ${txId}</i>`, {
+  return renderUI(ctx, `✅ <b>¡Pago registrado!</b>\n\nOrden completada por <b>${fmt$(paymentAmount)}</b>.\n\n<i>TxID: ${txId}</i>`, {
     parse_mode: 'HTML',
     reply_markup: kb,
   });
@@ -388,12 +408,8 @@ export async function handleReportIssues(ctx: BuyerContext) {
 
   kb.text('⬅️ Volver al detalle', `order_detail_${orderId}`);
 
-  if (ctx.callbackQuery) {
-    await ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
-    return ctx.answerCallbackQuery();
-  } else {
-    await ctx.reply(msg, { parse_mode: 'HTML', reply_markup: kb });
-  }
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
+  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 export async function handleReportCardSelect(ctx: BuyerContext) {
@@ -427,7 +443,7 @@ export async function handleReportCardSelect(ctx: BuyerContext) {
       reportDetail += `Monto reportado: <b>${fmt$(card.reportedAmount)}</b>\n`;
     }
 
-    await ctx.editMessageText(reportDetail, { parse_mode: 'HTML', reply_markup: kb });
+    await renderUI(ctx, reportDetail, { parse_mode: 'HTML', reply_markup: kb });
     return ctx.answerCallbackQuery();
   }
 
@@ -447,7 +463,7 @@ async function showReportTypes(ctx: BuyerContext) {
     .row()
     .text('⬅️ Volver', `report_issues_${orderId}`);
 
-  await ctx.editMessageText('🚩 <b>¿Qué tipo de problema tiene la tarjeta?</b>', {
+  await renderUI(ctx, '🚩 <b>¿Qué tipo de problema tiene la tarjeta?</b>', {
     parse_mode: 'HTML',
     reply_markup: kb,
   });
@@ -476,7 +492,7 @@ export async function handleReportDelete(ctx: BuyerContext) {
   });
 
   const kb = new InlineKeyboard().text('⬅️ Volver a la lista', `report_issues_${orderId}`);
-  await ctx.editMessageText('✅ <b>Reporte eliminado.</b>\n\nLa tarjeta volvió a estar marcada como sin usar.', {
+  await renderUI(ctx, '✅ <b>Reporte eliminado.</b>\n\nLa tarjeta volvió a estar marcada como sin usar.', {
     parse_mode: 'HTML',
     reply_markup: kb,
   });
@@ -491,8 +507,9 @@ export async function handleReportTypeSelect(ctx: BuyerContext) {
 
   if (type === 'WRONG_AMOUNT') {
     ctx.session.wizard.step = 'awaitingReportAmount';
-    await ctx.editMessageText('📉 <b>¿Cuál es el monto real que tiene la tarjeta?</b>\n\nIngresá solo el número (ejemplo: 50):', {
+    await renderUI(ctx, '📉 <b>¿Cuál es el monto real que tiene la tarjeta?</b>\n\nIngresá solo el número (ejemplo: 50):', {
       parse_mode: 'HTML',
+      reply_markup: new InlineKeyboard().text('❌ Cancelar', `report_issues_${ctx.session.wizard.orderId}`),
     });
     return ctx.answerCallbackQuery();
   }
@@ -506,8 +523,12 @@ export async function handleReportAmountText(ctx: BuyerContext) {
   const text = (ctx.message as any)?.text?.trim();
   const amount = parseFloat(text);
 
+  await deleteUserInput(ctx);
+
   if (isNaN(amount) || amount <= 0) {
-    return ctx.reply('❌ Por favor, ingresá un monto válido (solo números).');
+    return renderUI(ctx, '❌ Por favor, ingresá un monto válido (solo números).', {
+      reply_markup: new InlineKeyboard().text('⬅️ Volver', `report_type_WRONG_AMOUNT`),
+    });
   }
 
   ctx.session.wizard.reportAmount = amount;
@@ -521,12 +542,8 @@ async function requestProof(ctx: BuyerContext) {
   const msg =
     '📸 <b>Enviá una captura de pantalla (opcional)</b>\n\nPara agilizar el proceso, podés enviar una imagen que sirva de prueba del error:';
 
-  if (ctx.callbackQuery) {
-    await ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
-    return ctx.answerCallbackQuery();
-  } else {
-    await ctx.reply(msg, { parse_mode: 'HTML', reply_markup: kb });
-  }
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
+  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 export async function handleReportProofPhoto(ctx: BuyerContext) {
@@ -534,6 +551,8 @@ export async function handleReportProofPhoto(ctx: BuyerContext) {
 
   const photo = ctx.message?.photo?.pop();
   if (!photo) return;
+
+  await deleteUserInput(ctx);
 
   // En un sistema real, subiríamos a S3/R2. Por ahora guardamos el file_id de Telegram
   ctx.session.wizard.reportProofUrl = photo.file_id;
@@ -548,7 +567,9 @@ export async function handleReportProofSkip(ctx: BuyerContext) {
 async function submitReport(ctx: BuyerContext) {
   const { reportCardId, orderId, reportIssueType, reportAmount, reportProofUrl } = ctx.session.wizard;
   if (!reportCardId || !orderId || !reportIssueType) {
-    return ctx.reply('❌ Error en la sesión. Empezá de nuevo desde /orders.');
+    return renderUI(ctx, '❌ Error en la sesión. Empezá de nuevo desde /orders.', {
+      reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start')
+    });
   }
 
   const { Prisma } = await import('@/generated/prisma/client');
@@ -594,6 +615,8 @@ async function submitReport(ctx: BuyerContext) {
     return handleReportIssues(ctx);
   } catch (err) {
     console.error('[Report] Error:', err);
-    await ctx.reply('❌ Error al procesar el reporte. Intentá de nuevo.');
+    await renderUI(ctx, '❌ Error al procesar el reporte. Intentá de nuevo.', {
+      reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders')
+    });
   }
 }

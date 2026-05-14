@@ -46,6 +46,7 @@ export interface SellerSessionData {
     currentMediaGroupId?: string;
     statusMessageId?: number;
   };
+  uiMessageId?: number;
   storedMessageIds: number[];
 }
 
@@ -67,6 +68,7 @@ export interface BuyerSessionData {
     reportProofUrl?: string;
     selectedGiftcardIds?: string[];
   };
+  uiMessageId?: number;
   storedMessageIds: number[];
 }
 

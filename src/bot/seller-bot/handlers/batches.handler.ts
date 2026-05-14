@@ -3,6 +3,7 @@ import { InlineKeyboard } from 'grammy';
 import { decrypt } from '@/lib/encryption';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtDate, fmtRate } from '@/bot/shared/formatters.js';
+import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 
 function strike(text: string) {
   return text
@@ -14,6 +15,8 @@ function strike(text: string) {
 const PAGE_SIZE = 5;
 
 export async function handleBatches(ctx: SellerContext) {
+  await deleteUserInput(ctx);
+  
   const userId = ctx.user.id;
   const cbData = ctx.callbackQuery?.data || '';
   const pageMatch = cbData.match(/^my_batches_(\d+)$/);
@@ -38,12 +41,14 @@ export async function handleBatches(ctx: SellerContext) {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
   if (batches.length === 0 && page === 1) {
-    const kb = new InlineKeyboard().text('➕ Sell Giftcards', 'sell_start');
+    const kb = new InlineKeyboard()
+      .text('➕ Sell Giftcards', 'sell_start')
+      .row()
+      .text('🏠 Main Menu', 'start');
     const welcomeMsg = "📭 You haven't published any batches yet.";
-    if (ctx.callbackQuery) {
-      return ctx.editMessageText(welcomeMsg, { reply_markup: kb });
-    }
-    return ctx.reply(welcomeMsg, { reply_markup: kb });
+    await renderUI(ctx, welcomeMsg, { reply_markup: kb });
+    if (ctx.callbackQuery) return ctx.answerCallbackQuery();
+    return;
   }
 
   let msg = `📊 <b>Your Batches</b> (Page ${page}/${totalPages})\n\n`;
@@ -83,10 +88,8 @@ export async function handleBatches(ctx: SellerContext) {
 
   kb.text('🏠 Back to Menu', 'start');
 
-  if (ctx.callbackQuery) {
-    return ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
-  }
-  return ctx.reply(msg, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
+  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 export async function handleViewBatch(ctx: SellerContext) {
@@ -208,6 +211,6 @@ export async function handleViewBatch(ctx: SellerContext) {
   ].join('\n');
 
   const kb = new InlineKeyboard().text('⬅️ Back', `my_batches_${fromPage}`);
-  await ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery();
 }

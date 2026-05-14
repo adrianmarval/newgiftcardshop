@@ -6,6 +6,7 @@ import type { ParsedGiftcard } from '@/types/domain/giftcard';
 import { Prisma } from '@/generated/prisma/client';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
+import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -16,9 +17,11 @@ export async function startSellWizard(ctx: SellerContext) {
     orderBy: { name: 'asc' },
   });
 
+  await deleteUserInput(ctx);
+
   const activeBrands = brands.filter((b) => b.countries.length > 0);
   if (activeBrands.length === 0) {
-    return ctx.reply('❌ No active brands available. Please contact the administrator.');
+    return renderUI(ctx, '❌ No active brands available. Please contact the administrator.');
   }
 
   const kb = new InlineKeyboard();
@@ -30,7 +33,7 @@ export async function startSellWizard(ctx: SellerContext) {
   ctx.session.wizard.step = 'idle';
   await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
 
-  return ctx.reply('🏷️ <b>Which brand are you publishing?</b>', {
+  return renderUI(ctx, '🏷️ <b>Which brand are you publishing?</b>', {
     parse_mode: 'HTML',
     reply_markup: kb,
   });
@@ -58,7 +61,7 @@ export async function handleBrandSelected(ctx: SellerContext) {
   }
   kb.text('⬅️ Back', 'sell_start').row().text('❌ Cancel', 'sell_cancel');
 
-  await ctx.editMessageText(`🌍 <b>Country for ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, `🌍 <b>Country for ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery();
 }
 
@@ -84,7 +87,8 @@ export async function handleCountrySelected(ctx: SellerContext) {
   ctx.session.wizard.brandCountryId = brandCountry.id;
   ctx.session.wizard.step = 'awaitingCodes';
 
-  await ctx.editMessageText(
+  await renderUI(
+    ctx,
     `📝 <b>Enter the codes</b> (max 50)\n\n` +
       `Brand: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
       `Format (one per line):\n` +
@@ -94,7 +98,10 @@ export async function handleCountrySelected(ctx: SellerContext) {
       `<code>ABCD-123456-7890 25</code>\n` +
       `<code>EFGH-098765-4321 50 1234</code>\n\n` +
       `⚠️ <i>Maximum 50 codes per batch.</i>`,
-    { parse_mode: 'HTML' },
+    {
+      parse_mode: 'HTML',
+      reply_markup: new InlineKeyboard().text('⬅️ Back', `sell_brand_${brandId}`).row().text('❌ Cancel', 'sell_cancel'),
+    },
   );
   return ctx.answerCallbackQuery();
 }
@@ -154,14 +161,17 @@ export async function handleCodesText(ctx: SellerContext) {
   const text = (ctx.message as any)?.text as string | undefined;
   if (!text) return;
 
+  await deleteUserInput(ctx);
+
   const { parsed: cards, errors } = parseClaimCodes(text);
 
   if (cards.length > 50) {
-    return ctx.reply(
+    return renderUI(
+      ctx,
       `❌ <b>Batch too large.</b>\n\n` +
         `You can only publish up to <b>50 codes</b> at a time via Telegram to ensure message stability.\n\n` +
         `Please split your batch and try again.`,
-      { parse_mode: 'HTML' },
+      { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start') },
     );
   }
 
@@ -190,12 +200,13 @@ export async function handleCodesText(ctx: SellerContext) {
   }
 
   if (validCards.length === 0) {
-    return ctx.reply(
+    return renderUI(
+      ctx,
       `❌ <b>No valid codes to publish.</b>\n\n` +
         `${errors.length > 0 ? `<b>Parsing errors:</b>\n<code>${errors.join('\n')}</code>\n\n` : ''}` +
         `${duplicateInDbLines.length > 0 ? `<b>Duplicates found:</b>\n<code>${duplicateInDbLines.join('\n')}</code>\n\n` : ''}` +
         `Please check your list and try again.`,
-      { parse_mode: 'HTML' },
+      { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start') },
     );
   }
 
@@ -210,8 +221,7 @@ export async function handleCodesText(ctx: SellerContext) {
 
   const summary = await renderSummaryMessage(ctx);
   if (summary) {
-    const sent = await ctx.reply(summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
-    ctx.session.storedMessageIds = [sent.message_id];
+    await renderUI(ctx, summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
   }
 }
 
@@ -223,7 +233,8 @@ export async function handleUploadPhotosStart(ctx: SellerContext) {
   ctx.session.wizard.currentMediaGroupId = undefined;
 
   const kb = new InlineKeyboard().text('⬅️ Back to Summary', 'sell_photos_done');
-  await ctx.editMessageText(
+  await renderUI(
+    ctx,
     `📸 <b>Send your screenshots now.</b> (Total saved: 0)\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
     { parse_mode: 'HTML', reply_markup: kb },
   );
@@ -241,7 +252,8 @@ export async function handleAddMorePhotosStart(ctx: SellerContext) {
   const total = await prisma.provenanceImage.count({ where: { batchId: `temp_${ctx.from?.id}` } });
 
   const kb = new InlineKeyboard().text('⬅️ Back to Summary', 'sell_photos_done');
-  await ctx.editMessageText(
+  await renderUI(
+    ctx,
     `📸 <b>Send your additional screenshots now.</b> (Total saved: ${total})\n\nYou can send multiple photos as an album. When you are finished, click the button below to return to the summary.`,
     { parse_mode: 'HTML', reply_markup: kb },
   );
@@ -256,7 +268,7 @@ export async function handlePhotosDone(ctx: SellerContext) {
   ctx.session.wizard.step = 'awaitingConfirm';
   const summary = await renderSummaryMessage(ctx);
   if (summary) {
-    await ctx.editMessageText(summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
+    await renderUI(ctx, summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
   }
   return ctx.answerCallbackQuery();
 }
@@ -265,7 +277,7 @@ export async function handleDeletePhotos(ctx: SellerContext) {
   await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
   const summary = await renderSummaryMessage(ctx);
   if (summary) {
-    await ctx.editMessageText(summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
+    await renderUI(ctx, summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
   }
   return ctx.answerCallbackQuery('✅ Screenshots deleted');
 }
@@ -273,6 +285,8 @@ export async function handleDeletePhotos(ctx: SellerContext) {
 export async function handleSellPhotos(ctx: SellerContext) {
   if (ctx.session.wizard.step !== 'awaitingImages') return;
   if (!ctx.message?.photo) return;
+
+  await deleteUserInput(ctx);
 
   // Telegram sends photos in multiple sizes, the last one is the largest
   const photo = ctx.message.photo[ctx.message.photo.length - 1];
@@ -292,27 +306,7 @@ export async function handleSellPhotos(ctx: SellerContext) {
   const kb = new InlineKeyboard().text('✅ Done sending photos', 'sell_photos_done');
   const msgText = `📸 <b>Photo received!</b> (Total saved: ${total})\n\nSend more, or click the button below when finished.`;
 
-  if (total === 1) {
-    // Primera foto del batch: borramos el mensaje de instrucciones y mandamos uno nuevo abajo
-    if (ctx.session.wizard.statusMessageId) {
-      try {
-        await ctx.api.deleteMessage(ctx.chat!.id, ctx.session.wizard.statusMessageId);
-      } catch (e) {
-        // Ignorar si ya fue borrado
-      }
-    }
-    const sent = await ctx.reply(msgText, { parse_mode: 'HTML', reply_markup: kb });
-    ctx.session.wizard.statusMessageId = sent.message_id;
-  } else {
-    // Siguientes fotos: editamos el mensaje que ya está abajo
-    if (ctx.session.wizard.statusMessageId) {
-      try {
-        await ctx.api.editMessageText(ctx.chat!.id, ctx.session.wizard.statusMessageId, msgText, { parse_mode: 'HTML', reply_markup: kb });
-      } catch (e) {
-        // Ignorar error de rate limit
-      }
-    }
-  }
+  await renderUI(ctx, msgText, { parse_mode: 'HTML', reply_markup: kb });
 }
 
 // ── Step 5: Publish ──────────────────────────────────────────────────────────
@@ -345,7 +339,9 @@ export async function handleSellConfirm(ctx: SellerContext) {
   const uniqueCards = cards.filter((c, i) => !existingSet.has(codeHashes[i]));
 
   if (uniqueCards.length === 0) {
-    await ctx.editMessageText('⚠️ All codes already exist in inventory.');
+    await renderUI(ctx, '⚠️ All codes already exist in inventory.', {
+      reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start'),
+    });
     return ctx.answerCallbackQuery();
   }
 
@@ -399,7 +395,7 @@ export async function handleSellConfirm(ctx: SellerContext) {
 
   const kb = new InlineKeyboard().text('📦 View My Batches', 'my_batches').row().text('➕ Publish More', 'sell_start');
 
-  await ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery('✅ Published');
 }
 
@@ -411,6 +407,8 @@ export async function handleSellCancel(ctx: SellerContext) {
   (ctx.session as any)._pendingErrors = undefined;
   await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
 
-  await ctx.editMessageText('❌ Operation cancelled.');
+  await renderUI(ctx, '❌ Operation cancelled.', {
+    reply_markup: new InlineKeyboard().text('🏠 Main Menu', 'start').row().text('➕ Publish Giftcards', 'sell_start'),
+  });
   return ctx.answerCallbackQuery();
 }

@@ -4,11 +4,13 @@ import { Decimal } from '@prisma/client/runtime/client';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
 import { findGiftcardCombination } from '@/lib/browse-giftcards';
+import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
 export async function startBuyWizard(ctx: BuyerContext) {
+  await deleteUserInput(ctx);
   const brands = await prisma.brand.findMany({
     where: { isActive: true },
     include: {
@@ -26,7 +28,9 @@ export async function startBuyWizard(ctx: BuyerContext) {
   const brandsWithStock = brands.filter((b) => b.countries.some((c) => c.giftcards.length > 0));
 
   if (brandsWithStock.length === 0) {
-    return ctx.reply('😔 No hay tarjetas disponibles en este momento. Intentá más tarde.');
+    return renderUI(ctx, '😔 No hay tarjetas disponibles en este momento. Intentá más tarde.', {
+      reply_markup: new InlineKeyboard().text('⬅️ Volver', 'start'),
+    });
   }
 
   const kb = new InlineKeyboard();
@@ -38,11 +42,8 @@ export async function startBuyWizard(ctx: BuyerContext) {
   ctx.session.wizard.step = 'idle';
 
   const msg = '🛒 <b>¿Qué marca querés comprar?</b>';
-  if (ctx.callbackQuery) {
-    await ctx.editMessageText(msg, { parse_mode: 'HTML', reply_markup: kb });
-    return ctx.answerCallbackQuery();
-  }
-  return ctx.reply(msg, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
+  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 // ── Step 2: Elegir Country ────────────────────────────────────────────────────
@@ -80,7 +81,7 @@ export async function handleBuyBrandSelected(ctx: BuyerContext) {
   }
   kb.text('⬅️ Volver', 'buy_start').row().text('❌ Cancelar', 'buy_cancel');
 
-  await ctx.editMessageText(`🌍 <b>País para ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, `🌍 <b>País para ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
   return ctx.answerCallbackQuery();
 }
 
@@ -97,11 +98,12 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
   ctx.session.wizard.countryName = country.name;
   ctx.session.wizard.step = 'awaitingAmount';
 
-  await ctx.editMessageText(
+  await renderUI(
+    ctx,
     `💵 <b>¿Cuánto querés gastar? (face value en USD)</b>\n\n` +
       `Marca: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
       `Escribí el monto. Ejemplo: <code>50</code>`,
-    { parse_mode: 'HTML' },
+    { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Volver', `buy_brand_${ctx.session.wizard.brandId}`).row().text('❌ Cancelar', 'buy_cancel') },
   );
   return ctx.answerCallbackQuery();
 }
@@ -112,17 +114,22 @@ export async function handleAmountText(ctx: BuyerContext) {
   if (ctx.session.wizard.step !== 'awaitingAmount') return;
 
   const text = (ctx.message as any)?.text?.trim() as string | undefined;
+  await deleteUserInput(ctx);
+  
   const amount = text ? parseFloat(text) : NaN;
 
   if (isNaN(amount) || amount <= 0) {
-    return ctx.reply('❌ Monto inválido. Ingresá un número mayor a 0. Ejemplo: <code>50</code>', {
+    return renderUI(ctx, '❌ Monto inválido. Ingresá un número mayor a 0. Ejemplo: <code>50</code>', {
       parse_mode: 'HTML',
+      reply_markup: new InlineKeyboard().text('⬅️ Volver', `buy_country_${ctx.session.wizard.countryId}`),
     });
   }
 
   const { brandId, countryId } = ctx.session.wizard;
   if (!brandId || !countryId) {
-    return ctx.reply('❌ Sesión expirada. Empezá de nuevo con /buy.');
+    return renderUI(ctx, '❌ Sesión expirada. Empezá de nuevo con /buy.', {
+      reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start'),
+    });
   }
 
   // Verificar crédito disponible
@@ -130,7 +137,7 @@ export async function handleAmountText(ctx: BuyerContext) {
     where: { id: ctx.user.id },
     select: { creditLimit: true, buyRate: true, minAmountPreference: true, maxAmountPreference: true },
   });
-  if (!user) return ctx.reply('❌ Usuario no encontrado.');
+  if (!user) return renderUI(ctx, '❌ Usuario no encontrado.');
 
   const unpaidOrders = await prisma.order.findMany({
     where: { userId: ctx.user.id, status: 'AWAITING_PAYMENT' },
@@ -142,18 +149,20 @@ export async function handleAmountText(ctx: BuyerContext) {
   const creditCost = amountDec.mul(user.buyRate);
 
   if (unpaidTotal.gte(user.creditLimit)) {
-    return ctx.reply(
+    return renderUI(
+      ctx,
       `⚠️ Alcanzaste tu límite de crédito de <b>${fmt$(user.creditLimit)}</b>.\n\n` +
         `Tenés <b>${fmt$(unpaidTotal)}</b> pendiente de pago. Pagá antes de continuar.`,
-      { parse_mode: 'HTML' },
+      { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('🏠 Volver', 'start') },
     );
   }
 
   if (unpaidTotal.plus(creditCost).gt(user.creditLimit)) {
-    return ctx.reply(
+    return renderUI(
+      ctx,
       `⚠️ Esta compra (<b>${fmt$(creditCost)}</b>) excedería tu límite de crédito de <b>${fmt$(user.creditLimit)}</b>.\n\n` +
         `Ya tenés <b>${fmt$(unpaidTotal)}</b> pendiente.`,
-      { parse_mode: 'HTML' },
+      { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) },
     );
   }
 
@@ -161,7 +170,7 @@ export async function handleAmountText(ctx: BuyerContext) {
   const brandCountry = await prisma.brandCountry.findUnique({
     where: { brandId_countryId: { brandId, countryId } },
   });
-  if (!brandCountry) return ctx.reply('❌ Combinación de marca/país no encontrada.');
+  if (!brandCountry) return renderUI(ctx, '❌ Combinación de marca/país no encontrada.', { reply_markup: new InlineKeyboard().text('⬅️ Volver', 'buy_start') });
 
   const allCards = await prisma.giftcard.findMany({
     where: { brandCountryId: brandCountry.id, inStock: true, status: 'UNUSED' },
@@ -176,7 +185,10 @@ export async function handleAmountText(ctx: BuyerContext) {
   );
 
   if (result.selectedCards.length === 0) {
-    return ctx.reply(`😔 No hay tarjetas disponibles para <b>${fmt$(amount)}</b> con tus preferencias actuales.`, { parse_mode: 'HTML' });
+    return renderUI(ctx, `😔 No hay tarjetas disponibles para <b>${fmt$(amount)}</b> con tus preferencias actuales.`, { 
+      parse_mode: 'HTML', 
+      reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) 
+    });
   }
 
   const cards = result.selectedCards as typeof allCards;
@@ -198,7 +210,7 @@ export async function handleAmountText(ctx: BuyerContext) {
 
   const kb = new InlineKeyboard().text('✅ Confirmar orden', 'buy_confirm').text('❌ Cancelar', 'buy_cancel');
 
-  return ctx.reply(msg, { parse_mode: 'HTML', reply_markup: kb });
+  return renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
 }
 
 // ── Step 5: Crear orden ───────────────────────────────────────────────────────
@@ -222,7 +234,9 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   if (giftcards.length === 0) {
     await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
-    return ctx.editMessageText('😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.');
+    return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.', {
+      reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start')
+    });
   }
 
   const total = giftcards.reduce((s, c) => s.plus(c.amount.mul(user.buyRate)), new Prisma.Decimal(0));
@@ -248,7 +262,8 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   const kb = new InlineKeyboard().text('📋 Ver orden', `order_detail_${order.id}`).row().text('📋 Ver Mis órdenes', 'my_orders');
 
-  await ctx.editMessageText(
+  await renderUI(
+    ctx,
     `✅ <b>¡Orden creada!</b>\n\nID: <code>${order.id}</code>\nTotal: <b>${fmt$(total)}</b>\n\n` +
       `Aplicá las tarjetas y luego confirmá el uso desde el detalle de la orden.`,
     { parse_mode: 'HTML', reply_markup: kb },
@@ -259,6 +274,8 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 export async function handleBuyCancel(ctx: BuyerContext) {
   ctx.session.wizard.step = 'idle';
   ctx.session.wizard.selectedGiftcardIds = undefined;
-  await ctx.editMessageText('❌ Compra cancelada.');
+  await renderUI(ctx, '❌ Compra cancelada.', {
+    reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start').row().text('🛒 Comprar tarjetas', 'buy_start')
+  });
   return ctx.answerCallbackQuery();
 }
