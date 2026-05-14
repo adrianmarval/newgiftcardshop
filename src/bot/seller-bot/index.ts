@@ -1,7 +1,6 @@
 import { Bot, session } from 'grammy';
 import { PrismaAdapter } from '@grammyjs/storage-prisma';
 import { limit } from '@grammyjs/ratelimiter';
-import { InlineKeyboard } from 'grammy';
 import type { SellerContext, SellerSessionData } from '@/bot/shared/types.js';
 import prisma from '@/lib/prisma';
 import { authenticateSeller, sequentialize } from '@/bot/shared/middleware.js';
@@ -21,12 +20,7 @@ import {
   handleSellConfirm,
   handleSellCancel,
 } from './handlers/sell.handler.js';
-import {
-  handleRegName,
-  handleRegEmail,
-  handleRegOtp,
-  handleRegPassword,
-} from '@/bot/shared/registration.js';
+import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
 
 export function createSellerBot() {
   const token = process.env.SELLER_BOT_TOKEN;
@@ -55,8 +49,7 @@ export function createSellerBot() {
         storedMessageIds: [],
       }),
       storage: new PrismaAdapter<SellerSessionData>(prisma.botSession as any),
-      getSessionKey: (ctx) =>
-        ctx.from ? `seller:${ctx.from.id}` : undefined,
+      getSessionKey: (ctx) => (ctx.from ? `seller:${ctx.from.id}` : undefined),
     }),
   );
 
@@ -66,9 +59,9 @@ export function createSellerBot() {
   // Pasos del wizard de registro: capturan texto ANTES del auth middleware
   bot.on(':text', async (ctx, next) => {
     const step = ctx.session.wizard.step;
-    if (step === 'awaitingName')     return handleRegName(ctx, 'SELLER');
-    if (step === 'awaitingEmail')    return handleRegEmail(ctx, 'SELLER');
-    if (step === 'awaitingOtp')      return handleRegOtp(ctx, 'SELLER', () => startSeller(ctx));
+    if (step === 'awaitingName') return handleRegName(ctx, 'SELLER');
+    if (step === 'awaitingEmail') return handleRegEmail(ctx, 'SELLER');
+    if (step === 'awaitingOtp') return handleRegOtp(ctx, 'SELLER', () => startSeller(ctx));
     if (step === 'awaitingPassword') return handleRegPassword(ctx, 'SELLER');
     // Resto de steps → pasan al siguiente handler (que ya requiere auth)
     return next();
@@ -119,9 +112,7 @@ export function createSellerBot() {
   // ── Error handler ─────────────────────────────────────────────────────────
   bot.catch((err) => {
     console.error('[SellerBot] Error:', err.message, err.ctx?.update);
-    err.ctx
-      ?.reply('❌ An unexpected error occurred. Please try again or use /start.')
-      .catch(() => {});
+    err.ctx?.reply('❌ An unexpected error occurred. Please try again or use /start.').catch(() => {});
   });
 
   const webhookPath = `/api/bot/seller/${token.split(':')[0]}`;

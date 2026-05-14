@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
 import { decrypt } from '@/lib/encryption';
 import type { SellerContext } from '@/bot/shared/types.js';
-import { fmt$, fmtDate, fmtBatchStatus, fmtRate, fmtGiftcardStatus } from '@/bot/shared/formatters.js';
+import { fmt$, fmtDate, fmtRate } from '@/bot/shared/formatters.js';
 
 function strike(text: string) {
   return text

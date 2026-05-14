@@ -11,14 +11,16 @@ export function sequentialize(getSessionKey: (ctx: any) => string | undefined) {
   return async (ctx: any, next: NextFunction) => {
     const key = getSessionKey(ctx);
     if (!key) return next();
-    
+
     const current = locks.get(key) || Promise.resolve();
     let resolveLock!: () => void;
-    const nextPromise = new Promise<void>((resolve) => { resolveLock = resolve; });
-    
+    const nextPromise = new Promise<void>((resolve) => {
+      resolveLock = resolve;
+    });
+
     const lockPromise = current.then(() => nextPromise);
     locks.set(key, lockPromise);
-    
+
     await current;
     try {
       await next();
@@ -45,18 +47,13 @@ export const authenticateSeller = async (ctx: SellerContext, next: NextFunction)
 
   if (!user) {
     return ctx.reply(
-      '🔗 <b>Tu cuenta no está vinculada.</b>\n\n' +
-        `Pedile al administrador (@${ADMIN_USERNAME}) que te envíe tu link de acceso.`,
+      '🔗 <b>Tu cuenta no está vinculada.</b>\n\n' + `Pedile al administrador (@${ADMIN_USERNAME}) que te envíe tu link de acceso.`,
       { parse_mode: 'HTML' },
     );
   }
 
   if (!user.isActive) {
-    return ctx.reply(
-      '⏸ <b>Tu cuenta está desactivada.</b>\n\n' +
-        `Contactá a @${ADMIN_USERNAME} para activarla.`,
-      { parse_mode: 'HTML' },
-    );
+    return ctx.reply('⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para activarla.`, { parse_mode: 'HTML' });
   }
 
   if (user.role !== 'SELLER' && user.role !== 'ADMIN') {
@@ -82,25 +79,19 @@ export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) =
   });
 
   if (!user) {
-    return ctx.reply(
-      '🔗 <b>Tu cuenta no está vinculada.</b>\n\n' +
-        `Contactá a @${ADMIN_USERNAME} para obtener acceso.`,
-      { parse_mode: 'HTML' },
-    );
+    return ctx.reply('🔗 <b>Tu cuenta no está vinculada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para obtener acceso.`, {
+      parse_mode: 'HTML',
+    });
   }
 
   if (!user.isActive) {
-    return ctx.reply(
-      '⏸ <b>Tu cuenta está desactivada.</b>\n\n' +
-        `Contactá a @${ADMIN_USERNAME} para activarla.`,
-      { parse_mode: 'HTML' },
-    );
+    return ctx.reply('⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para activarla.`, { parse_mode: 'HTML' });
   }
 
   if (user.role !== 'BUYER' && user.role !== 'ADMIN') {
     return ctx.reply('🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot.', {
-      parse_mode: 'HTML' },
-    );
+      parse_mode: 'HTML',
+    });
   }
 
   ctx.user = user as any;

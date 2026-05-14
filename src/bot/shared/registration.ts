@@ -17,17 +17,21 @@ const i18n = {
     invalidEmail: '❌ Invalid email format.\nExample: <code>user@gmail.com</code>',
     emailInUse: '⚠️ That email is already registered.\n\nTo link your Telegram account, we will send a verification code to your email.',
     emailLinkedElsewhere: '⚠️ This email is already linked to another Telegram account. Contact the administrator if you need help.',
-    otpSent: '📬 We sent a 6-digit code to <b>{email}</b>.\n\n🔐 <b>Enter the code:</b>\n\n<i>Code expires in 5 minutes. Check your spam folder if it doesn\'t arrive.</i>',
+    otpSent:
+      "📬 We sent a 6-digit code to <b>{email}</b>.\n\n🔐 <b>Enter the code:</b>\n\n<i>Code expires in 5 minutes. Check your spam folder if it doesn't arrive.</i>",
     otpSubject: '🔐 Your verification code',
     otpEmailError: '❌ Could not send the code. Please check the email and try again.',
     otpNotFound: '❌ No pending code found. Please enter your email again.',
     otpExpired: '⏰ The code has expired. Please enter your email again to receive a new one.',
     otpIncorrect: '❌ Incorrect code. Please check your email and try again.',
-    emailVerified: '✅ <b>Email verified!</b>\n\n🔑 <b>Create your password:</b>\n\nRequirements:\n• Minimum 8 characters\n• At least one uppercase\n• At least one lowercase\n• At least one number\n\n<i>⚠️ Telegram messages are not encrypted. Use a unique password for this account.</i>',
+    emailVerified:
+      '✅ <b>Email verified!</b>\n\n🔑 <b>Create your password:</b>\n\nRequirements:\n• Minimum 8 characters\n• At least one uppercase\n• At least one lowercase\n• At least one number\n\n<i>⚠️ Telegram messages are not encrypted. Use a unique password for this account.</i>',
     invalidPassword: '❌ Invalid password. It needs at least:\n• 8 characters\n• 1 uppercase\n• 1 lowercase\n• 1 number',
     sessionIncomplete: '❌ Incomplete session. Start over with /start.',
-    accountCreated: '🎉 <b>Account created!</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Your account is <b>awaiting activation</b> by the administrator.',
-    accountLinked: '🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\n⏳ Awaiting activation by the administrator.',
+    accountCreated:
+      '🎉 <b>Account created!</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Your account is <b>awaiting activation</b> by the administrator.',
+    accountLinked:
+      '🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\n⏳ Awaiting activation by the administrator.',
     accountLinkedActive: '🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\nYou can now use the bot.',
     contactAdmin: 'Contact Admin',
     emailError: '❌ The email is already in use. Contact the administrator.',
@@ -40,17 +44,21 @@ const i18n = {
     invalidEmail: '❌ Email inválido. Ingresá un email con formato correcto.\nEjemplo: <code>usuario@gmail.com</code>',
     emailInUse: '⚠️ Ese email ya está registrado.\n\nPara vincular tu cuenta de Telegram, te enviamos un código de verificación al correo.',
     emailLinkedElsewhere: '⚠️ Este email ya está vinculado a otra cuenta de Telegram. Contactá al administrador si necesitás ayuda.',
-    otpSent: '📬 Te enviamos un código de 6 dígitos a <b>{email}</b>.\n\n🔐 <b>Ingresá el código:</b>\n\n<i>El código expira en 5 minutos. Si no llega, revisá spam.</i>',
+    otpSent:
+      '📬 Te enviamos un código de 6 dígitos a <b>{email}</b>.\n\n🔐 <b>Ingresá el código:</b>\n\n<i>El código expira en 5 minutos. Si no llega, revisá spam.</i>',
     otpSubject: '🔐 Tu código de verificación',
     otpEmailError: '❌ No pude enviar el código. Verificá el email e intentá de nuevo.',
     otpNotFound: '❌ No encontré un código pendiente. Ingresá tu email de nuevo.',
     otpExpired: '⏰ El código expiró. Ingresá tu email de nuevo para recibir uno nuevo.',
     otpIncorrect: '❌ Código incorrecto. Revisá el email e intentá de nuevo.',
-    emailVerified: '✅ ¡Email verificado!\n\n🔑 Creá tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i>⚠️ Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
+    emailVerified:
+      '✅ ¡Email verificado!\n\n🔑 Creá tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i>⚠️ Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
     invalidPassword: '❌ Contraseña inválida. Necesita al menos:\n• 8 caracteres\n• 1 mayúscula\n• 1 minúscula\n• 1 número',
     sessionIncomplete: '❌ Sesión incompleta. Empezá de nuevo con /start.',
-    accountCreated: '🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.',
-    accountLinked: '🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.',
+    accountCreated:
+      '🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.',
+    accountLinked:
+      '🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.',
     accountLinkedActive: '🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.',
     contactAdmin: 'Contactar administrador',
     emailError: '❌ El email ya está en uso. Contactá al administrador.',
