@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
 import type { BuyerContext } from '@/bot/shared/types.js';
-import { fmt$, fmtOrderStatus, fmtGiftcardStatus, fmtDate } from '@/bot/shared/formatters.js';
+import { fmt$, fmtGiftcardStatus, fmtDate } from '@/bot/shared/formatters.js';
 import { decrypt } from '@/lib/encryption';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 
@@ -36,10 +36,7 @@ export async function handleOrders(ctx: BuyerContext) {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   if (orders.length === 0 && page === 1) {
-    const kb = new InlineKeyboard()
-      .text('🛒 Comprar tarjetas', 'buy_start')
-      .row()
-      .text('🏠 Volver al Menú', 'start');
+    const kb = new InlineKeyboard().text('🛒 Comprar tarjetas', 'buy_start').row().text('🏠 Volver al Menú', 'start');
     await renderUI(ctx, '📭 No tenés órdenes todavía.', { reply_markup: kb });
     if (ctx.callbackQuery) return ctx.answerCallbackQuery();
     return;
@@ -49,7 +46,7 @@ export async function handleOrders(ctx: BuyerContext) {
   let msg = `📋 <b>Tus Órdenes</b> (Página ${page}/${totalPages})\n\n`;
   msg += '<b>Leyenda:</b>\n';
   msg += '<pre>🟢 Completada\n🔵 Esperando Pago\n🟡 Pendiente\n🔴 Cancelada</pre>\n\n';
-  msg += 'Seleccioná una orden para ver sus detalles:';
+  msg += '👇 Selecciona una orden para ver sus detalles:';
 
   for (const order of orders) {
     let icon = '🟡'; // PENDING
@@ -63,7 +60,7 @@ export async function handleOrders(ctx: BuyerContext) {
 
     const shortId = order.id.slice(-8).toUpperCase();
     const dateStr = fmtDate(order.createdAt);
-    const label = `${icon} Orden #${shortId} · ${dateStr}`;
+    const label = `${icon} Ver Orden #${shortId} · ${dateStr}`;
 
     kb.text(label, `order_detail_${order.id}_${page}`).row();
   }
@@ -119,10 +116,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
     return sum.plus(amt);
   }, new Prisma.Decimal(0));
 
-  const totalToPay =
-    order.status === 'PENDING'
-      ? totalGiftcardAmount.mul(order.buyRate)
-      : (order.adjustedTotal ?? order.total);
+  const totalToPay = order.status === 'PENDING' ? totalGiftcardAmount.mul(order.buyRate) : (order.adjustedTotal ?? order.total);
 
   const discountPercent = (1 - order.buyRate.toNumber()) * 100;
   const discountAmount = totalGiftcardAmount.mul(new Prisma.Decimal(1).minus(order.buyRate));
@@ -197,7 +191,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
     kb.text('💳 Informar pago', `make_payment_${order.id}`).row();
   }
 
-  kb.text('📞 Contactar a Soporte', `https://t.me/admin`).row(); // Ajustar según env si existe
+  kb.url('📞 Contactar a Soporte', `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}`).row();
   kb.text('🔙 Regresar al historial', `my_orders_${fromPage}`);
 
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
@@ -229,7 +223,7 @@ export async function handleCancelOrder(ctx: BuyerContext) {
 
   await prisma.order.update({
     where: { id: orderId },
-    data: { 
+    data: {
       status: 'CANCELLED',
       giftcards: {
         updateMany: {
@@ -303,7 +297,7 @@ export async function handleMakePayment(ctx: BuyerContext) {
 
   await renderUI(ctx, '💳 <b>Enviá el ID de transacción de Binance:</b>\n\n' + '<i>Ejemplo: 5A3F2E1D4C6B...</i>', {
     parse_mode: 'HTML',
-    reply_markup: new InlineKeyboard().text('⬅️ Volver', `order_detail_${orderId}`)
+    reply_markup: new InlineKeyboard().text('⬅️ Volver', `order_detail_${orderId}`),
   });
   return ctx.answerCallbackQuery();
 }
@@ -317,7 +311,10 @@ export async function handlePaymentText(ctx: BuyerContext) {
   await deleteUserInput(ctx);
 
   const orderId = ctx.session.wizard.orderId;
-  if (!orderId) return renderUI(ctx, '❌ Sesión expirada. Usá /orders para ver tu orden.', { reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start') });
+  if (!orderId)
+    return renderUI(ctx, '❌ Sesión expirada. Usá /orders para ver tu orden.', {
+      reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start'),
+    });
 
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order || order.userId !== ctx.user.id || order.status !== 'AWAITING_PAYMENT') {
@@ -566,7 +563,7 @@ async function submitReport(ctx: BuyerContext) {
   const { reportCardId, orderId, reportIssueType, reportAmount, reportProofUrl } = ctx.session.wizard;
   if (!reportCardId || !orderId || !reportIssueType) {
     return renderUI(ctx, '❌ Error en la sesión. Empezá de nuevo desde /orders.', {
-      reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start')
+      reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start'),
     });
   }
 
@@ -614,7 +611,7 @@ async function submitReport(ctx: BuyerContext) {
   } catch (err) {
     console.error('[Report] Error:', err);
     await renderUI(ctx, '❌ Error al procesar el reporte. Intentá de nuevo.', {
-      reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders')
+      reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
     });
   }
 }

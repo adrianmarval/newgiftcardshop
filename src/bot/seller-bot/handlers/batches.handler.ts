@@ -16,7 +16,7 @@ const PAGE_SIZE = 5;
 
 export async function handleBatches(ctx: SellerContext) {
   await deleteUserInput(ctx);
-  
+
   const userId = ctx.user.id;
   const cbData = ctx.callbackQuery?.data || '';
   const pageMatch = cbData.match(/^my_batches_(\d+)$/);
@@ -41,10 +41,7 @@ export async function handleBatches(ctx: SellerContext) {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
   if (batches.length === 0 && page === 1) {
-    const kb = new InlineKeyboard()
-      .text('➕ Sell Giftcards', 'sell_start')
-      .row()
-      .text('🏠 Main Menu', 'start');
+    const kb = new InlineKeyboard().text('➕ Sell Giftcards', 'sell_start').row().text('🏠 Main Menu', 'start');
     const welcomeMsg = "📭 You haven't published any batches yet.";
     await renderUI(ctx, welcomeMsg, { reply_markup: kb });
     if (ctx.callbackQuery) return ctx.answerCallbackQuery();
@@ -54,7 +51,7 @@ export async function handleBatches(ctx: SellerContext) {
   let msg = `📊 <b>Your Batches</b> (Page ${page}/${totalPages})\n\n`;
   msg += `<b>Legend:</b>\n`;
   msg += `<pre>🟡 Processing\n🔵 Confirmed\n🟢 Paid</pre>\n\n`;
-  msg += 'Select a batch to see detailed information:';
+  msg += '👇Select a batch to see detailed information:';
   const kb = new InlineKeyboard();
 
   for (const batch of batches) {
@@ -70,7 +67,7 @@ export async function handleBatches(ctx: SellerContext) {
     }
 
     const dateStr = fmtDate(batch.createdAt, 'en');
-    const label = `${icon} View BATCH #${batch.id} · ${dateStr}`;
+    const label = `${icon} View Batch #${batch.id} · ${dateStr}`;
 
     kb.text(label, `view_batch_${batch.id}_${page}`).row();
   }
