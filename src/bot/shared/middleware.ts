@@ -47,13 +47,13 @@ export const authenticateSeller = async (ctx: SellerContext, next: NextFunction)
 
   if (!user) {
     return ctx.reply(
-      '🔗 <b>Tu cuenta no está vinculada.</b>\n\n' + `Pedile al administrador (@${ADMIN_USERNAME}) que te envíe tu link de acceso.`,
+      '🔗 <b>Your account is not linked.</b>\n\n' + `Ask the administrator (@${ADMIN_USERNAME}) to send you your access link.`,
       { parse_mode: 'HTML' },
     );
   }
 
   if (!user.isActive) {
-    return ctx.reply('⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para activarla.`, { parse_mode: 'HTML' });
+    return ctx.reply('⏸ <b>Your account is deactivated.</b>\n\n' + `Contact @${ADMIN_USERNAME} to activate it.`, { parse_mode: 'HTML' });
   }
 
   if (user.role !== 'SELLER' && user.role !== 'ADMIN') {

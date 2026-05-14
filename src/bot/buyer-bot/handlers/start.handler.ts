@@ -23,7 +23,7 @@ export async function startBuyer(ctx: BuyerContext) {
   if (user) {
     if (!user.isActive) {
       return ctx.reply(
-        `⏳ <b>Hola, ${user.name}.</b>\n\nTu cuenta está pendiente de activación por el administrador.\nTe avisaremos cuando esté lista.`,
+        `⏳ <b>Hola, ${user.name}.</b>\n\nTu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
         { parse_mode: 'HTML' },
       );
     }

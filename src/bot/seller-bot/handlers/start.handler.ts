@@ -23,7 +23,7 @@ export async function startSeller(ctx: SellerContext) {
   if (user) {
     if (!user.isActive) {
       return ctx.reply(
-        `⏳ <b>Hello, ${user.name}.</b>\n\nYour account is awaiting activation by the administrator.\nWe will notify you once it is ready.`,
+        `⏳ <b>Hello, ${user.name}.</b>\n\nYour account is awaiting activation by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
         { parse_mode: 'HTML' },
       );
     }
