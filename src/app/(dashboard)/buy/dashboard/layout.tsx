@@ -9,7 +9,7 @@ export default async function BuyerDashboardLayout({ children }: { children: Rea
     <AutoRefreshProvider interval={15000}>
       <Card className="bg-background flex h-svh flex-col gap-2 p-1 ring-0 lg:flex-row lg:gap-4 lg:p-4">
         {/* Sidebar / Bottom Bar Container */}
-        <Card className="order-2 flex shrink-0 items-center justify-center p-0 lg:order-1">
+        <Card className="order-2 flex shrink-0 items-center justify-center overflow-visible p-0 lg:order-1">
           <BuyerNavbar />
         </Card>
 

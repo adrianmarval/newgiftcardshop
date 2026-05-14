@@ -34,7 +34,7 @@ export function BottomNav({ items, className }: BottomNavProps) {
   const extraItems = hasMore ? items.slice(limit - 1) : [];
 
   return (
-    <div className={cn(className)}>
+    <div className={cn('relative w-full', className)}>
       {/* Menú "Más" para Mobile */}
       <AnimatePresence>
         {isMenuOpen && (
@@ -42,6 +42,7 @@ export function BottomNav({ items, className }: BottomNavProps) {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="bg-background/95 absolute bottom-full left-1/2 z-100 mb-6 flex w-[92%] -translate-x-1/2 items-center justify-around gap-2 rounded-[2.5rem] border border-white/10 p-4 shadow-2xl backdrop-blur-3xl lg:hidden"
           >
             {extraItems.map((item, idx) => (
               <NavItem key={idx} item={item} isActive={pathname === item.url} onAction={() => setIsMenuOpen(false)} />
@@ -106,7 +107,7 @@ function NavItem({ item, isActive, onAction }: { item: BottomNavItem; isActive: 
     <Component
       {...(props as any)}
       className={cn(
-        'group relative flex w-full flex-1 flex-col items-center justify-center gap-1 rounded-2xl p-2 transition-all duration-200 lg:w-auto lg:max-w-none lg:flex-none',
+        'group relative flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl p-2 transition-all duration-200 lg:w-auto lg:max-w-none lg:flex-none',
         isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
       )}
     >
