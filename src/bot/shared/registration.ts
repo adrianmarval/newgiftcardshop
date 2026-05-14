@@ -128,7 +128,7 @@ export async function startRegistration(ctx: RegContext, role: BotRole): Promise
     ctx.session.wizard = { step: 'idle' };
   }
   ctx.session.wizard.step = 'awaitingName';
-  await renderUI(ctx, i18n[lang].welcome, { parse_mode: 'HTML', forceNew: true });
+  await renderUI(ctx, i18n[lang].welcome, { parse_mode: 'HTML' });
 }
 
 export async function handleRegName(ctx: RegContext, role: BotRole): Promise<void> {

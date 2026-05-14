@@ -19,7 +19,7 @@ export async function startBuyer(ctx: BuyerContext) {
       await renderUI(
         ctx,
         '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot. Por favor, contactá al administrador si creés que es un error.',
-        { parse_mode: 'HTML', forceNew: true },
+        { parse_mode: 'HTML' },
       );
       return deleteUserInput(ctx);
     }
@@ -30,7 +30,7 @@ export async function startBuyer(ctx: BuyerContext) {
         await renderUI(
           ctx,
           `⏳ <b>Hola, ${escapedName}.</b>\n\nTu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
-          { parse_mode: 'HTML', forceNew: true },
+          { parse_mode: 'HTML' },
         );
         return deleteUserInput(ctx);
       }
@@ -45,7 +45,6 @@ export async function startBuyer(ctx: BuyerContext) {
       await renderUI(ctx, `👋 ¡Hola de nuevo, <b>${escapedName}</b>!\n\nUsá los botones para navegar.`, { 
         parse_mode: 'HTML', 
         reply_markup: kb,
-        forceNew: true 
       });
       return deleteUserInput(ctx);
     }

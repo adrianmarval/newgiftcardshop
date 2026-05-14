@@ -18,7 +18,7 @@ export async function startSeller(ctx: SellerContext) {
     await renderUI(
       ctx,
       '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot. Please contact the administrator if you think this is a mistake.',
-      { parse_mode: 'HTML', forceNew: true },
+      { parse_mode: 'HTML' },
     );
     return deleteUserInput(ctx);
   }
@@ -29,7 +29,7 @@ export async function startSeller(ctx: SellerContext) {
       await renderUI(
         ctx,
         `⏳ <b>Hello, ${escapedName}.</b>\n\nYour account is awaiting activation by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
-        { parse_mode: 'HTML', forceNew: true },
+        { parse_mode: 'HTML' },
       );
       return deleteUserInput(ctx);
     }
@@ -45,7 +45,6 @@ export async function startSeller(ctx: SellerContext) {
     await renderUI(ctx, `👋 Welcome back, <b>${escapedName}</b>!\n\nUse the buttons below to navigate.`, {
       parse_mode: 'HTML',
       reply_markup: kb,
-      forceNew: true,
     });
     return deleteUserInput(ctx);
   }

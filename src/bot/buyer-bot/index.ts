@@ -1,9 +1,10 @@
-import { Bot, session } from 'grammy';
+import { Bot, InlineKeyboard, session } from 'grammy';
 import { PrismaAdapter } from '@grammyjs/storage-prisma';
 import { limit } from '@grammyjs/ratelimiter';
 import type { BuyerContext, BuyerSessionData } from '@/bot/shared/types.js';
 import prisma from '@/lib/prisma';
 import { authenticateBuyer } from '@/bot/shared/middleware.js';
+import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { startBuyer } from './handlers/start.handler.js';
 import {
   handleOrders,
@@ -79,15 +80,17 @@ export function createBuyerBot() {
   // ── Comandos ──────────────────────────────────────────────────────────────
   bot.command('buy', startBuyWizard);
   bot.command('orders', handleOrders);
-  bot.command('help', (ctx) =>
-    ctx.reply(
+  bot.command('help', async (ctx) => {
+    await deleteUserInput(ctx);
+    await renderUI(
+      ctx,
       '📋 <b>Comandos disponibles:</b>\n\n' +
         '/buy — Buscar y comprar tarjetas\n' +
         '/orders — Ver mis órdenes\n\n' +
         '<i>Usá los botones para navegar por los menús.</i>',
-      { parse_mode: 'HTML' },
-    ),
-  );
+      { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('🏠 Volver al Menú', 'start') },
+    );
+  });
 
   // ── Callback queries ──────────────────────────────────────────────────────
 

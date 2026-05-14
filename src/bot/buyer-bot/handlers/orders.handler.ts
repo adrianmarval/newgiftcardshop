@@ -114,17 +114,14 @@ export async function handleOrderDetail(ctx: BuyerContext) {
   const availableCards = order.giftcards.filter((c) => c.status === 'UNUSED' || c.status === 'USED' || c.status === 'WRONG_AMOUNT');
 
   const totalGiftcardAmount = order.giftcards.reduce((sum, c) => {
+    if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)) return sum;
     const amt = c.reportedAmount ?? c.amount;
     return sum.plus(amt);
   }, new Prisma.Decimal(0));
 
   const totalToPay =
     order.status === 'PENDING'
-      ? order.giftcards.reduce((sum, card) => {
-          if (card.status === 'UNUSED' || card.status === 'USED') return sum.plus(card.amount.mul(order.buyRate));
-          if (card.status === 'WRONG_AMOUNT' && card.reportedAmount) return sum.plus(card.reportedAmount.mul(order.buyRate));
-          return sum;
-        }, new Prisma.Decimal(0))
+      ? totalGiftcardAmount.mul(order.buyRate)
       : (order.adjustedTotal ?? order.total);
 
   const discountPercent = (1 - order.buyRate.toNumber()) * 100;
@@ -263,11 +260,12 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
   if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Estado inválido');
 
   const { Prisma } = await import('@/generated/prisma/client');
-  const adjustedTotal = order.giftcards.reduce((sum, card) => {
-    if (card.status === 'UNUSED') return sum.plus(card.amount.mul(order.buyRate));
-    if (card.status === 'WRONG_AMOUNT' && card.reportedAmount) return sum.plus(card.reportedAmount.mul(order.buyRate));
-    return sum;
+  const totalEffectiveFaceValue = order.giftcards.reduce((sum, c) => {
+    if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)) return sum;
+    return sum.plus(c.reportedAmount ?? c.amount);
   }, new Prisma.Decimal(0));
+
+  const adjustedTotal = totalEffectiveFaceValue.mul(order.buyRate);
 
   await prisma.$transaction(async (tx) => {
     await tx.order.update({

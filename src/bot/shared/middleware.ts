@@ -1,6 +1,7 @@
 import type { NextFunction } from 'grammy';
 import type { SellerContext, BuyerContext } from './types.js';
 import prisma from '@/lib/prisma';
+import { renderUI } from './ui.js';
 
 const ADMIN_USERNAME = process.env.ADMIN_TELEGRAM_USERNAME ?? '';
 
@@ -36,7 +37,7 @@ export function sequentialize(getSessionKey: (ctx: any) => string | undefined) {
 // ── Seller middleware ─────────────────────────────────────────────────────────
 
 export const authenticateSeller = async (ctx: SellerContext, next: NextFunction) => {
-  if (!ctx.from) return ctx.reply('❌ Error inesperado. Intentá de nuevo.');
+  if (!ctx.from) return renderUI(ctx, '❌ Error inesperado. Intentá de nuevo.');
 
   const telegramId = ctx.from.id.toString();
 
@@ -46,18 +47,19 @@ export const authenticateSeller = async (ctx: SellerContext, next: NextFunction)
   });
 
   if (!user) {
-    return ctx.reply(
+    return renderUI(
+      ctx,
       '🔗 <b>Your account is not linked.</b>\n\n' + `Ask the administrator (@${ADMIN_USERNAME}) to send you your access link.`,
       { parse_mode: 'HTML' },
     );
   }
 
   if (!user.isActive) {
-    return ctx.reply('⏸ <b>Your account is deactivated.</b>\n\n' + `Contact @${ADMIN_USERNAME} to activate it.`, { parse_mode: 'HTML' });
+    return renderUI(ctx, '⏸ <b>Your account is deactivated.</b>\n\n' + `Contact @${ADMIN_USERNAME} to activate it.`, { parse_mode: 'HTML' });
   }
 
   if (user.role !== 'SELLER' && user.role !== 'ADMIN') {
-    return ctx.reply('🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot.', {
+    return renderUI(ctx, '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot.', {
       parse_mode: 'HTML',
     });
   }
@@ -69,7 +71,7 @@ export const authenticateSeller = async (ctx: SellerContext, next: NextFunction)
 // ── Buyer middleware ──────────────────────────────────────────────────────────
 
 export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) => {
-  if (!ctx.from) return ctx.reply('❌ Error inesperado. Intentá de nuevo.');
+  if (!ctx.from) return renderUI(ctx, '❌ Error inesperado. Intentá de nuevo.');
 
   const telegramId = ctx.from.id.toString();
 
@@ -79,17 +81,17 @@ export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) =
   });
 
   if (!user) {
-    return ctx.reply('🔗 <b>Tu cuenta no está vinculada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para obtener acceso.`, {
+    return renderUI(ctx, '🔗 <b>Tu cuenta no está vinculada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para obtener acceso.`, {
       parse_mode: 'HTML',
     });
   }
 
   if (!user.isActive) {
-    return ctx.reply('⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para activarla.`, { parse_mode: 'HTML' });
+    return renderUI(ctx, '⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para activarla.`, { parse_mode: 'HTML' });
   }
 
   if (user.role !== 'BUYER' && user.role !== 'ADMIN') {
-    return ctx.reply('🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot.', {
+    return renderUI(ctx, '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot.', {
       parse_mode: 'HTML',
     });
   }

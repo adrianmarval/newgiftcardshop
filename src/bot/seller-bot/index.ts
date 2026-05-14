@@ -1,9 +1,10 @@
-import { Bot, session } from 'grammy';
+import { Bot, InlineKeyboard, session } from 'grammy';
 import { PrismaAdapter } from '@grammyjs/storage-prisma';
 import { limit } from '@grammyjs/ratelimiter';
 import type { SellerContext, SellerSessionData } from '@/bot/shared/types.js';
 import prisma from '@/lib/prisma';
 import { authenticateSeller, sequentialize } from '@/bot/shared/middleware.js';
+import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { startSeller } from './handlers/start.handler.js';
 import { handleStats } from './handlers/stats.handler.js';
 import { handleBatches, handleViewBatch } from './handlers/batches.handler.js';
@@ -74,16 +75,18 @@ export function createSellerBot() {
   bot.command('sell', startSellWizard);
   bot.command('batches', handleBatches);
   bot.command('stats', handleStats);
-  bot.command('help', (ctx) =>
-    ctx.reply(
+  bot.command('help', async (ctx) => {
+    await deleteUserInput(ctx);
+    await renderUI(
+      ctx,
       '📋 <b>Available commands:</b>\n\n' +
         '/sell — Publish giftcards\n' +
         '/batches — View your published batches\n' +
         '/stats — View your sales statistics\n\n' +
         '<i>Use the buttons to navigate through the menus.</i>',
-      { parse_mode: 'HTML' },
-    ),
-  );
+      { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('🏠 Back to Menu', 'start') },
+    );
+  });
 
   // ── Callback queries ──────────────────────────────────────────────────────
 
