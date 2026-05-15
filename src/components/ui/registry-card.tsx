@@ -49,7 +49,7 @@ export function RegistryCard({
     <Card
       id={`registry-card-${id}`}
       onClick={onToggle}
-      className={`hover:border-primary/30 relative cursor-pointer scroll-mt-2 gap-1 overflow-hidden border py-2 transition-all duration-200 ease-out ${
+      className={`hover:border-primary/30 relative cursor-pointer scroll-mt-2 gap-0 overflow-hidden border py-2 transition-all duration-200 ease-out ${
         isExpanded || isHighlighted ? `${activeBgClass || 'bg-primary/10 dark:bg-primary/15'} shadow-sm` : ''
       } ${isHighlighted ? 'border-primary/50 ring-primary/20 ring-1' : ''} ${className}`}
     >
@@ -66,7 +66,7 @@ export function RegistryCard({
             {icon && <div className="flex h-10 w-10 shrink-0 items-center justify-center">{icon}</div>}
 
             <div className="flex min-w-0 flex-col gap-0.5">
-              <div className="text-md text-foreground font-medium md:text-base min-w-0">{title}</div>
+              <div className="text-md text-foreground min-w-0 font-medium md:text-base">{title}</div>
               {subtitle && <div className="text-muted-foreground truncate text-xs md:text-sm">{subtitle}</div>}
             </div>
 
@@ -106,7 +106,7 @@ export function RegistryCard({
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="border-border cursor-default border-t p-4" onClick={(e: MouseEvent) => e.stopPropagation()}>
+            <div className="border-border cursor-default border-t p-1 md:p-4" onClick={(e: MouseEvent) => e.stopPropagation()}>
               {children}
             </div>
           </motion.div>
