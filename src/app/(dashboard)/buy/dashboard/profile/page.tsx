@@ -12,10 +12,7 @@ export default async function BuyerProfilePage() {
 
   return (
     <div className="container mx-auto space-y-4 py-2">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-black tracking-tighter italic md:text-7xl">MI PERFIL</h1>
-        <p className="text-muted-foreground text-base md:text-lg">Gestiona la información de tu cuenta.</p>
-      </div>
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-7xl">MI PERFIL</h1>
       <ProfileForm
         user={{
           name: session.user.name,
