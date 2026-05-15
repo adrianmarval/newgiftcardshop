@@ -4,8 +4,8 @@ import { getSellerRate } from '@/actions/seller/get-rate';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sell Gift Cards | Solmaira Cards',
-  description: 'Create a new batch of gift cards to sell on Solmaira',
+  title: `Sell Gift Cards | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Create a new batch of gift cards to sell on ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default async function SellBatchPage() {

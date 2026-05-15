@@ -6,7 +6,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-12 bg-neutral-950 p-6 text-white">
       {/* Hero */}
       <div className="space-y-3 text-center">
-        <h1 className="text-6xl font-bold tracking-tight">Solmaira Cards</h1>
+        <h1 className="text-6xl font-bold tracking-tight">{process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}</h1>
         <p className="mx-auto max-w-md text-xl text-neutral-400">
           The trusted marketplace for buying and selling gift cards at the best rates
         </p>
@@ -35,7 +35,7 @@ export default function Home() {
         </Link>
       </div>
 
-      <p className="text-sm text-neutral-600">© 2025 Solmaira Cards</p>
+      <p className="text-sm text-neutral-600">© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}</p>
     </main>
   );
 }

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'Cuenta Pendiente | Solmaira Cards',
+  title: `Cuenta Pendiente | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   description: 'Tu cuenta está en proceso de activación por un administrador.',
 };
 
@@ -34,8 +34,10 @@ export default async function PendingActivationPage() {
     cardDesc: isSpanish
       ? 'Contactanos por Telegram indicando tu email de registro para una aprobación inmediata:'
       : 'Contact us via Telegram indicating your registration email for immediate approval:',
-    telegram: 'Telegram @SOLMza1',
-    footer: isSpanish ? 'Solmaira Cards © 2026 • Sistema de Seguridad' : 'Solmaira Cards © 2026 • Security System',
+    telegram: `Telegram @${process.env.ADMIN_TELEGRAM_USERNAME || 'SOLMza1'}`,
+    footer: isSpanish
+      ? `${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} © ${new Date().getFullYear()} • Sistema de Seguridad`
+      : `${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} © ${new Date().getFullYear()} • Security System`,
   };
 
   return (

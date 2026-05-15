@@ -3,8 +3,8 @@ import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Olvidé mi Contraseña | Portal Admin | Solmaira Cards',
-  description: 'Restablece la contraseña de tu cuenta de administrador de Solmaira',
+  title: `Olvidé mi Contraseña | Portal Admin | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Restablece la contraseña de tu cuenta de administrador de ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default function AdminForgotPasswordPage() {

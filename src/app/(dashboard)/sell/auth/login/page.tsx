@@ -3,8 +3,8 @@ import { LoginForm } from '@/components/auth/login-form';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Seller Sign In | Solmaira Cards',
-  description: 'Sign in to your Solmaira seller account',
+  title: `Seller Sign In | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Sign in to your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} seller account`,
 };
 
 export default function SellerLoginPage() {

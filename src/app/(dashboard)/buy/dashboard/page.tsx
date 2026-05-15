@@ -7,8 +7,8 @@ import type { BuyerStats as BuyerStatsType } from '@/types/domain/order';
 import type { BuyerOrder } from '@/types/domain/order';
 
 export const metadata: Metadata = {
-  title: 'Dashboard de Comprador | Solmaira Cards',
-  description: 'Explora y compra tarjetas de regalo con descuento en Solmaira',
+  title: `Dashboard de Comprador | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Explora y compra tarjetas de regalo con descuento en ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default async function BuyerDashboardPage() {

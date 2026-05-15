@@ -7,8 +7,8 @@ import type { SellerStats as SellerStatsType } from '@/types/domain/seller';
 import type { RecentBatch } from '@/types/domain/seller';
 
 export const metadata: Metadata = {
-  title: 'Seller Dashboard | Solmaira Cards',
-  description: 'Manage your gift cards and track your sales on Solmaira',
+  title: `Seller Dashboard | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Manage your gift cards and track your sales on ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default async function SellerDashboardPage() {

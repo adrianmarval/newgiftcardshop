@@ -5,7 +5,7 @@ import { AdminOrdersView } from '@/components/admin/orders';
 import { adminOrdersSearchParamsCache } from '@/lib/search-params-cache';
 
 export const metadata: Metadata = {
-  title: 'Admin Orders | Solmaira Cards',
+  title: `Admin Orders | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   description: 'Manage all buyer orders, process reports and handle cancellations',
 };
 

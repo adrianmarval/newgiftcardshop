@@ -9,7 +9,7 @@ import { VerifyEmailTemplate } from '@/emails/verify-email';
 import { ResetPasswordTemplate } from '@/emails/reset-password';
 
 export const auth = betterAuth({
-  appName: 'Solmaira', // Added appName
+  appName: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop', // Added appName
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
@@ -21,7 +21,7 @@ export const auth = betterAuth({
       await resend.emails.send({
         from: EMAIL_FROM,
         to: user.email,
-        subject: 'Reset your Solmaira password',
+        subject: `Reset your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} password`,
         html,
       });
     },
@@ -37,7 +37,7 @@ export const auth = betterAuth({
       await resend.emails.send({
         from: EMAIL_FROM,
         to: user.email,
-        subject: 'Verify your Solmaira email',
+        subject: `Verify your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} email`,
         html,
       });
     },
@@ -58,7 +58,7 @@ export const auth = betterAuth({
   },
   plugins: [
     twoFactor({
-      issuer: 'Solmaira', // Added issuer
+      issuer: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop', // Added issuer
       skipVerificationOnEnable: true,
     }),
     nextCookies(),

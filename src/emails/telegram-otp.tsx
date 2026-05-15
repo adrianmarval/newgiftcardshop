@@ -15,7 +15,7 @@ export function TelegramOtpTemplate({ code, userName }: TelegramOtpProps) {
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
-            <Heading style={logo}>SOLMAIRA</Heading>
+            <Heading style={logo}>{process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}</Heading>
             <Text style={tagline}>Telegram Bot Access</Text>
           </Section>
 
@@ -24,8 +24,8 @@ export function TelegramOtpTemplate({ code, userName }: TelegramOtpProps) {
           <Section style={content}>
             <Text style={greeting}>{userName ? `Hola ${userName}, 👋` : 'Hola, 👋'}</Text>
             <Text style={text}>
-              Estás vinculando tu cuenta con nuestro bot de Telegram. 
-              Para completar el registro, ingresá este código de verificación en el chat del bot:
+              Estás vinculando tu cuenta con nuestro bot de Telegram. Para completar el registro, ingresá este código de verificación en el
+              chat del bot:
             </Text>
 
             <Section style={codeContainer}>
@@ -39,7 +39,7 @@ export function TelegramOtpTemplate({ code, userName }: TelegramOtpProps) {
 
           <Section style={footer}>
             <Text style={footerText}>Si no solicitaste este código, podés ignorar este email de forma segura.</Text>
-            <Text style={footerBrand}>© {new Date().getFullYear()} Solmaira. All rights reserved.</Text>
+            <Text style={footerBrand}>© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. All rights reserved.</Text>
           </Section>
         </Container>
       </Body>

@@ -3,8 +3,8 @@ import { ProfileForm } from '@/components/auth/profile/profile-form';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Perfil | Panel de Administración | Solmaira Cards',
-  description: 'Gestiona los ajustes de tu perfil de administrador de Solmaira',
+  title: `Perfil | Panel de Administración | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Gestiona los ajustes de tu perfil de administrador de ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default async function AdminProfilePage() {

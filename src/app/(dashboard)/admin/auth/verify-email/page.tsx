@@ -4,8 +4,8 @@ import { Metadata } from 'next';
 import { getSession } from '@/lib/authorization';
 
 export const metadata: Metadata = {
-  title: 'Verificar Correo | Portal Admin | Solmaira Cards',
-  description: 'Verifica el correo de tu cuenta de administrador de Solmaira',
+  title: `Verificar Correo | Portal Admin | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Verifica el correo de tu cuenta de administrador de ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default async function AdminVerifyEmailPage() {

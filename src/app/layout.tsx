@@ -22,12 +22,22 @@ const fontMono = IBM_Plex_Mono({
   weight: '400',
 });
 
+import type { Viewport } from 'next';
+
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: {
-    default: 'Solmaira Cards',
-    template: '%s | Solmaira Cards',
+    default: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop',
+    template: `%s | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   },
-  description: 'The trusted marketplace for buying and selling gift cards at the best rates',
+  description: `The trusted marketplace for buying and selling gift cards at the best rates with ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default function RootLayout({

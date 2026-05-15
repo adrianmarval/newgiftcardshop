@@ -5,7 +5,7 @@ import { AdminBatchesView } from '@/components/admin/batches/admin-batches-view'
 import { adminBatchesSearchParamsCache } from '@/lib/search-params-cache';
 
 export const metadata: Metadata = {
-  title: 'Admin Batches | Solmaira Cards',
+  title: `Admin Batches | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   description: 'Manage gift card batches, process payments and view seller activity',
 };
 

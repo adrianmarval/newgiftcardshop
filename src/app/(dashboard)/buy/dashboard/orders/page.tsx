@@ -4,7 +4,7 @@ import { orderSearchParamsCache } from '@/lib/search-params-cache';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Mis Órdenes | Solmaira Cards',
+  title: `Mis Órdenes | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   description: 'Consulta y rastrea tus órdenes de compra de tarjetas de regalo.',
 };
 

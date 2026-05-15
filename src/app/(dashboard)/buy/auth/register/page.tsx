@@ -3,8 +3,8 @@ import { RegisterForm } from '@/components/auth/register-form';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Regístrate | Solmaira Cards',
-  description: 'Crea tu cuenta de comprador de Solmaira',
+  title: `Regístrate | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Crea tu cuenta de comprador de ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default function BuyerRegisterPage() {

@@ -4,7 +4,7 @@ import { sellerBatchesSearchParamsCache } from '@/lib/search-params-cache';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'My Cards History | Solmaira Cards',
+  title: `My Cards History | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   description: 'View and track your gift card batches, sales, and payments.',
 };
 

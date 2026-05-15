@@ -4,8 +4,8 @@ import { Metadata } from 'next';
 import { getSession } from '@/lib/authorization';
 
 export const metadata: Metadata = {
-  title: 'Verify Email | Seller Portal | Solmaira Cards',
-  description: 'Verify your Solmaira seller account email',
+  title: `Verify Email | Seller Portal | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Verify your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} seller account email`,
 };
 
 export default async function SellerVerifyEmailPage() {

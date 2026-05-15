@@ -3,8 +3,8 @@ import { ProfileForm } from '@/components/auth/profile/profile-form';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Profile | Solmaira Cards',
-  description: 'Manage your Solmaira account profile settings',
+  title: `Profile | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Manage your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} account profile settings`,
 };
 
 export default async function BuyerProfilePage() {

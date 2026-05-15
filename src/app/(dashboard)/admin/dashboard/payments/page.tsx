@@ -4,7 +4,7 @@ import { AdminPaymentsView } from '@/components/admin/payments/admin-payments-vi
 import { adminPaymentsSearchParamsCache } from '@/lib/search-params-cache';
 
 export const metadata: Metadata = {
-  title: 'Admin Payments | Solmaira Cards',
+  title: `Admin Payments | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   description: 'Payment history and management for admin',
 };
 

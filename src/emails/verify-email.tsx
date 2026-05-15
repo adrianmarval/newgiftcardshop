@@ -7,7 +7,7 @@ export function VerifyEmailTemplate({ code, userName }: VerifyEmailProps) {
       <Head>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');`}</style>
       </Head>
-      <Preview>Your Solmaira verification code: {code}</Preview>
+      <Preview>Your {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} verification code: {code}</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
@@ -19,7 +19,7 @@ export function VerifyEmailTemplate({ code, userName }: VerifyEmailProps) {
 
           <Section style={content}>
             <Text style={greeting}>{userName ? `Hey ${userName},` : 'Hey there,'}</Text>
-            <Text style={text}>Verify your email address to get started on Solmaira. Enter this code in the app:</Text>
+            <Text style={text}>Verify your email address to get started on {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. Enter this code in the app:</Text>
 
             <Section style={codeContainer}>
               <Text style={codeText}>{code}</Text>
@@ -31,8 +31,8 @@ export function VerifyEmailTemplate({ code, userName }: VerifyEmailProps) {
           <Hr style={divider} />
 
           <Section style={footer}>
-            <Text style={footerText}>If you didn&apos;t create a Solmaira account, you can safely ignore this email.</Text>
-            <Text style={footerBrand}>© {new Date().getFullYear()} Solmaira. All rights reserved.</Text>
+            <Text style={footerText}>If you didn&apos;t create a {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} account, you can safely ignore this email.</Text>
+            <Text style={footerBrand}>© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. All rights reserved.</Text>
           </Section>
         </Container>
       </Body>

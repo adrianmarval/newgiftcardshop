@@ -3,8 +3,8 @@ import { LoginForm } from '@/components/auth/login-form';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Iniciar Sesión | Solmaira Cards',
-  description: 'Inicia sesión en tu cuenta de comprador de Solmaira',
+  title: `Iniciar Sesión | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Inicia sesión en tu cuenta de comprador de ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default function BuyerLoginPage() {

@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { getSession } from '@/lib/authorization';
 
 export const metadata: Metadata = {
-  title: 'Verificar 2FA Admin | Solmaira Cards',
+  title: `Verificar 2FA Admin | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   description: 'Verifica tu identidad con autenticación de dos factores',
 };
 

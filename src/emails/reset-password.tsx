@@ -7,12 +7,12 @@ export function ResetPasswordTemplate({ url, userName }: ResetPasswordProps) {
       <Head>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');`}</style>
       </Head>
-      <Preview>Reset your Solmaira password</Preview>
+      <Preview>Reset your {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} password</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
-            <Heading style={logo}>SOLMAIRA</Heading>
-            <Text style={tagline}>Gift Card Marketplace</Text>
+            <Heading style={logo}>{process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}</Heading>
+            <Text style={tagline}>{process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}</Text>
           </Section>
 
           <Hr style={divider} />
@@ -41,7 +41,7 @@ export function ResetPasswordTemplate({ url, userName }: ResetPasswordProps) {
           <Section style={footer}>
             <Text style={footerText}>If the button doesn&apos;t work, copy this link into your browser:</Text>
             <Text style={urlText}>{url}</Text>
-            <Text style={footerBrand}>© {new Date().getFullYear()} Solmaira. All rights reserved.</Text>
+            <Text style={footerBrand}>© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. All rights reserved.</Text>
           </Section>
         </Container>
       </Body>

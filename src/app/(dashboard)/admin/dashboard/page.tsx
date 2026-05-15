@@ -12,8 +12,8 @@ import { Decimal } from '@/generated/prisma/internal/prismaNamespaceBrowser';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
-  title: 'Panel de Administración | Solmaira Cards',
-  description: 'Vista general de la plataforma, gestión de usuarios y análisis para Solmaira Cards',
+  title: `Panel de Administración | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Vista general de la plataforma, gestión de usuarios y análisis para ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default async function AdminDashboardPage() {

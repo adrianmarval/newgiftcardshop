@@ -9,8 +9,8 @@ import {
   IconSun,
   IconMoon,
   IconTag,
-  // IconBell,
   IconSettings,
+  IconUser,
 } from '@tabler/icons-react';
 import { BottomNav, BottomNavItem } from '@/components/layout/bottom-nav';
 import { useTheme } from 'next-themes';
@@ -27,7 +27,6 @@ export const AdminNavbar = () => {
       url: '/admin/dashboard/batches',
       icon: IconCreditCard,
     },
-    // { title: 'Alertas', url: '/buy/dashboard/notifications', icon: IconBell },
     { title: 'Pagos', url: '/admin/dashboard/payments', icon: IconCash },
     {
       title: 'Brands',
@@ -39,6 +38,7 @@ export const AdminNavbar = () => {
       url: '/admin/dashboard/configuracion',
       icon: IconSettings,
     },
+    { title: 'Perfil', url: '/admin/dashboard/profile', icon: IconUser },
     {
       title: theme === 'dark' ? 'Light' : 'Dark',
       icon: theme === 'dark' ? IconSun : IconMoon,

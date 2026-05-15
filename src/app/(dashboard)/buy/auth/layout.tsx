@@ -10,7 +10,7 @@ export default function BuyAuthLayout({ children }: { children: ReactNode }) {
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-light tracking-tight text-white">
-            <span className="font-semibold text-blue-400">Solmaira</span> Buy
+            <span className="font-semibold text-blue-400">{process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}</span> Buy
           </h2>
           <p className="mt-2 text-sm text-slate-400">Mercado de Tarjetas de Regalo</p>
         </div>
