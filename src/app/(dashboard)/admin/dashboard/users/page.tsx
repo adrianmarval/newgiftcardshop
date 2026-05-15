@@ -23,10 +23,13 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <UsersManager
-      initialUsers={result.data.items}
-      pagination={result.data.pagination}
-      searchParams={{ search: parsed.search, role: parsed.role }}
-    />
+    <div className="container mx-auto space-y-4 py-2">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-7xl">USUARIOS</h1>
+      <UsersManager
+        initialUsers={result.data.items}
+        pagination={result.data.pagination}
+        searchParams={{ search: parsed.search, role: parsed.role }}
+      />
+    </div>
   );
 }

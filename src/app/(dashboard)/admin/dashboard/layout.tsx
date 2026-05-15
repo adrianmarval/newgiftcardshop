@@ -14,8 +14,8 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         </Card>
 
         {/* Main Content */}
-        <Card className="relative order-1 flex-1 overflow-hidden lg:order-2">
-          <CardContent className="h-full w-full overflow-y-scroll p-2 md:p-4">{children}</CardContent>
+        <Card className="relative order-1 flex-1 overflow-hidden py-0 lg:order-2">
+          <CardContent className="h-full w-full overflow-y-scroll p-1 md:p-4">{children}</CardContent>
         </Card>
       </Card>
     </AutoRefreshProvider>
