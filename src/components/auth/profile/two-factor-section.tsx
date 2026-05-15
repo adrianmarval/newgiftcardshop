@@ -136,7 +136,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
 
   return (
     <>
-      <Card>
+      <Card className="gap-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div className="flex items-center gap-2">
             <div
