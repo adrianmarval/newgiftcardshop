@@ -42,8 +42,8 @@ export async function startBuyer(ctx: BuyerContext) {
       const kb = new InlineKeyboard().text('📋 Ver Mis órdenes', 'my_orders').row().text('🛒 Comprar tarjetas', 'buy_start');
       const escapedName = escapeHTML(user.name);
 
-      await renderUI(ctx, `👋 ¡Hola de nuevo, <b>${escapedName}</b>!\n\nUsá los botones para navegar.`, { 
-        parse_mode: 'HTML', 
+      await renderUI(ctx, `👋 ¡Hola de nuevo, <b>${escapedName}</b>!\n\nUsá los botones para navegar.`, {
+        parse_mode: 'HTML',
         reply_markup: kb,
       });
       return deleteUserInput(ctx);

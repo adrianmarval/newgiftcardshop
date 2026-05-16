@@ -90,7 +90,7 @@ export const AdminOrderCard = ({
     <RegistryCard
       id={order.id}
       title={
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5">
           <span className="truncate">Orden #{order.id.slice(-8).toUpperCase()}</span>
           <Button
             variant="ghost"

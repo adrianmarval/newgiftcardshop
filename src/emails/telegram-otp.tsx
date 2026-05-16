@@ -39,7 +39,9 @@ export function TelegramOtpTemplate({ code, userName }: TelegramOtpProps) {
 
           <Section style={footer}>
             <Text style={footerText}>Si no solicitaste este código, podés ignorar este email de forma segura.</Text>
-            <Text style={footerBrand}>© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. All rights reserved.</Text>
+            <Text style={footerBrand}>
+              © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. All rights reserved.
+            </Text>
           </Section>
         </Container>
       </Body>

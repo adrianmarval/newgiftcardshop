@@ -25,7 +25,9 @@ export default function Home() {
         </Link>
       </div>
 
-      <p className="text-sm text-neutral-600">© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}</p>
+      <p className="text-sm text-neutral-600">
+        © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}
+      </p>
     </main>
   );
 }

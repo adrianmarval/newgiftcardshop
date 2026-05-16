@@ -7,20 +7,24 @@ type BotContext = SellerContext | BuyerContext;
  * Escapes HTML special characters.
  */
 export function escapeHTML(text: string): string {
-  return text.replace(/[&<>"']/g, (m) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  }[m] || m));
+  return text.replace(
+    /[&<>"']/g,
+    (m) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[m] || m,
+  );
 }
 
 /**
  * Safely deletes a user's input message (text, command, photo).
  */
 export async function deleteUserInput(ctx: BotContext): Promise<void> {
-  if (ctx.callbackQuery) return; 
+  if (ctx.callbackQuery) return;
   if (!ctx.message) return;
   try {
     await ctx.deleteMessage();
@@ -66,7 +70,7 @@ export async function renderUI(
       if (err?.message?.includes('message is not modified')) {
         return;
       }
-      // Si falló por cualquier otra razón (ej: mensaje borrado o muy viejo), 
+      // Si falló por cualquier otra razón (ej: mensaje borrado o muy viejo),
       // limpiamos el ID y procedemos a enviar uno nuevo.
       console.warn(`[UI] editMessageText falló (ID: ${session.uiMessageId}):`, err.message);
       session.uiMessageId = undefined;
@@ -80,7 +84,7 @@ export async function renderUI(
       parse_mode: parseMode,
       reply_markup: replyMarkup as any,
     });
-    
+
     session.uiMessageId = newMsg.message_id;
 
     // AHORA borramos el viejo, solo si el nuevo salió bien
@@ -89,15 +93,15 @@ export async function renderUI(
     }
   } catch (err: any) {
     console.error(`[UI] Error crítico al enviar mensaje:`, err.message);
-    
-    if (parseMode === 'HTML' && err?.message?.includes('can\'t parse entities')) {
+
+    if (parseMode === 'HTML' && err?.message?.includes("can't parse entities")) {
       try {
         const plainText = text.replace(/<[^>]*>/g, '');
         const fallbackMsg = await ctx.reply(plainText, {
           reply_markup: replyMarkup as any,
         });
         session.uiMessageId = fallbackMsg.message_id;
-        
+
         if (oldMessageId) {
           await ctx.api.deleteMessage(ctx.chat!.id, oldMessageId).catch(() => {});
         }

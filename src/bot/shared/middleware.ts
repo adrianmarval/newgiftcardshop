@@ -55,7 +55,9 @@ export const authenticateSeller = async (ctx: SellerContext, next: NextFunction)
   }
 
   if (!user.isActive) {
-    return renderUI(ctx, '⏸ <b>Your account is deactivated.</b>\n\n' + `Contact @${ADMIN_USERNAME} to activate it.`, { parse_mode: 'HTML' });
+    return renderUI(ctx, '⏸ <b>Your account is deactivated.</b>\n\n' + `Contact @${ADMIN_USERNAME} to activate it.`, {
+      parse_mode: 'HTML',
+    });
   }
 
   if (user.role !== 'SELLER' && user.role !== 'ADMIN') {
@@ -87,7 +89,9 @@ export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) =
   }
 
   if (!user.isActive) {
-    return renderUI(ctx, '⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para activarla.`, { parse_mode: 'HTML' });
+    return renderUI(ctx, '⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para activarla.`, {
+      parse_mode: 'HTML',
+    });
   }
 
   if (user.role !== 'BUYER' && user.role !== 'ADMIN') {

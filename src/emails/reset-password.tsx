@@ -41,7 +41,9 @@ export function ResetPasswordTemplate({ url, userName }: ResetPasswordProps) {
           <Section style={footer}>
             <Text style={footerText}>If the button doesn&apos;t work, copy this link into your browser:</Text>
             <Text style={urlText}>{url}</Text>
-            <Text style={footerBrand}>© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. All rights reserved.</Text>
+            <Text style={footerBrand}>
+              © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. All rights reserved.
+            </Text>
           </Section>
         </Container>
       </Body>

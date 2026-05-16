@@ -56,7 +56,7 @@ export const getBatchImages = adminActionClient
 
               const filePath = fileData.result.file_path;
               const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
-              
+
               const downloadRes = await fetch(downloadUrl);
               const arrayBuffer = await downloadRes.arrayBuffer();
               const buffer = Buffer.from(arrayBuffer);
@@ -84,7 +84,7 @@ export const getBatchImages = adminActionClient
             mimeType,
             base64: base64Data,
           };
-        })
+        }),
       );
 
       return {

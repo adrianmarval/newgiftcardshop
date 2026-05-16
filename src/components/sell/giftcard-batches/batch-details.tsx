@@ -11,7 +11,7 @@ export function BatchDetails({ batch }: BatchDetailsProps) {
         <span className="text-muted-foreground text-xs font-medium md:text-base">Batch Rate: {(batch.sellRate * 100).toFixed(1)}%</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-1 md:gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-1 sm:grid-cols-2 md:gap-3 xl:grid-cols-3">
         {batch.giftcards.map((card) => (
           <GiftcardItem key={card.id} card={card} showCopyButton={false} />
         ))}

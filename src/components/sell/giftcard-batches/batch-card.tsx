@@ -46,7 +46,7 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
     <RegistryCard
       id={batch.id}
       title={
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5">
           <span className="truncate">Batch #{batch.id}</span>
           <Button
             variant="ghost"

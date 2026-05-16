@@ -103,7 +103,13 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
     `💵 <b>¿Cuánto querés gastar? (face value en USD)</b>\n\n` +
       `Marca: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
       `Escribí el monto. Ejemplo: <code>50</code>`,
-    { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Volver', `buy_brand_${ctx.session.wizard.brandId}`).row().text('❌ Cancelar', 'buy_cancel') },
+    {
+      parse_mode: 'HTML',
+      reply_markup: new InlineKeyboard()
+        .text('⬅️ Volver', `buy_brand_${ctx.session.wizard.brandId}`)
+        .row()
+        .text('❌ Cancelar', 'buy_cancel'),
+    },
   );
   return ctx.answerCallbackQuery();
 }
@@ -115,7 +121,7 @@ export async function handleAmountText(ctx: BuyerContext) {
 
   const text = (ctx.message as any)?.text?.trim() as string | undefined;
   await deleteUserInput(ctx);
-  
+
   const amount = text ? parseFloat(text) : NaN;
 
   if (isNaN(amount) || amount <= 0) {
@@ -170,7 +176,10 @@ export async function handleAmountText(ctx: BuyerContext) {
   const brandCountry = await prisma.brandCountry.findUnique({
     where: { brandId_countryId: { brandId, countryId } },
   });
-  if (!brandCountry) return renderUI(ctx, '❌ Combinación de marca/país no encontrada.', { reply_markup: new InlineKeyboard().text('⬅️ Volver', 'buy_start') });
+  if (!brandCountry)
+    return renderUI(ctx, '❌ Combinación de marca/país no encontrada.', {
+      reply_markup: new InlineKeyboard().text('⬅️ Volver', 'buy_start'),
+    });
 
   const allCards = await prisma.giftcard.findMany({
     where: { brandCountryId: brandCountry.id, inStock: true, status: 'UNUSED' },
@@ -185,9 +194,9 @@ export async function handleAmountText(ctx: BuyerContext) {
   );
 
   if (result.selectedCards.length === 0) {
-    return renderUI(ctx, `😔 No hay tarjetas disponibles para <b>${fmt$(amount)}</b> con tus preferencias actuales.`, { 
-      parse_mode: 'HTML', 
-      reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) 
+    return renderUI(ctx, `😔 No hay tarjetas disponibles para <b>${fmt$(amount)}</b> con tus preferencias actuales.`, {
+      parse_mode: 'HTML',
+      reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`),
     });
   }
 
@@ -235,7 +244,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
   if (giftcards.length === 0) {
     await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
     return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.', {
-      reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start')
+      reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
     });
   }
 
@@ -275,7 +284,7 @@ export async function handleBuyCancel(ctx: BuyerContext) {
   ctx.session.wizard.step = 'idle';
   ctx.session.wizard.selectedGiftcardIds = undefined;
   await renderUI(ctx, '❌ Compra cancelada.', {
-    reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start').row().text('🛒 Comprar tarjetas', 'buy_start')
+    reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start').row().text('🛒 Comprar tarjetas', 'buy_start'),
   });
   return ctx.answerCallbackQuery();
 }

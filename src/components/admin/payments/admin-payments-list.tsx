@@ -92,8 +92,8 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="min-w-[120px]">
-                        <p className="font-medium truncate">{payment.relatedUserName || 'N/A'}</p>
-                        <p className="text-muted-foreground text-xs truncate">{payment.relatedUserEmail || '-'}</p>
+                        <p className="truncate font-medium">{payment.relatedUserName || 'N/A'}</p>
+                        <p className="text-muted-foreground truncate text-xs">{payment.relatedUserEmail || '-'}</p>
                       </div>
                     </td>
                     <td
@@ -107,8 +107,8 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                       {payment.referenceType && payment.referenceId ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span 
-                              className="bg-muted cursor-pointer hover:bg-muted-foreground/10 transition-colors rounded px-1.5 py-0.5 text-xs"
+                            <span
+                              className="bg-muted hover:bg-muted-foreground/10 cursor-pointer rounded px-1.5 py-0.5 text-xs transition-colors"
                               onClick={() => handleCopy(payment.referenceId!, 'ID')}
                             >
                               {payment.referenceType}:{payment.referenceId.slice(-6)}
@@ -116,8 +116,8 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                           </TooltipTrigger>
                           <TooltipContent>
                             <div className="flex flex-col gap-1 p-1">
-                              <span className="text-[10px] text-muted-foreground">Click para copiar ID completo</span>
-                              <span className="text-xs font-mono">{payment.referenceId}</span>
+                              <span className="text-muted-foreground text-[10px]">Click para copiar ID completo</span>
+                              <span className="font-mono text-xs">{payment.referenceId}</span>
                             </div>
                           </TooltipContent>
                         </Tooltip>
@@ -129,8 +129,8 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                       {payment.binanceTxId ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span 
-                              className="bg-muted cursor-pointer hover:bg-muted-foreground/10 transition-colors rounded px-1.5 py-0.5 font-mono text-xs"
+                            <span
+                              className="bg-muted hover:bg-muted-foreground/10 cursor-pointer rounded px-1.5 py-0.5 font-mono text-xs transition-colors"
                               onClick={() => handleCopy(payment.binanceTxId!, 'TX ID')}
                             >
                               {payment.binanceTxId.slice(-10)}...
@@ -138,8 +138,8 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                           </TooltipTrigger>
                           <TooltipContent>
                             <div className="flex flex-col gap-1 p-1">
-                              <span className="text-[10px] text-muted-foreground">Click para copiar TX completo</span>
-                              <span className="text-xs font-mono">{payment.binanceTxId}</span>
+                              <span className="text-muted-foreground text-[10px]">Click para copiar TX completo</span>
+                              <span className="font-mono text-xs">{payment.binanceTxId}</span>
                             </div>
                           </TooltipContent>
                         </Tooltip>

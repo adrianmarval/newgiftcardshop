@@ -111,7 +111,7 @@ export function parseClaimCodes(raw: string): ParseClaimCodesResult {
     // This prevents digits inside the code itself from being read as the amount.
     const remainder = trimmedLine.slice(matchEnd).trim();
     const parts = remainder.split(/\s+/);
-    
+
     // El primer elemento después del código debería ser el monto
     const amountPart = parts[0];
     const amountMatch = amountPart ? AMOUNT_RE.exec(amountPart) : null;
@@ -121,7 +121,7 @@ export function parseClaimCodes(raw: string): ParseClaimCodesResult {
       errors.push(`Line ${lineIdx + 1}: Missing or invalid amount — "${trimmedLine.slice(0, 40)}"`);
       continue;
     }
-    
+
     // El segundo elemento después del código (si existe) es el PIN
     const pinCode = parts[1];
 
