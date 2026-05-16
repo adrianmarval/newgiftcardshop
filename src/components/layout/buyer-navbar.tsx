@@ -8,19 +8,19 @@ export const BuyerNavbar = () => {
   const { theme, setTheme } = useTheme();
 
   const navItems: BottomNavItem[] = [
-    { title: 'Inicio', url: '/buy/dashboard', icon: IconDashboard },
+    { title: 'Inicio', url: '/store/dashboard', icon: IconDashboard },
     {
       title: 'Historial',
-      url: '/buy/dashboard/orders',
+      url: '/store/dashboard/orders',
       icon: IconHistory,
     },
     {
       title: 'Comprar',
-      url: '/buy/dashboard/browse-cards',
+      url: '/store/dashboard/browse-cards',
       icon: IconShoppingCart,
     },
-    { title: 'Perfil', url: '/buy/dashboard/profile', icon: IconUser },
-    { title: 'Alertas', url: '/buy/dashboard/notifications', icon: IconBell },
+    { title: 'Perfil', url: '/store/dashboard/profile', icon: IconUser },
+    { title: 'Alertas', url: '/store/dashboard/notifications', icon: IconBell },
     {
       title: theme === 'dark' ? 'Luz' : 'Noche',
       icon: theme === 'dark' ? IconSun : IconMoon,

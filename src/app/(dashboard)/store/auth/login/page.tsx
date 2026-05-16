@@ -14,8 +14,8 @@ export default function BuyerLoginPage() {
         portal="buy"
         title="Inicio de Sesión Comprador"
         subtitle="Accede a tu cuenta para explorar y comprar tarjetas de regalo"
-        forgotPasswordUrl="/buy/auth/forgot-password"
-        registerUrl="/buy/auth/register"
+        forgotPasswordUrl="/store/auth/forgot-password"
+        registerUrl="/store/auth/register"
         registerPrompt="¿No tienes una cuenta?"
         registerLinkText="Regístrate"
       />

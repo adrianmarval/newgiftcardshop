@@ -68,7 +68,7 @@ export const ConfirmUsageStep = () => {
     onSuccess: () => {
       showAlert.toast.success('Orden cancelada con éxito');
       resetForm();
-      router.push('/buy/dashboard/orders');
+      router.push('/store/dashboard/orders');
     },
     onError: ({ error }) => {
       const errorDescription = error.serverError || error.validationErrors?._errors?.[0] || 'Error al cancelar la orden';

@@ -20,7 +20,7 @@ export const SellerNavbar = () => {
       icon: IconCash,
     },
     { title: 'Profile', url: '/sell/dashboard/profile', icon: IconUser },
-    { title: 'Alertas', url: '/buy/dashboard/notifications', icon: IconBell },
+    { title: 'Alertas', url: '/store/dashboard/notifications', icon: IconBell },
     {
       title: theme === 'dark' ? 'Light' : 'Dark',
       icon: theme === 'dark' ? IconSun : IconMoon,

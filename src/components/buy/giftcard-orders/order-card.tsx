@@ -52,7 +52,7 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
 
   const handleResumeOrder = (e: MouseEvent) => {
     e.stopPropagation();
-    router.push(`/buy/dashboard/browse-cards?orderId=${order.id}`);
+    router.push(`/store/dashboard/browse-cards?orderId=${order.id}`);
   };
 
   const handleCancelOrder = async (e: MouseEvent) => {
@@ -79,7 +79,7 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
     <RegistryCard
       id={order.id}
       title={
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5">
           <span className="truncate">Orden #{order.id.slice(-8).toUpperCase()}</span>
           <Button
             variant="ghost"

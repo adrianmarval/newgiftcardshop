@@ -7,7 +7,7 @@ import { verify2FASchema, verify2FAOutputSchema } from '@/types/auth/schemas';
 
 const dashboardMap = {
   sell: '/sell/dashboard',
-  buy: '/buy/dashboard',
+  buy: '/store/dashboard',
   admin: '/admin/dashboard',
 } as const;
 

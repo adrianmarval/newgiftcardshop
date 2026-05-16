@@ -14,7 +14,7 @@ import { buyerOrderSchema } from './Order';
  * Parsers para los search params de la página de órdenes del buyer.
  * Usa nuqs/server para parsing tipo-seguro en Server Components.
  *
- * Ejemplo de URL: /buy/dashboard/orders?page=2&status=PENDING&search=order_123&sort=oldest
+ * Ejemplo de URL: /store/dashboard/orders?page=2&status=PENDING&search=order_123&sort=oldest
  */
 export const orderSearchParamsParsers = {
   /** Número de página (1-indexed). Default: 1 */

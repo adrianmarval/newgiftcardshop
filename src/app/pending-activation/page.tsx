@@ -17,7 +17,7 @@ export default async function PendingActivationPage() {
 
   if (session.user.isActive || session.user.role === 'ADMIN') {
     const dashboard =
-      session.user.role === 'ADMIN' ? '/admin/dashboard' : session.user.role === 'SELLER' ? '/sell/dashboard' : '/buy/dashboard';
+      session.user.role === 'ADMIN' ? '/admin/dashboard' : session.user.role === 'SELLER' ? '/sell/dashboard' : '/store/dashboard';
     redirect(dashboard);
   }
 

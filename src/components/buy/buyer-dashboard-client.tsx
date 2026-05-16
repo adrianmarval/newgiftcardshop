@@ -43,7 +43,7 @@ export function BuyerDashboardClient({ stats, activeOrders }: BuyerDashboardClie
                 <CardDescription>Buscar gift cards para comprar</CardDescription>
               </div>
               <Link
-                href="/buy/dashboard/browse-cards"
+                href="/store/dashboard/browse-cards"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-lg px-2 py-2 font-medium"
               >
                 <IconPlus className="h-4 w-4" />
@@ -57,7 +57,7 @@ export function BuyerDashboardClient({ stats, activeOrders }: BuyerDashboardClie
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Órdenes Activas</h2>
-          <Link href="/buy/dashboard/orders" className="text-primary text-sm hover:underline">
+          <Link href="/store/dashboard/orders" className="text-primary text-sm hover:underline">
             Ver todas →
           </Link>
         </div>

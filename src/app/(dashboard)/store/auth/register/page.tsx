@@ -12,8 +12,8 @@ export default function BuyerRegisterPage() {
     <Suspense fallback={<div>Loading...</div>}>
       <RegisterForm
         portal="buy"
-        redirectTo="/buy"
-        loginUrl="/buy/auth/login"
+        redirectTo="/store"
+        loginUrl="/store/auth/login"
         title="Crear Cuenta"
         subtitle="Regístrate para empezar a comprar tarjetas de regalo a excelentes precios"
       />

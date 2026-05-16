@@ -14,7 +14,7 @@
  * @example
  * // In auth forms to determine redirect path after login:
  * function LoginForm({ portal }: LoginFormProps) {
- *   const redirectTo = portal === 'sell' ? '/sell/dashboard' : '/buy/dashboard';
+ *   const redirectTo = portal === 'sell' ? '/sell/dashboard' : '/store/dashboard';
  * }
  *
  * @example

@@ -7,7 +7,7 @@ import { registerSchema, registerOutputSchema } from '@/types/auth/schemas';
 
 const dashboardMap = {
   sell: '/sell/dashboard',
-  buy: '/buy/dashboard',
+  buy: '/store/dashboard',
 } as const;
 
 const roleMap = {

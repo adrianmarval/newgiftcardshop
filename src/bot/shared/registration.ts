@@ -29,10 +29,8 @@ const i18n = {
       '✅ <b>Email verified!</b>\n\n🔑 <b>Create your password:</b>\n\nRequirements:\n• Minimum 8 characters\n• At least one uppercase\n• At least one lowercase\n• At least one number\n\n<i>⚠️ Telegram messages are not encrypted. Use a unique password for this account.</i>',
     invalidPassword: '❌ Invalid password. It needs at least:\n• 8 characters\n• 1 uppercase\n• 1 lowercase\n• 1 number',
     sessionIncomplete: '❌ Incomplete session. Start over with /start.',
-    accountCreated:
-      `🎉 <b>Account created!</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Your account is <b>awaiting activation</b> by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
-    accountLinked:
-      `🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\n⏳ Awaiting activation by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
+    accountCreated: `🎉 <b>Account created!</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Your account is <b>awaiting activation</b> by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
+    accountLinked: `🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\n⏳ Awaiting activation by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
     accountLinkedActive: '🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\nYou can now use the bot.',
     contactAdmin: 'Contact Admin',
     emailError: '❌ The email is already in use. Contact the administrator.',
@@ -56,10 +54,8 @@ const i18n = {
       '✅ ¡Email verificado!\n\n🔑 Creá tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i>⚠️ Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
     invalidPassword: '❌ Contraseña inválida. Necesita al menos:\n• 8 caracteres\n• 1 mayúscula\n• 1 minúscula\n• 1 número',
     sessionIncomplete: '❌ Sesión incompleta. Empezá de nuevo con /start.',
-    accountCreated:
-      `🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
-    accountLinked:
-      `🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
+    accountCreated: `🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
+    accountLinked: `🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
     accountLinkedActive: '🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.',
     contactAdmin: 'Contactar administrador',
     emailError: '❌ El email ya está en uso. Contactá al administrador.',
@@ -134,9 +130,9 @@ export async function startRegistration(ctx: RegContext, role: BotRole): Promise
 export async function handleRegName(ctx: RegContext, role: BotRole): Promise<void> {
   const lang = getLang(role);
   const name = (ctx.message as any)?.text?.trim() as string | undefined;
-  
+
   await deleteUserInput(ctx);
-  
+
   if (!name || name.length < 2) {
     await renderUI(ctx, i18n[lang].nameShort);
     return;
@@ -294,7 +290,7 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
         password,
         role,
         isActive: false,
-        callbackURL: role === 'SELLER' ? '/sell/dashboard' : '/buy/dashboard',
+        callbackURL: role === 'SELLER' ? '/sell/dashboard' : '/store/dashboard',
       },
     });
 

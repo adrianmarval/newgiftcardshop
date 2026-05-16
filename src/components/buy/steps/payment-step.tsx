@@ -81,7 +81,7 @@ export const PaymentStep = () => {
           </p>
         </div>
         <Button
-          onClick={() => (window.location.href = '/buy/dashboard')}
+          onClick={() => (window.location.href = '/store/dashboard')}
           className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 font-bold"
         >
           Volver al Dashboard
