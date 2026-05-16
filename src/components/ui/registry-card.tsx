@@ -54,7 +54,7 @@ export function RegistryCard({
       } ${isHighlighted ? 'border-primary/50 ring-primary/20 ring-1' : ''} ${className}`}
     >
       {hasReport && !isExpanded && (
-        <div className="text-muted-foreground/80 absolute right-1 bottom-4 z-20 flex items-center justify-center gap-1 text-[10px] font-black tracking-widest uppercase">
+        <div className="text-muted-foreground/80 absolute right-1 bottom-4 z-20 mr-10 mb-1.5 flex items-center justify-center gap-1 text-[10px] font-black tracking-widest uppercase">
           <AlertTriangle className="text-destructive fill-destructive/20 h-4 w-4 drop-shadow-md" />
           <span>With Reports</span>
         </div>
