@@ -2,7 +2,7 @@
 
 import { buyerActionClient } from '@/lib/safe-action';
 import { getUserBuyRateOutputSchema } from '@/types/domain/order';
-import { getUserRates } from '@/lib/services/pricing';
+import { getUserRates } from '@/services/pricing.service';
 import { z } from 'zod';
 
 const getUserBuyRateInputSchema = z.object({

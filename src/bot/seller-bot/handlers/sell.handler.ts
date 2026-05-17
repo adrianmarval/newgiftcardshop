@@ -7,7 +7,7 @@ import { Prisma } from '@/generated/prisma/client';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
-import { getUserRates } from '@/lib/services/pricing';
+import { getUserRates } from '@/services/pricing.service';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 

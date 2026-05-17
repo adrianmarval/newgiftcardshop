@@ -6,7 +6,7 @@ import { fmt$ } from '@/bot/shared/formatters.js';
 import { findGiftcardCombination } from '@/lib/browse-giftcards';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
-import { getUserRates } from '@/lib/services/pricing';
+import { getUserRates } from '@/services/pricing.service';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 

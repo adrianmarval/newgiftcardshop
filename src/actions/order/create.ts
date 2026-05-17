@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { createOrderInputSchema, createOrderOutputSchema } from '@/types/domain/order';
-import { getUserRates } from '@/lib/services/pricing';
+import { getUserRates } from '@/services/pricing.service';
 
 export const createOrder = buyerActionClient
   .inputSchema(createOrderInputSchema)

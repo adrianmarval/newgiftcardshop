@@ -6,7 +6,7 @@ import { encrypt, hashCode, encryptBuffer } from '@/lib/encryption';
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import { publishBatchSchema, publishBatchOutputSchema } from '@/types/domain/seller';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
-import { getUserRates } from '@/lib/services/pricing';
+import { getUserRates } from '@/services/pricing.service';
 
 export const publishBatch = sellerActionClient
   .inputSchema(publishBatchSchema)
