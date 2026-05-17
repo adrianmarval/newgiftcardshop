@@ -120,15 +120,30 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   }, [editUser]);
 
   const handleAddRate = async () => {
-    if (!editUser || !selectedBrandCountryId || !rateForm.buyRate || !rateForm.sellRate) {
-      showAlert.toast.error('Complete todos los campos');
+    const isSeller = editUser?.role === 'SELLER';
+    const isBuyer = editUser?.role === 'BUYER';
+
+    const buyRequired = !isSeller;
+    const sellRequired = !isBuyer;
+
+    if (!editUser || !selectedBrandCountryId) return;
+
+    if (buyRequired && !rateForm.buyRate) {
+      showAlert.toast.error('Complete el campo Buy Rate');
+      return;
+    }
+    if (sellRequired && !rateForm.sellRate) {
+      showAlert.toast.error('Complete el campo Sell Rate');
       return;
     }
 
-    const buyVal = parseFloat(rateForm.buyRate) / 100;
-    const sellVal = parseFloat(rateForm.sellRate) / 100;
+    const buyVal = buyRequired ? (parseFloat(rateForm.buyRate) / 100) : 0.85;
+    const sellVal = sellRequired ? (parseFloat(rateForm.sellRate) / 100) : 0.75;
 
-    if (isNaN(buyVal) || buyVal < 0 || buyVal > 1 || isNaN(sellVal) || sellVal < 0 || sellVal > 1) {
+    if (
+      (buyRequired && (isNaN(buyVal) || buyVal < 0 || buyVal > 1)) ||
+      (sellRequired && (isNaN(sellVal) || sellVal < 0 || sellVal > 1))
+    ) {
       showAlert.toast.error('Tarifas deben estar entre 0% y 100%');
       return;
     }
@@ -454,25 +469,32 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                   </Popover>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="grid gap-2">
-                    <label className="text-xs font-medium">Buy Rate (%)</label>
-                    <Input
-                      type="number"
-                      placeholder="85"
-                      value={rateForm.buyRate}
-                      onChange={(e) => setRateForm((f) => ({ ...f, buyRate: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <label className="text-xs font-medium">Sell Rate (%)</label>
-                    <Input
-                      type="number"
-                      placeholder="75"
-                      value={rateForm.sellRate}
-                      onChange={(e) => setRateForm((f) => ({ ...f, sellRate: e.target.value }))}
-                    />
-                  </div>
+                <div className={cn(
+                  "grid gap-2",
+                  editUser?.role === 'ADMIN' ? "grid-cols-2" : "grid-cols-1"
+                )}>
+                  {editUser?.role !== 'SELLER' && (
+                    <div className="grid gap-2">
+                      <label className="text-xs font-medium">Buy Rate (%)</label>
+                      <Input
+                        type="number"
+                        placeholder="85"
+                        value={rateForm.buyRate}
+                        onChange={(e) => setRateForm((f) => ({ ...f, buyRate: e.target.value }))}
+                      />
+                    </div>
+                  )}
+                  {editUser?.role !== 'BUYER' && (
+                    <div className="grid gap-2">
+                      <label className="text-xs font-medium">Sell Rate (%)</label>
+                      <Input
+                        type="number"
+                        placeholder="75"
+                        value={rateForm.sellRate}
+                        onChange={(e) => setRateForm((f) => ({ ...f, sellRate: e.target.value }))}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <Button
@@ -503,8 +525,22 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                       <div>
                         <span className="font-semibold">{rate.brandName}</span> ({rate.countryCode})
                         <div className="text-muted-foreground mt-0.5">
-                          Buy: <span className="font-medium text-foreground">{rate.buyRate * 100}%</span> | 
-                          Sell: <span className="font-medium text-foreground">{rate.sellRate * 100}%</span>
+                          {editUser?.role === 'ADMIN' && (
+                            <>
+                              Buy: <span className="font-medium text-foreground">{rate.buyRate * 100}%</span> |{' '}
+                              Sell: <span className="font-medium text-foreground">{rate.sellRate * 100}%</span>
+                            </>
+                          )}
+                          {editUser?.role === 'BUYER' && (
+                            <>
+                              Buy: <span className="font-medium text-foreground">{rate.buyRate * 100}%</span>
+                            </>
+                          )}
+                          {editUser?.role === 'SELLER' && (
+                            <>
+                              Sell: <span className="font-medium text-foreground">{rate.sellRate * 100}%</span>
+                            </>
+                          )}
                         </div>
                       </div>
                       <Button
