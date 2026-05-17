@@ -39,7 +39,6 @@ export const seedData: SeedData = {
       emailVerified: true,
       isActive: true,
       role: 'SELLER',
-      sellRate: 0.75,
       paymentMethod: {
         create: {
           address: '118s4g684sd68g48s64dg68sdg',
@@ -60,7 +59,6 @@ export const seedData: SeedData = {
       email: 'gaget85reingerk542@gmail.com',
       emailVerified: true,
       isActive: true,
-      buyRate: 0.85,
       role: 'BUYER',
       paymentMethod: {
         create: {

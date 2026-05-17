@@ -34,6 +34,7 @@ export const getBrandsByCountry = authActionClient
     return {
       success: true,
       brandCountries: brandCountries.map((bc) => ({
+        id: bc.id,
         brandId: bc.brandId,
         countryId: bc.countryId,
         brandName: bc.brand.name,
@@ -78,6 +79,7 @@ export const getBrandCountryById = authActionClient
     return {
       success: true,
       brandCountry: {
+        id: brandCountry.id,
         brandId: brandCountry.brandId,
         countryId: brandCountry.countryId,
         brandName: brandCountry.brand.name,
@@ -117,6 +119,7 @@ export const getActiveBrandCountries = authActionClient.outputSchema(getActiveBr
   return {
     success: true,
     brandCountries: brandCountries.map((bc) => ({
+      id: bc.id,
       brandId: bc.brandId,
       countryId: bc.countryId,
       brandName: bc.brand.name,

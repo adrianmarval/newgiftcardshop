@@ -14,7 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { formatCurrency } from '@/lib/currency-formatter';
 
 export const ConfirmUsageStep = () => {
-  const { foundGiftcards, setStep, orderId, setAdjustedTotal, resetForm } = useBuyFlow();
+  const { foundGiftcards, setStep, orderId, setAdjustedTotal, resetForm, selectedBrand, selectedCountry } = useBuyFlow();
   const router = useRouter();
   const [buyRate, setBuyRate] = useState(0.85);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -26,13 +26,13 @@ export const ConfirmUsageStep = () => {
       }
     },
     onError: ({ error }) => {
-      showAlert.error('Error', error.serverError || error.validationErrors?.formErrors?.[0] || 'Error al obtener la tasa de compra');
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || 'Error al obtener la tasa de compra');
     },
   });
 
   useEffect(() => {
-    executeGetUserBuyRate();
-  }, [executeGetUserBuyRate]);
+    executeGetUserBuyRate({ brandId: selectedBrand, countryId: selectedCountry });
+  }, [executeGetUserBuyRate, selectedBrand, selectedCountry]);
 
   const rawTotal = foundGiftcards.reduce((sum, card) => {
     if (card.status === 'UNUSED') return sum + card.amount;

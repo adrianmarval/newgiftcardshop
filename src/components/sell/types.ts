@@ -11,7 +11,7 @@ import type { ParsedGiftcard } from '@/types/domain/giftcard';
  */
 export interface SellBatchManagerProps {
   brandCountries: BrandCountry[];
-  sellRate: number;
+  sellRate?: number;
 }
 
 /**

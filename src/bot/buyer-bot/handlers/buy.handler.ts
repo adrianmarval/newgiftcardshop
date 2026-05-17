@@ -6,6 +6,7 @@ import { fmt$ } from '@/bot/shared/formatters.js';
 import { findGiftcardCombination } from '@/lib/browse-giftcards';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
+import { getUserRates } from '@/lib/services/pricing';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -141,9 +142,19 @@ export async function handleAmountText(ctx: BuyerContext) {
   // Verificar crédito disponible
   const user = await prisma.user.findUnique({
     where: { id: ctx.user.id },
-    select: { creditLimit: true, buyRate: true, minAmountPreference: true, maxAmountPreference: true },
+    select: { creditLimit: true, minAmountPreference: true, maxAmountPreference: true },
   });
   if (!user) return renderUI(ctx, '❌ Usuario no encontrado.');
+
+  let buyRate: Decimal;
+  try {
+    const rates = await getUserRates(ctx.user.id, { brandId, countryId });
+    buyRate = rates.buyRate as Decimal;
+  } catch (error: any) {
+    return renderUI(ctx, `❌ ${error.message || 'No se han configurado tarifas para esta marca y país.'}`, {
+      reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
+    });
+  }
 
   const unpaidOrders = await prisma.order.findMany({
     where: { userId: ctx.user.id, status: 'AWAITING_PAYMENT' },
@@ -152,7 +163,7 @@ export async function handleAmountText(ctx: BuyerContext) {
   const unpaidTotal = unpaidOrders.reduce((s, o) => s.plus(o.adjustedTotal ?? o.total), new Decimal(0));
 
   const amountDec = new Decimal(amount);
-  const creditCost = amountDec.mul(user.buyRate);
+  const creditCost = amountDec.mul(buyRate);
 
   if (unpaidTotal.gte(user.creditLimit)) {
     return renderUI(
@@ -202,14 +213,14 @@ export async function handleAmountText(ctx: BuyerContext) {
 
   const cards = result.selectedCards as typeof allCards;
   const totalFace = cards.reduce((s, c) => s + Number(c.amount), 0);
-  const totalCost = totalFace * Number(user.buyRate);
+  const totalCost = totalFace * Number(buyRate);
 
   let msg =
     `🛒 <b>Tarjetas encontradas:</b>\n\n` +
     cards.map((c) => `• ${fmt$(c.amount)}`).join('\n') +
     `\n\n` +
     `Face value total: <b>${fmt$(totalFace)}</b>\n` +
-    `Tasa de compra: ${(Number(user.buyRate) * 100).toFixed(0)}%\n` +
+    `Tasa de compra: ${(Number(buyRate) * 100).toFixed(0)}%\n` +
     `<b>Total a pagar: ${fmt$(totalCost)}</b>\n\n` +
     `¿Confirmar la orden?`;
 
@@ -221,21 +232,29 @@ export async function handleAmountText(ctx: BuyerContext) {
 
   return renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
 }
-
 // ── Step 5: Crear orden ───────────────────────────────────────────────────────
-
 export async function handleBuyConfirm(ctx: BuyerContext) {
   const { selectedGiftcardIds } = ctx.session.wizard;
   if (!selectedGiftcardIds || selectedGiftcardIds.length === 0) {
+    await ctx.answerCallbackQuery('No hay tarjetas seleccionadas.');
+    return;
+  }
+  const { brandId, countryId } = ctx.session.wizard;
+  if (!brandId || !countryId) {
     await ctx.answerCallbackQuery('Sesión expirada. Empezá de nuevo con /buy');
     return;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: ctx.user.id },
-    select: { buyRate: true },
-  });
-  if (!user) return ctx.answerCallbackQuery('Usuario no encontrado');
+  let buyRate: Prisma.Decimal;
+  try {
+    const rates = await getUserRates(ctx.user.id, { brandId, countryId });
+    buyRate = rates.buyRate as Prisma.Decimal;
+  } catch (error: any) {
+    await ctx.answerCallbackQuery('Error al obtener la tasa de compra');
+    return renderUI(ctx, `❌ ${error.message || 'No se han configurado tarifas para esta marca y país.'}`, {
+      reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
+    });
+  }
 
   const giftcards = await prisma.giftcard.findMany({
     where: { id: { in: selectedGiftcardIds }, inStock: true, status: 'UNUSED' },
@@ -248,14 +267,14 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     });
   }
 
-  const total = giftcards.reduce((s, c) => s.plus(c.amount.mul(user.buyRate)), new Prisma.Decimal(0));
+  const total = giftcards.reduce((s, c) => s.plus(c.amount.mul(buyRate)), new Prisma.Decimal(0));
 
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
         userId: ctx.user.id,
         total,
-        buyRate: user.buyRate,
+        buyRate: buyRate,
         status: 'PENDING',
         giftcards: { connect: giftcards.map((c) => ({ id: c.id })) },
       },

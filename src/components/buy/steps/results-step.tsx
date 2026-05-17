@@ -28,7 +28,7 @@ import { formatCurrency } from '@/lib/currency-formatter';
 import { showAlert } from '@/lib/swal';
 
 export const ResultsStep = () => {
-  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, targetAmount, setOrderId, setFoundGiftcards } = useBuyFlow();
+  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, selectedCountry, targetAmount, setOrderId, setFoundGiftcards } = useBuyFlow();
   const [resultsState, setResultsState] = useState<{
     brandData: Brand | null;
     buyRate: number;
@@ -59,7 +59,7 @@ export const ResultsStep = () => {
       }
     },
     onError: ({ error }) => {
-      showAlert.error('Error', error.serverError || error.validationErrors?.formErrors?.[0] || 'Error al obtener la tasa de compra');
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || 'Error al obtener la tasa de compra');
     },
   });
 
@@ -92,8 +92,8 @@ export const ResultsStep = () => {
       const brandId = selectedBrand.split('|')[0];
       executeGetBrandById({ id: brandId });
     }
-    executeGetUserBuyRate();
-  }, [selectedBrand, executeGetBrandById, executeGetUserBuyRate]);
+    executeGetUserBuyRate({ brandId: selectedBrand, countryId: selectedCountry });
+  }, [selectedBrand, selectedCountry, executeGetBrandById, executeGetUserBuyRate]);
 
   const { execute: createOrderExecute, status: createOrderStatus } = useAction(createOrder, {
     onSuccess: ({ data }) => {

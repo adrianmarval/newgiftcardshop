@@ -16,6 +16,7 @@ import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { SearchStepProps } from '@/components/buy/types';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/user/search-preferences';
+import { getUserBuyRate } from '@/actions/order/get-user-buy-rate';
 import { showAlert } from '@/lib/swal';
 
 export function SearchStep({ brandCountries }: SearchStepProps) {
@@ -43,6 +44,12 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   const [savedBuyRate, setSavedBuyRate] = useState('');
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
+  const selectedBc = useMemo(() => {
+    if (!selectedBrand) return null;
+    const [bId, cId] = selectedBrand.split('|');
+    return brandCountries.find((bc) => bc.brandId === bId && bc.countryId === cId) || null;
+  }, [selectedBrand, brandCountries]);
+
   useEffect(() => {
     if (session?.user?.id) {
       getUserSearchPreferences(session.user.id).then((prefs) => {
@@ -55,15 +62,28 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
           setSavedMax(maxStr);
           setAllowSearchPreferences(prefs.allowSearchPreferences || false);
           setAllowBuyRateAdjustment(prefs.allowBuyRateAdjustment || false);
-          if (prefs.buyRate) {
-            const brStr = (prefs.buyRate * 100).toString();
-            setPrefBuyRate(brStr);
-            setSavedBuyRate(brStr);
-          }
         }
       });
     }
   }, [session?.user?.id]);
+
+  const selectedBcId = selectedBc?.id;
+
+  // Cargar tarifa cuando se selecciona marca y país
+  useEffect(() => {
+    if (allowBuyRateAdjustment && selectedBcId) {
+      getUserBuyRate({ brandCountryId: selectedBcId }).then((res) => {
+        if (res?.data?.success && res.data.rate) {
+          const brStr = (res.data.rate * 100).toString();
+          setPrefBuyRate(brStr);
+          setSavedBuyRate(brStr);
+        }
+      });
+    } else {
+      setPrefBuyRate('');
+      setSavedBuyRate('');
+    }
+  }, [selectedBcId, allowBuyRateAdjustment]);
 
   const handleClearPreferences = async () => {
     setPrefMin('');
@@ -111,7 +131,11 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
           showAlert.toast.error('La tarifa de compra no puede ser inferior a 80%');
           return;
         }
-        const brResult = await updateBuyRate({ buyRate: brVal });
+        if (!selectedBc) {
+          showAlert.toast.error('Selecciona un brand y país para ajustar tu tarifa');
+          return;
+        }
+        const brResult = await updateBuyRate({ brandCountryId: selectedBc.id, buyRate: brVal });
         if (brResult?.data?.error) {
           showAlert.toast.error(brResult.data.error);
           brUpdated = false;
@@ -291,22 +315,30 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
                 <CollapsibleContent className="space-y-4">
                   {allowBuyRateAdjustment && (
-                    <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
-                      <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
-                        Mi Tarifa de Compra (%)
-                      </Label>
-                      <div className="relative w-40 md:w-full">
-                        <Input
-                          type="number"
-                          placeholder="85"
-                          min="80"
-                          max="100"
-                          step="0.1"
-                          value={prefBuyRate}
-                          onChange={(e) => setPrefBuyRate(e.target.value)}
-                          className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm"
-                        />
-                      </div>
+                    <div className="w-full">
+                      {!selectedBc ? (
+                        <div className="flex items-center gap-2 p-2 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xs">
+                          ⚠️ Selecciona un brand y país para ajustar tu tarifa
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
+                          <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+                            Mi Tarifa de Compra (%)
+                          </Label>
+                          <div className="relative w-40 md:w-full">
+                            <Input
+                              type="number"
+                              placeholder="85"
+                              min="80"
+                              max="100"
+                              step="0.1"
+                              value={prefBuyRate}
+                              onChange={(e) => setPrefBuyRate(e.target.value)}
+                              className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-3 text-sm"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

@@ -9,7 +9,7 @@ export async function handleStats(ctx: SellerContext) {
   const userId = ctx.user.id;
 
   const [rateData, batchCount, paidBatchCount, cards] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { sellRate: true } }),
+    Promise.resolve({ sellRate: 0.75 }),
     prisma.giftcardBatch.count({ where: { userId } }),
     prisma.giftcardBatch.count({ where: { userId, isPaid: true } }),
     prisma.giftcard.findMany({
@@ -49,7 +49,7 @@ export async function handleStats(ctx: SellerContext) {
     `<b>Payouts</b>\n` +
     `  Total Earned: ${fmt$(earnedPaid)}\n` +
     `  Pending Payment: ${fmt$(earnedPending)}\n\n` +
-    `<b>Your current rate:</b> ${fmtRate(rateData?.sellRate ?? 0)}`;
+    `<b>Your current rate:</b> Granular (by brand and country)`;
 
   const kb = new InlineKeyboard().text('🏠 Back to Menu', 'start');
   return renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });

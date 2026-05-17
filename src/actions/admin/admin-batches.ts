@@ -66,7 +66,7 @@ export const adminBatches = adminActionClient
     const batches = await prisma.giftcardBatch.findMany({
       where,
       include: {
-        user: { select: { id: true, name: true, email: true, sellRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
+        user: { select: { id: true, name: true, email: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
         giftcards: {
           include: {
             brandCountry: { include: { brand: true, country: true } },
@@ -113,7 +113,7 @@ export const adminBatches = adminActionClient
             id: batch.user.id,
             name: batch.user.name,
             email: batch.user.email,
-            sellRate: Number(batch.user.sellRate),
+            sellRate: 0.75,
             orderCount: 0,
             createdAt: batch.user.createdAt.toISOString(),
             twoFactorEnabled: batch.user.twoFactorEnabled,

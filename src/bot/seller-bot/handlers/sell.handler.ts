@@ -7,6 +7,7 @@ import { Prisma } from '@/generated/prisma/client';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
+import { getUserRates } from '@/lib/services/pricing';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -322,12 +323,16 @@ export async function handleSellConfirm(ctx: SellerContext) {
 
   const cards: ParsedGiftcard[] = JSON.parse(pendingCardsRaw);
 
-  const user = await prisma.user.findUnique({
-    where: { id: ctx.user.id },
-    select: { sellRate: true },
-  });
-
-  if (!user) return ctx.answerCallbackQuery('User not found');
+  let sellRate: Prisma.Decimal;
+  try {
+    const rates = await getUserRates(ctx.user.id, { brandCountryId });
+    sellRate = rates.sellRate as Prisma.Decimal;
+  } catch (error: any) {
+    await ctx.answerCallbackQuery('Error resolving rates');
+    return renderUI(ctx, `❌ ${error.message || 'No se han configurado tarifas para esta marca y país.'}`, {
+      reply_markup: new InlineKeyboard().text('🏠 Home', 'start'),
+    });
+  }
 
   // Filtro de seguridad final por si hubo una carrera
   const codeHashes = cards.map((c) => hashCode(c.claimCode.toUpperCase()));
@@ -347,7 +352,7 @@ export async function handleSellConfirm(ctx: SellerContext) {
 
   const batch = await prisma.$transaction(async (tx) => {
     const createdBatch = await tx.giftcardBatch.create({
-      data: { userId: ctx.user.id, sellRate: user.sellRate, isPaid: false },
+      data: { userId: ctx.user.id, sellRate: sellRate, isPaid: false },
     });
 
     for (const card of uniqueCards) {
@@ -386,12 +391,12 @@ export async function handleSellConfirm(ctx: SellerContext) {
   ctx.session.storedMessageIds = [];
 
   const totalFace = uniqueCards.reduce((s, c) => s + parseFloat(c.amount || '0'), 0);
-  const payout = totalFace * Number(user.sellRate);
+  const payout = totalFace * Number(sellRate);
 
   let msg =
     `🎉 <b>Batch #${batch.id} published</b>\n\n` +
     `📦 ${uniqueCards.length} card(s) · ${fmt$(totalFace)} face value\n` +
-    `💸 You earn: <b>${fmt$(payout)}</b> (rate ${fmtRate(user.sellRate)})\n`;
+    `💸 You earn: <b>${fmt$(payout)}</b> (rate ${fmtRate(sellRate)})\n`;
 
   const kb = new InlineKeyboard().text('📦 View My Batches', 'my_batches').row().text('➕ Publish More', 'sell_start');
 

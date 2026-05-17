@@ -18,6 +18,7 @@ import { z } from 'zod';
  * ```
  */
 export const brandCountrySchema = z.object({
+  id: z.string(),
   brandId: z.string(),
   countryId: z.string(),
   brandName: z.string(),

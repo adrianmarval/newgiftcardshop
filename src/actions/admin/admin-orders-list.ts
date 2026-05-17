@@ -72,7 +72,7 @@ export const adminOrders = adminActionClient
     const orders = await prisma.order.findMany({
       where,
       include: {
-        user: { select: { id: true, name: true, email: true, buyRate: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
+        user: { select: { id: true, name: true, email: true, createdAt: true, twoFactorEnabled: true, twoFactor: true } },
         giftcards: {
           include: {
             brandCountry: { include: { brand: true, country: true } },
@@ -184,7 +184,7 @@ export const adminOrders = adminActionClient
             id: order.user.id,
             name: order.user.name,
             email: order.user.email,
-            buyRate: Number(order.user.buyRate),
+            buyRate: 0.85,
             orderCount: orderCountMap.get(order.userId) ?? 0,
             createdAt: order.user.createdAt.toISOString(),
             twoFactorEnabled: order.user.twoFactorEnabled,

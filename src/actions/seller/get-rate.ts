@@ -1,16 +1,32 @@
 'use server';
 
-import prisma from '@/lib/prisma';
 import { sellerActionClient } from '@/lib/safe-action';
 import { getSellerRateOutputSchema } from '@/types/domain/seller';
+import { getUserRates } from '@/lib/services/pricing';
+import { z } from 'zod';
 
-export const getSellerRate = sellerActionClient.outputSchema(getSellerRateOutputSchema).action(async ({ ctx }) => {
-  const dbUser = await prisma.user.findUnique({
-    where: { id: ctx.auth.user.id },
-    select: { sellRate: true },
-  });
-  return {
-    success: true as const,
-    rate: dbUser?.sellRate ? dbUser.sellRate.toNumber() : 0.75,
-  };
+const getSellerRateInputSchema = z.object({
+  brandCountryId: z.string().optional(),
+  brandId: z.string().optional(),
+  countryId: z.string().optional(),
 });
+
+export const getSellerRate = sellerActionClient
+  .inputSchema(getSellerRateInputSchema)
+  .outputSchema(getSellerRateOutputSchema)
+  .action(async ({ parsedInput, ctx }) => {
+    const { brandCountryId, brandId, countryId } = parsedInput;
+
+    try {
+      const rates = await getUserRates(ctx.auth.user.id, { brandCountryId, brandId, countryId });
+      return {
+        success: true as const,
+        rate: Number(rates.sellRate),
+      };
+    } catch (error: any) {
+      return {
+        success: false as const,
+        error: error.message || 'No se han configurado tarifas para esta marca y país.',
+      };
+    }
+  });

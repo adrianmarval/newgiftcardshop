@@ -1,6 +1,5 @@
 import { SellBatchManager } from '@/components/sell/sell-flow-manager';
 import { getActiveBrandCountries } from '@/actions/catalog/brand-country';
-import { getSellerRate } from '@/actions/seller/get-rate';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -9,10 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default async function SellBatchPage() {
-  const [brandCountriesResult, sellRateResult] = await Promise.all([getActiveBrandCountries(), getSellerRate()]);
+  const brandCountriesResult = await getActiveBrandCountries();
 
-  if (!sellRateResult.data?.success) throw new Error('Failed to get seller rate');
   if (!brandCountriesResult.data?.success) throw new Error('Failed to get brand countries');
 
-  return <SellBatchManager brandCountries={brandCountriesResult.data.brandCountries} sellRate={sellRateResult.data.rate} />;
+  return <SellBatchManager brandCountries={brandCountriesResult.data.brandCountries} />;
 }

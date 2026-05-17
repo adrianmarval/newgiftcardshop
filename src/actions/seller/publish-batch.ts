@@ -6,6 +6,7 @@ import { encrypt, hashCode, encryptBuffer } from '@/lib/encryption';
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import { publishBatchSchema, publishBatchOutputSchema } from '@/types/domain/seller';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
+import { getUserRates } from '@/lib/services/pricing';
 
 export const publishBatch = sellerActionClient
   .inputSchema(publishBatchSchema)
@@ -72,7 +73,7 @@ export const publishBatch = sellerActionClient
 
     const dbUser = await prisma.user.findUnique({
       where: { id: ctx.auth.user.id },
-      select: { sellRate: true },
+      select: { id: true },
     });
 
     if (!dbUser) throw new ActionError('User not found in the system.');
@@ -99,15 +100,21 @@ export const publishBatch = sellerActionClient
 
     return next({ ctx: { uniqueCards, duplicates, dbUser, brandCountryId: brandCountry.id, unmatchedImages } });
   })
-  .action(async ({ parsedInput: { brandId, countryId }, ctx }) => {
+  .action(async ({ ctx }) => {
     const { uniqueCards, duplicates, dbUser, brandCountryId, unmatchedImages } = ctx;
 
-    const sellRateSnapshot = dbUser.sellRate;
+    let sellRateSnapshot: Prisma.Decimal;
+    try {
+      const rates = await getUserRates(dbUser.id, { brandCountryId });
+      sellRateSnapshot = rates.sellRate as Prisma.Decimal;
+    } catch (error: any) {
+      throw new ActionError(error.message || 'No se han configurado tarifas para esta marca y país.');
+    }
 
     const batch = await prisma.$transaction(async (tx) => {
       const createdBatch = await tx.giftcardBatch.create({
         data: {
-          userId: ctx.auth.user.id,
+          userId: dbUser.id,
           sellRate: sellRateSnapshot,
           isPaid: false,
         },
@@ -124,7 +131,7 @@ export const publishBatch = sellerActionClient
             codeHash,
             pinCode: encryptedPinCode,
             amount: new Prisma.Decimal(parseFloat(card.amount)),
-            ownerId: ctx.auth.user.id,
+            ownerId: dbUser.id,
             inStock: true,
             status: 'UNUSED',
             batchId: createdBatch.id,

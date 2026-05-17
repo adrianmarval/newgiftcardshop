@@ -12,8 +12,6 @@ const userSchema = z.object({
   role: z.enum(['ADMIN', 'SELLER', 'BUYER']),
   isActive: z.boolean(),
   creditLimit: z.number(),
-  buyRate: z.number(),
-  sellRate: z.number(),
   minAmountPreference: z.number().nullable(),
   maxAmountPreference: z.number().nullable(),
   allowSearchPreferences: z.boolean(),
@@ -26,8 +24,6 @@ const updateUserSchema = z.object({
   role: z.enum(['ADMIN', 'SELLER', 'BUYER']).optional(),
   isActive: z.boolean().optional(),
   creditLimit: z.number().optional(),
-  buyRate: z.number().optional(),
-  sellRate: z.number().optional(),
   minAmountPreference: z.number().nullable().optional(),
   maxAmountPreference: z.number().nullable().optional(),
   allowSearchPreferences: z.boolean().optional(),
@@ -41,8 +37,6 @@ export const updateUser = adminActionClient.inputSchema(updateUserSchema).action
       role,
       isActive,
       creditLimit,
-      buyRate,
-      sellRate,
       minAmountPreference,
       maxAmountPreference,
       allowSearchPreferences,
@@ -55,8 +49,6 @@ export const updateUser = adminActionClient.inputSchema(updateUserSchema).action
         ...(role !== undefined && { role }),
         ...(isActive !== undefined && { isActive }),
         ...(creditLimit !== undefined && { creditLimit }),
-        ...(buyRate !== undefined && { buyRate }),
-        ...(sellRate !== undefined && { sellRate }),
         ...(minAmountPreference !== undefined && { minAmountPreference }),
         ...(maxAmountPreference !== undefined && { maxAmountPreference }),
         ...(allowSearchPreferences !== undefined && { allowSearchPreferences }),
@@ -118,8 +110,6 @@ export const listUsers = adminActionClient
       role: user.role as 'ADMIN' | 'SELLER' | 'BUYER',
       isActive: user.isActive,
       creditLimit: Number(user.creditLimit),
-      buyRate: Number(user.buyRate),
-      sellRate: Number(user.sellRate),
       minAmountPreference: user.minAmountPreference ? Number(user.minAmountPreference) : null,
       maxAmountPreference: user.maxAmountPreference ? Number(user.maxAmountPreference) : null,
       allowSearchPreferences: user.allowSearchPreferences,
@@ -136,4 +126,111 @@ export const listUsers = adminActionClient
         totalCount,
       },
     };
+  });
+
+const userBrandCountryRateSchema = z.object({
+  id: z.string(),
+  brandCountryId: z.string(),
+  brandName: z.string(),
+  countryName: z.string(),
+  countryCode: z.string(),
+  buyRate: z.number(),
+  sellRate: z.number(),
+});
+
+export const getUserBrandCountryRates = adminActionClient
+  .inputSchema(z.object({ userId: z.string() }))
+  .outputSchema(z.object({ success: z.literal(true), rates: z.array(userBrandCountryRateSchema) }))
+  .action(async ({ parsedInput }) => {
+    const { userId } = parsedInput;
+
+    const rates = await prisma.userBrandCountryRate.findMany({
+      where: { userId },
+      include: {
+        brandCountry: {
+          include: {
+            brand: true,
+            country: true,
+          },
+        },
+      },
+      orderBy: {
+        brandCountry: {
+          brand: {
+            name: 'asc',
+          },
+        },
+      },
+    });
+
+    return {
+      success: true as const,
+      rates: rates.map((r) => ({
+        id: r.id,
+        brandCountryId: r.brandCountryId,
+        brandName: r.brandCountry.brand.name,
+        countryName: r.brandCountry.country.name,
+        countryCode: r.brandCountry.country.code,
+        buyRate: Number(r.buyRate),
+        sellRate: Number(r.sellRate),
+      })),
+    };
+  });
+
+export const updateUserBrandCountryRate = adminActionClient
+  .inputSchema(
+    z.object({
+      userId: z.string(),
+      brandCountryId: z.string(),
+      buyRate: z.number().min(0).max(1),
+      sellRate: z.number().min(0).max(1),
+    }),
+  )
+  .outputSchema(z.object({ success: z.literal(true) }))
+  .action(async ({ parsedInput }) => {
+    const { userId, brandCountryId, buyRate, sellRate } = parsedInput;
+
+    await prisma.userBrandCountryRate.upsert({
+      where: {
+        userId_brandCountryId: {
+          userId,
+          brandCountryId,
+        },
+      },
+      create: {
+        userId,
+        brandCountryId,
+        buyRate,
+        sellRate,
+      },
+      update: {
+        buyRate,
+        sellRate,
+      },
+    });
+
+    return { success: true as const };
+  });
+
+export const deleteUserBrandCountryRate = adminActionClient
+  .inputSchema(
+    z.object({
+      userId: z.string(),
+      brandCountryId: z.string(),
+    }),
+  )
+  .outputSchema(z.object({ success: z.literal(true) }))
+  .action(async ({ parsedInput }) => {
+    const { userId, brandCountryId } = parsedInput;
+
+    await prisma.userBrandCountryRate.delete({
+      where: {
+        userId_brandCountryId: {
+          userId,
+          brandCountryId,
+        },
+      },
+    });
+
+    return { success: true as const };
   });

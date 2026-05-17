@@ -21,7 +21,7 @@ import { formatCurrency } from '@/lib/currency-formatter';
 import { copyToClipboard } from '@/lib/clipboard';
 
 export const RedeemStep = () => {
-  const { foundGiftcards, reportIssue, setStep, orderId } = useBuyFlow();
+  const { foundGiftcards, reportIssue, setStep, orderId, selectedBrand, selectedCountry } = useBuyFlow();
 
   const [redeemState, setRedeemState] = useState<{
     activeReportId: string | null;
@@ -39,16 +39,15 @@ export const RedeemStep = () => {
 
   const { execute: executeGetUserBuyRate } = useAction(getUserBuyRate, {
     onSuccess: ({ data }) => {
-      const rate = data;
-      if (typeof rate === 'number') {
-        setRedeemState((prev) => ({ ...prev, buyRate: rate }));
+      if (data?.success && typeof data.rate === 'number') {
+        setRedeemState((prev) => ({ ...prev, buyRate: data.rate }));
       }
     },
   });
 
   useEffect(() => {
-    executeGetUserBuyRate();
-  }, [executeGetUserBuyRate]);
+    executeGetUserBuyRate({ brandId: selectedBrand, countryId: selectedCountry });
+  }, [executeGetUserBuyRate, selectedBrand, selectedCountry]);
 
   const setLoading = (id: string, loading: boolean) => {
     setRedeemState((prev) => {

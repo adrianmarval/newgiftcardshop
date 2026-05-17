@@ -22,6 +22,8 @@ const brandWithCountriesSchema = z.object({
       minAmount: z.number().nullable(),
       maxAmount: z.number().nullable(),
       isActive: z.boolean(),
+      buyRate: z.number().nullable(),
+      sellRate: z.number().nullable(),
     }),
   ),
 });
@@ -87,6 +89,7 @@ export const getAllBrands = adminActionClient.outputSchema(getBrandsOutputSchema
       countries: {
         include: {
           country: true,
+          rate: true,
         },
       },
     },
@@ -109,6 +112,8 @@ export const getAllBrands = adminActionClient.outputSchema(getBrandsOutputSchema
         minAmount: bc.minAmount ? Number(bc.minAmount) : null,
         maxAmount: bc.maxAmount ? Number(bc.maxAmount) : null,
         isActive: bc.isActive,
+        buyRate: bc.rate ? Number(bc.rate.buyRate) : null,
+        sellRate: bc.rate ? Number(bc.rate.sellRate) : null,
       })),
     })),
   };
@@ -290,6 +295,34 @@ export const toggleBrandCountryActive = adminActionClient
         brandId_countryId: { brandId, countryId },
       },
       data: { isActive },
+    });
+
+    return { success: true as const };
+  });
+
+export const updateBrandCountryRate = adminActionClient
+  .inputSchema(
+    z.object({
+      brandCountryId: z.string(),
+      buyRate: z.number().min(0).max(1),
+      sellRate: z.number().min(0).max(1),
+    }),
+  )
+  .outputSchema(z.object({ success: z.literal(true) }))
+  .action(async ({ parsedInput }) => {
+    const { brandCountryId, buyRate, sellRate } = parsedInput;
+
+    await prisma.brandCountryRate.upsert({
+      where: { brandCountryId },
+      create: {
+        brandCountryId,
+        buyRate,
+        sellRate,
+      },
+      update: {
+        buyRate,
+        sellRate,
+      },
     });
 
     return { success: true as const };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { publishBatch } from '@/actions/seller/publish-batch';
+import { getSellerRate } from '@/actions/seller/get-rate';
 import { BrandStep } from '@/components/sell/steps/brand-step';
 import { DataEntryStep } from '@/components/sell/steps/data-entry-step';
 import { ReviewStep } from '@/components/sell/steps/review-step';
@@ -25,16 +26,39 @@ import { useRouter } from 'next/navigation';
 
 const STEP_LABELS = ['Config', 'Load', 'Review'];
 
-export const SellBatchManager = ({ brandCountries, sellRate }: SellBatchManagerProps) => {
+export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: SellBatchManagerProps) => {
   const { step, resetForm, giftcards, selectedBrandCountry, images, brandCountryLimits } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [duplicates, setDuplicates] = useState<string[]>([]);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [sellRate, setSellRate] = useState(sellRateProp ?? 0.75);
   const router = useRouter();
 
   const selectedBrandCountryData = useMemo(() => {
     return brandCountries.find((bc) => `${bc.brandId}|${bc.countryId}` === selectedBrandCountry);
   }, [brandCountries, selectedBrandCountry]);
+
+  // Cargar tarifa de venta dinámicamente cuando el vendedor selecciona la marca y país
+  useEffect(() => {
+    if (selectedBrandCountryData) {
+      getSellerRate({
+        brandId: selectedBrandCountryData.brandId,
+        countryId: selectedBrandCountryData.countryId,
+      }).then((res) => {
+        if (res?.data) {
+          if (res.data.success) {
+            setSellRate(res.data.rate);
+          } else {
+            // Mostrar warning amigable en vez de romper la página
+            showAlert.toast.warning(
+              res.data.error || 'Esta combinación no tiene tarifas de venta configuradas. Usando valor por defecto.'
+            );
+            setSellRate(0.75); // Fallback por defecto
+          }
+        }
+      });
+    }
+  }, [selectedBrandCountryData]);
 
   const { execute, status } = useAction(publishBatch, {
     onSuccess: ({ data }) => {

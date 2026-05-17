@@ -23,6 +23,7 @@ import {
   removeCountryFromBrand,
   toggleBrandActive,
   toggleBrandCountryActive,
+  updateBrandCountryRate,
 } from '@/actions/admin/brands';
 
 interface BrandWithCountries {
@@ -40,6 +41,8 @@ interface BrandWithCountries {
     minAmount: number | null;
     maxAmount: number | null;
     isActive: boolean;
+    buyRate: number | null;
+    sellRate: number | null;
   }>;
 }
 
@@ -64,7 +67,12 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
 
   const [newBrand, setNewBrand] = useState({ name: '', slug: '', icon: '📦', image: '' });
   const [newCountry, setNewCountry] = useState({ countryId: '', minAmount: '', maxAmount: '' });
-  const [countryLimits, setCountryLimits] = useState<{ minAmount: string; maxAmount: string }>({ minAmount: '', maxAmount: '' });
+  const [countryLimits, setCountryLimits] = useState<{ minAmount: string; maxAmount: string; buyRate: string; sellRate: string }>({
+    minAmount: '',
+    maxAmount: '',
+    buyRate: '',
+    sellRate: '',
+  });
 
   const { execute: executeCreate, status: createStatus } = useAction(createBrand, {
     onSuccess: () => {
@@ -110,6 +118,14 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       refreshBrands();
     },
     onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error updating limits'),
+  });
+
+  const { execute: executeUpdateRate, status: updateRateStatus } = useAction(updateBrandCountryRate, {
+    onSuccess: () => {
+      showAlert.toast.success('Rates updated');
+      refreshBrands();
+    },
+    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error updating rates'),
   });
 
   const { execute: executeRemoveCountry, status: removeCountryStatus } = useAction(removeCountryFromBrand, {
@@ -171,13 +187,20 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
     });
   };
 
-  const handleUpdateLimits = (countryId: string) => {
+  const handleUpdateLimits = (bc: any) => {
     if (!selectedBrand) return;
     executeUpdateLimits({
       brandId: selectedBrand.id,
-      countryId,
+      countryId: bc.countryId,
       minAmount: countryLimits.minAmount ? parseFloat(countryLimits.minAmount) : null,
       maxAmount: countryLimits.maxAmount ? parseFloat(countryLimits.maxAmount) : null,
+    });
+    const bRate = countryLimits.buyRate ? parseFloat(countryLimits.buyRate) / 100 : 0.85;
+    const sRate = countryLimits.sellRate ? parseFloat(countryLimits.sellRate) / 100 : 0.75;
+    executeUpdateRate({
+      brandCountryId: bc.id,
+      buyRate: bRate,
+      sellRate: sRate,
     });
   };
 
@@ -412,34 +435,62 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                           </Badge>
                         )}
                       </div>
-                      <span className="text-muted-foreground text-xs">
-                        Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'}
+                      <span className="text-muted-foreground text-xs block">
+                        Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'} | Default Rates: Buy {(bc.buyRate ? bc.buyRate * 100 : 85).toFixed(1)}% / Sell {(bc.sellRate ? bc.sellRate * 100 : 75).toFixed(1)}%
                       </span>
                     </div>
                     <div className="flex gap-1">
                       {editingCountryId === bc.id ? (
-                        <>
-                          <Input
-                            type="number"
-                            placeholder="Min"
-                            value={countryLimits.minAmount}
-                            onChange={(e) => setCountryLimits((p) => ({ ...p, minAmount: e.target.value }))}
-                            className="h-8 w-20"
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Max"
-                            value={countryLimits.maxAmount}
-                            onChange={(e) => setCountryLimits((p) => ({ ...p, maxAmount: e.target.value }))}
-                            className="h-8 w-20"
-                          />
-                          <Button size="sm" onClick={() => handleUpdateLimits(bc.countryId)} disabled={updateLimitsStatus === 'executing'}>
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => setEditingCountryId(null)}>
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-muted-foreground">Min ($)</span>
+                            <Input
+                              type="number"
+                              placeholder="Min"
+                              value={countryLimits.minAmount}
+                              onChange={(e) => setCountryLimits((p) => ({ ...p, minAmount: e.target.value }))}
+                              className="h-8 w-16"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-muted-foreground">Max ($)</span>
+                            <Input
+                              type="number"
+                              placeholder="Max"
+                              value={countryLimits.maxAmount}
+                              onChange={(e) => setCountryLimits((p) => ({ ...p, maxAmount: e.target.value }))}
+                              className="h-8 w-16"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-muted-foreground">Buy Rate (%)</span>
+                            <Input
+                              type="number"
+                              placeholder="Buy %"
+                              value={countryLimits.buyRate}
+                              onChange={(e) => setCountryLimits((p) => ({ ...p, buyRate: e.target.value }))}
+                              className="h-8 w-20"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-muted-foreground">Sell Rate (%)</span>
+                            <Input
+                              type="number"
+                              placeholder="Sell %"
+                              value={countryLimits.sellRate}
+                              onChange={(e) => setCountryLimits((p) => ({ ...p, sellRate: e.target.value }))}
+                              className="h-8 w-20"
+                            />
+                          </div>
+                          <div className="flex items-end gap-1 mt-4">
+                            <Button size="sm" onClick={() => handleUpdateLimits(bc)} disabled={updateLimitsStatus === 'executing' || updateRateStatus === 'executing'}>
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditingCountryId(null)}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
                       ) : (
                         <>
                           <Button
@@ -447,7 +498,12 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                             variant="outline"
                             onClick={() => {
                               setEditingCountryId(bc.id);
-                              setCountryLimits({ minAmount: bc.minAmount?.toString() || '', maxAmount: bc.maxAmount?.toString() || '' });
+                              setCountryLimits({
+                                minAmount: bc.minAmount?.toString() || '',
+                                maxAmount: bc.maxAmount?.toString() || '',
+                                buyRate: (bc.buyRate ? bc.buyRate * 100 : 85).toString(),
+                                sellRate: (bc.sellRate ? bc.sellRate * 100 : 75).toString(),
+                              });
                             }}
                           >
                             <Edit2 className="h-4 w-4" />

@@ -47,10 +47,16 @@ export const publishBatchOutputSchema = z.union([
 // ── Get Seller Rate ─────────────────────────────────────────────────────────────
 
 /** Schema de salida para getSellerRate */
-export const getSellerRateOutputSchema = z.object({
-  success: z.literal(true),
-  rate: z.number(),
-});
+export const getSellerRateOutputSchema = z.union([
+  z.object({
+    success: z.literal(true),
+    rate: z.number(),
+  }),
+  z.object({
+    success: z.literal(false),
+    error: z.string(),
+  }),
+]);
 
 // ── Check Existing Codes ───────────────────────────────────────────────────────
 
