@@ -8,6 +8,7 @@ import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
 import { getUserRates } from '@/services/pricing.service';
 import { formatCurrency } from '@/lib/currency-formatter';
+import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
 
   await renderUI(
     ctx,
-    `💵 <b>¿Cuánto querés gastar? (face value en USD)</b>\n\n` +
+    `💵 <b>¿Qué monto de tarjetas querés? (USD)</b>\n\n` +
       `Marca: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
       `Escribí el monto. Ejemplo: <code>50</code>`,
     {
@@ -204,27 +205,43 @@ export async function handleAmountText(ctx: BuyerContext) {
   const result = findGiftcardCombination(
     allCards,
     amount,
+    Math.floor(Number(buyRate) * 100),
     user.minAmountPreference ? new Decimal(user.minAmountPreference) : undefined,
     user.maxAmountPreference ? new Decimal(user.maxAmountPreference) : undefined,
   );
 
   if (result.selectedCards.length === 0) {
-    return renderUI(ctx, `😔 No hay tarjetas disponibles para <b>${fmt$(amount)}</b> con tus preferencias actuales.`, {
-      parse_mode: 'HTML',
-      reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`),
-    });
+    const buyerRatePercent = Math.floor(Number(buyRate) * 100);
+    const accessibleAmount = result.tierInfo.accessibleAmount;
+    const inaccessibleAmount = result.tierInfo.inaccessibleAmount;
+    const accessibleCards = result.tierInfo.accessibleCards.length;
+
+    let msg = '';
+
+    if (inaccessibleAmount.gt(0) && accessibleAmount.eq(0)) {
+      msg = `😔 No hay tarjetas disponibles a tu tasa (${buyerRatePercent}%).\n\n⏱️ Reintentá en unos minutos.`;
+    } else {
+      msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount))}).\n\nEl total no alcanza lo que buscás.`;
+    }
+
+    const kb = new InlineKeyboard()
+      .text('⬅️ Cambiar Monto', `buy_country_${countryId}`)
+      .row()
+      .text('🔄 Reintentar', `buy_country_${countryId}`);
+
+    return renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
   }
 
   const cards = result.selectedCards as typeof allCards;
   const totalFace = cards.reduce((s, c) => s + Number(c.amount), 0);
   const totalCost = totalFace * Number(buyRate);
 
+  const ratePercent = (Number(buyRate) * 100).toFixed(0);
   let msg =
-    `🛒 <b>Tarjetas encontradas:</b>\n\n` +
+    `🛒 <b>Tarjetas encontradas al ${ratePercent}%:</b>\n\n` +
     cards.map((c) => `• ${fmt$(c.amount)}`).join('\n') +
     `\n\n` +
     `Face value total: <b>${fmt$(totalFace)}</b>\n` +
-    `Tasa de compra: ${(Number(buyRate) * 100).toFixed(0)}%\n` +
     `<b>Total a pagar: ${fmt$(totalCost)}</b>\n\n` +
     `¿Confirmar la orden?`;
 
@@ -263,6 +280,15 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
   const giftcards = await prisma.giftcard.findMany({
     where: { id: { in: selectedGiftcardIds }, inStock: true, status: 'UNUSED' },
   });
+
+  const buyerBuyRate = Math.floor(Number(buyRate) * 100);
+  const blockedCards = giftcards.filter((c) => (c.escalationTier ?? 100) > buyerBuyRate);
+  if (blockedCards.length > 0) {
+    await ctx.answerCallbackQuery('Algunas tarjetas cambiaron de tier. Intentá de nuevo.');
+    return renderUI(ctx, '😔 Algunas tarjetas ya no están disponibles para tu tasa. Intentá de nuevo con /buy.', {
+      reply_markup: new InlineKeyboard().text('🛒 Nueva búsqueda', 'buy_start'),
+    });
+  }
 
   if (giftcards.length === 0) {
     await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');

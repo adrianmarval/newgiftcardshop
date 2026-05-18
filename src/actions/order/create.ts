@@ -6,6 +6,45 @@ import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { createOrderInputSchema, createOrderOutputSchema } from '@/types/domain/order';
 import { getUserRates } from '@/services/pricing.service';
 
+async function getBuyerBuyRate(userId: string, brandCountryId: string): Promise<number> {
+  const userRate = await prisma.userBrandCountryRate.findFirst({
+    where: { userId, brandCountryId },
+    select: { buyRate: true },
+  });
+
+  if (userRate) {
+    return Math.floor(userRate.buyRate.toNumber());
+  }
+
+  const defaultRate = await prisma.brandCountryRate.findUnique({
+    where: { brandCountryId },
+    select: { buyRate: true },
+  });
+
+  if (defaultRate) {
+    return Math.floor(defaultRate.buyRate.toNumber());
+  }
+
+  return 100;
+}
+
+function validateTierAccess(cards: { id: string; escalationTier: number }[], buyerBuyRate: number): string | null {
+  const blockedCards: string[] = [];
+
+  for (const card of cards) {
+    const tier = card.escalationTier ?? 100;
+    if (tier > buyerBuyRate) {
+      blockedCards.push(card.id);
+    }
+  }
+
+  if (blockedCards.length > 0) {
+    return `No puedes tomar ${blockedCards.length} tarjeta(s). Algunas cambiaron de tier. Por favor re-busca.`;
+  }
+
+  return null;
+}
+
 export const createOrder = buyerActionClient
   .inputSchema(createOrderInputSchema)
   .outputSchema(createOrderOutputSchema)
@@ -32,6 +71,13 @@ export const createOrder = buyerActionClient
       buyRate = rates.buyRate as Prisma.Decimal;
     } catch (error: any) {
       throw new ActionError(error.message || 'No se han configurado tarifas para esta marca y país.');
+    }
+
+    const buyerBuyRate = Math.floor(buyRate.toNumber());
+
+    const tierError = validateTierAccess(ctx.giftcards, buyerBuyRate);
+    if (tierError) {
+      throw new ActionError(tierError);
     }
 
     const total = ctx.giftcards.reduce((sum, card) => {

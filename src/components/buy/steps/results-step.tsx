@@ -28,7 +28,7 @@ import { formatCurrency } from '@/lib/currency-formatter';
 import { showAlert } from '@/lib/swal';
 
 export const ResultsStep = () => {
-  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, selectedCountry, targetAmount, setOrderId, setFoundGiftcards } = useBuyFlow();
+  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, selectedCountry, targetAmount, setOrderId, setFoundGiftcards, tierInfo } = useBuyFlow();
   const [resultsState, setResultsState] = useState<{
     brandData: Brand | null;
     buyRate: number;
@@ -160,6 +160,32 @@ export const ResultsStep = () => {
               Los códigos se revelarán en el siguiente paso. Puedes eliminar las tarjetas que no quieras de la lista de la derecha.
             </p>
           </div>
+
+          {tierInfo && (
+            <div className="border-border bg-muted/30 space-y-2 rounded-xl border p-3 md:p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs md:text-sm">Tu tasa</span>
+                <span className="font-bold text-primary text-sm md:text-base">{tierInfo.buyerBuyRate}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs md:text-sm">Monto disponible</span>
+                <span className="font-bold text-green-500 text-sm md:text-base">
+                  {formatCurrency(Number(tierInfo.accessibleAmount), { currency: 'USD' })}
+                </span>
+              </div>
+              {Number(tierInfo.inaccessibleAmount) > 0 && (
+                <div className="flex items-center justify-between border-t border-dashed border-border/50 pt-2 mt-2">
+                  <span className="text-muted-foreground text-xs md:text-sm">No disponible aún</span>
+                  <span className="text-muted-foreground text-xs md:text-sm">
+                    {formatCurrency(Number(tierInfo.inaccessibleAmount), { currency: 'USD' })}
+                  </span>
+                </div>
+              )}
+              <p className="text-muted-foreground text-[10px] leading-tight md:text-xs">
+                Las tarjetas con tasa mayor a {tierInfo.buyerBuyRate}% no están disponibles para ti actualmente.
+              </p>
+            </div>
+          )}
         </div>
       </Card>
 

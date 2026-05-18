@@ -136,5 +136,20 @@ export const seedData: SeedData = {
       value: '57038454',
       description: 'ID de pago de Binance',
     },
+    {
+      key: 'escalation_enabled',
+      value: 'true',
+      description: 'Habilitar sistema de reserva escalonada de tarjetas',
+    },
+    {
+      key: 'escalation_duration_minutes',
+      value: '5',
+      description: 'Duración de cada tier de escalación en minutos',
+    },
+    {
+      key: 'escalation_drop_amount',
+      value: '1',
+      description: 'Cuánto baja el tier en cada ciclo de escalación',
+    },
   ],
 };

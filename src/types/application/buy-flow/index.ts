@@ -24,6 +24,7 @@ export type {
   OrderCardItem,
   ReportGiftcardIssueInput,
   UndoGiftcardIssueInput,
+  TierInfo,
 } from './BuyFlowActions';
 
 export type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from './giftcard-selection';

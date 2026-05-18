@@ -11,6 +11,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   foundGiftcards: [],
   orderId: null,
   adjustedTotal: null,
+  tierInfo: null,
 
   setStep: (step) => set({ step }),
   setSelectedBrand: (brand) => set({ selectedBrand: brand }),
@@ -19,6 +20,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   setFoundGiftcards: (cards) => set({ foundGiftcards: cards }),
   setOrderId: (id) => set({ orderId: id }),
   setAdjustedTotal: (total) => set({ adjustedTotal: total }),
+  setTierInfo: (info) => set({ tierInfo: info }),
 
   removeGiftcard: (id) =>
     set((state) => ({
@@ -47,5 +49,6 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
       foundGiftcards: [],
       orderId: null,
       adjustedTotal: null,
+      tierInfo: null,
     }),
 }));

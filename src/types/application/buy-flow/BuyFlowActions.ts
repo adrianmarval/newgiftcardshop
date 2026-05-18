@@ -36,14 +36,29 @@ export const searchGiftcardItemSchema = z.object({
 
 export type SearchGiftcardItem = z.infer<typeof searchGiftcardItemSchema>;
 
+/** Schema para información de tiers en respuesta de búsqueda */
+export const tierInfoSchema = z.object({
+  buyerBuyRate: z.number(),
+  accessibleAmount: z.string(),
+  inaccessibleAmount: z.string(),
+  totalCards: z.number(),
+  accessibleCardCount: z.number(),
+  inaccessibleCardCount: z.number(),
+});
+
+export type TierInfo = z.infer<typeof tierInfoSchema>;
+
 /** Schema de salida para searchGiftcards */
-export const searchGiftcardsOutputSchema = z
-  .object({
-    success: z.literal(true),
-    giftcards: z.array(searchGiftcardItemSchema),
-    error: z.string().optional(),
-  })
-  .strict();
+export const searchGiftcardsOutputSchema = z.object({
+  success: z.literal(true),
+  giftcards: searchGiftcardItemSchema
+    .extend({
+      escalationTier: z.number().optional(),
+    })
+    .array(),
+  error: z.string().optional(),
+  tierInfo: tierInfoSchema.optional(),
+});
 
 // ── Get Order Cards ───────────────────────────────────────────────────────────
 

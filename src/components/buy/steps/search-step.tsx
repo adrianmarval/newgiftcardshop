@@ -18,6 +18,7 @@ import type { SearchStepProps } from '@/components/buy/types';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/user/search-preferences';
 import { getUserBuyRate } from '@/actions/order/get-user-buy-rate';
 import { showAlert } from '@/lib/swal';
+import type { SearchGiftcardItem, TierInfo } from '@/types/application/buy-flow';
 
 export function SearchStep({ brandCountries }: SearchStepProps) {
   const { data: session } = useSession();
@@ -30,6 +31,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     setTargetAmount,
     setStep,
     setFoundGiftcards,
+    setTierInfo,
   } = useBuyFlow();
 
   const [searchBrand, setSearchBrand] = useState('');
@@ -177,12 +179,21 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   }, [brandCountries, selectedCountry, searchBrand]);
 
   const { execute, status } = useAction(searchGiftcards, {
-    onSuccess: ({ data }) => {
-      if (data?.success && data.giftcards && data.giftcards.length > 0) {
-        setFoundGiftcards(data.giftcards);
+    onSuccess: (result) => {
+      const data = result;
+      if (!data?.data) return;
+      const { success, giftcards, error, tierInfo } = data.data;
+      if (success && giftcards && giftcards.length > 0) {
+        setFoundGiftcards(giftcards as SearchGiftcardItem[]);
+        if (tierInfo) {
+          setTierInfo(tierInfo as TierInfo);
+        }
         setStep(2);
-      } else if (data?.error) {
-        showAlert.error('Error', data.error);
+      } else if (error) {
+        if (tierInfo) {
+          setTierInfo(tierInfo as TierInfo);
+        }
+        showAlert.error('Error', error);
       } else {
         showAlert.warning('Sin stock', 'No se encontraron tarjetas disponibles con los criterios seleccionados.');
       }

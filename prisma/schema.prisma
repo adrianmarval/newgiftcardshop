@@ -148,6 +148,11 @@ model Giftcard {
   updatedAt         DateTime @updatedAt
   provenanceImageId String?
 
+  // Sistema de reserva escalonada
+  escalationTier Int      @default(100)
+  tierStartedAt  DateTime @default(now())
+  tierUpdatedAt  DateTime @updatedAt
+
   @@map("giftcard")
 }
 

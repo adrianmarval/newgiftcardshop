@@ -8,6 +8,7 @@ import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { getUserRates } from '@/services/pricing.service';
+import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -350,6 +351,9 @@ export async function handleSellConfirm(ctx: SellerContext) {
     return ctx.answerCallbackQuery();
   }
 
+  const escalationService = new GiftcardEscalationService();
+  const initialTier = await escalationService.getInitialTier(brandCountryId);
+
   const batch = await prisma.$transaction(async (tx) => {
     const createdBatch = await tx.giftcardBatch.create({
       data: { userId: ctx.user.id, sellRate: sellRate, isPaid: false },
@@ -367,6 +371,7 @@ export async function handleSellConfirm(ctx: SellerContext) {
           status: 'UNUSED',
           batchId: createdBatch.id,
           brandCountryId,
+          escalationTier: initialTier,
         },
       });
     }

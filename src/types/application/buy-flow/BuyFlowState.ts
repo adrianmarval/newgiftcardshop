@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { BuyFlowCard } from './BuyFlowCard';
+import type { TierInfo } from './BuyFlowActions';
 
 // ── Buy Flow State ────────────────────────────────────────────────────────────
 
@@ -26,6 +27,8 @@ export interface BuyFlowState {
   orderId: string | null;
   /** Se setea después de confirmOrderUsage — el adjusted total calculado por el server. */
   adjustedTotal: number | null;
+  /** Información de tiers de escalación para mostrar al buyer */
+  tierInfo: TierInfo | null;
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -36,6 +39,7 @@ export interface BuyFlowState {
   setFoundGiftcards: (cards: BuyFlowCard[]) => void;
   setOrderId: (id: string | null) => void;
   setAdjustedTotal: (total: number | null) => void;
+  setTierInfo: (info: TierInfo | null) => void;
 
   /** Quita un card de la orden (buyer cambió de opinión). */
   removeGiftcard: (id: string) => void;

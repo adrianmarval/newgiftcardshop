@@ -7,6 +7,29 @@ import { headers } from 'next/headers';
 import { searchGiftcardSchema, searchGiftcardsOutputSchema } from '@/types/application/buy-flow';
 import { auth } from '@/lib/auth';
 import { Decimal } from '@prisma/client/runtime/client';
+import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
+
+async function getBuyerBuyRate(userId: string, brandCountryId: string): Promise<number> {
+  const userRate = await prisma.userBrandCountryRate.findFirst({
+    where: { userId, brandCountryId },
+    select: { buyRate: true },
+  });
+
+  if (userRate && userRate.buyRate.gt(0)) {
+    return Math.floor(userRate.buyRate.toNumber() * 100);
+  }
+
+  const defaultRate = await prisma.brandCountryRate.findUnique({
+    where: { brandCountryId },
+    select: { buyRate: true },
+  });
+
+  if (defaultRate && defaultRate.buyRate.gt(0)) {
+    return Math.floor(defaultRate.buyRate.toNumber() * 100);
+  }
+
+  return 100;
+}
 
 export const searchGiftcards = buyerActionClient
   .inputSchema(searchGiftcardSchema)
@@ -72,6 +95,8 @@ export const searchGiftcards = buyerActionClient
       return { success: true as const, giftcards: [] };
     }
 
+    const buyerBuyRate = await getBuyerBuyRate(session.user.id, brandCountry.id);
+
     const allGiftcards = await prisma.giftcard.findMany({
       where: {
         brandCountryId: brandCountry.id,
@@ -87,29 +112,41 @@ export const searchGiftcards = buyerActionClient
       },
     });
 
-    const selectedGiftcards = findGiftcardCombination(
+    const result = findGiftcardCombination(
       allGiftcards,
       amount,
+      buyerBuyRate,
       user?.minAmountPreference ? new Decimal(user.minAmountPreference) : undefined,
       user?.maxAmountPreference ? new Decimal(user.maxAmountPreference) : undefined,
     );
 
-    if (selectedGiftcards.selectedCards.length === 0 && allGiftcards.length > 0) {
-      const outsideAmount = allGiftcards.reduce((sum, c) => sum + Number(c.amount), 0);
+    if (result.selectedCards.length === 0 && allGiftcards.length > 0) {
+      const totalInaccessible = result.tierInfo.inaccessibleAmount.toNumber();
+      const totalAccessible = result.tierInfo.accessibleAmount.toNumber();
+
+      if (totalInaccessible > 0 && totalAccessible === 0) {
+        return {
+          success: true as const,
+          giftcards: [],
+          error: `No hay tarjetas disponibles a tu tasa (${buyerBuyRate}%).\n\nReintentá en unos minutos.`,
+        };
+      }
+
       return {
         success: true as const,
         giftcards: [],
-        error: `No hay tarjetas dentro de tus preferencias. Hay $${outsideAmount.toFixed(2)} disponible. Cambiá tus preferencias para ver más opciones.`,
+        error: `Podés acceder a ${result.tierInfo.accessibleCards.length} tarjetas ($${totalAccessible.toFixed(2)}).\n\nEl total disponible no alcanza las tarjetas que buscás. Intentá con un monto menor.`,
       };
     }
 
     return {
       success: true as const,
-      giftcards: (selectedGiftcards.selectedCards as any[]).map((card) => ({
+      giftcards: (result.selectedCards as any[]).map((card) => ({
         id: card.id,
         brand: card.brandCountryId,
         amount: Number(card.amount),
         status: 'UNUSED' as const,
+        escalationTier: card.escalationTier ?? 100,
         country: card.brandCountry.country
           ? {
               name: card.brandCountry.country.name,
@@ -118,5 +155,13 @@ export const searchGiftcards = buyerActionClient
             }
           : null,
       })),
+      tierInfo: {
+        buyerBuyRate,
+        accessibleAmount: result.tierInfo.accessibleAmount.toString(),
+        inaccessibleAmount: result.tierInfo.inaccessibleAmount.toString(),
+        totalCards: allGiftcards.length,
+        accessibleCardCount: result.tierInfo.accessibleCards.length,
+        inaccessibleCardCount: result.tierInfo.inaccessibleCards.length,
+      },
     };
   });

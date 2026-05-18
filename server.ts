@@ -3,6 +3,39 @@ import next from 'next';
 import { webhookCallback } from 'grammy';
 
 const isProd = process.env.NODE_ENV === 'production';
+
+// ── Giftcard Escalation Service ─────────────────────────────────────────────────
+let escalationInterval: NodeJS.Timeout | null = null;
+
+async function initEscalationService() {
+  try {
+    const { GiftcardEscalationService } = await import('./src/lib/services/giftcard-escalation');
+    const escalationService = new GiftcardEscalationService();
+
+    const config = await escalationService.getConfig();
+
+    if (!config.enabled) {
+      console.log('[Escalation] Sistema deshabilitado via PlatformSettings');
+      return;
+    }
+
+    const intervalMs = config.durationMinutes * 60 * 1000;
+    console.log(`[Escalation] Iniciado - intervalo: ${config.durationMinutes}min`);
+
+    escalationInterval = setInterval(async () => {
+      try {
+        const result = await escalationService.processEscalationTiers();
+        if (result.processed > 0) {
+          console.log(`[Escalation] Procesadas ${result.processed} tarjetas`);
+        }
+      } catch (err) {
+        console.error('[Escalation] Error:', err);
+      }
+    }, intervalMs);
+  } catch (err) {
+    console.error('[Escalation] Error al iniciar:', err);
+  }
+}
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
@@ -13,6 +46,9 @@ const handleNextRequest = app.getRequestHandler();
 console.log('[Server] Preparando Next.js...');
 await app.prepare();
 console.log('[Server] Next.js listo.');
+
+// ── Giftcard Escalation ───────────────────────────────────────────────────────
+await initEscalationService();
 
 // ── Bots (opcionales — Next.js arranca igual si faltan los tokens) ─────────────
 type BotEntry = { bot: any; webhookPath: string; name: string };

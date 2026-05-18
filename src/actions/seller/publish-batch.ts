@@ -7,6 +7,7 @@ import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import { publishBatchSchema, publishBatchOutputSchema } from '@/types/domain/seller';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
 import { getUserRates } from '@/services/pricing.service';
+import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
 
 export const publishBatch = sellerActionClient
   .inputSchema(publishBatchSchema)
@@ -111,6 +112,9 @@ export const publishBatch = sellerActionClient
       throw new ActionError(error.message || 'No se han configurado tarifas para esta marca y país.');
     }
 
+    const escalationService = new GiftcardEscalationService();
+    const initialTier = await escalationService.getInitialTier(brandCountryId);
+
     const batch = await prisma.$transaction(async (tx) => {
       const createdBatch = await tx.giftcardBatch.create({
         data: {
@@ -136,6 +140,7 @@ export const publishBatch = sellerActionClient
             status: 'UNUSED',
             batchId: createdBatch.id,
             brandCountryId,
+            escalationTier: initialTier,
           },
         });
 

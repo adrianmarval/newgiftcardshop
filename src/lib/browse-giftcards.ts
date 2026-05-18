@@ -4,11 +4,21 @@ import type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from '
 
 export type { GiftcardSelectionResult };
 
+export interface GiftcardSelectionWithTierInfo extends GiftcardSelectionResult {
+  tierInfo: {
+    accessibleCards: Giftcard[];
+    inaccessibleCards: Giftcard[];
+    accessibleAmount: Decimal;
+    inaccessibleAmount: Decimal;
+    buyerBuyRate: number;
+  };
+}
+
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
 const TOLERANCE_RANGE = new Decimal(5);
 const MAX_CARDS_EXACT_SEARCH = 30; // Consistente en todas las funciones
-const MAX_TARGET_AMOUNT = 1000;
+const MAX_TARGET_AMOUNT = 10000;
 const MAX_DP_TARGET = 10000;
 const BATCH_GROUP_BY_DAY_THRESHOLD = 3; // Agrupar por día si hay más de cards/N lotes
 
@@ -22,18 +32,34 @@ const BATCH_GROUP_BY_DAY_THRESHOLD = 3; // Agrupar por día si hay más de cards
  * - Preferir combinaciones dentro del rango de tolerancia de $5 por debajo
  * - Mantener prioridad estricta por antigüedad de lotes
  * - Filtrar tarjetas por denominación mínima/máxima
+ * - Filtrar tarjetas por tier de escalación (buyerBuyRate)
+ *
+ * @param cards - Lista de tarjetas disponibles
+ * @param targetPurchaseAmount - Monto objetivo de compra
+ * @param buyerBuyRate - Tasa de compra del buyer (para filtrar por tier)
+ * @param minamount - Monto mínimo de tarjeta
+ * @param maxamount - Monto máximo de tarjeta (opcional)
+ * @returns Resultado de selección con información de tier
  */
 export function findGiftcardCombination(
   cards: Giftcard[],
   targetPurchaseAmount: number,
+  buyerBuyRate: number,
   minamount: Decimal = new Decimal(1),
   maxamount?: Decimal | null,
-): GiftcardSelectionResult {
-  const emptyResult: GiftcardSelectionResult = {
+): GiftcardSelectionWithTierInfo {
+  const emptyResult: GiftcardSelectionWithTierInfo = {
     selectedCards: [],
     total: new Decimal(0),
     isExactMatch: false,
     isWithinToleranceRange: false,
+    tierInfo: {
+      accessibleCards: [],
+      inaccessibleCards: [],
+      accessibleAmount: new Decimal(0),
+      inaccessibleAmount: new Decimal(0),
+      buyerBuyRate,
+    },
   };
 
   if (
@@ -60,22 +86,70 @@ export function findGiftcardCombination(
     return emptyResult;
   }
 
+  // Filtrar por tier de escalación
+  const accessibleCards = availableCards.filter((card) => {
+    const tier = card.escalationTier ?? 100;
+    return tier <= buyerBuyRate;
+  });
+
+  const inaccessibleCards = availableCards.filter((card) => {
+    const tier = card.escalationTier ?? 100;
+    return tier > buyerBuyRate;
+  });
+
+  // Calcular montos por tier
+  let accessibleAmount = new Decimal(0);
+  for (const card of accessibleCards) {
+    accessibleAmount = accessibleAmount.add(card.amount);
+  }
+
+  let inaccessibleAmount = new Decimal(0);
+  for (const card of inaccessibleCards) {
+    inaccessibleAmount = inaccessibleAmount.add(card.amount);
+  }
+
+  // Si no hay tarjetas accesibles, retornar con info de tiers
+  if (accessibleCards.length === 0) {
+    return {
+      ...emptyResult,
+      tierInfo: {
+        accessibleCards: [],
+        inaccessibleCards,
+        accessibleAmount: new Decimal(0),
+        inaccessibleAmount,
+        buyerBuyRate,
+      },
+    };
+  }
+
   const target = new Decimal(targetPurchaseAmount);
 
-  // Preprocesar datos agrupando por lotes cronológicos
-  const batchData = preprocessCardsByBatches(availableCards);
+  // Preprocesar datos agrupando por lotes cronológicos (solo tarjetas accesibles)
+  const batchData = preprocessCardsByBatches(accessibleCards);
 
   // Estrategia 1: Selección secuencial por lotes antiguos
   const batchSequentialResult = batchSequentialSelection(batchData, target, TOLERANCE_RANGE);
 
+  // Agregar tierInfo al resultado
+  const addTierInfo = (result: GiftcardSelectionResult): GiftcardSelectionWithTierInfo => ({
+    ...result,
+    tierInfo: {
+      accessibleCards: result.selectedCards,
+      inaccessibleCards,
+      accessibleAmount: result.total,
+      inaccessibleAmount,
+      buyerBuyRate,
+    },
+  });
+
   if (batchSequentialResult.isExactMatch) {
-    return batchSequentialResult;
+    return addTierInfo(batchSequentialResult);
   }
 
   // Estrategia 2: Optimización inteligente manteniendo prioridad por lotes
   const optimizedResult = optimizeBatchSelection(batchData, batchSequentialResult, target, TOLERANCE_RANGE);
 
-  return selectBestResult(batchSequentialResult, optimizedResult, target, TOLERANCE_RANGE);
+  return addTierInfo(selectBestResult(batchSequentialResult, optimizedResult, target, TOLERANCE_RANGE));
 }
 
 // ─── Preprocesamiento ──────────────────────────────────────────────────────────
