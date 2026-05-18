@@ -7,6 +7,7 @@ import { findGiftcardCombination } from '@/lib/browse-giftcards';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
 import { getUserRates } from '@/services/pricing.service';
+import { formatCurrency } from '@/lib/currency-formatter';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ export async function handleBuyBrandSelected(ctx: BuyerContext) {
         where: { isActive: true },
         include: {
           country: true,
-          giftcards: { where: { inStock: true, status: 'UNUSED' }, select: { id: true } },
+          giftcards: { where: { inStock: true, status: 'UNUSED' }, select: { amount: true } },
         },
       },
     },
@@ -78,7 +79,10 @@ export async function handleBuyBrandSelected(ctx: BuyerContext) {
 
   const kb = new InlineKeyboard();
   for (const bc of countriesWithStock) {
-    kb.text(`${bc.country.name} (${bc.giftcards.length} disponibles)`, `buy_country_${bc.country.id}`).row();
+    const totalAmount = bc.giftcards.reduce((sum, gc) => sum + Number(gc.amount), 0);
+    const currency = bc.country.currency || 'USD';
+    const formatted = formatCurrency(totalAmount, { currency, minimumFractionDigits: 0 });
+    kb.text(`${bc.country.name} (${formatted} disponibles)`, `buy_country_${bc.country.id}`).row();
   }
   kb.text('⬅️ Volver', 'buy_start').row().text('❌ Cancelar', 'buy_cancel');
 
