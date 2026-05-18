@@ -56,9 +56,9 @@ export const searchGiftcards = buyerActionClient
       const unpaidOrders = await prisma.order.findMany({
         where: {
           userId: session.user.id,
-          status: 'AWAITING_PAYMENT',
+          status: { in: ['PENDING', 'AWAITING_PAYMENT'] },
         },
-        select: { adjustedTotal: true, total: true },
+        select: { adjustedTotal: true, total: true, status: true },
       });
 
       let unpaidTotal = new Decimal(0);

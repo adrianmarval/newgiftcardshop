@@ -177,29 +177,7 @@ export async function handleAmountText(ctx: BuyerContext) {
   const amountDec = new Decimal(amount);
   const creditCost = amountDec.mul(buyRate);
 
-  const hasOrdersPending = hasPendingOrders || unpaidTotal.gt(0);
-    
-  if (hasOrdersPending) {
-    const pendingMsg = hasPendingOrders 
-      ? `Tenés <b>${pendingCount}</b> orden(es) pendientes que deben ser procesadas para liberar crédito.`
-      : `Tenés <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.`;
-      
-    if (unpaidTotal.plus(creditCost).gt(user.creditLimit)) {
-      const availableCredit = user.creditLimit.minus(unpaidTotal);
-      return renderUI(
-        ctx,
-        `⚠️ <b>Crédito insuficiente</b>\n\n` +
-          `Tu límite: <b>${fmt$(user.creditLimit)}</b>\n` +
-          `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n` +
-          `Disponible: <b>${fmt$(availableCredit)}</b>\n` +
-          `Esta compra: <b>${fmt$(creditCost)}</b>\n\n` +
-          `${pendingMsg}\n\n` +
-          `Intentá con un monto igual o menor a <b>${fmt$(availableCredit)}</b>.`,
-        { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) },
-      );
-    }
-  }
-
+  // Siempre verificar límite de crédito
   if (unpaidTotal.gte(user.creditLimit)) {
     return renderUI(
       ctx,
@@ -208,6 +186,24 @@ export async function handleAmountText(ctx: BuyerContext) {
         `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n\n` +
         `Debes completar los pagos antes de comprar más tarjetas.`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('🏠 Volver', 'start') },
+    );
+  }
+
+  if (unpaidTotal.plus(creditCost).gt(user.creditLimit)) {
+    const availableCredit = user.creditLimit.minus(unpaidTotal);
+    const unpaidText = unpaidTotal.gt(0) ? `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n` : '';
+    const pendingMsg = hasPendingOrders
+      ? `\nTenés <b>${pendingCount}</b> orden(es) pendientes que deben ser procesadas para liberar crédito.`
+      : '';
+    return renderUI(
+      ctx,
+      `⚠️ <b>Crédito insuficiente</b>\n\n` +
+        `Tu límite: <b>${fmt$(user.creditLimit)}</b>\n` +
+        unpaidText +
+        `Disponible: <b>${fmt$(availableCredit)}</b>\n` +
+        `Esta compra: <b>${fmt$(creditCost)}</b>\n\n` +
+        `Intentá con un monto igual o menor a <b>${fmt$(availableCredit)}</b>.${pendingMsg}`,
+      { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) },
     );
   }
 
