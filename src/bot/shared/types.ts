@@ -47,6 +47,7 @@ export interface SellerSessionData {
     statusMessageId?: number;
   };
   uiMessageId?: number;
+  lastChatId?: number;
   storedMessageIds: number[];
 }
 
@@ -70,6 +71,7 @@ export interface BuyerSessionData {
     selectedGiftcardIds?: string[];
   };
   uiMessageId?: number;
+  lastChatId?: number;
   storedMessageIds: number[];
 }
 

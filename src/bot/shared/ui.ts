@@ -57,10 +57,20 @@ export async function renderUI(
     await ctx.answerCallbackQuery().catch(() => {});
   }
 
+  // Obtener el chat ID correcto - usar from.id como fallback si chat no está disponible
+  const chatId = ctx.chat?.id || ctx.from?.id;
+  if (!chatId) return;
+
+  // Limpiar uiMessageId si es muy viejo o estamos en un chat diferente
+  if (session.uiMessageId && session.lastChatId !== chatId) {
+    session.uiMessageId = undefined;
+  }
+  session.lastChatId = chatId;
+
   // Intentar editar si existe un ID y no se fuerza uno nuevo
   if (!options?.forceNew && session.uiMessageId) {
     try {
-      await ctx.api.editMessageText(ctx.chat!.id, session.uiMessageId, text, {
+      await ctx.api.editMessageText(chatId, session.uiMessageId, text, {
         parse_mode: parseMode,
         reply_markup: replyMarkup as any,
       });
@@ -72,7 +82,6 @@ export async function renderUI(
       }
       // Si falló por cualquier otra razón (ej: mensaje borrado o muy viejo),
       // limpiamos el ID y procedemos a enviar uno nuevo.
-      console.warn(`[UI] editMessageText falló (ID: ${session.uiMessageId}):`, err.message);
       session.uiMessageId = undefined;
     }
   }
@@ -87,13 +96,11 @@ export async function renderUI(
 
     session.uiMessageId = newMsg.message_id;
 
-    // AHORA borramos el viejo, solo si el nuevo salió bien
-    if (oldMessageId) {
-      await ctx.api.deleteMessage(ctx.chat!.id, oldMessageId).catch(() => {});
+    // AHORA borramos el viejo, solo si el nuevo salió bien y es el mismo chat
+    if (oldMessageId && oldMessageId !== newMsg.message_id) {
+      await ctx.api.deleteMessage(chatId, oldMessageId).catch(() => {});
     }
   } catch (err: any) {
-    console.error(`[UI] Error crítico al enviar mensaje:`, err.message);
-
     if (parseMode === 'HTML' && err?.message?.includes("can't parse entities")) {
       try {
         const plainText = text.replace(/<[^>]*>/g, '');
@@ -103,10 +110,10 @@ export async function renderUI(
         session.uiMessageId = fallbackMsg.message_id;
 
         if (oldMessageId) {
-          await ctx.api.deleteMessage(ctx.chat!.id, oldMessageId).catch(() => {});
+          await ctx.api.deleteMessage(chatId, oldMessageId).catch(() => {});
         }
       } catch (innerErr) {
-        console.error(`[UI] Fallback total falló:`, innerErr);
+        // Fallback falló silenciosamente
       }
     }
   }

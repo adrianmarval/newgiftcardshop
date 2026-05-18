@@ -54,6 +54,8 @@ export function createBuyerBot() {
     session<BuyerSessionData, BuyerContext>({
       initial: (): BuyerSessionData => ({
         wizard: { step: 'idle' },
+        uiMessageId: undefined,
+        lastChatId: undefined,
         storedMessageIds: [],
       }),
       storage: new PrismaAdapter<BuyerSessionData>(prisma.botSession as any),

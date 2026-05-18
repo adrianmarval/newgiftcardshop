@@ -47,6 +47,8 @@ export function createSellerBot() {
     session<SellerSessionData, SellerContext>({
       initial: (): SellerSessionData => ({
         wizard: { step: 'idle' },
+        uiMessageId: undefined,
+        lastChatId: undefined,
         storedMessageIds: [],
       }),
       storage: new PrismaAdapter<SellerSessionData>(prisma.botSession as any),
