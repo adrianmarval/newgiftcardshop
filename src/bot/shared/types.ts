@@ -41,6 +41,7 @@ export interface SellerSessionData {
     brandName?: string;
     countryId?: string;
     countryName?: string;
+    countryCurrency?: string;
     brandCountryId?: string;
     pendingImages?: string[];
     currentMediaGroupId?: string;

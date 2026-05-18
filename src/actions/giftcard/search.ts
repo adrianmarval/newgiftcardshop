@@ -72,17 +72,18 @@ export const searchGiftcards = buyerActionClient
         return {
           success: true as const,
           giftcards: [],
-          error: 'Has alcanzado tu límite de crédito. Debes realizar el pago antes de continuar.',
+          error: 'Has alcanzado tu límite de crédito. Debes completar los pagos pendientes antes de comprar más.',
         };
       }
 
       const amountDecimal = new Decimal(amount);
       if (unpaidTotal.plus(amountDecimal).gt(creditLimit)) {
-        const pendingText = unpaidTotal.gt(0) ? ` Ya tienes $${unpaidTotal.toFixed(2)} pendiente.` : '';
+        const availableCredit = creditLimit.minus(unpaidTotal);
+        const pendingText = unpaidTotal.gt(0) ? `Tienes $${unpaidTotal.toFixed(2)} en pagos pendientes. ` : '';
         return {
           success: true as const,
           giftcards: [],
-          error: `Esta compra excedería tu límite de crédito ($${creditLimit.toNumber()}).${pendingText}`,
+          error: `Esta compra excedería tu límite de crédito. ${pendingText}Crédito disponible: $${availableCredit.toFixed(2)}. Intentá con un monto menor.`,
         };
       }
     }

@@ -4,9 +4,13 @@ type Lang = 'en' | 'es';
 
 // ── Money ─────────────────────────────────────────────────────────────────────
 
-export function fmt$(amount: number | string | { toNumber(): number }): string {
+export function fmt$(
+  amount: number | string | { toNumber(): number },
+  currency: string = 'USD'
+): string {
   const n = typeof amount === 'object' ? amount.toNumber() : Number(amount);
-  return `$${n.toFixed(2)}`;
+  const symbol = currency === 'GBP' ? '£' : currency === 'CAD' ? 'C$' : '$';
+  return `${symbol}${n.toFixed(2)}`;
 }
 
 export function fmtRate(rate: number | string | { toNumber(): number }): string {

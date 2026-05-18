@@ -86,6 +86,7 @@ export async function handleCountrySelected(ctx: SellerContext) {
 
   ctx.session.wizard.countryId = country.id;
   ctx.session.wizard.countryName = country.name;
+  ctx.session.wizard.countryCurrency = country.currency || 'USD';
   ctx.session.wizard.brandCountryId = brandCountry.id;
   ctx.session.wizard.step = 'awaitingCodes';
 
@@ -123,13 +124,14 @@ async function renderSummaryMessage(ctx: SellerContext) {
   });
 
   const totalFace = validCards.reduce((sum, c) => sum + parseFloat(c.amount || '0'), 0);
+  const currency = ctx.session.wizard.countryCurrency || 'USD';
 
   let confirmMsg =
     `✅ <b>PROCESSED: ${validCards.length} valid card(s)</b>\n` +
-    `💰 Total value: <b>${fmt$(totalFace)}</b>\n\n` +
+    `💰 Total value: <b>${fmt$(totalFace, currency)}</b>\n\n` +
     validCards
       .map(
-        (c, i) => `${i + 1}. <code>${c.claimCode}</code> — ${fmt$(c.amount || '0')}${c.pinCode ? ` (PIN: <code>${c.pinCode}</code>)` : ''}`,
+        (c, i) => `${i + 1}. <code>${c.claimCode}</code> — ${fmt$(c.amount || '0', currency)}${c.pinCode ? ` (PIN: <code>${c.pinCode}</code>)` : ''}`,
       )
       .join('\n') +
     '\n\n';
@@ -397,11 +399,12 @@ export async function handleSellConfirm(ctx: SellerContext) {
 
   const totalFace = uniqueCards.reduce((s, c) => s + parseFloat(c.amount || '0'), 0);
   const payout = totalFace * Number(sellRate);
+  const currency = ctx.session.wizard.countryCurrency || 'USD';
 
   let msg =
     `🎉 <b>Batch #${batch.id} published</b>\n\n` +
-    `📦 ${uniqueCards.length} card(s) · ${fmt$(totalFace)} face value\n` +
-    `💸 You earn: <b>${fmt$(payout)}</b> (rate ${fmtRate(sellRate)})\n`;
+    `📦 ${uniqueCards.length} card(s) · ${fmt$(totalFace, currency)} face value\n` +
+    `💸 You earn: <b>${fmt$(payout, 'USD')}</b> (rate ${fmtRate(sellRate)})\n`;
 
   const kb = new InlineKeyboard().text('📦 View My Batches', 'my_batches').row().text('➕ Publish More', 'sell_start');
 

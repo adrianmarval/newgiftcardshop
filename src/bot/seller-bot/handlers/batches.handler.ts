@@ -132,17 +132,6 @@ export async function handleViewBatch(ctx: SellerContext) {
   const brandIcon = firstCard?.brandCountry?.brand?.icon || '📦';
   const countryName = firstCard?.brandCountry?.country?.name || 'Unknown';
   const countryCurrency = firstCard?.brandCountry?.country?.currency || 'USD';
-  const currencySymbol = countryCurrency === 'GBP' ? '£' : countryCurrency === 'CAD' ? 'C$' : '$';
-
-  function fmtWithCurrency(amount: number | string | { toNumber(): number }): string {
-    const n = typeof amount === 'object' ? amount.toNumber() : Number(amount);
-    return `${currencySymbol}${n.toFixed(2)}`;
-  }
-
-  function fmtUSD(amount: number | string | { toNumber(): number }): string {
-    const n = typeof amount === 'object' ? amount.toNumber() : Number(amount);
-    return `$${n.toFixed(2)}`;
-  }
 
   const faceValueTotal = batch.giftcards.reduce((sum, card) => {
     // Si la tarjeta está anulada por un reporte, no suma nada
@@ -162,14 +151,14 @@ export async function handleViewBatch(ctx: SellerContext) {
     const rawCode = decrypt(card.claimCode);
     const isWrong = card.status === 'WRONG_AMOUNT';
 
-    let amountText = fmtWithCurrency(card.amount);
+    let amountText = fmt$(card.amount, countryCurrency);
     let correctedLine = null;
 
     if (isWrong && card.reportedAmount) {
-      amountText = strike(fmtWithCurrency(card.amount));
-      correctedLine = `↳ ${fmtWithCurrency(card.reportedAmount)}`;
+      amountText = strike(fmt$(card.amount, countryCurrency));
+      correctedLine = `↳ ${fmt$(card.reportedAmount, countryCurrency)}`;
     } else if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) {
-      amountText = strike(fmtWithCurrency(card.amount));
+      amountText = strike(fmt$(card.amount, countryCurrency));
     }
 
     let reportText = '';
@@ -224,9 +213,9 @@ export async function handleViewBatch(ctx: SellerContext) {
     `📦 <b>Batch: ${batch.id}</b>`,
     `<b>Brand:</b> ${brandIcon} ${brandName} (${countryName})`,
     `<b>Date:</b> <code>${fmtDate(batch.createdAt, 'en')}</code>`,
-    `<b>Total Face Value:</b> <code>${fmtWithCurrency(faceValueTotal)}</code>`,
+    `<b>Total Face Value:</b> <code>${fmt$(faceValueTotal, countryCurrency)}</code>`,
     `<b>Sell Rate:</b> <code>${fmtRate(sellRate)}</code>`,
-    `<b>You Earn:</b> <code>${fmtUSD(pendingPayment)}</code>`,
+    `<b>You Earn:</b> <code>${fmt$(pendingPayment, 'USD')}</code>`,
     `━━━━━━━━━━━━━━`,
     `<b>Giftcards:</b>`,
     table,

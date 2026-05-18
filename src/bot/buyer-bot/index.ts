@@ -10,6 +10,7 @@ import {
   handleOrders,
   handleOrderDetail,
   handleConfirmUsage,
+  handleConfirmUsageFinal,
   handleCancelOrder,
   handleMakePayment,
   handlePaymentText,
@@ -109,6 +110,7 @@ export function createBuyerBot() {
   // Orders
   bot.callbackQuery(/^my_orders(_\d+)?$/, handleOrders);
   bot.callbackQuery(/^order_detail_/, handleOrderDetail);
+  bot.callbackQuery(/^confirm_usage_final_/, handleConfirmUsageFinal);
   bot.callbackQuery(/^confirm_usage_/, handleConfirmUsage);
   bot.callbackQuery(/^cancel_order_/, handleCancelOrder);
   bot.callbackQuery(/^make_payment_/, handleMakePayment);

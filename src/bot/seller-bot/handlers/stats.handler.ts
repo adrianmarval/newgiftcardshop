@@ -41,14 +41,14 @@ export async function handleStats(ctx: SellerContext) {
     `  In stock: ${inStockCards}\n` +
     `  Sold: ${soldCards}\n\n` +
     `<b>Value</b>\n` +
-    `  Total Face Value: ${fmt$(faceValueTotal)}\n` +
-    `  Sold Face Value: ${fmt$(faceValueSold)}\n\n` +
+    `  Total Face Value: $${faceValueTotal.toFixed(2)}\n` +
+    `  Sold Face Value: $${faceValueSold.toFixed(2)}\n\n` +
     `<b>Batches</b>\n` +
     `  Total: ${batchCount}\n` +
     `  Paid: ${paidBatchCount}\n\n` +
     `<b>Payouts</b>\n` +
-    `  Total Earned: ${fmt$(earnedPaid)}\n` +
-    `  Pending Payment: ${fmt$(earnedPending)}\n\n` +
+    `  Total Earned: ${fmt$(earnedPaid, 'USD')}\n` +
+    `  Pending Payment: ${fmt$(earnedPending, 'USD')}\n\n` +
     `<b>Your current rate:</b> Granular (by brand and country)`;
 
   const kb = new InlineKeyboard().text('🏠 Back to Menu', 'start');

@@ -118,6 +118,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
 
   const totalToPay = order.status === 'PENDING' ? totalGiftcardAmount.mul(order.buyRate) : (order.adjustedTotal ?? order.total);
 
+  const currency = order.giftcards[0]?.brandCountry?.country?.currency || 'USD';
   const discountPercent = (1 - order.buyRate.toNumber()) * 100;
   const discountAmount = totalGiftcardAmount.mul(new Prisma.Decimal(1).minus(order.buyRate));
 
@@ -127,7 +128,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
         nullifiedCards
           .map((c) => {
             const claimCode = decrypt(c.claimCode);
-            return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount))} - ${c.status}`;
+            return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount, currency))} - ${c.status}`;
           })
           .join('\n') +
         '\n\n'
@@ -143,18 +144,18 @@ export async function handleOrderDetail(ctx: BuyerContext) {
             const amt = c.reportedAmount ?? c.amount;
 
             if (isWrong) {
-              return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount))} → ${fmt$(amt)}`;
+              return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount, currency))} → ${fmt$(amt, currency)}`;
             }
-            return `• <code>${claimCode}</code> - ${fmt$(amt)}`;
+            return `• <code>${claimCode}</code> - ${fmt$(amt, currency)}`;
           })
           .join('\n') +
         '\n\n'
       : '';
 
   const summary = `<b>💰 Resumen financiero</b>
-• Valor tarjetas: ${fmt$(totalGiftcardAmount)}
-• Descuento (${discountPercent.toFixed(0)}%): -${fmt$(discountAmount)}
-• <b>Total ${order.status === 'COMPLETED' ? 'pagado' : 'a pagar'}: ${fmt$(totalToPay)}</b>`;
+• Valor tarjetas: ${fmt$(totalGiftcardAmount, currency)}
+• Descuento (${discountPercent.toFixed(0)}%): -${fmt$(discountAmount, currency)}
+• <b>Total ${order.status === 'COMPLETED' ? 'pagado' : 'a pagar'}: ${fmt$(totalToPay, 'USD')}</b>`;
 
   let instructions = '';
   if (order.status === 'PENDING') {
@@ -259,6 +260,54 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
     return sum.plus(c.reportedAmount ?? c.amount);
   }, new Prisma.Decimal(0));
 
+  const reportedCount = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED').length;
+  const warningText =
+    reportedCount > 0 ? `\n⚠️ <b>Tenés ${reportedCount} tarjeta(s) reportada(s)</b> - El pago se ajustará automáticamente.\n` : '';
+
+  const firstCard = order.giftcards[0];
+  const brandCountry = await prisma.brandCountry.findUnique({
+    where: { id: firstCard.brandCountryId },
+    include: { country: true },
+  });
+  const currency = brandCountry?.country?.currency || 'USD';
+
+  const kb = new InlineKeyboard()
+    .text('✅ Confirmar y Procesar Pago', `confirm_usage_final_${orderId}`)
+    .row()
+    .text('⬅️ Regresar', `order_detail_${orderId}`);
+
+  await renderUI(
+    ctx,
+    `⚠️ <b>¿Confirmar uso de tarjetas?</b>\n\n` +
+      `Esta acción <b>NO se puede revertir</b>.\n\n` +
+      `Al confirmar, el sistema procesará el pago al proveedor por <b>${fmt$(totalEffectiveFaceValue, currency)}</b> giftcards.\n${warningText}\n` +
+      `📝 <b>Asegurate de que:</b>\n` +
+      `• Las tarjetas fueron aplicadas correctamente\n` +
+      `• El saldo ${fmt$(totalEffectiveFaceValue, currency)} exacto fue acreditado en tu cuenta\n` +
+      `• Si hubo problemas que no reportaste, detente ahora y regresa para reportarlos con el botón "🚩 Reportar problema"`,
+    { parse_mode: 'HTML', reply_markup: kb },
+  );
+  return ctx.answerCallbackQuery();
+}
+
+export async function handleConfirmUsageFinal(ctx: BuyerContext) {
+  const orderId = ctx.callbackQuery?.data?.replace('confirm_usage_final_', '');
+  if (!orderId) return ctx.answerCallbackQuery();
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { giftcards: true },
+  });
+
+  if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery('Orden no encontrada');
+  if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Estado inválido');
+
+  const { Prisma } = await import('@/generated/prisma/client');
+  const totalEffectiveFaceValue = order.giftcards.reduce((sum, c) => {
+    if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)) return sum;
+    return sum.plus(c.reportedAmount ?? c.amount);
+  }, new Prisma.Decimal(0));
+
   const adjustedTotal = totalEffectiveFaceValue.mul(order.buyRate);
 
   await prisma.$transaction(async (tx) => {
@@ -281,7 +330,7 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
 
   await renderUI(
     ctx,
-    `✅ <b>Uso confirmado.</b>\n\nTotal a pagar: <b>${fmt$(adjustedTotal)}</b>\n\n` +
+    `✅ <b>Uso confirmado.</b>\n\nTotal a pagar: <b>${fmt$(adjustedTotal, 'USD')}</b>\n\n` +
       `Enviá el pago en USDT a la dirección del administrador y confirmá con el botón.`,
     { parse_mode: 'HTML', reply_markup: kb },
   );
@@ -350,10 +399,14 @@ export async function handlePaymentText(ctx: BuyerContext) {
 
   const kb = new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders');
 
-  return renderUI(ctx, `✅ <b>¡Pago registrado!</b>\n\nOrden completada por <b>${fmt$(paymentAmount)}</b>.\n\n<i>TxID: ${txId}</i>`, {
-    parse_mode: 'HTML',
-    reply_markup: kb,
-  });
+  return renderUI(
+    ctx,
+    `✅ <b>¡Pago registrado!</b>\n\nOrden completada por <b>${fmt$(paymentAmount, 'USD')}</b>.\n\n<i>TxID: ${txId}</i>`,
+    {
+      parse_mode: 'HTML',
+      reply_markup: kb,
+    },
+  );
 }
 
 // ── Problem Reporting ────────────────────────────────────────────────────────
@@ -367,13 +420,15 @@ export async function handleReportIssues(ctx: BuyerContext) {
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { giftcards: { orderBy: { id: 'asc' }, include: { brandCountry: { include: { brand: true } } } } },
+    include: { giftcards: { orderBy: { id: 'asc' }, include: { brandCountry: { include: { brand: true, country: true } } } } },
   });
 
   if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery?.('Orden no encontrada');
 
   const kb = new InlineKeyboard();
   let msg = '🚩 <b>¿Con qué tarjeta tenés problemas?</b>\n\nSeleccioná una tarjeta para reportar o gestionar un reporte existente:';
+
+  const currency = order.giftcards[0]?.brandCountry?.country?.currency || 'USD';
 
   for (const card of order.giftcards) {
     const isReported = card.status !== 'UNUSED' && card.status !== 'USED';
@@ -382,17 +437,17 @@ export async function handleReportIssues(ctx: BuyerContext) {
 
     let icon = '✅';
     let statusTxt = '(SIN REPORTAR)';
-    let amountTxt = `${fmt$(card.amount)}`;
+    let amountTxt = `${fmt$(card.amount, currency)}`;
 
     if (isReported) {
       if (card.status === 'WRONG_AMOUNT') {
         icon = '⚠️';
         statusTxt = '(WRONG_AMOUNT)';
-        amountTxt = `${strike(fmt$(card.amount))} → ${fmt$(card.reportedAmount ?? 0)}`;
+        amountTxt = `${strike(fmt$(card.amount, currency))} → ${fmt$(card.reportedAmount ?? 0, currency)}`;
       } else {
         icon = '🚫';
         statusTxt = `(${card.status})`;
-        amountTxt = `${strike(fmt$(card.amount))}`;
+        amountTxt = `${strike(fmt$(card.amount, currency))}`;
       }
     }
 
@@ -413,7 +468,7 @@ export async function handleReportCardSelect(ctx: BuyerContext) {
 
   const card = await prisma.giftcard.findUnique({
     where: { id: cardId },
-    include: { order: true, brandCountry: { include: { brand: true } } },
+    include: { order: true, brandCountry: { include: { brand: true, country: true } } },
   });
 
   if (!card || card.order?.userId !== ctx.user.id) return ctx.answerCallbackQuery('Tarjeta no encontrada');
@@ -431,11 +486,12 @@ export async function handleReportCardSelect(ctx: BuyerContext) {
       .row()
       .text('⬅️ Volver', `report_issues_${card.orderId}`);
 
+    const currency = card.brandCountry?.country?.currency || 'USD';
     let reportDetail =
       `🚩 <b>Reporte actual:</b>\n\n` + `Tarjeta: ${card.brandCountry.brand.name}\n` + `Tipo: ${fmtGiftcardStatus(card.status)}\n`;
 
     if (card.status === 'WRONG_AMOUNT' && card.reportedAmount) {
-      reportDetail += `Monto reportado: <b>${fmt$(card.reportedAmount)}</b>\n`;
+      reportDetail += `Monto reportado: <b>${fmt$(card.reportedAmount, currency)}</b>\n`;
     }
 
     await renderUI(ctx, reportDetail, { parse_mode: 'HTML', reply_markup: kb });

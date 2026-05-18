@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
 import { Decimal } from '@prisma/client/runtime/client';
+import { decrypt } from '@/lib/encryption';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
 import { findGiftcardCombination } from '@/lib/browse-giftcards';
@@ -105,7 +106,6 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
   ctx.session.wizard.countryCurrency = country.currency || 'USD';
   ctx.session.wizard.step = 'awaitingAmount';
 
-  const currencySymbol = ctx.session.wizard.countryCurrency === 'GBP' ? '£' : ctx.session.wizard.countryCurrency === 'CAD' ? 'C$' : '$';
   await renderUI(
     ctx,
     `💵 <b>¿Qué monto de tarjetas querés? (${ctx.session.wizard.countryCurrency})</b>\n\n` +
@@ -164,29 +164,50 @@ export async function handleAmountText(ctx: BuyerContext) {
   }
 
   const unpaidOrders = await prisma.order.findMany({
-    where: { userId: ctx.user.id, status: 'AWAITING_PAYMENT' },
-    select: { adjustedTotal: true, total: true },
+    where: { 
+      userId: ctx.user.id, 
+      status: { in: ['PENDING', 'AWAITING_PAYMENT'] } 
+    },
+    select: { adjustedTotal: true, total: true, status: true },
   });
   const unpaidTotal = unpaidOrders.reduce((s, o) => s.plus(o.adjustedTotal ?? o.total), new Decimal(0));
+  const pendingCount = unpaidOrders.filter(o => o.status === 'PENDING').length;
+  const hasPendingOrders = pendingCount > 0;
 
   const amountDec = new Decimal(amount);
   const creditCost = amountDec.mul(buyRate);
 
+  const hasOrdersPending = hasPendingOrders || unpaidTotal.gt(0);
+    
+  if (hasOrdersPending) {
+    const pendingMsg = hasPendingOrders 
+      ? `Tenés <b>${pendingCount}</b> orden(es) pendientes que deben ser procesadas para liberar crédito.`
+      : `Tenés <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.`;
+      
+    if (unpaidTotal.plus(creditCost).gt(user.creditLimit)) {
+      const availableCredit = user.creditLimit.minus(unpaidTotal);
+      return renderUI(
+        ctx,
+        `⚠️ <b>Crédito insuficiente</b>\n\n` +
+          `Tu límite: <b>${fmt$(user.creditLimit)}</b>\n` +
+          `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n` +
+          `Disponible: <b>${fmt$(availableCredit)}</b>\n` +
+          `Esta compra: <b>${fmt$(creditCost)}</b>\n\n` +
+          `${pendingMsg}\n\n` +
+          `Intentá con un monto igual o menor a <b>${fmt$(availableCredit)}</b>.`,
+        { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) },
+      );
+    }
+  }
+
   if (unpaidTotal.gte(user.creditLimit)) {
     return renderUI(
       ctx,
-      `⚠️ Alcanzaste tu límite de crédito de <b>${fmt$(user.creditLimit)}</b>.\n\n` +
-        `Tenés <b>${fmt$(unpaidTotal)}</b> pendiente de pago. Pagá antes de continuar.`,
+      `⚠️ <b>Límite de crédito alcanzado</b>\n\n` +
+        `Tu límite: <b>${fmt$(user.creditLimit)}</b>\n` +
+        `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n\n` +
+        `Debes completar los pagos antes de comprar más tarjetas.`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('🏠 Volver', 'start') },
-    );
-  }
-
-  if (unpaidTotal.plus(creditCost).gt(user.creditLimit)) {
-    return renderUI(
-      ctx,
-      `⚠️ Esta compra (<b>${fmt$(creditCost)}</b>) excedería tu límite de crédito de <b>${fmt$(user.creditLimit)}</b>.\n\n` +
-        `Ya tenés <b>${fmt$(unpaidTotal)}</b> pendiente.`,
-      { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) },
     );
   }
 
@@ -220,10 +241,11 @@ export async function handleAmountText(ctx: BuyerContext) {
 
     let msg = '';
 
+    const currency = ctx.session.wizard.countryCurrency || 'USD';
     if (inaccessibleAmount.gt(0) && accessibleAmount.eq(0)) {
       msg = `😔 No hay tarjetas disponibles a tu tasa (${buyerRatePercent}%).\n\n⏱️ Reintentá en unos minutos.`;
     } else {
-      msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount))}).\n\nEl total no alcanza lo que buscás.`;
+      msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}).\n\nEl total no alcanza lo que buscás.`;
     }
 
     const kb = new InlineKeyboard()
@@ -237,14 +259,17 @@ export async function handleAmountText(ctx: BuyerContext) {
   const cards = result.selectedCards as typeof allCards;
   const totalFace = cards.reduce((s, c) => s + Number(c.amount), 0);
   const totalCost = totalFace * Number(buyRate);
+  const currency = ctx.session.wizard.countryCurrency || 'USD';
 
   const ratePercent = (Number(buyRate) * 100).toFixed(0);
+  const cardsList = cards.map((c) => `• ${fmt$(c.amount, currency)}`).join('\n');
+
   let msg =
     `🛒 <b>Tarjetas encontradas al ${ratePercent}%:</b>\n\n` +
-    cards.map((c) => `• ${fmt$(c.amount)}`).join('\n') +
+    cardsList +
     `\n\n` +
-    `Face value total: <b>${fmt$(totalFace)}</b>\n` +
-    `<b>Total a pagar: ${fmt$(totalCost)}</b>\n\n` +
+    `Face value total: <b>${fmt$(totalFace, currency)}</b>\n` +
+    `<b>Total a pagar: ${fmt$(totalCost, 'USD')}</b>\n\n` +
     `¿Confirmar la orden?`;
 
   // Guardar IDs en sesión
@@ -320,12 +345,29 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   ctx.session.wizard.selectedGiftcardIds = undefined;
 
-  const kb = new InlineKeyboard().text('📋 Ver orden', `order_detail_${order.id}`).row().text('📋 Ver Mis órdenes', 'my_orders');
+  const decryptedCards = giftcards.map((g) => ({
+    code: decrypt(g.claimCode),
+    amount: g.amount,
+    pin: g.pinCode ? decrypt(g.pinCode) : null,
+  }));
+
+  const currency = ctx.session.wizard.countryCurrency || 'USD';
+  const cardsText = decryptedCards
+    .map((c, i) => {
+      const pinPart = c.pin ? ` | PIN: <code>${c.pin}</code>` : '';
+      return `${i + 1}. <code>${c.code}</code> — ${fmt$(c.amount, currency)}${pinPart}`;
+    })
+    .join('\n');
+
+  const kb = new InlineKeyboard().text('✅ Confirmar uso', `confirm_usage_${order.id}`).row().text('🚩 Reportar problema', `report_issues_${order.id}`).row().text('📋 Ver Mis órdenes', 'my_orders');
 
   await renderUI(
     ctx,
-    `✅ <b>¡Orden creada!</b>\n\nID: <code>${order.id}</code>\nTotal: <b>${fmt$(total)}</b>\n\n` +
-      `Aplicá las tarjetas y luego confirmá el uso desde el detalle de la orden.`,
+    `✅ <b>¡Orden creada!</b>\n\n` +
+      `ID: <code>${order.id}</code>\n` +
+      `Total a pagar: <b>${fmt$(total, 'USD')}</b>\n\n` +
+      `<b>Códigos para aplicar:</b>\n${cardsText}\n\n` +
+      `📝 <i>Aplicá los códigos, luego confirmá el uso desde los botones de abajo.</i>`,
     { parse_mode: 'HTML', reply_markup: kb },
   );
   return ctx.answerCallbackQuery('¡Orden creada!');
