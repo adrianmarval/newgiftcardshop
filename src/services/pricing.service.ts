@@ -5,13 +5,24 @@ export async function getUserRates(
   params: { brandCountryId?: string; brandId?: string; countryId?: string }
 ) {
   let brandCountryId = params.brandCountryId;
+  let brandId = params.brandId;
+  let countryId = params.countryId;
 
-  if (!brandCountryId && params.brandId && params.countryId) {
+  // Si brandId viene en formato compuesto (ej. "brandId|countryId"), lo separamos de forma robusta
+  if (brandId && brandId.includes('|')) {
+    const parts = brandId.split('|');
+    brandId = parts[0];
+    if (!countryId) {
+      countryId = parts[1];
+    }
+  }
+
+  if (!brandCountryId && brandId && countryId) {
     const bc = await prisma.brandCountry.findUnique({
       where: {
         brandId_countryId: {
-          brandId: params.brandId,
-          countryId: params.countryId,
+          brandId,
+          countryId,
         },
       },
       select: { id: true },
