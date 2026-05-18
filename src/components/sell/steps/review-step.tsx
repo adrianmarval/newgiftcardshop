@@ -112,6 +112,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
   const totalAmount = giftcards.reduce((sum, card) => sum + (parseFloat(card.amount) || 0), 0);
   const totalToReceive = totalAmount * sellRate;
+  const currencySymbol = brandCountry?.countryCurrency === 'GBP' ? '£' : brandCountry?.countryCurrency === 'CAD' ? 'C$' : '$';
 
   const sortedGiftcards = useMemo(() => {
     return [...giftcards].sort((a, b) => {
@@ -150,7 +151,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
           </div>
           <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2">
             <span className="text-[10px] text-emerald-400">Total</span>
-            <p className="text-sm font-semibold text-emerald-400">${totalAmount.toFixed(2)}</p>
+            <p className="text-sm font-semibold text-emerald-400">{currencySymbol}{totalAmount.toFixed(2)}</p>
           </div>
         </div>
 
@@ -164,7 +165,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3">
           <div>
             <span className="text-[10px] text-emerald-400">You receive</span>
-            <p className="text-lg font-semibold text-emerald-400">${totalToReceive.toFixed(2)}</p>
+            <p className="text-lg font-semibold text-emerald-400">{currencySymbol}{totalToReceive.toFixed(2)}</p>
           </div>
           <Badge variant="outline" className="border-emerald-500/30 text-[10px] text-emerald-400">
             {sellRate * 100}%
@@ -221,7 +222,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                       <div className="bg-primary/20 text-primary flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black">
                         {idx + 1}
                       </div>
-                      <span className="text-foreground text-base font-black md:text-xl">${card.amount || '0.00'}</span>
+                      <span className="text-foreground text-base font-black md:text-xl">{currencySymbol}{card.amount || '0.00'}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       {hasCapture ? (
@@ -294,11 +295,11 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                       <div className="grid grid-cols-2 gap-1.5">
                         <div className="rounded border border-amber-500/10 bg-black/20 p-1.5">
                           <p className="text-[9px] text-amber-200/50 uppercase">Written</p>
-                          <p className="text-xs font-black text-white">${card.amount}</p>
+                          <p className="text-xs font-black text-white">{currencySymbol}{card.amount}</p>
                         </div>
                         <div className="rounded border border-emerald-500/10 bg-black/20 p-1.5">
                           <p className="text-[9px] text-emerald-200/50 uppercase">In Picture</p>
-                          <p className="text-xs font-black text-emerald-400">${card.evidence?.extractedAmount || '?'}</p>
+                          <p className="text-xs font-black text-emerald-400">{currencySymbol}{card.evidence?.extractedAmount || '?'}</p>
                         </div>
                       </div>
                       <div className="flex gap-1.5">

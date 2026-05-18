@@ -28,7 +28,7 @@ import { formatCurrency } from '@/lib/currency-formatter';
 import { showAlert } from '@/lib/swal';
 
 export const ResultsStep = () => {
-  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, selectedCountry, targetAmount, setOrderId, setFoundGiftcards, tierInfo } = useBuyFlow();
+  const { foundGiftcards, removeGiftcard, setStep, selectedBrand, selectedCountry, selectedCurrency, targetAmount, setOrderId, setFoundGiftcards, tierInfo } = useBuyFlow();
   const [resultsState, setResultsState] = useState<{
     brandData: Brand | null;
     buyRate: number;
@@ -117,8 +117,6 @@ export const ResultsStep = () => {
 
   const rawTotal = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
   const discountedTotal = rawTotal * resultsState.buyRate;
-  // @ts-ignore - country added to BuyFlowCard but TS might need a refresh
-  const currency = (foundGiftcards[0] as any)?.country?.currency || 'USD';
 
   return (
     <div className="flex flex-col gap-4 md:grid md:h-full md:grid-cols-12 md:items-start md:gap-6">
@@ -133,7 +131,7 @@ export const ResultsStep = () => {
           <div className="border-border bg-muted/50 space-y-2 rounded-xl border p-2 md:space-y-3 md:p-4">
             <div className="flex items-center justify-between text-xs md:text-base">
               <span className="text-muted-foreground">Objetivo</span>
-              <span className="font-bold">{formatCurrency(Number(targetAmount), { currency })}</span>
+              <span className="font-bold">{formatCurrency(Number(targetAmount), { currency: selectedCurrency })}</span>
             </div>
             <div className="flex items-center justify-between text-xs md:text-base">
               <span className="text-muted-foreground">Tarjetas</span>
@@ -141,14 +139,14 @@ export const ResultsStep = () => {
             </div>
             <div className="border-border/50 flex items-center justify-between border-t border-dashed pt-1.5 text-xs md:text-base">
               <span className="text-foreground font-semibold">Disponible</span>
-              <span className="text-foreground text-lg font-bold md:text-xl">{formatCurrency(rawTotal, { currency })}</span>
+              <span className="text-foreground text-lg font-bold md:text-xl">{formatCurrency(rawTotal, { currency: selectedCurrency })}</span>
             </div>
             <div className="border-border flex items-center justify-between border-t pt-1.5 text-xs md:text-base">
               <span className="text-primary">Total a Pagar</span>
               <div className="text-right">
                 <span className="text-primary text-xl font-black md:text-2xl">{formatCurrency(discountedTotal, { currency: 'USD' })}</span>
                 <p className="text-muted-foreground mt-0.5 text-[10px] leading-none md:text-xs">
-                  Tasa: {(resultsState.buyRate * 100).toFixed(1)}% · Ahorrás {formatCurrency(rawTotal - discountedTotal, { currency })}
+                  Tasa: {(resultsState.buyRate * 100).toFixed(1)}% · Ahorrás {formatCurrency(rawTotal - discountedTotal, { currency: selectedCurrency })}
                 </p>
               </div>
             </div>
@@ -170,14 +168,14 @@ export const ResultsStep = () => {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-xs md:text-sm">Monto disponible</span>
                 <span className="font-bold text-green-500 text-sm md:text-base">
-                  {formatCurrency(Number(tierInfo.accessibleAmount), { currency: 'USD' })}
+                  {formatCurrency(Number(tierInfo.accessibleAmount), { currency: selectedCurrency })}
                 </span>
               </div>
               {Number(tierInfo.inaccessibleAmount) > 0 && (
                 <div className="flex items-center justify-between border-t border-dashed border-border/50 pt-2 mt-2">
                   <span className="text-muted-foreground text-xs md:text-sm">No disponible aún</span>
                   <span className="text-muted-foreground text-xs md:text-sm">
-                    {formatCurrency(Number(tierInfo.inaccessibleAmount), { currency: 'USD' })}
+                    {formatCurrency(Number(tierInfo.inaccessibleAmount), { currency: selectedCurrency })}
                   </span>
                 </div>
               )}
@@ -226,7 +224,7 @@ export const ResultsStep = () => {
                   <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground text-[10px] tracking-wider uppercase md:text-xs">Valor Nominal</span>
                     <div className="text-foreground text-xl leading-none font-black md:text-2xl">
-                      {formatCurrency(card.amount, { currency: card.country?.currency || currency })}
+                      {formatCurrency(card.amount, { currency: selectedCurrency })}
                     </div>
                     <div className="text-muted-foreground/50 mt-0.5 font-mono text-[9px] tracking-wider uppercase md:text-xs">
                       ···· ···· ···· ···· {/* show as masked placeholder for card code */}

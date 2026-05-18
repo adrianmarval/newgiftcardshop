@@ -27,6 +27,7 @@ export const brandCountrySchema = z.object({
   brandImage: z.string().nullable(),
   countryName: z.string(),
   countryCode: z.string(),
+  countryCurrency: z.string().default('USD'),
   isActive: z.boolean(),
   minAmount: z.number().nullable(),
   maxAmount: z.number().nullable(),

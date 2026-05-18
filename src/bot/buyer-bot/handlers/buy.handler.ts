@@ -102,11 +102,13 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
 
   ctx.session.wizard.countryId = country.id;
   ctx.session.wizard.countryName = country.name;
+  ctx.session.wizard.countryCurrency = country.currency || 'USD';
   ctx.session.wizard.step = 'awaitingAmount';
 
+  const currencySymbol = ctx.session.wizard.countryCurrency === 'GBP' ? '£' : ctx.session.wizard.countryCurrency === 'CAD' ? 'C$' : '$';
   await renderUI(
     ctx,
-    `💵 <b>¿Qué monto de tarjetas querés? (USD)</b>\n\n` +
+    `💵 <b>¿Qué monto de tarjetas querés? (${ctx.session.wizard.countryCurrency})</b>\n\n` +
       `Marca: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
       `Escribí el monto. Ejemplo: <code>50</code>`,
     {

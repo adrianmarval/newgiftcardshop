@@ -108,6 +108,12 @@ export async function handleViewBatch(ctx: SellerContext) {
           claimCode: true,
           reportedAmount: true,
           isConfirmed: true,
+          brandCountry: {
+            include: {
+              brand: true,
+              country: true,
+            },
+          },
         },
         orderBy: { createdAt: 'asc' },
       },
@@ -120,7 +126,25 @@ export async function handleViewBatch(ctx: SellerContext) {
 
   const { Prisma } = await import('@/generated/prisma/client');
 
-  const amazonTotal = batch.giftcards.reduce((sum, card) => {
+  // Obtener brand y currency del primer card (asumimos que todos son del mismo brandCountry)
+  const firstCard = batch.giftcards[0];
+  const brandName = firstCard?.brandCountry?.brand?.name || 'Unknown';
+  const brandIcon = firstCard?.brandCountry?.brand?.icon || '📦';
+  const countryName = firstCard?.brandCountry?.country?.name || 'Unknown';
+  const countryCurrency = firstCard?.brandCountry?.country?.currency || 'USD';
+  const currencySymbol = countryCurrency === 'GBP' ? '£' : countryCurrency === 'CAD' ? 'C$' : '$';
+
+  function fmtWithCurrency(amount: number | string | { toNumber(): number }): string {
+    const n = typeof amount === 'object' ? amount.toNumber() : Number(amount);
+    return `${currencySymbol}${n.toFixed(2)}`;
+  }
+
+  function fmtUSD(amount: number | string | { toNumber(): number }): string {
+    const n = typeof amount === 'object' ? amount.toNumber() : Number(amount);
+    return `$${n.toFixed(2)}`;
+  }
+
+  const faceValueTotal = batch.giftcards.reduce((sum, card) => {
     // Si la tarjeta está anulada por un reporte, no suma nada
     if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) {
       return sum;
@@ -131,21 +155,21 @@ export async function handleViewBatch(ctx: SellerContext) {
   }, new Prisma.Decimal(0));
 
   const sellRate = new Prisma.Decimal(batch.sellRate);
-  const pendingPayment = amazonTotal.mul(sellRate);
+  const pendingPayment = faceValueTotal.mul(sellRate);
 
   // 1. Preparar datos para la tabla
   const cardData = batch.giftcards.map((card) => {
     const rawCode = decrypt(card.claimCode);
     const isWrong = card.status === 'WRONG_AMOUNT';
 
-    let amountText = fmt$(card.amount);
+    let amountText = fmtWithCurrency(card.amount);
     let correctedLine = null;
 
     if (isWrong && card.reportedAmount) {
-      amountText = strike(fmt$(card.amount));
-      correctedLine = `↳ ${fmt$(card.reportedAmount)}`;
+      amountText = strike(fmtWithCurrency(card.amount));
+      correctedLine = `↳ ${fmtWithCurrency(card.reportedAmount)}`;
     } else if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) {
-      amountText = strike(fmt$(card.amount));
+      amountText = strike(fmtWithCurrency(card.amount));
     }
 
     let reportText = '';
@@ -198,10 +222,11 @@ export async function handleViewBatch(ctx: SellerContext) {
 
   const msg = [
     `📦 <b>Batch: ${batch.id}</b>`,
+    `<b>Brand:</b> ${brandIcon} ${brandName} (${countryName})`,
     `<b>Date:</b> <code>${fmtDate(batch.createdAt, 'en')}</code>`,
-    `<b>Amazon Total:</b> <code>${fmt$(amazonTotal)}</code>`,
+    `<b>Total Face Value:</b> <code>${fmtWithCurrency(faceValueTotal)}</code>`,
     `<b>Sell Rate:</b> <code>${fmtRate(sellRate)}</code>`,
-    `<b>Pending Payment:</b> <code>${fmt$(pendingPayment)}</code>`,
+    `<b>You Earn:</b> <code>${fmtUSD(pendingPayment)}</code>`,
     `━━━━━━━━━━━━━━`,
     `<b>Giftcards:</b>`,
     table,

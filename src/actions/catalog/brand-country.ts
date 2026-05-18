@@ -43,6 +43,7 @@ export const getBrandsByCountry = authActionClient
         brandImage: bc.brand.image,
         countryName: bc.country.name,
         countryCode: bc.country.code,
+        countryCurrency: bc.country.currency || 'USD',
         isActive: bc.isActive,
         minAmount: bc.minAmount ? Number(bc.minAmount) : null,
         maxAmount: bc.maxAmount ? Number(bc.maxAmount) : null,
@@ -88,6 +89,7 @@ export const getBrandCountryById = authActionClient
         brandImage: brandCountry.brand.image,
         countryName: brandCountry.country.name,
         countryCode: brandCountry.country.code,
+        countryCurrency: brandCountry.country.currency || 'USD',
         isActive: brandCountry.isActive,
         minAmount: brandCountry.minAmount ? Number(brandCountry.minAmount) : null,
         maxAmount: brandCountry.maxAmount ? Number(brandCountry.maxAmount) : null,
@@ -95,42 +97,45 @@ export const getBrandCountryById = authActionClient
     };
   });
 
-export const getActiveBrandCountries = authActionClient.outputSchema(getActiveBrandCountriesOutputSchema).action(async () => {
-  const brandCountries = await prisma.brandCountry.findMany({
-    where: {},
-    include: {
-      brand: true,
-      country: true,
-    },
-    orderBy: [
-      {
-        country: {
-          name: 'asc',
-        },
+export const getActiveBrandCountries = authActionClient
+  .outputSchema(getActiveBrandCountriesOutputSchema)
+  .action(async () => {
+    const brandCountries = await prisma.brandCountry.findMany({
+      where: {},
+      include: {
+        brand: true,
+        country: true,
       },
-      {
-        brand: {
-          name: 'asc',
+      orderBy: [
+        {
+          country: {
+            name: 'asc',
+          },
         },
-      },
-    ],
-  });
+        {
+          brand: {
+            name: 'asc',
+          },
+        },
+      ],
+    });
 
-  return {
-    success: true,
-    brandCountries: brandCountries.map((bc) => ({
-      id: bc.id,
-      brandId: bc.brandId,
-      countryId: bc.countryId,
-      brandName: bc.brand.name,
-      brandSlug: bc.brand.slug,
-      brandIcon: bc.brand.icon,
-      brandImage: bc.brand.image,
-      countryName: bc.country.name,
-      countryCode: bc.country.code,
-      isActive: bc.isActive,
-      minAmount: bc.minAmount ? Number(bc.minAmount) : null,
-      maxAmount: bc.maxAmount ? Number(bc.maxAmount) : null,
-    })),
-  };
-});
+    return {
+      success: true,
+      brandCountries: brandCountries.map((bc) => ({
+        id: bc.id,
+        brandId: bc.brandId,
+        countryId: bc.countryId,
+        brandName: bc.brand.name,
+        brandSlug: bc.brand.slug,
+        brandIcon: bc.brand.icon,
+        brandImage: bc.brand.image,
+        countryName: bc.country.name,
+        countryCode: bc.country.code,
+        countryCurrency: bc.country.currency || 'USD',
+        isActive: bc.isActive,
+        minAmount: bc.minAmount ? Number(bc.minAmount) : null,
+        maxAmount: bc.maxAmount ? Number(bc.maxAmount) : null,
+      })),
+    };
+  });

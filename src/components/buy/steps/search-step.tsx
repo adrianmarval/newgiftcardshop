@@ -27,6 +27,8 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     setSelectedBrand,
     selectedCountry,
     setSelectedCountry,
+    selectedCurrency,
+    setSelectedCurrency,
     targetAmount,
     setTargetAmount,
     setStep,
@@ -86,6 +88,15 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       setSavedBuyRate('');
     }
   }, [selectedBcId, allowBuyRateAdjustment]);
+
+  // Guardar currency cuando se selecciona un brandCountry
+  useEffect(() => {
+    if (selectedBc?.countryCurrency) {
+      setSelectedCurrency(selectedBc.countryCurrency);
+    } else {
+      setSelectedCurrency('USD');
+    }
+  }, [selectedBc, setSelectedCurrency]);
 
   const handleClearPreferences = async () => {
     setPrefMin('');

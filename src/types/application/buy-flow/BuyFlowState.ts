@@ -22,6 +22,7 @@ export interface BuyFlowState {
   step: number;
   selectedBrand: string;
   selectedCountry: string;
+  selectedCurrency: string;
   targetAmount: string;
   foundGiftcards: BuyFlowCard[];
   orderId: string | null;
@@ -35,6 +36,7 @@ export interface BuyFlowState {
   setStep: (step: number) => void;
   setSelectedBrand: (brand: string) => void;
   setSelectedCountry: (country: string) => void;
+  setSelectedCurrency: (currency: string) => void;
   setTargetAmount: (amount: string) => void;
   setFoundGiftcards: (cards: BuyFlowCard[]) => void;
   setOrderId: (id: string | null) => void;

@@ -61,6 +61,7 @@ export interface BuyerSessionData {
     brandName?: string;
     countryId?: string;
     countryName?: string;
+    countryCurrency?: string;
     orderId?: string;
     reportCardId?: string;
     reportIssueType?: 'INVALID' | 'ALREADY_USED' | 'DEACTIVATED' | 'WRONG_AMOUNT';
