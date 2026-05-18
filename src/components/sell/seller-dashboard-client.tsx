@@ -6,6 +6,7 @@ import { IconPlus, IconGift, IconCreditCard, IconPackage, IconCircleCheck, IconC
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { SellerStats, RecentBatch } from '@/types/domain/seller';
 import { StatCard } from '@/components/ui/stat-card';
+import { formatCurrency } from '@/lib/currency-formatter';
 
 interface SellerDashboardClientProps {
   stats: SellerStats;
@@ -88,7 +89,9 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-semibold">${batch.effectiveTotal}</p>
+                    <p className="text-lg font-semibold">
+                      {formatCurrency(batch.effectiveTotal, { currency: 'USD' })}
+                    </p>
                     <span
                       className={`rounded px-2 py-1 text-xs font-medium ${
                         batch.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'

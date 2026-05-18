@@ -49,6 +49,8 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
   const isActionable = order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT';
   const hasReport = order.giftcards.some((g) => g.isConfirmed && g.status !== 'USED');
   const currency = order.giftcards[0]?.country?.currency || 'USD';
+  const faceValueCurrency = currency;
+  const paymentCurrency = 'USD';
 
   const handleResumeOrder = (e: MouseEvent) => {
     e.stopPropagation();
@@ -107,8 +109,8 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(order.faceValueTotal, { currency })}</span>
-          <span className="text-muted-foreground text-xs md:text-sm">Precio: {formatCurrency(order.effectiveTotal, { currency })}</span>
+          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(order.faceValueTotal, { currency: faceValueCurrency })}</span>
+          <span className="text-muted-foreground text-xs md:text-sm">Precio: {formatCurrency(order.effectiveTotal, { currency: paymentCurrency })}</span>
         </>
       }
       date={formatDateTime(order.createdAt, 'es-AR')}

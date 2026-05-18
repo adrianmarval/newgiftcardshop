@@ -21,7 +21,7 @@ import { formatCurrency } from '@/lib/currency-formatter';
 import { copyToClipboard } from '@/lib/clipboard';
 
 export const RedeemStep = () => {
-  const { foundGiftcards, reportIssue, setStep, orderId, selectedBrand, selectedCountry } = useBuyFlow();
+  const { foundGiftcards, reportIssue, setStep, orderId, selectedBrand, selectedCountry, selectedCurrency } = useBuyFlow();
 
   const [redeemState, setRedeemState] = useState<{
     activeReportId: string | null;
@@ -173,7 +173,7 @@ export const RedeemStep = () => {
             <div className="text-md flex items-center justify-between md:text-base">
               <span className="text-muted-foreground">Monto en Giftcards</span>
               <span className="font-bold">
-                {formatCurrency(rawTotal, { currency: (foundGiftcards[0] as any)?.country?.currency || 'USD' })}
+                {formatCurrency(rawTotal, { currency: selectedCurrency })}
               </span>
             </div>
 
@@ -250,11 +250,11 @@ export const RedeemStep = () => {
                           <span
                             className={`text-lg font-black md:text-xl ${card.status === 'UNUSED' ? 'text-foreground' : 'text-muted-foreground line-through'}`}
                           >
-                            {formatCurrency(card.amount, { currency: (card as any).country?.currency || 'USD' })}
+                            {formatCurrency(card.amount, { currency: selectedCurrency })}
                           </span>
                           {card.status === 'WRONG_AMOUNT' && card.reportedAmount !== undefined && (
                             <span className="text-destructive text-lg font-black md:text-xl">
-                              {formatCurrency(card.reportedAmount, { currency: (card as any).country?.currency || 'USD' })}
+                              {formatCurrency(card.reportedAmount, { currency: selectedCurrency })}
                             </span>
                           )}
                           {card.status !== 'UNUSED' && (

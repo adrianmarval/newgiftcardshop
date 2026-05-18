@@ -28,11 +28,11 @@ async function getBuyerBuyRate(userId: string, brandCountryId: string): Promise<
   return 100;
 }
 
-function validateTierAccess(cards: { id: string; escalationTier: number }[], buyerBuyRate: number): string | null {
+function validateTierAccess(cards: { id: string; escalationTier: number | null | undefined }[], buyerBuyRate: number): string | null {
   const blockedCards: string[] = [];
 
   for (const card of cards) {
-    const tier = card.escalationTier ?? 100;
+    const tier = card.escalationTier != null ? Number(card.escalationTier) : 100;
     if (tier > buyerBuyRate) {
       blockedCards.push(card.id);
     }
@@ -50,7 +50,10 @@ export const createOrder = buyerActionClient
   .outputSchema(createOrderOutputSchema)
   .useValidated(async ({ parsedInput: { giftcardIds }, ctx, next }) => {
     const dbUser = await prisma.user.findUnique({ where: { id: ctx.auth.user.id } });
-    const giftcards = await prisma.giftcard.findMany({ where: { id: { in: giftcardIds } } });
+    const giftcards = await prisma.giftcard.findMany({
+      where: { id: { in: giftcardIds } },
+      select: { id: true, amount: true, brandCountryId: true, escalationTier: true },
+    });
 
     if (!dbUser) throw new ActionError('Usuario no encontrado en la base de datos');
     if (giftcards.length === 0) throw new ActionError('No se especificaron tarjetas de regalo válidas');
@@ -73,7 +76,7 @@ export const createOrder = buyerActionClient
       throw new ActionError(error.message || 'No se han configurado tarifas para esta marca y país.');
     }
 
-    const buyerBuyRate = Math.floor(buyRate.toNumber());
+    const buyerBuyRate = Math.floor(buyRate.toNumber() * 100);
 
     const tierError = validateTierAccess(ctx.giftcards, buyerBuyRate);
     if (tierError) {

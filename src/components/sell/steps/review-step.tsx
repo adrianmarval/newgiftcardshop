@@ -165,7 +165,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3">
           <div>
             <span className="text-[10px] text-emerald-400">You receive</span>
-            <p className="text-lg font-semibold text-emerald-400">{currencySymbol}{totalToReceive.toFixed(2)}</p>
+            <p className="text-lg font-semibold text-emerald-400">${totalToReceive.toFixed(2)}</p>
           </div>
           <Badge variant="outline" className="border-emerald-500/30 text-[10px] text-emerald-400">
             {sellRate * 100}%

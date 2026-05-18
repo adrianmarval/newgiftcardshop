@@ -65,6 +65,8 @@ export const AdminOrderCard = ({
   const isActionable = order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT';
   const hasReports = order.giftcards.some((g) => ['INVALID', 'ALREADY_USED', 'DEACTIVATED', 'WRONG_AMOUNT'].includes(g.status));
   const currency = order.giftcards[0]?.country?.currency || 'USD';
+  const faceValueCurrency = currency;
+  const paymentCurrency = 'USD';
 
   const handleCancelOrder = async (e: MouseEvent) => {
     e.stopPropagation();
@@ -143,8 +145,8 @@ export const AdminOrderCard = ({
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(order.faceValueTotal, { currency })}</span>
-          <span className="text-muted-foreground text-xs md:text-sm">Precio: {formatCurrency(order.effectiveTotal, { currency })}</span>
+          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(order.faceValueTotal, { currency: faceValueCurrency })}</span>
+          <span className="text-muted-foreground text-xs md:text-sm">Precio: {formatCurrency(order.effectiveTotal, { currency: paymentCurrency })}</span>
         </>
       }
       date={formatDateTime(order.createdAt, 'es-AR')}
