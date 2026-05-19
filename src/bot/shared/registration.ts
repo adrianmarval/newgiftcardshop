@@ -116,45 +116,6 @@ function isValidPassword(password: string): boolean {
   return password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
 }
 
-export async function handleStartLink(ctx: RegContext, role: BotRole, email: string): Promise<void> {
-  const lang = getLang(role);
-  const telegramId = ctx.from!.id.toString();
-
-  const user = await prisma.user.findUnique({
-    where: { email },
-    include: { telegramUser: { select: { telegramId: true } } },
-  });
-
-  if (!user) {
-    await renderUI(ctx, i18n[lang].emailNotFound, { parse_mode: 'HTML' });
-    return;
-  }
-
-  if (user.telegramUser) {
-    await renderUI(ctx, i18n[lang].emailLinkedElsewhere, { parse_mode: 'HTML' });
-    return;
-  }
-
-  const otp = generateOtp();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
-  await prisma.telegramOtp.upsert({
-    where: { telegramId },
-    update: { email, name: user.name, otp, expiresAt },
-    create: { telegramId, email, name: user.name, otp, expiresAt },
-  });
-
-  try {
-    await sendOtpEmail(email, user.name, otp, lang);
-  } catch (err) {
-    await renderUI(ctx, i18n[lang].otpEmailError);
-    return;
-  }
-
-  ctx.session.wizard = { step: 'awaitingOtp' };
-  await renderUI(ctx, i18n[lang].otpSent.replace('{email}', email), { parse_mode: 'HTML' });
-}
-
 export async function startRegistration(ctx: RegContext, role: BotRole): Promise<void> {
   const telegramId = ctx.from!.id.toString();
   const lang = getLang(role);

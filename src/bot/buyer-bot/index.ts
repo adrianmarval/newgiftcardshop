@@ -31,7 +31,7 @@ import {
   handleBuyConfirm,
   handleBuyCancel,
 } from './handlers/buy.handler.js';
-import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword, handleStartLink } from '@/bot/shared/registration.js';
+import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
 
 export function createBuyerBot() {
   const token = process.env.BUYER_BOT_TOKEN;
@@ -65,25 +65,7 @@ export function createBuyerBot() {
   );
 
   // ── /start y wizard de registro (SIN auth — self-service) ─────────────────
-  bot.command('start', async (ctx) => {
-    const startParam = ctx.match;
-
-    if (startParam?.startsWith('link_')) {
-      try {
-        const emailBase64 = startParam.slice(4);
-        const email = Buffer.from(emailBase64, 'base64').toString('utf-8');
-
-        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          await handleStartLink(ctx, 'BUYER', email);
-          return;
-        }
-      } catch (e) {
-        // Fall through to normal start
-      }
-    }
-
-    await startBuyer(ctx);
-  });
+  bot.command('start', startBuyer);
 
   // Wizard de registro: captura texto ANTES del auth middleware
   bot.on(':text', async (ctx, next) => {
@@ -116,7 +98,7 @@ export function createBuyerBot() {
   // ── Callback queries ──────────────────────────────────────────────────────
 
   // Menú
-  bot.callbackQuery('start', startBuyer as any);
+  bot.callbackQuery('start', startBuyer);
 
   // Buy flow
   bot.callbackQuery('buy_start', startBuyWizard);
