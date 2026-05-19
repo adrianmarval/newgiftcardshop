@@ -12,7 +12,7 @@ type RegContext = SellerContext | BuyerContext;
 
 const i18n = {
   en: {
-    welcome: '👋 Welcome!\n\nTo create your account, I need some details.\n\n📝 <b>What is your full name?</b>',
+    welcome: '👋 Welcome!\n\nTo get started, please enter your <b>email address.</b>',
     nameShort: '❌ Name too short. Please enter your full name.',
     helloName: '✅ Hello, <b>{name}</b>!\n\n📧 <b>What is your email address?</b>',
     invalidEmail: '❌ Invalid email format.\nExample: <code>user@gmail.com</code>',
@@ -31,14 +31,15 @@ const i18n = {
     invalidPassword: '❌ Invalid password. It needs at least:\n• 8 characters\n• 1 uppercase\n• 1 lowercase\n• 1 number',
     sessionIncomplete: '❌ Incomplete session. Start over with /start.',
     accountCreated: `🎉 <b>Account created!</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Your account is <b>awaiting activation</b> by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
-    accountLinked: `🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\n⏳ Awaiting activation by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
-    accountLinkedActive: '🎉 <b>Account linked!</b>\n\nYour Telegram is now linked to <b>{email}</b>.\n\nYou can now use the bot.',
+    accountLinked: `🎉 <b>Account linked!</b>\n\nWelcome back, <b>{name}</b>!\nYour Telegram is now linked to <b>{email}</b>.\n\n⏳ Awaiting activation by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
+    accountLinkedActive:
+      '🎉 <b>Account linked!</b>\n\nWelcome back, <b>{name}</b>!\nYour Telegram is now linked to <b>{email}</b>.\n\nYou can now use the bot.',
     contactAdmin: 'Contact Admin',
     emailError: '❌ The email is already in use. Contact the administrator.',
     genericError: '❌ Error creating account. Try again or contact the administrator.',
   },
   es: {
-    welcome: '👋 ¡Bienvenido!\n\nPara crear tu cuenta necesito algunos datos.\n\n📝 <b>¿Cuál es tu nombre completo?</b>',
+    welcome: '👋 ¡Bienvenido!\n\nPara comenzar, por favor ingresa tu correo electrónico.',
     nameShort: '❌ Nombre muy corto. Ingresá tu nombre completo.',
     helloName: '✅ ¡Hola, <b>{name}</b>!\n\n📧 <b>¿Cuál es tu correo electrónico?</b>',
     invalidEmail: '❌ Email inválido. Ingresá un email con formato correcto.\nEjemplo: <code>usuario@gmail.com</code>',
@@ -57,8 +58,9 @@ const i18n = {
     invalidPassword: '❌ Contraseña inválida. Necesita al menos:\n• 8 mayúscula\n• 1 minúscula\n• 1 número',
     sessionIncomplete: '❌ Sesión incompleta. Empezá de nuevo con /start.',
     accountCreated: `🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
-    accountLinked: `🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
-    accountLinkedActive: '🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.',
+    accountLinked: `🎉 <b>¡Cuenta vinculada!</b>\n\n¡Bienvenido de nuevo, <b>{name}</b>!\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
+    accountLinkedActive:
+      '🎉 <b>¡Cuenta vinculada!</b>\n\n¡Bienvenido de nuevo, <b>{name}</b>!\nTu Telegram ahora está vinculado a <b>{email}</b>.',
     contactAdmin: 'Contactar administrador',
     emailError: '❌ El email ya está en uso. Contactá al administrador.',
     genericError: '❌ Error al crear la cuenta. Intentá de nuevo o contactá al administrador.',
@@ -138,7 +140,7 @@ export async function startRegistration(ctx: RegContext, role: BotRole): Promise
   if (!ctx.session.wizard) {
     ctx.session.wizard = { step: 'idle' };
   }
-  ctx.session.wizard.step = 'awaitingName';
+  ctx.session.wizard.step = 'awaitingEmail';
   await renderUI(ctx, i18n[lang].welcome, { parse_mode: 'HTML' });
 }
 
@@ -154,9 +156,28 @@ export async function handleRegName(ctx: RegContext, role: BotRole): Promise<voi
   }
 
   ctx.session.wizard.regName = name;
-  ctx.session.wizard.step = 'awaitingEmail';
+  ctx.session.wizard.step = 'awaitingOtp';
 
-  await renderUI(ctx, i18n[lang].helloName.replace('{name}', name), { parse_mode: 'HTML' });
+  const email = ctx.session.wizard.regEmail!;
+  const otp = generateOtp();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  const telegramId = ctx.from!.id.toString();
+
+  await prisma.telegramOtp.upsert({
+    where: { telegramId },
+    update: { email, name, otp, expiresAt },
+    create: { telegramId, email, name, otp, expiresAt },
+  });
+
+  try {
+    await sendOtpEmail(email, name, otp, lang);
+  } catch (err) {
+    ctx.session.wizard.step = 'awaitingName';
+    await renderUI(ctx, i18n[lang].otpEmailError);
+    return;
+  }
+
+  await renderUI(ctx, i18n[lang].otpSent.replace('{email}', email), { parse_mode: 'HTML' });
 }
 
 export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<void> {
@@ -180,32 +201,42 @@ export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<vo
       await renderUI(ctx, i18n[lang].emailLinkedElsewhere, { parse_mode: 'HTML' });
       return;
     }
+
     await renderUI(ctx, i18n[lang].emailInUse, { parse_mode: 'HTML' });
-  }
 
-  ctx.session.wizard.regEmail = email;
-  ctx.session.wizard.step = 'awaitingOtp';
+    ctx.session.wizard.regEmail = email;
+    ctx.session.wizard.isLinking = true;
+    ctx.session.wizard.step = 'awaitingOtp';
 
-  const name = existing?.name ?? ctx.session.wizard.regName ?? (lang === 'en' ? 'User' : 'Usuario');
-  const otp = generateOtp();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-  const telegramId = ctx.from!.id.toString();
+    const name = existing.name;
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const telegramId = ctx.from!.id.toString();
 
-  await prisma.telegramOtp.upsert({
-    where: { telegramId },
-    update: { email, name, otp, expiresAt },
-    create: { telegramId, email, name, otp, expiresAt },
-  });
+    await prisma.telegramOtp.upsert({
+      where: { telegramId },
+      update: { email, name, otp, expiresAt },
+      create: { telegramId, email, name, otp, expiresAt },
+    });
 
-  try {
-    await sendOtpEmail(email, name, otp, lang);
-  } catch (err) {
-    ctx.session.wizard.step = 'awaitingEmail';
-    await renderUI(ctx, i18n[lang].otpEmailError);
+    try {
+      await sendOtpEmail(email, name, otp, lang);
+    } catch (err) {
+      ctx.session.wizard.step = 'awaitingEmail';
+      await renderUI(ctx, i18n[lang].otpEmailError);
+      return;
+    }
+
+    await renderUI(ctx, i18n[lang].otpSent.replace('{email}', email), { parse_mode: 'HTML' });
     return;
   }
 
-  await renderUI(ctx, i18n[lang].otpSent.replace('{email}', email), { parse_mode: 'HTML' });
+  ctx.session.wizard.regEmail = email;
+  ctx.session.wizard.step = 'awaitingName';
+
+  const namePrompt =
+    lang === 'en' ? `📝 What is your <b>full name?</b>\n e.g. John Doe` : `📝 ¿Cuál es tu <b>nombre completo?</b>\n e.g. John Doe`;
+  await renderUI(ctx, namePrompt, { parse_mode: 'HTML' });
 }
 
 export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: () => Promise<any>): Promise<void> {
@@ -238,7 +269,7 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
 
   const existingUser = await prisma.user.findUnique({
     where: { email: record.email },
-    select: { id: true, role: true, isActive: true },
+    select: { id: true, name: true, role: true, isActive: true },
   });
 
   if (existingUser) {
@@ -260,14 +291,14 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
     ctx.session.wizard = { step: 'idle' };
 
     if (existingUser.isActive) {
-      await renderUI(ctx, i18n[lang].accountLinkedActive.replace('{email}', record.email), {
+      await renderUI(ctx, i18n[lang].accountLinkedActive.replace('{name}', existingUser.name).replace('{email}', record.email), {
         parse_mode: 'HTML',
       });
       if (onFinish) {
         await onFinish();
       }
     } else {
-      await renderUI(ctx, i18n[lang].accountLinked.replace('{email}', record.email), {
+      await renderUI(ctx, i18n[lang].accountLinked.replace('{name}', existingUser.name).replace('{email}', record.email), {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],

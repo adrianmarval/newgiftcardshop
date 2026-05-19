@@ -36,6 +36,7 @@ export interface SellerSessionData {
     // Registro
     regName?: string;
     regEmail?: string;
+    isLinking?: boolean;
     // Sell wizard
     brandId?: string;
     brandName?: string;
@@ -58,6 +59,7 @@ export interface BuyerSessionData {
     // Registro
     regName?: string;
     regEmail?: string;
+    isLinking?: boolean;
     // Buy wizard
     brandId?: string;
     brandName?: string;
