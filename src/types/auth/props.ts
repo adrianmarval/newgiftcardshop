@@ -16,11 +16,19 @@ export interface ProfileFormProps {
   user: {
     name: string;
     email: string;
+    emailVerified: boolean;
     image?: string | null;
     twoFactorEnabled: boolean;
+    telegramUser?: {
+      username: string | null;
+      firstName: string | null;
+      lastName: string | null;
+      photoUrl: string | null;
+      languageCode: string | null;
+    } | null;
   };
-  /** Sección de la app (para redirect post-update). */
   portal: AppSection;
+  telegramLinkUrl?: string | null;
 }
 
 /** Props para Verify2FAForm. El portal determina el dashboard de redirect post-2FA. */
@@ -61,6 +69,16 @@ export interface SecuritySectionProps {
 export interface ProfileInfoSectionProps {
   name: string;
   email: string;
+  emailVerified: boolean;
+  portal: AppSection;
+  telegramUser?: {
+    username: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    photoUrl: string | null;
+    languageCode: string | null;
+  } | null;
+  telegramLinkUrl?: string | null;
 }
 
 /** Props para TwoFactorSection en la página de profile. */

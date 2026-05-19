@@ -9,6 +9,12 @@ export const metadata: Metadata = {
 
 export default async function SellerProfilePage() {
   const session = await getSession();
+  const telegramUser = session.user.telegramUser ?? null;
+
+  const botUsername = process.env.SELLER_BOT_USERNAME;
+  const telegramLinkUrl = botUsername && session.user.email
+    ? `https://t.me/${botUsername}?start=link_${Buffer.from(session.user.email).toString('base64')}`
+    : null;
 
   return (
     <div className="container mx-auto space-y-4 py-2">
@@ -17,10 +23,13 @@ export default async function SellerProfilePage() {
         user={{
           name: session.user.name,
           email: session.user.email,
-          image: session.user.image,
+          emailVerified: session.user.emailVerified,
+          image: telegramUser?.photoUrl ?? null,
           twoFactorEnabled: !!session.user.twoFactorEnabled,
+          telegramUser,
         }}
         portal="sell"
+        telegramLinkUrl={telegramLinkUrl}
       />
     </div>
   );

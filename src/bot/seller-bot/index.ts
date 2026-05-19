@@ -21,7 +21,7 @@ import {
   handleSellConfirm,
   handleSellCancel,
 } from './handlers/sell.handler.js';
-import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
+import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword, handleStartLink } from '@/bot/shared/registration.js';
 
 export function createSellerBot() {
   const token = process.env.SELLER_BOT_TOKEN;
@@ -57,7 +57,25 @@ export function createSellerBot() {
   );
 
   // ── /start y wizard de registro (sin auth — cualquier user puede registrarse) ──
-  bot.command('start', startSeller);
+  bot.command('start', async (ctx) => {
+    const startParam = ctx.match;
+
+    if (startParam?.startsWith('link_')) {
+      try {
+        const emailBase64 = startParam.slice(4);
+        const email = Buffer.from(emailBase64, 'base64').toString('utf-8');
+
+        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          await handleStartLink(ctx, 'SELLER', email);
+          return;
+        }
+      } catch (e) {
+        // Fall through to normal start
+      }
+    }
+
+    await startSeller(ctx);
+  });
 
   // Pasos del wizard de registro: capturan texto ANTES del auth middleware
   bot.on(':text', async (ctx, next) => {

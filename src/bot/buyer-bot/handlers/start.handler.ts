@@ -29,10 +29,12 @@ export async function startBuyer(ctx: BuyerContext) {
 
   try {
     // ¿Ya tiene cuenta vinculada?
-    const user = await prisma.user.findUnique({
+    const telegramUser = await prisma.telegramUser.findUnique({
       where: { telegramId },
-      select: { name: true, isActive: true, emailVerified: true, role: true },
+      include: { user: { select: { name: true, isActive: true, emailVerified: true, role: true } } },
     });
+
+    const user = telegramUser?.user;
 
     if (user && user.role === 'SELLER') {
       await renderUI(

@@ -3,6 +3,7 @@ import { auth } from './auth';
 import { betterAuth } from '@next-safe-action/adapter-better-auth';
 import { Role } from '@/generated/prisma/enums';
 import { unauthorized } from 'next/navigation';
+import type { Session } from '@/types/auth/session';
 
 export class ActionError extends Error {
   constructor(message: string) {
@@ -56,7 +57,8 @@ export const authActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
-      if (!authData.user.isActive && authData.user.role !== 'ADMIN') unauthorized();
+      const user = authData.user as Session['user'];
+      if (!user.isActive && user.role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
     },
   }),
@@ -91,8 +93,9 @@ export const sellerActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
-      if (!authData.user.isActive && authData.user.role !== 'ADMIN') unauthorized();
-      const role = authData.user.role as Role;
+      const user = authData.user as Session['user'];
+      if (!user.isActive && user.role !== 'ADMIN') unauthorized();
+      const role = user.role as Role;
       if (role !== 'SELLER' && role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
     },
@@ -123,8 +126,9 @@ export const buyerActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
-      if (!authData.user.isActive && authData.user.role !== 'ADMIN') unauthorized();
-      const role = authData.user.role as Role;
+      const user = authData.user as Session['user'];
+      if (!user.isActive && user.role !== 'ADMIN') unauthorized();
+      const role = user.role as Role;
       if (role !== 'BUYER' && role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
     },
@@ -145,8 +149,9 @@ export const adminActionClient = actionClient.use(
   betterAuth(auth, {
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
-      if (!authData.user.isActive && authData.user.role !== 'ADMIN') unauthorized();
-      const role = authData.user.role as Role;
+      const user = authData.user as Session['user'];
+      if (!user.isActive && user.role !== 'ADMIN') unauthorized();
+      const role = user.role as Role;
       if (role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
     },

@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import { twoFactor } from 'better-auth/plugins'; // Added this import
+import { twoFactor, customSession } from 'better-auth/plugins';
 import prisma from '@/lib/prisma';
 import { resend, EMAIL_FROM } from '@/lib/resend';
 import { render } from '@react-email/components';
@@ -57,8 +57,28 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    customSession(async ({ user }) => {
+      const telegramUser = await prisma.telegramUser.findUnique({
+        where: { userId: user.id },
+        select: {
+          telegramId: true,
+          firstName: true,
+          lastName: true,
+          username: true,
+          languageCode: true,
+          photoUrl: true,
+        },
+      });
+
+      return {
+        user: {
+          ...user,
+          telegramUser,
+        },
+      };
+    }),
     twoFactor({
-      issuer: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop', // Added issuer
+      issuer: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop',
       skipVerificationOnEnable: true,
     }),
     nextCookies(),

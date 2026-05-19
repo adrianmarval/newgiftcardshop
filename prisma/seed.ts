@@ -25,6 +25,7 @@ export async function main() {
   await prisma.paymentMethod.deleteMany();
   await prisma.session.deleteMany();
   await prisma.account.deleteMany();
+  await prisma.telegramUser.deleteMany();
   await prisma.userBrandCountryRate.deleteMany();
   await prisma.brandCountryRate.deleteMany();
   await prisma.user.deleteMany();

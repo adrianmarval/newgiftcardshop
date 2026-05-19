@@ -25,10 +25,6 @@ model User {
   role          Role    @default(BUYER)
   isActive      Boolean @default(false)
 
-  // Telegram Integration
-  telegramId       String? @unique // Telegram user ID
-  telegramUsername String? // Telegram username (sin @)
-
   // Perfil de Trading (Tasas de cambio con precisión)
   allowBuyRateAdjustment Boolean @default(false)
 
@@ -41,6 +37,7 @@ model User {
   maxAmountPreference    Decimal? @db.Decimal(10, 2)
 
   // Relaciones
+  telegramUser    TelegramUser?
   sessions          Session[]
   accounts          Account[]
   giftcards         Giftcard[]
@@ -422,6 +419,24 @@ model TwoFactor {
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("twoFactor")
+}
+
+model TelegramUser {
+  id           String  @id @default(cuid())
+  telegramId   String  @unique
+  firstName    String?
+  lastName     String?
+  username     String?
+  languageCode String?
+  photoUrl     String?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("telegram_user")
 }
 
 // Bot session persistence for @grammyjs/storage-prisma

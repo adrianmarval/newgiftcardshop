@@ -12,7 +12,7 @@ export async function startSeller(ctx: SellerContext) {
   // (no como callback query) — el usuario pudo haber borrado los mensajes del chat
   const chatId = ctx.chat?.id || ctx.from?.id;
   const oldMessageId = !ctx.callbackQuery ? ctx.session.uiMessageId : undefined;
-  
+
   if (!ctx.callbackQuery) {
     ctx.session.uiMessageId = undefined;
     ctx.session.lastChatId = undefined;
@@ -28,12 +28,14 @@ export async function startSeller(ctx: SellerContext) {
   };
 
   // ¿Ya tiene cuenta vinculada?
-  const user = await prisma.user.findUnique({
+  const telegramUser = await prisma.telegramUser.findUnique({
     where: { telegramId },
-    select: { name: true, isActive: true, emailVerified: true, role: true },
+    include: { user: { select: { name: true, isActive: true, emailVerified: true, role: true } } },
   });
 
-if (user && user.role === 'BUYER') {
+  const user = telegramUser?.user;
+
+  if (user && user.role === 'BUYER') {
     await renderUI(
       ctx,
       '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot. Please contact the administrator if you think this is a mistake.',

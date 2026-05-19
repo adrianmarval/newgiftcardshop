@@ -16,7 +16,7 @@ export const verify2FA = actionClient
   .outputSchema(verify2FAOutputSchema)
   .action(async function ({ parsedInput: { code, portal } }) {
     try {
-      await auth.api.verifyTOTP({
+      await (auth as any).api.verifyTOTP({
         body: {
           code,
         },

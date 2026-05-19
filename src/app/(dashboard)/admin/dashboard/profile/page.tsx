@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 
 export default async function AdminProfilePage() {
   const session = await getSession();
+  const telegramUser = session.user.telegramUser ?? null;
 
   return (
     <div className="container mx-auto space-y-4 py-2">
@@ -17,8 +18,10 @@ export default async function AdminProfilePage() {
         user={{
           name: session.user.name,
           email: session.user.email,
-          image: session.user.image,
+          emailVerified: session.user.emailVerified,
+          image: telegramUser?.photoUrl ?? null,
           twoFactorEnabled: !!session.user.twoFactorEnabled,
+          telegramUser,
         }}
         portal="admin"
       />

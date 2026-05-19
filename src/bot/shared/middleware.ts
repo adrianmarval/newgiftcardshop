@@ -41,10 +41,12 @@ export const authenticateSeller = async (ctx: SellerContext, next: NextFunction)
 
   const telegramId = ctx.from.id.toString();
 
-  const user = await prisma.user.findUnique({
+  const telegramUser = await prisma.telegramUser.findUnique({
     where: { telegramId },
-    select: { id: true, name: true, role: true, isActive: true },
+    include: { user: { select: { id: true, name: true, role: true, isActive: true } } },
   });
+
+  const user = telegramUser?.user;
 
   if (!user) {
     return renderUI(
@@ -77,10 +79,12 @@ export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) =
 
   const telegramId = ctx.from.id.toString();
 
-  const user = await prisma.user.findUnique({
+  const telegramUser = await prisma.telegramUser.findUnique({
     where: { telegramId },
-    select: { id: true, name: true, role: true, isActive: true },
+    include: { user: { select: { id: true, name: true, role: true, isActive: true } } },
   });
+
+  const user = telegramUser?.user;
 
   if (!user) {
     return renderUI(ctx, '🔗 <b>Tu cuenta no está vinculada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para obtener acceso.`, {

@@ -18,6 +18,7 @@ const i18n = {
     invalidEmail: '❌ Invalid email format.\nExample: <code>user@gmail.com</code>',
     emailInUse: '⚠️ That email is already registered.\n\nTo link your Telegram account, we will send a verification code to your email.',
     emailLinkedElsewhere: '⚠️ This email is already linked to another Telegram account. Contact the administrator if you need help.',
+    emailNotFound: '⚠️ No account found with this email. Please register first using /start.',
     otpSent:
       "📬 We sent a 6-digit code to <b>{email}</b>.\n\n🔐 <b>Enter the code:</b>\n\n<i>Code expires in 5 minutes. Check your spam folder if it doesn't arrive.</i>",
     otpSubject: '🔐 Your verification code',
@@ -43,6 +44,7 @@ const i18n = {
     invalidEmail: '❌ Email inválido. Ingresá un email con formato correcto.\nEjemplo: <code>usuario@gmail.com</code>',
     emailInUse: '⚠️ Ese email ya está registrado.\n\nPara vincular tu cuenta de Telegram, te enviamos un código de verificación al correo.',
     emailLinkedElsewhere: '⚠️ Este email ya está vinculado a otra cuenta de Telegram. Contactá al administrador si necesitás ayuda.',
+    emailNotFound: '⚠️ No se encontró cuenta con este email. Por favor, registrate primero usando /start.',
     otpSent:
       '📬 Te enviamos un código de 6 dígitos a <b>{email}</b>.\n\n🔐 <b>Ingresá el código:</b>\n\n<i>El código expira en 5 minutos. Si no llega, revisá spam.</i>',
     otpSubject: '🔐 Tu código de verificación',
@@ -52,7 +54,7 @@ const i18n = {
     otpIncorrect: '❌ Código incorrecto. Revisá el email e intentá de nuevo.',
     emailVerified:
       '✅ ¡Email verificado!\n\n🔑 Creá tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i>⚠️ Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
-    invalidPassword: '❌ Contraseña inválida. Necesita al menos:\n• 8 caracteres\n• 1 mayúscula\n• 1 minúscula\n• 1 número',
+    invalidPassword: '❌ Contraseña inválida. Necesita al menos:\n• 8 mayúscula\n• 1 minúscula\n• 1 número',
     sessionIncomplete: '❌ Sesión incompleta. Empezá de nuevo con /start.',
     accountCreated: `🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
     accountLinked: `🎉 <b>¡Cuenta vinculada!</b>\n\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
@@ -67,7 +69,24 @@ function getLang(role: BotRole): Lang {
   return role === 'SELLER' ? 'en' : 'es';
 }
 
-// ── OTP helpers ───────────────────────────────────────────────────────────────
+async function getTelegramProfilePhotoUrl(ctx: RegContext, telegramId: string, botToken: string): Promise<string | null> {
+  try {
+    const photos = await ctx.api.getUserProfilePhotos(Number(telegramId), { limit: 1 });
+    if (photos.total_count === 0) return null;
+
+    const photo = photos.photos[0];
+    if (!photo || photo.length === 0) return null;
+
+    const largestPhoto = photo[photo.length - 1];
+    const file = await ctx.api.getFile(largestPhoto.file_id);
+    if (!file.file_path) return null;
+
+    return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
+  } catch (error) {
+    console.error('Error fetching Telegram profile photo:', error);
+    return null;
+  }
+}
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -89,8 +108,6 @@ async function sendOtpEmail(email: string, name: string, otp: string, lang: Lang
   }
 }
 
-// ── Validations ──────────────────────────────────────────────────────────────
-
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -99,18 +116,55 @@ function isValidPassword(password: string): boolean {
   return password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
 }
 
-// ── Flow ─────────────────────────────────────────────────────────────────────
+export async function handleStartLink(ctx: RegContext, role: BotRole, email: string): Promise<void> {
+  const lang = getLang(role);
+  const telegramId = ctx.from!.id.toString();
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { telegramUser: { select: { telegramId: true } } },
+  });
+
+  if (!user) {
+    await renderUI(ctx, i18n[lang].emailNotFound, { parse_mode: 'HTML' });
+    return;
+  }
+
+  if (user.telegramUser) {
+    await renderUI(ctx, i18n[lang].emailLinkedElsewhere, { parse_mode: 'HTML' });
+    return;
+  }
+
+  const otp = generateOtp();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+  await prisma.telegramOtp.upsert({
+    where: { telegramId },
+    update: { email, name: user.name, otp, expiresAt },
+    create: { telegramId, email, name: user.name, otp, expiresAt },
+  });
+
+  try {
+    await sendOtpEmail(email, user.name, otp, lang);
+  } catch (err) {
+    await renderUI(ctx, i18n[lang].otpEmailError);
+    return;
+  }
+
+  ctx.session.wizard = { step: 'awaitingOtp' };
+  await renderUI(ctx, i18n[lang].otpSent.replace('{email}', email), { parse_mode: 'HTML' });
+}
 
 export async function startRegistration(ctx: RegContext, role: BotRole): Promise<void> {
   const telegramId = ctx.from!.id.toString();
   const lang = getLang(role);
 
-  const existing = await prisma.user.findUnique({
+  const existing = await prisma.telegramUser.findUnique({
     where: { telegramId },
-    select: { role: true },
+    include: { user: { select: { role: true } } },
   });
 
-  if (existing && existing.role !== role) {
+  if (existing && existing.user.role !== role) {
     const errorMsg =
       role === 'SELLER'
         ? '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot. Please contact the administrator if you think this is a mistake.'
@@ -155,14 +209,16 @@ export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<vo
     return;
   }
 
-  const existing = await prisma.user.findUnique({ where: { email }, select: { id: true, telegramId: true, name: true } });
+  const existing = await prisma.user.findUnique({
+    where: { email },
+    include: { telegramUser: { select: { telegramId: true } } },
+  });
 
   if (existing) {
-    if (existing.telegramId) {
+    if (existing.telegramUser) {
       await renderUI(ctx, i18n[lang].emailLinkedElsewhere, { parse_mode: 'HTML' });
       return;
     }
-    // Si ya existe pero no tiene telegramId, procedemos enviando OTP para vincular
     await renderUI(ctx, i18n[lang].emailInUse, { parse_mode: 'HTML' });
   }
 
@@ -195,7 +251,7 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
   const lang = getLang(role);
   const inputOtp = (ctx.message as any)?.text?.trim() as string | undefined;
   const telegramId = ctx.from!.id.toString();
-  const telegramUsername = ctx.from!.username;
+  const { first_name: firstName, last_name: lastName, username, language_code: languageCode } = ctx.from!;
 
   await deleteUserInput(ctx);
 
@@ -219,17 +275,24 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
     return;
   }
 
-  // Verificar si ya existe el usuario para ver si es flujo de vinculación
   const existingUser = await prisma.user.findUnique({
     where: { email: record.email },
     select: { id: true, role: true, isActive: true },
   });
 
   if (existingUser) {
-    // VINCULACIÓN: El usuario ya existe, solo asociamos el Telegram
+    const botToken = role === 'SELLER' ? process.env.SELLER_BOT_TOKEN! : process.env.BUYER_BOT_TOKEN!;
+    const photoUrl = await getTelegramProfilePhotoUrl(ctx, telegramId, botToken);
+
     await prisma.user.update({
       where: { id: existingUser.id },
-      data: { telegramId, telegramUsername, emailVerified: true },
+      data: { emailVerified: true },
+    });
+
+    await prisma.telegramUser.upsert({
+      where: { telegramId },
+      update: { firstName, lastName, username, languageCode, photoUrl },
+      create: { telegramId, firstName, lastName, username, languageCode, photoUrl, userId: existingUser.id },
     });
 
     await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});
@@ -253,7 +316,6 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
     return;
   }
 
-  // REGISTRO NUEVO: Continuar a contraseña
   ctx.session.wizard.regEmail = record.email;
   ctx.session.wizard.regName = record.name;
   ctx.session.wizard.step = 'awaitingPassword';
@@ -274,7 +336,7 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
 
   const { regName: name, regEmail: email } = ctx.session.wizard;
   const telegramId = ctx.from!.id.toString();
-  const telegramUsername = ctx.from!.username;
+  const { first_name: firstName, last_name: lastName, username, language_code: languageCode } = ctx.from!;
 
   if (!name || !email) {
     ctx.session.wizard.step = 'awaitingName';
@@ -296,9 +358,16 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
 
     if (!result?.user?.id) throw new Error('signUpEmail failed');
 
+    const botToken = role === 'SELLER' ? process.env.SELLER_BOT_TOKEN! : process.env.BUYER_BOT_TOKEN!;
+    const photoUrl = await getTelegramProfilePhotoUrl(ctx, telegramId, botToken);
+
     await prisma.user.update({
       where: { id: result.user.id },
-      data: { telegramId, telegramUsername, emailVerified: true },
+      data: { emailVerified: true },
+    });
+
+    await prisma.telegramUser.create({
+      data: { telegramId, firstName, lastName, username, languageCode, photoUrl, userId: result.user.id },
     });
 
     await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});

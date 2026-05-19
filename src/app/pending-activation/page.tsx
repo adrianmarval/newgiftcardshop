@@ -21,8 +21,8 @@ export default async function PendingActivationPage() {
     redirect(dashboard);
   }
 
-  const isSpanish = session.user.role !== 'SELLER';
-  const portal = session.user.role === 'ADMIN' ? 'admin' : session.user.role === 'SELLER' ? 'sell' : 'buy';
+  const isSpanish = session.user.role === 'BUYER';
+  const portal = session.user.role === 'SELLER' ? 'sell' : 'buy';
 
   const t = {
     title: isSpanish ? 'Acceso en Espera' : 'Access Pending',

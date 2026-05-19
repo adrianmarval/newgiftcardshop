@@ -23,7 +23,7 @@ export const register = actionClient
     const role = roleMap[portal];
 
     try {
-      await auth.api.signUpEmail({
+      await (auth.api.signUpEmail as any)({
         body: {
           name: fullName,
           email,
