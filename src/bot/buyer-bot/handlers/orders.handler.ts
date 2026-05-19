@@ -60,7 +60,7 @@ export async function handleOrders(ctx: BuyerContext) {
 
     const shortId = order.id.slice(-8).toUpperCase();
     const dateStr = fmtDate(order.createdAt);
-    const label = `${icon} Ver Orden #${shortId} · ${dateStr}`;
+    const label = `${icon} Orden #${shortId} · ${dateStr}`;
 
     kb.text(label, `order_detail_${order.id}_${page}`).row();
   }
