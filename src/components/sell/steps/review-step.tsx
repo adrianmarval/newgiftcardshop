@@ -134,7 +134,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
   return (
     <div className="grid grid-cols-1 items-start gap-2 md:grid-cols-12 md:gap-6">
-      <Card className="border-border/50 flex flex-col p-1 md:col-span-4 md:space-y-4 md:p-4">
+      <Card className="flex flex-col border p-1 md:col-span-4 md:space-y-4 md:p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium text-white">Review</h2>
           <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-[10px]">
@@ -190,8 +190,8 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         </div>
       </Card>
 
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col p-1 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
-        <div className="mb-2 flex items-center justify-between md:mb-6">
+      <Card className="bg-card/50 custom-scrollbar flex flex-col overflow-auto border p-1 backdrop-blur-sm md:col-span-8 md:h-[540px] md:p-4">
+        <div className="flex items-center justify-between">
           <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase md:text-sm">Cards</Label>
           <Badge variant="outline" className="border-border text-muted-foreground text-[10px]">
             {giftcards.length} Total

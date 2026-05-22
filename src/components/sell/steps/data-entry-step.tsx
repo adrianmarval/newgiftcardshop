@@ -516,9 +516,9 @@ export function DataEntryStep() {
             }}
             disabled={isProcessing}
             className={cn(
-              'border-border bg-muted/20 focus-visible:ring-primary text-md h-86 resize-none rounded-xl font-mono transition-all md:text-sm',
+              'border-border bg-muted/20 focus-visible:ring-primary text-md h-96 resize-none rounded-xl font-mono transition-all md:text-sm lg:h-70',
               isDragOver && 'border-primary',
-              showFormatHelp && 'h-64',
+              showFormatHelp && 'h-84 lg:h-50',
               validationErrors.length > 0 && 'border-destructive/50 ring-destructive/20 ring-1',
             )}
           />
