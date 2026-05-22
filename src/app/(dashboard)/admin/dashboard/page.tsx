@@ -3,9 +3,8 @@ import { formatCurrency } from '@/lib/currency-formatter';
 import { Metadata } from 'next';
 import { getBinanceBalancesAction } from '@/actions/admin/binance';
 import { getPlatformBalance } from '@/actions/platform/settings';
-import { getInventoryStatsAction, getProfitStatsAction } from '@/actions/admin/dashboard-stats';
-import { InventoryChart } from '@/components/admin/dashboard/inventory-chart';
-import { ProfitChart } from '@/components/admin/dashboard/profit-chart';
+import { getInventoryStatsAction, getProfitStatsAction } from '@/actions/admin/stats';
+import { InventoryChart, ProfitChart } from '@/components/admin/charts';
 
 import { Bitcoin, CircleDollarSignIcon, Equal, TrendingDown, TrendingUp } from 'lucide-react';
 import { Decimal } from '@/generated/prisma/internal/prismaNamespaceBrowser';
@@ -33,13 +32,10 @@ export default async function AdminDashboardPage() {
   const diffColor = differential.greaterThan(0) ? 'text-green-400' : differential.lessThan(0) ? 'text-red-400' : 'text-white/80';
 
   return (
-    <div className="container mx-auto w-full space-y-2">
-      <div className="space-y-1">
-        <h1 className="text-4xl font-bold">Panel de Administración</h1>
-        <p className="text-muted-foreground">Resumen y gestión de la plataforma</p>
-      </div>
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">PANEL DE ADMINISTRACIÓN</h1>
 
-      <div className="grid auto-rows-min gap-2 md:grid-cols-3">
+      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
             <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
@@ -131,7 +127,7 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <div className="col-span-1 md:col-span-1 lg:col-span-3">
           <InventoryChart data={inventoryData} />
         </div>

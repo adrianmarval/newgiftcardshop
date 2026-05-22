@@ -1,7 +1,52 @@
 'use client';
 
+import { GiftcardStatus } from '@/types';
 import { create } from 'zustand';
-import type { BuyFlowState } from '@/types';
+
+export interface BuyFlowCard {
+  id: string;
+  brand: string;
+  amount: number;
+  claimCode?: string;
+  pinCode?: string;
+  status: GiftcardStatus;
+  reportedAmount?: number;
+  sellerId?: string;
+  country?: { name: string; code: string; currency: string | null } | null;
+}
+
+export interface TierInfo {
+  buyerBuyRate: number;
+  accessibleAmount: string;
+  inaccessibleAmount: string;
+  totalCards: number;
+  accessibleCardCount: number;
+  inaccessibleCardCount: number;
+}
+
+export interface BuyFlowState {
+  step: number;
+  selectedBrand: string;
+  selectedCountry: string;
+  selectedCurrency: string;
+  targetAmount: string;
+  foundGiftcards: BuyFlowCard[];
+  orderId: string | null;
+  adjustedTotal: number | null;
+  tierInfo: TierInfo | null;
+  setStep: (step: number) => void;
+  setSelectedBrand: (brand: string) => void;
+  setSelectedCountry: (country: string) => void;
+  setSelectedCurrency: (currency: string) => void;
+  setTargetAmount: (amount: string) => void;
+  setFoundGiftcards: (cards: BuyFlowCard[]) => void;
+  setOrderId: (id: string | null) => void;
+  setAdjustedTotal: (total: number | null) => void;
+  setTierInfo: (info: TierInfo | null) => void;
+  removeGiftcard: (id: string) => void;
+  reportIssue: (id: string, status: BuyFlowCard['status'], correctedAmount?: number) => void;
+  resetForm: () => void;
+}
 
 export const useBuyFlow = create<BuyFlowState>((set) => ({
   step: 1,

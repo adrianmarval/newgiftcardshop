@@ -1,28 +1,29 @@
 'use server';
 
+import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { loginSchema, loginOutputSchema } from '@/types/auth/schemas';
+import { dashboardMap, portalSchema, roleMap } from '@/types/';
 
-const dashboardMap = {
-  sell: '/sell/dashboard',
-  buy: '/store/dashboard',
-  admin: '/admin/dashboard',
-} as const;
+const loginInputSchema = z.object({
+  email: z.email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+  portal: portalSchema,
+});
 
-const roleMap = {
-  sell: 'SELLER',
-  buy: 'BUYER',
-  admin: 'ADMIN',
-} as const;
+const loginOutputSchema = z.union([
+  z.object({ success: z.literal(true), redirectTo: z.string() }),
+  z.object({ success: z.literal(false), error: z.string().optional(), needsVerification: z.boolean().optional() }),
+]);
 
 export const login = actionClient
-  .inputSchema(loginSchema)
+  .inputSchema(loginInputSchema)
   .outputSchema(loginOutputSchema)
   .action(async function ({ parsedInput: { email, password, portal } }) {
     const callbackURL = dashboardMap[portal];
     const requiredRole = roleMap[portal];
+    const isSpanish = portal === 'buy' || portal === 'admin';
 
     try {
       const response = (await auth.api.signInEmail({
@@ -42,7 +43,7 @@ export const login = actionClient
         };
       };
       if (response.twoFactorRedirect) {
-        return { success: true, redirectTo: `/${portal}/auth/verify-2fa` };
+        return { success: true as const, redirectTo: `${callbackURL}` };
       }
 
       if (response.user) {
@@ -50,17 +51,33 @@ export const login = actionClient
 
         if (user.role !== requiredRole && user.role !== 'ADMIN') {
           await auth.api.signOut({ headers: await headers() });
-          return {
-            error: `Your account does not have ${requiredRole.toLowerCase()} access`,
-          };
+          return { success: false as const, error: `Your account does not have ${requiredRole.toLowerCase()} access` };
         }
 
-        return { success: true, redirectTo: callbackURL };
+        return { success: true as const, redirectTo: callbackURL };
       }
 
-      return { error: 'Invalid email or password' };
+      return { success: false as const, error: 'Invalid email or password' };
     } catch (error) {
       console.error('Login error:', error);
-      return { error: 'Unexpected error occurred. Please try again later.' };
+
+      const errorObj = error as { status?: number; message?: string; body?: { message?: string; status?: number } };
+      const status = errorObj?.status || errorObj?.body?.status;
+      const apiMessage = errorObj?.body?.message || errorObj?.message;
+
+      if (status === 403 || apiMessage?.toLowerCase().includes('not verified') || apiMessage?.toLowerCase().includes('verification')) {
+        return {
+          success: false as const,
+          error: isSpanish
+            ? 'Tu correo electrónico no ha sido verificado. Por favor, revisa tu bandeja de entrada o reenvía el correo de verificación.'
+            : 'Your email has not been verified. Please check your inbox or resend the verification email.',
+          needsVerification: true,
+        };
+      }
+
+      if (apiMessage) {
+        return { success: false as const, error: apiMessage };
+      }
+      return { success: false as const, error: isSpanish ? 'Error al iniciar sesión' : 'Login failed' };
     }
   });

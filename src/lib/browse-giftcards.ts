@@ -1,8 +1,26 @@
 import { Giftcard } from '@/generated/prisma/client';
 import { Decimal } from '@prisma/client/runtime/client';
-import type { GiftcardSelectionResult, BatchInfo, PreprocessedBatchData } from '@/types';
 
-export type { GiftcardSelectionResult };
+// ── Types (defined locally - these were previously in @/types) ─────────────────
+
+export interface GiftcardSelectionResult {
+  selectedCards: Giftcard[];
+  total: Decimal;
+  isExactMatch: boolean;
+  isWithinToleranceRange: boolean;
+}
+
+export interface BatchInfo {
+  createdAt: Date;
+  cards: Giftcard[];
+  totalValue: Decimal;
+}
+
+export interface PreprocessedBatchData {
+  batches: BatchInfo[];
+  allCardsByAge: Giftcard[];
+  totalCards: number;
+}
 
 export interface GiftcardSelectionWithTierInfo extends GiftcardSelectionResult {
   tierInfo: {

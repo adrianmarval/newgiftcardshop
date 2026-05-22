@@ -1,7 +1,15 @@
 import { formatCurrency } from '@/lib/currency-formatter';
-import type { BatchDetailsProps } from './types';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
 import { CheckCircle2 } from 'lucide-react';
+import { SellerBatch } from '@/types';
+
+/**
+ * Props for the BatchDetails component.
+ * Shows detailed view of a single batch's giftcards.
+ */
+export interface BatchDetailsProps {
+  batch: SellerBatch;
+}
 
 export function BatchDetails({ batch }: BatchDetailsProps) {
   return (

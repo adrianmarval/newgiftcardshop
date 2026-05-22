@@ -3,7 +3,20 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { formatDateTime } from '@/lib/date-formatter';
-import type { AdminBuyerDialogProps } from './types';
+
+interface AdminBuyerDialogProps {
+  buyer: {
+    id: string;
+    name: string;
+    email: string;
+    buyRate: number;
+    orderCount: number;
+    createdAt: string;
+    twoFactorEnabled: boolean;
+  } | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
 export function AdminBuyerDialog({ buyer, open, onOpenChange }: AdminBuyerDialogProps) {
   if (!buyer) return null;

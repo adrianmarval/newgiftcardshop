@@ -1,5 +1,5 @@
 import { SellBatchManager } from '@/components/sell/sell-flow-manager';
-import { getActiveBrandCountries } from '@/actions/catalog/brand-country';
+import { getActiveBrandCountries } from '@/actions/catalog/get-active-brand-countries';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -12,5 +12,10 @@ export default async function SellBatchPage() {
 
   if (!brandCountriesResult.data?.success) throw new Error('Failed to get brand countries');
 
-  return <SellBatchManager brandCountries={brandCountriesResult.data.brandCountries} />;
+  return (
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">SELL CARDS</h1>
+      <SellBatchManager brandCountries={brandCountriesResult.data.brandCountries} />
+    </div>
+  );
 }

@@ -10,13 +10,18 @@ import { Spinner } from '@/components/ui/spinner';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 import { forgotPassword } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
+import { AppSection, appSectionMap } from '@/types';
 
-export const ForgotPasswordForm = ({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) => {
+interface ForgotPasswordFormProps {
+  portal?: AppSection;
+}
+
+export const ForgotPasswordForm = ({ portal = 'buy' }: ForgotPasswordFormProps) => {
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
 
   const isSpanish = portal === 'buy' || portal === 'admin';
-  const portalPath = portal === 'buy' ? '/buy' : `/${portal}`;
+  const portalPath = appSectionMap[portal];
   const authPath = `${portalPath}/auth`;
 
   const { execute, status } = useAction(forgotPassword, {

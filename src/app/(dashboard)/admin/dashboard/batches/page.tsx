@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import { adminBatches } from '@/actions/admin/admin-batches';
-import { adminGetSellers } from '@/actions/admin/admin-get-sellers';
+import { listBatches } from '@/actions/admin/batches';
+import { getSellers } from '@/actions/admin/users/get-sellers';
 import { AdminBatchesView } from '@/components/admin/batches/admin-batches-view';
 import { adminBatchesSearchParamsCache } from '@/lib/search-params-cache';
 
@@ -22,8 +22,8 @@ export default async function AdminBatchesPage({ searchParams }: { searchParams:
   const amountMax = parsed.amountMax ? Number(parsed.amountMax) : null;
 
   const [batchesResult, sellersResult] = await Promise.all([
-    adminBatches({ page, limit, search, sort, sellerId, status, dateFrom, dateTo, amountMin, amountMax }),
-    adminGetSellers(),
+    listBatches({ page, limit, search, sort, sellerId, status, dateFrom, dateTo, amountMin, amountMax }),
+    getSellers(),
   ]);
 
   if (!batchesResult.data?.success) {
@@ -33,8 +33,8 @@ export default async function AdminBatchesPage({ searchParams }: { searchParams:
   const sellers = sellersResult.data?.success ? sellersResult.data.sellers : [];
 
   return (
-    <div className="container mx-auto space-y-4 py-2">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-7xl">ADMIN BATCHES</h1>
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">ADMIN BATCHES</h1>
       <AdminBatchesView batches={batchesResult.data.items} sellers={sellers} pagination={batchesResult.data.pagination} />
     </div>
   );

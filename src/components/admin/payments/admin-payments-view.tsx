@@ -6,12 +6,20 @@ import { AdminPaymentsFilters } from '@/components/admin/payments/admin-payments
 import { AdminPaymentsList } from '@/components/admin/payments/admin-payments-list';
 import { AdminDepositDialog } from '@/components/admin/payments/admin-deposit-dialog';
 import { AdminRefundDialog } from '@/components/admin/payments/admin-refund-dialog';
-import type { AdminPaymentsViewProps } from './types';
 import { Button } from '@/components/ui/button';
 import { syncPendingWithdrawalsAction } from '@/actions/admin/binance';
 import { useAction } from 'next-safe-action/hooks';
 import Swal from 'sweetalert2';
 import { Loader2, RefreshCw } from 'lucide-react';
+import { Payment, PaginationMeta } from '@/types';
+
+interface AdminPaymentsViewProps {
+  payments: Payment[];
+  pagination: PaginationMeta;
+  sellers: Array<{ id: string; name: string; email: string }>;
+  buyers: Array<{ id: string; name: string; email: string }>;
+  admins: Array<{ id: string; name: string; email: string }>;
+}
 
 export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: AdminPaymentsViewProps) => {
   const router = useRouter();
@@ -53,7 +61,7 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
       });
       router.refresh();
     },
-    onError: (error) => {
+    onError: () => {
       Swal.fire({
         title: 'Error de Sincronización',
         text: 'Hubo un problema al conectar con Binance o actualizar la DB.',

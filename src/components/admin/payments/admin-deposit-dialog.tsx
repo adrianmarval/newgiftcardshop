@@ -1,13 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { createDeposit } from '@/actions/admin/admin-create-deposit';
+import { createDeposit } from '@/actions/admin/payments';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { AdminDepositDialogProps } from './types';
 
-export const AdminDepositDialog = ({ open, onOpenChange, onSuccess }: Omit<AdminDepositDialogProps, 'admins'>) => {
+interface AdminDepositDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+}
+
+export const AdminDepositDialog = ({ open, onOpenChange, onSuccess }: AdminDepositDialogProps) => {
   const [amount, setAmount] = useState('');
 
   const [binanceTxId, setBinanceTxId] = useState('');

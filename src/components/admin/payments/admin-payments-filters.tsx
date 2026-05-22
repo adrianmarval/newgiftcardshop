@@ -9,9 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
-import { adminPaymentsSearchParamsParsers } from '@/types/domain/admin';
-import type { AdminPaymentsFiltersProps } from './types';
+import { adminPaymentsSearchParamsParsers } from '@/lib/search-params';
 import { cn } from '@/lib/utils';
+
+interface AdminPaymentsFiltersProps {
+  sellers: Array<{ id: string; name: string; email: string }>;
+  buyers: Array<{ id: string; name: string; email: string }>;
+}
 
 export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersProps) => {
   const [params, setParams] = useQueryStates(
@@ -88,7 +92,7 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[280px] p-0" align="start">
+                <PopoverContent className="w-70 p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Buscar usuario..." />
                     <CommandList>

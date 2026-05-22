@@ -6,7 +6,7 @@ export const showSwal = Swal.mixin({
     title: 'text-foreground font-bold',
     htmlContainer: 'text-muted-foreground',
     confirmButton:
-      'bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-primary/20',
+      'cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-primary/20',
     cancelButton: 'bg-muted text-muted-foreground hover:bg-muted/80 px-6 py-2 rounded-xl font-bold transition-all',
   },
   buttonsStyling: false,

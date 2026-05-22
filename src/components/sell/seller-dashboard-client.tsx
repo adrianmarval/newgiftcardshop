@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { IconPlus, IconGift, IconCreditCard, IconPackage, IconCircleCheck, IconClock } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import type { SellerStats, RecentBatch } from '@/types/domain/seller';
+import type { SellerStats, RecentBatch } from '@/types/domain/batch';
 import { StatCard } from '@/components/ui/stat-card';
 import { formatCurrency } from '@/lib/currency-formatter';
 
@@ -15,10 +15,10 @@ interface SellerDashboardClientProps {
 
 export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardClientProps) {
   return (
-    <div className="container mx-auto space-y-4">
+    <div className="w-full space-y-4">
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Statistics</h2>
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Cards"
             value={stats.totalCards.toString()}
@@ -89,9 +89,7 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-semibold">
-                      {formatCurrency(batch.effectiveTotal, { currency: 'USD' })}
-                    </p>
+                    <p className="text-lg font-semibold">{formatCurrency(batch.effectiveTotal, { currency: 'USD' })}</p>
                     <span
                       className={`rounded px-2 py-1 text-xs font-medium ${
                         batch.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'

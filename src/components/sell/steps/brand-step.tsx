@@ -1,20 +1,23 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Check, ChevronRight, Globe, X, Plus } from 'lucide-react';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Search, Check, ChevronRight, Globe } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-
 import { useSellFlow } from '@/hooks/use-sell-flow';
-
 import Image from 'next/image';
-import type { BrandStepProps } from '@/components/sell/types';
+import { BrandCountry } from '@/types';
 
-export function BrandStep({ brandCountries }: BrandStepProps) {
+export interface BrandStepProps {
+  brandCountries: BrandCountry[];
+  onBrandSelect: (brandId: string, countryId: string) => void;
+}
+
+export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
   const { selectedBrandCountry, setSelectedBrandCountry, setStep } = useSellFlow();
 
   const [searchBrand, setSearchBrand] = useState('');
@@ -41,6 +44,16 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
       });
   }, [brandCountries, selectedCountryId, searchBrand]);
 
+  const handleCountryChange = (val: string) => {
+    setSelectedCountryId(val);
+    setSelectedBrandCountry('', { minAmount: null, maxAmount: null });
+  };
+
+  const handleBrandClick = (bc: BrandCountry) => {
+    setSelectedBrandCountry(`${bc.brandId}|${bc.countryId}`, { minAmount: bc.minAmount, maxAmount: bc.maxAmount });
+    onBrandSelect(bc.brandId, bc.countryId);
+  };
+
   const isStep1Valid = selectedBrandCountry !== '';
   const showEmptyState = !selectedCountryId;
 
@@ -53,13 +66,7 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
               1. Select Country
             </Label>
             <div className="w-40 md:w-full">
-              <Select
-                value={selectedCountryId}
-                onValueChange={(val) => {
-                  setSelectedCountryId(val);
-                  setSelectedBrandCountry('', { minAmount: null, maxAmount: null });
-                }}
-              >
+              <Select value={selectedCountryId} onValueChange={handleCountryChange}>
                 <SelectTrigger className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 w-full text-sm md:h-11 md:text-base">
                   <SelectValue placeholder="Select Country" />
                 </SelectTrigger>
@@ -112,9 +119,7 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   disabled={!bc.isActive}
-                  onClick={() =>
-                    setSelectedBrandCountry(`${bc.brandId}|${bc.countryId}`, { minAmount: bc.minAmount, maxAmount: bc.maxAmount })
-                  }
+                  onClick={() => handleBrandClick(bc)}
                   className={`group relative flex h-20 flex-col items-center justify-center overflow-hidden rounded-xl border-2 pb-1 transition-all md:h-32 ${
                     !bc.isActive
                       ? 'border-border bg-muted/10 cursor-not-allowed opacity-80'
@@ -162,15 +167,11 @@ export function BrandStep({ brandCountries }: BrandStepProps) {
             </AnimatePresence>
           )}
         </CardContent>
-        <CardFooter className="p-2">
-          <Button
-            onClick={() => setStep(2)}
-            disabled={!isStep1Valid}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-full font-bold transition-all"
-          >
+        <div>
+          <Button onClick={() => setStep(2)} disabled={!isStep1Valid} className="p-4">
             Continuar <ChevronRight className="ml-1 h-4 w-4 md:ml-2" />
           </Button>
-        </CardFooter>
+        </div>
       </Card>
     </div>
   );

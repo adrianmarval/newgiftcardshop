@@ -3,16 +3,17 @@
 import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
-import { useBuyFlow } from '@/hooks/use-buy-flow';
-import { SearchStep } from '@/components/buy/steps/search-step';
-import { ResultsStep } from '@/components/buy/steps/results-step';
-import { RedeemStep } from '@/components/buy/steps/redeem-step';
-import { ConfirmUsageStep } from '@/components/buy/steps/confirm-usage-step';
-import { PaymentStep } from '@/components/buy/steps/payment-step';
-import type { BuyFlowCard, BuyFlowGiftcardStatus } from '@/types/application/buy-flow';
-import type { BuyGiftcardManagerProps } from './types';
+import { BuyFlowCard, useBuyFlow } from '@/hooks/use-buy-flow';
+import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep } from '@/components/buy/buy-steps';
+import { PaymentStep } from '@/components/buy/buy-steps/payment-step';
+import { BrandCountry, BuyerOrder, GiftcardStatus } from '@/types';
 
-const STEP_LABELS = ['Buscar', 'Seleccionar', 'Redimir', 'Uso', 'Pagar'];
+export const STEP_LABELS = ['Buscar', 'Seleccionar', 'Redimir', 'Uso', 'Pagar'];
+
+export interface BuyGiftcardManagerProps {
+  brandCountries: BrandCountry[];
+  resumeOrder?: BuyerOrder | null;
+}
 
 export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardManagerProps) => {
   const { step } = useBuyFlow();
@@ -31,7 +32,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
         amount: card.amount,
         claimCode: card.claimCode,
         pinCode: card.pinCode || undefined,
-        status: card.status as BuyFlowGiftcardStatus,
+        status: card.status as GiftcardStatus,
         reportedAmount: card.reportedAmount ?? undefined,
       }));
 
@@ -55,20 +56,18 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
   }
 
   return (
-    <div className="flex h-full w-full flex-col space-y-2 px-0 py-0 md:space-y-6 md:px-0 md:py-0">
-      {/* Header & Progress combined */}
-      <div className="border-border bg-card/40 items-center justify-between gap-2.5 rounded-none border-y px-1.5 py-1.5 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
+    <div className="flex w-full flex-col space-y-4">
+      <div className="bg-card/40 flex flex-row items-center justify-between gap-2.5 rounded-none backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-          <h1 className="mb-0 flex justify-center text-lg font-bold md:mb-1 md:text-3xl">Comprar Tarjetas</h1>
-          <p className="text-muted-foreground hidden text-xs md:block md:text-base">Encuentra los mejores precios en gift card.</p>
+          <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Pasos de Compra</h1>
+          <p className="text-muted-foreground hidden text-xs md:block md:text-base">Completa los pasos para comprar giftcards.</p>
         </motion.div>
-
         {/* Compact Progress Steps */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex justify-center md:justify-end"
+          className="flex items-center justify-center md:justify-end"
         >
           <div className="flex items-center md:gap-2">
             {STEP_LABELS.map((label, idx) => {
@@ -89,7 +88,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
                       {s < step ? <Check className="h-4 w-4 md:h-5 md:w-5" /> : s}
                     </motion.div>
                     <span
-                      className={`absolute -bottom-5 left-1/2 hidden -translate-x-1/2 text-sm font-bold tracking-wider whitespace-nowrap uppercase sm:block md:text-sm ${
+                      className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] font-bold tracking-wider whitespace-nowrap uppercase sm:block md:text-sm ${
                         s === step ? 'text-primary' : 'text-muted-foreground/70'
                       } `}
                     >
@@ -107,7 +106,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
       </div>
 
       {/* Steps Content */}
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -115,7 +114,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="flex h-full flex-col"
+            className="flex h-full min-h-[300px] flex-col overflow-hidden"
           >
             {step === 1 && <SearchStep brandCountries={brandCountries} />}
             {step === 2 && <ResultsStep />}

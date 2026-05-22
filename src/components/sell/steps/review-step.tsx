@@ -2,41 +2,39 @@
 
 import React, { useMemo, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, HelpCircle, ImageIcon, ImageOff, Loader2, MinusCircle, X, Camera } from 'lucide-react';
+import { Loader2, X, Camera, ImageOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import { isBlockingEvidenceState, type ValidationState } from '@/types/application/sell-flow';
-import type { SellFlowImage } from '@/types/application/sell-flow';
-import type { ReviewStepProps } from '@/components/sell/types';
+import { isBlockingEvidenceState, type ValidationState, SellFlowImage } from '@/hooks/use-sell-flow';
+
 import { cn } from '@/lib/utils';
 import { useAction } from 'next-safe-action/hooks';
-import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard/ocr';
+import { uploadImage } from '@/actions/buyer/giftcards/ocr/upload-image';
+import { extractDraft } from '@/actions/buyer/giftcards/ocr/extract-draft';
 import { showAlert } from '@/lib/swal';
 import { normalizeClaimCode } from '@/lib/utils/claim-code-parser';
+import { validationStatusConfig } from '@/lib/ui-config';
+import { BrandCountry } from '@/types';
+import { MAX_BATCH_SIZE } from '@/lib/constants';
+import Image from 'next/image';
 
-const STATUS_CONFIG: Record<ValidationState, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
-  verified: { label: 'Verified', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: CheckCircle2 },
-  amount_mismatch: { label: 'Review amount', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: AlertCircle },
-  amount_required: { label: 'Amount required', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: AlertCircle },
-  code_new_detected: { label: 'New code', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: HelpCircle },
-  no_capture: { label: 'No capture', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30', icon: ImageIcon },
-  capture_mismatch: { label: 'Incorrect capture', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', icon: AlertCircle },
-  processing_error: { label: 'Error', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30', icon: AlertCircle },
-  skipped: { label: 'No capture', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30', icon: MinusCircle },
-  amount_not_found: { label: 'Missing amount', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: AlertCircle },
-  error: { label: 'Error', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30', icon: AlertCircle },
-};
+export interface ReviewStepProps {
+  onPublish: () => void;
+  isPublishing?: boolean;
+  brandCountry: BrandCountry;
+  sellRate: number;
+  backStep?: number;
+}
 
 export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, backStep }: ReviewStepProps) {
-  const { giftcards, images, setStep, removeGiftcard, updateGiftcard, resolveAmountMismatch, addImageToCard } = useSellFlow();
+  const { giftcards, images, setStep, resolveAmountMismatch, addImageToCard } = useSellFlow();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [processingCardId, setProcessingCardId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const imageMap = useMemo(() => {
     const map = new Map<string, SellFlowImage>();
@@ -46,7 +44,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
   const extractionContext = useRef<{ imageId: string; compressedData: string; previewUrl: string } | null>(null);
 
-  const { execute: runExtraction } = useAction(extractDraftBatch, {
+  const { execute: runExtraction } = useAction(extractDraft, {
     onSuccess: ({ data }) => {
       if (!processingCardId) return;
 
@@ -59,7 +57,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         const normalizedExtracted = extracted.claimCode ? normalizeClaimCode(extracted.claimCode) : null;
 
         if (normalizedCard && normalizedExtracted && normalizedCard !== normalizedExtracted) {
-          showAlert.error('Code mismatch', 'The screenshot code does not match this gift card.');
+          showAlert.toast.error('Code mismatch: The screenshot code does not match this gift card.');
           setProcessingCardId(null);
           return;
         }
@@ -78,12 +76,12 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
           showAlert.toast.success('Evidence linked');
         }
       } else {
-        showAlert.error('Could not read code', 'Try a clearer screenshot.');
+        showAlert.toast.error('Could not read code: Try a clearer screenshot.');
       }
       setProcessingCardId(null);
     },
     onError: () => {
-      showAlert.error('Extraction failed', 'Error reading image');
+      showAlert.toast.error('Extraction failed: Error reading image');
       setProcessingCardId(null);
     },
   });
@@ -94,7 +92,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
     setProcessingCardId(cardId);
 
-    const uploadRes = await uploadProvenanceImage({ file });
+    const uploadRes = await uploadImage({ file });
     if (uploadRes.data?.success && uploadRes.data.compressedData) {
       const imageId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const previewUrl = URL.createObjectURL(file);
@@ -103,7 +101,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
       runExtraction({ images: [{ id: imageId, compressedData: uploadRes.data.compressedData }] });
     } else {
-      showAlert.error('Upload failed', 'Error uploading image');
+      showAlert.toast.error('Upload failed: Error uploading image');
       setProcessingCardId(null);
     }
 
@@ -151,7 +149,10 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
           </div>
           <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2">
             <span className="text-[10px] text-emerald-400">Total</span>
-            <p className="text-sm font-semibold text-emerald-400">{currencySymbol}{totalAmount.toFixed(2)}</p>
+            <p className="text-sm font-semibold text-emerald-400">
+              {currencySymbol}
+              {totalAmount.toFixed(2)}
+            </p>
           </div>
         </div>
 
@@ -178,7 +179,9 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
           </Button>
           <Button
             onClick={onPublish}
-            disabled={isPublishing || giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status))}
+            disabled={
+              isPublishing || giftcards.length > MAX_BATCH_SIZE || giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status))
+            }
             size="sm"
             className="bg-primary hover:bg-primary/90 h-9 flex-1 text-xs font-semibold"
           >
@@ -201,7 +204,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
             const evidenceStatus = card.evidence?.status;
             const hasCapture = !!matchedImageId;
 
-            const config = STATUS_CONFIG[evidenceStatus as ValidationState] || STATUS_CONFIG.no_capture;
+            const config = validationStatusConfig[evidenceStatus as ValidationState] || validationStatusConfig.no_capture;
             const Icon = config.icon;
             const isBlocking = isBlockingEvidenceState(evidenceStatus as ValidationState);
 
@@ -222,7 +225,10 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                       <div className="bg-primary/20 text-primary flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black">
                         {idx + 1}
                       </div>
-                      <span className="text-foreground text-base font-black md:text-xl">{currencySymbol}{card.amount || '0.00'}</span>
+                      <span className="text-foreground text-base font-black md:text-xl">
+                        {currencySymbol}
+                        {card.amount || '0.00'}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       {hasCapture ? (
@@ -249,8 +255,8 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                               onClick={() => setPreviewImage(matchedImageId!)}
                               className="border-border hover:border-primary/50 group/thumb h-6 w-6 overflow-hidden rounded border transition-colors md:h-8 md:w-8"
                             >
-                              <img
-                                src={imageMap.get(matchedImageId!)?.previewUrl}
+                              <Image
+                                src={imageMap.get(matchedImageId!)?.previewUrl || '#'}
                                 alt=""
                                 className="h-full w-full object-cover transition-transform group-hover/thumb:scale-110"
                               />
@@ -295,11 +301,17 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                       <div className="grid grid-cols-2 gap-1.5">
                         <div className="rounded border border-amber-500/10 bg-black/20 p-1.5">
                           <p className="text-[9px] text-amber-200/50 uppercase">Written</p>
-                          <p className="text-xs font-black text-white">{currencySymbol}{card.amount}</p>
+                          <p className="text-xs font-black text-white">
+                            {currencySymbol}
+                            {card.amount}
+                          </p>
                         </div>
                         <div className="rounded border border-emerald-500/10 bg-black/20 p-1.5">
                           <p className="text-[9px] text-emerald-200/50 uppercase">In Picture</p>
-                          <p className="text-xs font-black text-emerald-400">{currencySymbol}{card.evidence?.extractedAmount || '?'}</p>
+                          <p className="text-xs font-black text-emerald-400">
+                            {currencySymbol}
+                            {card.evidence?.extractedAmount || '?'}
+                          </p>
                         </div>
                       </div>
                       <div className="flex gap-1.5">

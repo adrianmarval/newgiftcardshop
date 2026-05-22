@@ -1,15 +1,110 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// use-sell-flow — Zustand store
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use client';
 
 import { create } from 'zustand';
-import type { SellFlowState, SellFlowImage, SellFlowCard, SellFlowCardEvidence } from '@/types/application/sell-flow';
+import { z } from 'zod';
+import { MAX_BATCH_SIZE } from '@/lib/constants';
 
-function defaultEvidence(): SellFlowCardEvidence {
-  return { status: 'no_capture' };
+// ── Validation States ─────────────────────────────────────────────────────────
+
+export const validationStateEnum = z.enum([
+  'verified',
+  'amount_mismatch',
+  'amount_required',
+  'no_capture',
+  'code_new_detected',
+  'capture_mismatch',
+  'processing_error',
+  'skipped',
+  'amount_not_found',
+  'error',
+]);
+
+export type ValidationState = z.infer<typeof validationStateEnum>;
+
+export const BLOCKING_EVIDENCE_STATES = ['amount_mismatch', 'amount_required'] as const satisfies ReadonlyArray<
+  z.infer<typeof validationStateEnum>
+>;
+
+export type BlockingEvidenceState = (typeof BLOCKING_EVIDENCE_STATES)[number];
+
+export function isBlockingEvidenceState(state: ValidationState | undefined): boolean {
+  if (!state) return false;
+  return (BLOCKING_EVIDENCE_STATES as ReadonlyArray<string>).includes(state);
 }
 
-function makeBlankCard(id: string, source: SellFlowCard['source'] = 'manual'): SellFlowCard {
-  return { id, amount: '', claimCode: '', pinCode: '', source, evidence: defaultEvidence() };
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+export interface SellFlowCardEvidence {
+  status: ValidationState;
+  matchedImageId?: string;
+  extractedCode?: string;
+  extractedAmount?: string;
+  amountDecision?: 'accept-extracted' | 'keep-declared';
 }
+
+export interface SellFlowCard {
+  id: string;
+  amount: string;
+  claimCode: string;
+  pinCode?: string;
+  source?: 'manual' | 'bulk' | 'ocr';
+  evidence: SellFlowCardEvidence;
+}
+
+export interface SellFlowUnmatchedImage {
+  imageId: string;
+}
+
+export interface SellFlowImage {
+  id: string;
+  compressedData: string;
+  previewUrl: string;
+}
+
+export interface OCRDraftCard {
+  claimCode?: string;
+  amount?: string;
+  imageId?: string;
+  ocrConfidence: 'high' | 'manual';
+  rawExtractedCode?: string;
+  rawExtractedAmount?: string;
+}
+
+export interface SellFlowState {
+  step: number;
+  selectedBrandCountry: string;
+  brandCountryLimits: { minAmount: number | null; maxAmount: number | null };
+  giftcards: SellFlowCard[];
+  images: SellFlowImage[];
+  unmatchedImages: SellFlowUnmatchedImage[];
+  setStep: (step: number) => void;
+  setSelectedBrandCountry: (brandCountry: string, limits: { minAmount: number | null; maxAmount: number | null }) => void;
+  setGiftcards: (giftcards: SellFlowCard[]) => void;
+  removeGiftcard: (id: string) => void;
+  updateGiftcard: (id: string, field: keyof Pick<SellFlowCard, 'amount' | 'claimCode' | 'pinCode'>, value: string) => void;
+  handleBulkImport: (cards: { amount?: string; claimCode: string }[]) => { importedCount: number; duplicateCount: number; error?: string };
+  ingestOCRDraft: (draftCards: Array<OCRDraftCard>) => void;
+  acceptExtractedAmount: (cardId: string) => void;
+  keepDeclaredAmount: (cardId: string) => void;
+  resolveAmountMismatch: (cardId: string, choice: 'accept-extracted' | 'keep-declared' | 'remove') => void;
+  addImage: (image: SellFlowImage) => void;
+  removeImage: (id: string) => void;
+  clearImages: () => void;
+  setUnmatchedImages: (images: SellFlowUnmatchedImage[]) => void;
+  addImageToCard: (
+    cardId: string,
+    imageData: { imageId: string; compressedData: string; previewUrl: string },
+    extractedClaimCode: string | null,
+    extractedAmount: string | null,
+  ) => void;
+  resetForm: () => void;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function hasCardContent(card: SellFlowCard): boolean {
   return !!(card.amount || card.claimCode || card.pinCode);
@@ -25,16 +120,13 @@ function formatAmount(value?: string): string {
   if (!value || !value.trim()) return '';
   const trimmed = value.trim();
 
-  // Si ya tiene formato válido de dollars, devolver limpio
   const parsed = parseAmount(trimmed);
   if (parsed === null) return trimmed;
 
-  // Si es entero como "50", convertir a "50.00"
   if (/^\d+$/.test(trimmed)) {
     return parsed.toFixed(2);
   }
 
-  //Si tiene punto, asegurar max 2 decimales
   if (trimmed.includes('.')) {
     const [int, dec] = trimmed.split('.');
     const cleanInt = int.replace(/[$,]/g, '') || '0';
@@ -42,7 +134,6 @@ function formatAmount(value?: string): string {
     return `${cleanInt}.${cleanDec}`;
   }
 
-  //Si tiene coma como decimal
   if (trimmed.includes(',')) {
     const [int, dec] = trimmed.split(',');
     const cleanInt = int.replace(/[$,]/g, '') || '0';
@@ -53,6 +144,8 @@ function formatAmount(value?: string): string {
   return parsed.toFixed(2);
 }
 
+// ── Store ─────────────────────────────────────────────────────────────────────
+
 export const useSellFlow = create<SellFlowState>((set, get) => ({
   step: 1,
   selectedBrandCountry: '',
@@ -61,13 +154,14 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
   images: [],
   unmatchedImages: [],
 
-  setStep: (step) => set({ step }),
+  setStep: (step: number) => set({ step }),
 
-  setSelectedBrandCountry: (brandCountry, limits) => set({ selectedBrandCountry: brandCountry, brandCountryLimits: limits }),
+  setSelectedBrandCountry: (brandCountry: string, limits: { minAmount: number | null; maxAmount: number | null }) =>
+    set({ selectedBrandCountry: brandCountry, brandCountryLimits: limits }),
 
-  setGiftcards: (giftcards) => set({ giftcards }),
+  setGiftcards: (giftcards: SellFlowCard[]) => set({ giftcards }),
 
-  removeGiftcard: (id) =>
+  removeGiftcard: (id: string) =>
     set((state) => {
       const card = state.giftcards.find((g) => g.id === id);
       const matchedImageId = card?.evidence?.matchedImageId;
@@ -78,12 +172,11 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       };
     }),
 
-  updateGiftcard: (id, field, value) =>
+  updateGiftcard: (id: string, field: keyof Pick<SellFlowCard, 'amount' | 'claimCode' | 'pinCode'>, value: string) =>
     set((state) => ({
       giftcards: state.giftcards.map((g) => {
         if (g.id !== id) return g;
         const updated = { ...g, [field]: field === 'amount' ? formatAmount(value) : value };
-        // Desbloquear al cambiar monto cuando estaba bloqueado
         if (field === 'amount' && g.evidence?.status === 'amount_mismatch') {
           updated.evidence = { ...g.evidence, status: 'verified' };
         }
@@ -94,8 +187,15 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       }),
     })),
 
-  handleBulkImport: (cards) => {
-    if (cards.length === 0) return { importedCount: 0, duplicateCount: 0 };
+  handleBulkImport: (cards: { amount?: string; claimCode: string }[]) => {
+    if (cards.length === 0) return { importedCount: 0, duplicateCount: 0, error: undefined };
+    if (cards.length > MAX_BATCH_SIZE) {
+      return {
+        importedCount: 0,
+        duplicateCount: 0,
+        error: `Máximo ${MAX_BATCH_SIZE} tarjetas por batch`,
+      };
+    }
 
     let importedCount = 0;
     let duplicateCount = 0;
@@ -138,12 +238,11 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       return { giftcards: [...existingCards, ...newCards] };
     });
 
-    return { importedCount, duplicateCount };
+    return { importedCount, duplicateCount, error: undefined };
   },
 
-  ingestOCRDraft: (draftCards) =>
+  ingestOCRDraft: (draftCards: Array<OCRDraftCard>) =>
     set((state) => {
-      const maxId = Math.max(...state.giftcards.map((g) => parseInt(g.id) || 0), 0);
       const existingCards = state.giftcards.filter(hasCardContent);
 
       const cardsByNormCode = new Map<string, SellFlowCard>();
@@ -167,17 +266,13 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
         let finalAmount = existing.amount;
 
         if (extractedAmount !== null) {
-          // La imagen tiene monto
           if (declaredAmount === null) {
-            // Card sin monto → ask confirmar
             targetStatus = 'amount_mismatch';
             finalAmount = formatAmount(draft.amount ?? '');
           } else if (declaredAmount !== extractedAmount) {
-            // Ambos tienen monto pero difieren
             targetStatus = 'amount_mismatch';
           }
         } else if (declaredAmount === null) {
-          // Card sin monto Y imagen sin monto → BLOQUEA
           targetStatus = 'amount_required';
         }
 
@@ -199,7 +294,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       };
     }),
 
-  acceptExtractedAmount: (cardId) =>
+  acceptExtractedAmount: (cardId: string) =>
     set((state) => ({
       giftcards: state.giftcards.map((g) => {
         if (g.id !== cardId) return g;
@@ -208,7 +303,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       }),
     })),
 
-  keepDeclaredAmount: (cardId) =>
+  keepDeclaredAmount: (cardId: string) =>
     set((state) => ({
       giftcards: state.giftcards.map((g) => {
         if (g.id !== cardId) return g;
@@ -216,7 +311,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
       }),
     })),
 
-  resolveAmountMismatch: (cardId, choice) => {
+  resolveAmountMismatch: (cardId: string, choice: 'accept-extracted' | 'keep-declared' | 'remove') => {
     if (choice === 'remove') {
       get().removeGiftcard(cardId);
     } else if (choice === 'accept-extracted') {
@@ -228,7 +323,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
   addImage: (image: SellFlowImage) => set((state) => ({ images: [...state.images, image] })),
 
-  removeImage: (id) =>
+  removeImage: (id: string) =>
     set((state) => ({
       images: state.images.filter((img) => img.id !== id),
       unmatchedImages: state.unmatchedImages.filter((img) => img.imageId !== id),
@@ -236,7 +331,7 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
 
   clearImages: () => set({ images: [] }),
 
-  setUnmatchedImages: (images) => set({ unmatchedImages: images }),
+  setUnmatchedImages: (images: SellFlowUnmatchedImage[]) => set({ unmatchedImages: images }),
 
   addImageToCard: () => {},
 

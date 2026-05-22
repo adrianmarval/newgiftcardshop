@@ -1,9 +1,9 @@
-// For adding custom fonts with other frameworks, see:
-// https://tailwindcss.com/docs/font-family
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Aldrich, Lora, IBM_Plex_Mono } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { Providers } from '@/components/providers';
+import { getServerTheme } from '@/lib/theme-utils';
 
 const fontSans = Aldrich({
   subsets: ['latin'],
@@ -22,8 +22,6 @@ const fontMono = IBM_Plex_Mono({
   weight: '400',
 });
 
-import type { Viewport } from 'next';
-
 export const viewport: Viewport = {
   themeColor: '#000000',
   width: 'device-width',
@@ -40,13 +38,21 @@ export const metadata: Metadata = {
   description: `The trusted marketplace for buying and selling gift cards at the best rates with ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const theme = await getServerTheme();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={theme} suppressHydrationWarning>
+      <head>
+        <Script
+          src="/theme-init.js"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>

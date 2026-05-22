@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
     },
   },
   allowedDevOrigins: ['192.168.1.173', '*.trycloudflare.com'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.telegram.org',
+      },
+    ],
+  },
 };
 
 export default withPWA(nextConfig);

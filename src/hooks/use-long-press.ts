@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 
 interface UseLongPressOptions {
   threshold?: number;
@@ -7,7 +7,6 @@ interface UseLongPressOptions {
 }
 
 export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongPressOptions) {
-  const [isLongPressActive, setIsLongPressActive] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressHappened = useRef(false);
 
@@ -20,7 +19,6 @@ export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongP
       timerRef.current = setTimeout(() => {
         onLongPress(e);
         isLongPressHappened.current = true;
-        setIsLongPressActive(true);
       }, threshold);
     },
     [onLongPress, threshold],
@@ -37,7 +35,6 @@ export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongP
         onClick(e);
       }
 
-      setIsLongPressActive(false);
     },
     [onClick],
   );
@@ -47,7 +44,6 @@ export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongP
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    setIsLongPressActive(false);
   }, []);
 
   return {

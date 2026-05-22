@@ -17,7 +17,7 @@ export const AdminWithdrawDialog = ({ open, onOpenChange, onSuccess }: AdminWith
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);

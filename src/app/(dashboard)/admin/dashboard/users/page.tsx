@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { listUsers } from '@/actions/admin/users';
+import { listUsers } from '@/actions/admin/users/';
 import { UsersManager } from './users-manager';
 import { adminUsersSearchParamsCache } from '@/lib/search-params-cache';
 
@@ -23,8 +23,8 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <div className="container mx-auto space-y-4 py-2">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-7xl">USUARIOS</h1>
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">USUARIOS</h1>
       <UsersManager
         initialUsers={result.data.items}
         pagination={result.data.pagination}

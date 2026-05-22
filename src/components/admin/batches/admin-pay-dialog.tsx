@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { showAlert } from '@/lib/swal';
-import { adminBatchPay } from '@/actions/admin/admin-batch-pay';
 import { Spinner } from '@/components/ui/spinner';
-import type { AdminBatch } from '@/types/domain/admin';
+import { InlineAlert, type InlineAlertVariant } from '@/components/ui/inline-alert';
+import { payBatch } from '@/actions/admin/batches';
+import { AdminBatch } from '@/types';
 
 interface AdminPayDialogProps {
   batches: AdminBatch[];
@@ -15,26 +15,36 @@ interface AdminPayDialogProps {
   onPaid: () => void;
 }
 
+interface AlertState {
+  variant: InlineAlertVariant;
+  title: string;
+  description?: string;
+}
+
 export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPayDialogProps) {
   const [isPaying, setIsPaying] = useState(false);
+  const [alert, setAlert] = useState<AlertState | null>(null);
 
   const totalPayout = batches.reduce((sum, b) => sum + b.estimatedPayout, 0);
 
   const handlePay = async () => {
+    setAlert(null);
     setIsPaying(true);
     try {
-      const result = await adminBatchPay({ batchIds: batches.map((b) => b.id) });
+      const result = await payBatch({ batchIds: batches.map((b) => b.id) });
       if (result.serverError) {
-        showAlert.error('Pago fallido', result.serverError);
+        setAlert({ variant: 'error', title: 'Pago fallido', description: result.serverError });
       } else if (!result.data?.success) {
-        showAlert.error('Pago fallido', 'Error desconocido');
+        setAlert({ variant: 'error', title: 'Pago fallido', description: 'Error desconocido' });
       } else {
-        showAlert.toast.success(`${batches.length} lote(s) pagado(s) exitosamente`);
-        onOpenChange(false);
-        onPaid();
+        setAlert({ variant: 'success', title: `${batches.length} lote(s) pagado(s) exitosamente` });
+        setTimeout(() => {
+          onOpenChange(false);
+          onPaid();
+        }, 1200);
       }
     } catch (error) {
-      showAlert.error('Pago fallido', error instanceof Error ? error.message : 'Error desconocido');
+      setAlert({ variant: 'error', title: 'Pago fallido', description: error instanceof Error ? error.message : 'Error desconocido' });
     } finally {
       setIsPaying(false);
     }
@@ -49,6 +59,17 @@ export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPay
             Estás a punto de pagar {batches.length} lote{batches.length > 1 ? 's' : ''}. Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
+
+        {alert && (
+          <InlineAlert
+            variant={alert.variant}
+            title={alert.title}
+            description={alert.description}
+            autoDismiss
+            dismissAfter={3000}
+            onDismiss={() => setAlert(null)}
+          />
+        )}
 
         <div className="space-y-2">
           {batches.map((batch) => (

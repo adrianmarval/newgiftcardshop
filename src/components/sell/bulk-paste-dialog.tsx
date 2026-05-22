@@ -11,8 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Copy, Code, Info, AlertCircle } from 'lucide-react';
 import type { ParsedGiftcard } from '@/types';
 import { parseClaimCodes } from '@/lib/utils/claim-code-parser';
-import type { BulkPasteDialogProps } from './types';
 import { copyToClipboard } from '@/lib/clipboard';
+
+export interface BulkPasteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onImport: (cards: ParsedGiftcard[]) => void;
+}
 
 export function BulkPasteDialog({ open, onOpenChange, onImport }: BulkPasteDialogProps) {
   const [pasteContent, setPasteContent] = useState('');

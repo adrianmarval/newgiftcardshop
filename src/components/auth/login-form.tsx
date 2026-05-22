@@ -3,14 +3,25 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { showAlert } from '@/lib/swal';
+import { showSwal } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { login } from '@/actions';
+import { login, resendVerification } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
-import type { LoginFormProps } from '@/types';
+import { AppSection } from '@/types';
+
+export interface LoginFormProps {
+  portal: AppSection;
+  title: string;
+  subtitle: string;
+  forgotPasswordUrl: string;
+  emailPlaceholder?: string;
+  registerUrl?: string;
+  registerPrompt?: string;
+  registerLinkText?: string;
+}
 
 export const LoginForm = ({
   portal,
@@ -31,21 +42,60 @@ export const LoginForm = ({
 
   const { execute, status } = useAction(login, {
     onSuccess: ({ data }) => {
-      if (data?.success && data.redirectTo) {
+      if (!data) return;
+      if ('redirectTo' in data && data.redirectTo) {
         router.push(data.redirectTo);
-      } else if (data?.error) {
-        showAlert.error('Error', data.error);
+      } else if ('error' in data && data.error) {
+        const needsVerification = 'needsVerification' in data && data.needsVerification;
+        if (needsVerification) {
+          showSwal.fire({
+            icon: 'error',
+            title: isSpanish ? 'Email no verificado' : 'Email not verified',
+            text: data.error,
+            confirmButtonText: isSpanish ? 'Reenviar email' : 'Resend email',
+            cancelButtonText: isSpanish ? 'Cancelar' : 'Cancel',
+            showCancelButton: true,
+          }).then((result) => {
+            if (result.isConfirmed && email) {
+              resendExecute({ portal: portalValue, email });
+            }
+          });
+        } else {
+          showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+        }
       }
     },
     onError: ({ error }) => {
-      showAlert.error(
-        'Error',
-        error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'),
-      );
+      showSwal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'),
+      });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { execute: resendExecute, status: resendStatus } = useAction(resendVerification, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        showSwal.fire({
+          icon: 'success',
+          title: isSpanish ? 'Email reenviado' : 'Email resent',
+          text: isSpanish ? 'Revisa tu bandeja de entrada' : 'Check your inbox',
+        });
+      } else if (data?.error) {
+        showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+      }
+    },
+    onError: ({ error }) => {
+      showSwal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al reenviar' : 'Failed to resend'),
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     execute({ email, password, portal: portalValue });
   };

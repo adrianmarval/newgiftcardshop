@@ -1,6 +1,6 @@
 import { BuyGiftcardManager } from '@/components/buy/buy-flow-manager';
-import { getActiveBrandCountries } from '@/actions/catalog/brand-country';
-import { getOrderById } from '@/actions/order/get-order-by-id';
+import { getActiveBrandCountries } from '@/actions/catalog/get-active-brand-countries';
+import { getOrderById } from '@/actions/buyer/orders/get-order-by-id';
 import type { BuyerOrder } from '@/types';
 
 export default async function BrowseCardsPage({ searchParams }: { searchParams: Promise<{ orderId?: string }> }) {
@@ -18,5 +18,10 @@ export default async function BrowseCardsPage({ searchParams }: { searchParams: 
     }
   }
 
-  return <BuyGiftcardManager brandCountries={brandCountries} resumeOrder={resumeOrder} />;
+  return (
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">COMPRAR GIFTCARDS</h1>
+      <BuyGiftcardManager brandCountries={brandCountries} resumeOrder={resumeOrder} />
+    </div>
+  );
 }

@@ -1,26 +1,25 @@
 'use server';
 
+import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import prisma from '@/lib/prisma';
 import { actionClient } from '@/lib/safe-action';
-import { resendVerificationSchema, resendVerificationOutputSchema } from '@/types/auth/schemas';
+import { dashboardMap, portalSchema } from '@/types';
+
+const resendVerificationInputSchema = z.object({
+  email: z.email('Invalid email address'),
+  portal: portalSchema,
+});
+
+const resendVerificationOutputSchema = z.union([z.object({ success: z.literal(true) }), z.object({ error: z.string() })]);
 
 export const resendVerification = actionClient
-  .inputSchema(resendVerificationSchema)
+  .inputSchema(resendVerificationInputSchema)
   .outputSchema(resendVerificationOutputSchema)
   .action(async function ({ parsedInput: { email, portal } }) {
-    const portalPath = portal === 'buy' ? '/buy' : `/${portal}`;
-    const callbackURL = `${process.env.BETTER_AUTH_URL}${portalPath}/auth/verify-email`;
+    const callbackURL = `${dashboardMap[portal]}`;
 
     try {
-      // Find the user to get their name
-      const user = await prisma.user.findUnique({
-        where: { email },
-        select: { name: true },
-      });
-
-      // Use better-auth to send a new verification email
       await auth.api.sendVerificationEmail({
         body: {
           email,
@@ -29,9 +28,9 @@ export const resendVerification = actionClient
         headers: await headers(),
       });
 
-      return { success: true };
+      return { success: true as const };
     } catch (error) {
       console.error('Resend verification error:', error);
-      return { error: 'Failed to resend verification email.' };
+      return { success: false as const, error: 'Failed to resend verification email.' };
     }
   });

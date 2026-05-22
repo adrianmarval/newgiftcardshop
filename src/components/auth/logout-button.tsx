@@ -5,9 +5,10 @@ import { IconLogout } from '@tabler/icons-react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { useLogout } from '@/hooks/use-logout';
+import { AppSection } from '@/types';
 
 interface LogoutButtonProps {
-  portal: 'buy' | 'sell' | 'admin';
+  portal: AppSection;
   className?: string;
   variant?: 'link' | 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' | null | undefined;
   showIcon?: boolean;

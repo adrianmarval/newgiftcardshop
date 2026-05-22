@@ -4,5 +4,5 @@ export { BatchesList } from './batches-list';
 export { BatchCard } from './batch-card';
 export { BatchDetails } from './batch-details';
 export { SellerBatchesView } from './seller-batches-view';
-export { sellerBatchesSearchParamsParsers } from '@/types/domain/seller';
-export type { SellerBatchesSearchParams } from '@/types/domain/seller';
+export { sellerBatchesSearchParamsParsers } from '@/lib/search-params';
+export type { SellerBatchesSearchParams } from '@/lib/search-params';

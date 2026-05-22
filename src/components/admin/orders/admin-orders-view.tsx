@@ -7,9 +7,14 @@ import { AdminOrdersList } from '@/components/admin/orders/admin-orders-list';
 import { AdminReportDialog } from '@/components/admin/orders/admin-report-dialog';
 import { AdminBuyerDialog } from '@/components/admin/orders/admin-buyer-dialog';
 import { StatusLeyend } from '@/components/ui/status-leyend';
-import type { AdminOrdersViewProps } from './types';
 import type { Giftcard } from '@/types/domain/giftcard';
-import type { AdminOrder } from '@/types/domain/admin';
+import type { AdminOrder, PaginationMeta } from '@/types';
+
+interface AdminOrdersViewProps {
+  orders: AdminOrder[];
+  buyers: Array<{ id: string; name: string; email: string }>;
+  pagination: PaginationMeta;
+}
 
 export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewProps) => {
   const router = useRouter();

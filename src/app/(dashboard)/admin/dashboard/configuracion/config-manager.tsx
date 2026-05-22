@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PlatformSetting } from '@/types/platform/settings';
+import { PlatformSetting } from '@/actions/platform/settings';
 import { useAction } from 'next-safe-action/hooks';
 import { setPlatformSetting, deletePlatformSetting } from '@/actions/platform/settings';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Spinner } from '@/components/ui/spinner';
 
-export function ConfigManager({ initialSettings }: { initialSettings: PlatformSetting[] }) {
+interface ConfigManagerProps {
+  initialSettings: PlatformSetting[];
+}
+
+export function ConfigManager({ initialSettings }: ConfigManagerProps) {
   const [settings, setSettings] = useState<PlatformSetting[]>(initialSettings);
 
   // States para el modal de Crear/Editar
@@ -109,15 +113,15 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
   };
 
   return (
-    <>
-      <Card className="m-4">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Configuraciones de la Plataforma</CardTitle>
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">CONFIGURACIÓN</h1>
+      <div className="space-y-2">
+        <div className="flex flex-row items-center justify-end">
           <Button onClick={() => handleOpenForm()} className="gap-2">
-            <IconPlus size={16} /> Nueva
+            <IconPlus size={16} />
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div>
           {settings.length === 0 ? (
             <div className="text-muted-foreground p-8 text-center">No hay configuraciones registradas.</div>
           ) : (
@@ -129,7 +133,7 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
                     <th className="h-12 px-4 align-middle font-medium">Valor</th>
                     <th className="h-12 px-4 align-middle font-medium">Balance</th>
                     <th className="h-12 px-4 align-middle font-medium">Descripción</th>
-                    <th className="h-12 w-[100px] px-4 align-middle font-medium">Acciones</th>
+                    <th className="h-12 w-25 px-4 align-middle font-medium">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -160,8 +164,8 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
               </table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Formulario Modal (Dialog) */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -257,6 +261,6 @@ export function ConfigManager({ initialSettings }: { initialSettings: PlatformSe
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

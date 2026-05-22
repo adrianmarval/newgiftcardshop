@@ -6,28 +6,43 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { adminReportManage } from '@/actions/admin/admin-report-manage';
-import { showAlert } from '@/lib/swal';
+import { manageReport } from '@/actions/admin/orders';
 import { Spinner } from '@/components/ui/spinner';
-import type { AdminReportDialogProps } from './types';
+import { InlineAlert, type InlineAlertVariant } from '@/components/ui/inline-alert';
+import type { Giftcard } from '@/types/domain/giftcard';
 
-type ReportMode = 'ADD' | 'EDIT' | 'DELETE';
+interface AdminReportDialogProps {
+  card: Giftcard | null;
+  orderId: string | null;
+  mode: 'ADD' | 'EDIT' | 'DELETE' | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+interface AlertState {
+  variant: InlineAlertVariant;
+  title: string;
+  description?: string;
+}
 
 export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onSuccess }: AdminReportDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [issueType, setIssueType] = useState<'INVALID' | 'ALREADY_USED' | 'DEACTIVATED' | 'WRONG_AMOUNT'>('WRONG_AMOUNT');
   const [reportedAmount, setReportedAmount] = useState<string>('');
+  const [alert, setAlert] = useState<AlertState | null>(null);
 
   const currentMode = mode ?? 'ADD';
 
   const handleSubmit = async () => {
     if (!card || !orderId) return;
 
+    setAlert(null);
     setIsLoading(true);
     try {
       let result;
       if (currentMode === 'ADD') {
-        result = await adminReportManage({
+        result = await manageReport({
           action: 'ADD',
           giftcardId: card.id,
           orderId,
@@ -35,14 +50,14 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
           reportedAmount: issueType === 'WRONG_AMOUNT' ? Number(reportedAmount) : undefined,
         });
       } else if (currentMode === 'EDIT') {
-        result = await adminReportManage({
+        result = await manageReport({
           action: 'UPDATE',
           giftcardId: card.id,
           orderId,
           reportedAmount: Number(reportedAmount),
         });
       } else {
-        result = await adminReportManage({
+        result = await manageReport({
           action: 'DELETE',
           giftcardId: card.id,
           orderId,
@@ -50,21 +65,26 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
       }
 
       if (!result) {
-        showAlert.error('Error al gestionar el reporte');
+        setAlert({ variant: 'error', title: 'Error al gestionar el reporte' });
         return;
       }
 
       if (result.serverError || result.validationErrors) {
-        showAlert.error('Error al gestionar el reporte');
+        setAlert({ variant: 'error', title: 'Error al gestionar el reporte' });
       } else {
-        showAlert.toast.success(
-          currentMode === 'ADD' ? 'Reporte agregado' : currentMode === 'EDIT' ? 'Reporte actualizado' : 'Reporte eliminado',
-        );
-        onSuccess?.();
-        onOpenChange(false);
+        const messages = {
+          ADD: 'Reporte agregado',
+          EDIT: 'Reporte actualizado',
+          DELETE: 'Reporte eliminado',
+        };
+        setAlert({ variant: 'success', title: messages[currentMode] });
+        setTimeout(() => {
+          onSuccess?.();
+          onOpenChange(false);
+        }, 1200);
       }
     } catch {
-      showAlert.error('Error al gestionar el reporte');
+      setAlert({ variant: 'error', title: 'Error al gestionar el reporte' });
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +103,17 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
         </DialogHeader>
 
         <div className="space-y-4 pt-4">
+          {alert && (
+            <InlineAlert
+              variant={alert.variant}
+              title={alert.title}
+              description={alert.description}
+              autoDismiss
+              dismissAfter={3000}
+              onDismiss={() => setAlert(null)}
+            />
+          )}
+
           {card && (
             <div className="bg-muted/30 flex items-center gap-3 rounded-2xl p-3">
               <div>
@@ -139,14 +170,14 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
             </div>
           )}
 
-          {(currentMode as ReportMode) === 'DELETE' && (
+          {currentMode === 'DELETE' && (
             <p className="text-muted-foreground text-sm">
               ¿Estás seguro de que deseas eliminar el reporte de esta tarjeta? La tarjeta quedará como USADA.
             </p>
           )}
 
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1" disabled={isLoading}>
               Cancelar
             </Button>
             <Button onClick={handleSubmit} disabled={isLoading || isWrongAmountDisabled} className="flex-1">

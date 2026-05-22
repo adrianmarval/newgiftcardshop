@@ -3,55 +3,26 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, Sparkles, Loader2, Upload, X, Plus, Code, ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useSellFlow } from '@/hooks/use-sell-flow';
+import { SellFlowImage, useSellFlow } from '@/hooks/use-sell-flow';
 import { useAction } from 'next-safe-action/hooks';
-import { uploadProvenanceImage, extractDraftBatch } from '@/actions/giftcard/ocr';
-import { checkExistingCodes } from '@/actions/seller/check-codes';
+import { uploadImage } from '@/actions/buyer/giftcards/ocr/upload-image';
+import { extractDraft } from '@/actions/buyer/giftcards/ocr/extract-draft';
+import { checkCodes } from '@/actions/seller/batches';
 import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
-import type { SellFlowImage } from '@/types/application/sell-flow';
+
 import { showAlert } from '@/lib/swal';
 import { cn } from '@/lib/utils';
-
-// ─── Processing stage labels ────────────────────────────────────────────────
-
-type ProcessingStage = 'idle' | 'parsing' | 'uploading' | 'extracting' | 'ingesting' | 'done';
-
-const STAGE_LABELS: Record<ProcessingStage, string> = {
-  idle: '',
-  parsing: 'Parsing codes from text…',
-  uploading: 'Uploading screenshots…',
-  extracting: 'Analyzing screenshots with AI…',
-  ingesting: 'Importing cards…',
-  done: 'Done!',
-};
-
-const STAGE_PROGRESS: Record<ProcessingStage, number> = {
-  idle: 0,
-  parsing: 15,
-  uploading: 35,
-  extracting: 70,
-  ingesting: 90,
-  done: 100,
-};
+import { ProcessingStage, STAGE_LABELS, STAGE_PROGRESS } from '@/lib/ui-config';
+import { MAX_BATCH_SIZE } from '@/lib/constants';
 
 // ─── DataEntryStep ──────────────────────────────────────────────────────────
 
 export function DataEntryStep() {
-  const {
-    addImage,
-    clearImages,
-    setGiftcards,
-    handleBulkImport,
-    ingestOCRDraft,
-    setStep,
-    giftcards,
-    selectedBrandCountry,
-    brandCountryLimits,
-  } = useSellFlow();
+  const { addImage, clearImages, setGiftcards, handleBulkImport, ingestOCRDraft, setStep, giftcards, selectedBrandCountry } = useSellFlow();
 
   const brandId = selectedBrandCountry?.split('|')[0] ?? '';
   const countryId = selectedBrandCountry?.split('|')[1] ?? '';
@@ -132,7 +103,7 @@ export function DataEntryStep() {
 
   // ── DB check action ──────────────────────────────────────────────────────
 
-  const { execute: runCheckExistingCodes } = useAction(checkExistingCodes, {
+  const { execute: runCheckExistingCodes } = useAction(checkCodes, {
     onSuccess: ({ data }) => {
       if (data?.success && data.existingCodes && data.existingCodes.length > 0) {
         const codeToLineMap = pendingCodeToLineMapRef.current;
@@ -159,7 +130,7 @@ export function DataEntryStep() {
 
   // ── OCR extraction action ─────────────────────────────────────────────────
 
-  const { execute: runExtraction } = useAction(extractDraftBatch, {
+  const { execute: runExtraction } = useAction(extractDraft, {
     onSuccess: ({ data }) => {
       if (data?.success) {
         setStage('ingesting');
@@ -267,7 +238,7 @@ export function DataEntryStep() {
           for (const localImg of filesToUpload) {
             try {
               console.log(`[UPLOAD] Uploading image ${localImg.file.name}...`);
-              const result = await uploadProvenanceImage({ file: localImg.file });
+              const result = await uploadImage({ file: localImg.file });
               if (result.data?.success && result.data.compressedData) {
                 const imageId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
                 const newImage: SellFlowImage = {
@@ -375,8 +346,24 @@ export function DataEntryStep() {
         }
       }
 
+      if (parsed.length > MAX_BATCH_SIZE) {
+        showAlert.error(
+          `Máximo ${MAX_BATCH_SIZE} tarjetas por batch`,
+          `Elimina líneas y vuelve a intentar. Puedes dividir en múltiples lotes.`,
+        );
+        setStage('idle');
+        return;
+      }
+
       if (parsed.length > 0) {
         const result = handleBulkImport(parsed);
+
+        if (result.error) {
+          showAlert.error('Límite excedido', result.error);
+          setStage('idle');
+          return;
+        }
+
         parsedCount = result.importedCount;
 
         const allGiftcards = useSellFlow.getState().giftcards;
@@ -529,8 +516,9 @@ export function DataEntryStep() {
             }}
             disabled={isProcessing}
             className={cn(
-              'border-border bg-muted/20 focus-visible:ring-primary text-md h-full w-full resize-none rounded-xl font-mono transition-all md:text-sm',
+              'border-border bg-muted/20 focus-visible:ring-primary text-md h-86 resize-none rounded-xl font-mono transition-all md:text-sm',
               isDragOver && 'border-primary',
+              showFormatHelp && 'h-64',
               validationErrors.length > 0 && 'border-destructive/50 ring-destructive/20 ring-1',
             )}
           />
@@ -661,7 +649,7 @@ export function DataEntryStep() {
         </AnimatePresence>
 
         {/* Action bar */}
-        <CardFooter className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 p-2">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 p-2">
           <Button
             onClick={() => setStep(1)}
             variant="outline"
@@ -704,7 +692,7 @@ export function DataEntryStep() {
               </>
             )}
           </Button>
-        </CardFooter>
+        </div>
       </Card>
 
       {/* Hidden file input */}

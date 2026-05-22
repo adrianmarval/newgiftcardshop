@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AdminBatchesFilters } from './admin-batches-filters';
 import { AdminBatchesList } from './admin-batches-list';
 import { AdminPayDialog } from './admin-pay-dialog';
 import { AdminSellerDialog } from './admin-seller-dialog';
-import type { AdminBatch } from '@/types/domain/admin';
-import type { PaginationMeta } from '@/types/application/shared';
+import type { AdminBatch, PaginationMeta } from '@/types/';
 import { IconCurrencyDollar } from '@tabler/icons-react';
 import { StatusLeyend } from '@/components/ui/status-leyend';
 
@@ -23,7 +22,6 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
   const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [payDialogOpen, setPayDialogOpen] = useState(false);
-  const [showFloatingBar, setShowFloatingBar] = useState(false);
   const [sellerDialog, setSellerDialog] = useState<{
     seller: {
       id: string;
@@ -37,10 +35,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
   }>({ seller: null });
 
   const selectedBatches = batches.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount);
-
-  useEffect(() => {
-    setShowFloatingBar(selectedBatches.length > 0);
-  }, [selectedBatches.length]);
+  const showFloatingBar = useMemo(() => selectedBatches.length > 0, [selectedBatches.length]);
 
   const handleSelect = (id: number, selected: boolean) => {
     setSelectedIds((prev) => {

@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { copyToClipboard } from '@/lib/clipboard';
-import type { CodeDisplayProps } from '@/components/ui/types';
 import { Button } from './button';
 import { showAlert } from '@/lib/swal';
 
-type ClaimCodeFieldProps = CodeDisplayProps & {
+interface ClaimCodeFieldProps {
+  code: string;
   variant?: 'visible' | 'masked';
   showToast?: boolean;
   showCopyButton?: boolean;
-};
+}
 
 export function ClaimCodeField({ code, variant = 'masked', showToast = true, showCopyButton = true }: ClaimCodeFieldProps) {
   const [copied, setCopied] = useState(false);
@@ -23,7 +23,11 @@ export function ClaimCodeField({ code, variant = 'masked', showToast = true, sho
     }
     const success = await copyToClipboard(code);
     setCopied(true);
-    showToast && success ? showAlert.toast.success('Code copied to clipboard') : showAlert.toast.error('Failed to copy code');
+    if (showToast && success) {
+      showAlert.toast.success('Code copied to clipboard');
+    } else {
+      showAlert.toast.error('Failed to copy code');
+    }
     setTimeout(() => setCopied(false), 2000);
   };
 

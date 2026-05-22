@@ -1,11 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { createRefund } from '@/actions/admin/admin-create-refund';
+import { createRefund } from '@/actions/admin/payments';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { AdminRefundDialogProps } from './types';
+
+interface AdminRefundDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  sellers: Array<{ id: string; name: string; email: string }>;
+  buyers: Array<{ id: string; name: string; email: string }>;
+  onSuccess: () => void;
+}
 
 export const AdminRefundDialog = ({ open, onOpenChange, sellers, buyers, onSuccess }: AdminRefundDialogProps) => {
   const [refundType, setRefundType] = useState<'BUYER' | 'SELLER'>('BUYER');

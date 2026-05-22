@@ -8,18 +8,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, Check, X, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { resetPassword } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
+import { AppSection, appSectionMap } from '@/types';
+import { PasswordCheckItem } from './ui/PasswordCheckItem';
 
-const PasswordCheckItem = ({ valid, label }: { valid: boolean; label: string }) => (
-  <div className="flex items-center gap-2 text-xs">
-    {valid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-slate-600" />}
-    <span className={valid ? 'text-emerald-400' : 'text-slate-500'}>{label}</span>
-  </div>
-);
+interface ResetPasswordFormProps {
+  portal?: AppSection;
+}
 
-const ResetPasswordFormContent = ({ portal = 'buy' }: { portal?: 'admin' | 'buy' | 'sell' }) => {
+const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
@@ -52,7 +51,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: { portal?: 'admin' | 'buy'
   const allValid = Object.values(passwordChecks).every(Boolean);
   const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
 
-  const portalPath = portal === 'buy' ? '/buy' : `/${portal}`;
+  const portalPath = appSectionMap[portal];
   const authPath = `${portalPath}/auth`;
 
   const { execute, status } = useAction(resetPassword, {
@@ -67,7 +66,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: { portal?: 'admin' | 'buy'
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     execute({ token, newPassword, confirmPassword, portal });
   };

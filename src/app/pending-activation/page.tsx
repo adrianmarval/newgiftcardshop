@@ -42,7 +42,7 @@ export default async function PendingActivationPage() {
 
   return (
     <div className="bg-background relative flex min-h-svh flex-col items-center justify-center overflow-hidden p-6 text-center">
-      <div className="bg-primary/5 absolute top-0 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]" />
+      <div className="bg-primary/5 absolute top-0 left-1/2 -z-10 h-125 w-125 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]" />
 
       <div className="w-full max-w-md space-y-8">
         <div className="space-y-6">

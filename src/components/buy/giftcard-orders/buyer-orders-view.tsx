@@ -2,8 +2,13 @@
 
 import { OrdersFilters } from '@/components/buy/giftcard-orders/orders-filters';
 import { OrdersList } from '@/components/buy/giftcard-orders/orders-list';
-import type { BuyerOrdersViewProps } from './types';
 import { StatusLeyend } from '@/components/ui/status-leyend';
+import { BuyerOrder, PaginationMeta } from '@/types';
+
+export interface BuyerOrdersViewProps {
+  orders: BuyerOrder[];
+  pagination: PaginationMeta;
+}
 
 export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) => {
   return (

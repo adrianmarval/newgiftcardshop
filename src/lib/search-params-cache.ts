@@ -1,12 +1,12 @@
 import { createSearchParamsCache } from 'nuqs/server';
-import { orderSearchParamsParsers } from '@/types/domain/order';
 import {
+  orderSearchParamsParsers,
   adminBatchesSearchParamsParsers,
   adminOrdersSearchParamsParsers,
   adminUsersSearchParamsParsers,
   adminPaymentsSearchParamsParsers,
-} from '@/types/domain/admin';
-import { sellerBatchesSearchParamsParsers } from '@/types/domain/seller';
+  sellerBatchesSearchParamsParsers,
+} from '@/lib/search-params';
 
 export const orderSearchParamsCache = createSearchParamsCache(orderSearchParamsParsers);
 export const adminBatchesSearchParamsCache = createSearchParamsCache(adminBatchesSearchParamsParsers);

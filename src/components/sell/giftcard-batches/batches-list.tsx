@@ -5,7 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { BatchCard } from './batch-card';
-import type { BatchesListProps } from './types';
+import { SellerBatch } from '@/types';
+
+export interface BatchesListProps {
+  batches: SellerBatch[];
+  totalPages?: number;
+}
 
 export function BatchesList({ batches }: BatchesListProps) {
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);

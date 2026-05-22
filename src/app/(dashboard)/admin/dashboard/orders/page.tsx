@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import { adminOrders } from '@/actions/admin/admin-orders-list';
-import { adminGetBuyers } from '@/actions/admin/admin-get-buyers';
+import { listOrders } from '@/actions/admin/orders';
+import { getBuyers } from '@/actions/admin/users/get-buyers';
 import { AdminOrdersView } from '@/components/admin/orders';
 import { adminOrdersSearchParamsCache } from '@/lib/search-params-cache';
 
@@ -21,8 +21,8 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   const dateTo = parsed.dateTo || null;
 
   const [ordersResult, buyersResult] = await Promise.all([
-    adminOrders({ page, limit, search, status, buyerId, dateFrom, dateTo }),
-    adminGetBuyers(),
+    listOrders({ page, limit, search, status, buyerId, dateFrom, dateTo }),
+    getBuyers(),
   ]);
 
   if (!ordersResult.data?.success) {
@@ -32,8 +32,8 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   const buyers = buyersResult.data?.success ? buyersResult.data.buyers : [];
 
   return (
-    <div className="container mx-auto space-y-4 py-2">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-7xl">ADMIN ÓRDENES</h1>
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">ADMIN ÓRDENES</h1>
       <AdminOrdersView orders={ordersResult.data.items} buyers={buyers} pagination={ordersResult.data.pagination} />
     </div>
   );

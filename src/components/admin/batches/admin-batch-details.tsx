@@ -1,10 +1,10 @@
 import { CardFooter } from '@/components/ui/card';
 import { showAlert } from '@/lib/swal';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
-import { adminCardDelete } from '@/actions/admin/admin-card-delete';
-import type { AdminBatch } from '@/types/domain/admin';
+import { deleteCard } from '@/actions/admin/batches';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { AdminBatchGallery } from './admin-batch-gallery';
+import { AdminBatch } from '@/types';
 
 interface AdminBatchDetailsProps {
   batch: AdminBatch;
@@ -16,7 +16,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
     const confirmed = await showAlert.confirm('¿Eliminar tarjeta?', '¿Eliminar esta tarjeta? Esta acción no se puede deshacer.');
     if (!confirmed) return;
     try {
-      const result = await adminCardDelete({ cardId });
+      const result = await deleteCard({ cardId });
       if (result.serverError) {
         showAlert.error('Error', result.serverError);
       } else if (result.data?.error) {

@@ -1,4 +1,3 @@
-import { encrypt, hashCode } from '@/lib/encryption';
 import { Prisma } from '../src/generated/prisma/client';
 import { hashPassword } from 'better-auth/crypto';
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { showAlert } from '@/lib/swal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,10 +9,14 @@ import { AlertCircle, ShieldCheck, Copy, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authClient } from '@/lib/auth-client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { InlineAlert } from '@/components/ui/inline-alert';
 import { QRCodeSVG } from 'qrcode.react';
-import type { TwoFactorSectionProps } from '@/types';
 import { usePathname } from 'next/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
+
+export interface TwoFactorSectionProps {
+  initialEnabled: boolean;
+}
 
 export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
   const pathname = usePathname();
@@ -34,7 +37,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
 
   const handleEnable2FA = async () => {
     if (!password) {
-      showAlert.toast.error(isSpanish ? 'Se requiere contraseña' : 'Password is required');
+      setTwoFactorError(isSpanish ? 'Se requiere contraseña' : 'Password is required');
       return;
     }
     setIs2FAPending(true);
@@ -42,7 +45,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     try {
       const { data, error } = await authClient.twoFactor.enable({ password });
       if (error) {
-        showAlert.error('Error', error.message || (isSpanish ? 'Error al habilitar' : 'Failed to enable'));
+        setTwoFactorError(error.message || (isSpanish ? 'Error al habilitar' : 'Failed to enable'));
       } else if (data) {
         setQrCodeData(data.totpURI);
         setTwoStepEnable(true);
@@ -50,7 +53,8 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
         setPassword('');
       }
     } catch (err) {
-      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
+      console.error(err);
+      setTwoFactorError(isSpanish ? 'Error inesperado' : 'Unexpected error');
     } finally {
       setIs2FAPending(false);
     }
@@ -62,7 +66,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     try {
       const { data, error } = await authClient.twoFactor.verifyTotp({ code: totpCode });
       if (error) {
-        showAlert.error('Error', error.message || (isSpanish ? 'Código inválido' : 'Invalid code'));
+        setTwoFactorError(error.message || (isSpanish ? 'Código inválido' : 'Invalid code'));
       } else {
         setIs2FAEnabled(true);
         const codes = (data as { backupCodes?: string[] })?.backupCodes;
@@ -71,15 +75,16 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
         setTotpCode('');
       }
     } catch (err) {
-      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
+      console.error(err);
+      setTwoFactorError(isSpanish ? 'Error inesperado' : 'Unexpected error');
     } finally {
       setIs2FAPending(false);
     }
   };
 
-  const handleRegenerateBackupCodes = async () => {
+const handleRegenerateBackupCodes = async () => {
     if (!password) {
-      showAlert.toast.error(isSpanish ? 'Se requiere contraseña' : 'Password required');
+      setTwoFactorError(isSpanish ? 'Se requiere contraseña' : 'Password is required');
       return;
     }
     setIs2FAPending(true);
@@ -87,22 +92,23 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     try {
       const { data, error } = await authClient.twoFactor.generateBackupCodes({ password });
       if (error) {
-        showAlert.error('Error', error.message || (isSpanish ? 'Error al regenerar' : 'Failed to regenerate'));
+        setTwoFactorError(error.message || (isSpanish ? 'Error al regenerar' : 'Failed to regenerate'));
       } else if (data) {
         setBackupCodes(data.backupCodes);
         setShowBackupCodes(true);
         setPassword('');
       }
     } catch (err) {
-      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
+      console.error(err);
+      setTwoFactorError(isSpanish ? 'Error inesperado' : 'Unexpected error');
     } finally {
       setIs2FAPending(false);
     }
   };
 
-  const handleDisable2FA = async () => {
+const handleDisable2FA = async () => {
     if (!password) {
-      showAlert.toast.error(isSpanish ? 'Se requiere contraseña' : 'Password required');
+      setTwoFactorError(isSpanish ? 'Se requiere contraseña' : 'Password is required');
       return;
     }
     setIs2FAPending(true);
@@ -110,14 +116,15 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     try {
       const { error } = await authClient.twoFactor.disable({ password });
       if (error) {
-        showAlert.error('Error', error.message || (isSpanish ? 'Error al deshabilitar' : 'Failed to disable'));
+        setTwoFactorError(error.message || (isSpanish ? 'Error al deshabilitar' : 'Failed to disable'));
       } else {
         setIs2FAEnabled(false);
         setShowDisableDialog(false);
         setPassword('');
       }
     } catch (err) {
-      showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
+      console.error(err);
+      setTwoFactorError(isSpanish ? 'Error inesperado' : 'Unexpected error');
     } finally {
       setIs2FAPending(false);
     }
@@ -388,6 +395,16 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
           </DialogHeader>
 
           <div className="space-y-3">
+            {twoFactorError && (
+              <InlineAlert
+                variant="error"
+                title={twoFactorError}
+                autoDismiss
+                dismissAfter={3000}
+                onDismiss={() => setTwoFactorError('')}
+              />
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="disablePassword" className="text-[10px] font-medium md:text-xs">
                 {isSpanish ? 'Contraseña' : 'Password'}

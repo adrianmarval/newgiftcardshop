@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Search, Edit2, X, Check, Globe, AlertTriangle } from 'lucide-react';
+import { Trash2, Plus, Search, Edit2, X, Check, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,6 @@ import Image from 'next/image';
 import {
   getAllBrands,
   createBrand,
-  updateBrand,
   deleteBrand,
   addCountryToBrand,
   updateBrandCountryLimits,
@@ -24,7 +23,7 @@ import {
   toggleBrandActive,
   toggleBrandCountryActive,
   updateBrandCountryRate,
-} from '@/actions/admin/brands';
+} from '@/actions/admin/catalog';
 
 interface BrandWithCountries {
   id: string;
@@ -33,23 +32,25 @@ interface BrandWithCountries {
   icon: string;
   image: string | null;
   isActive: boolean;
-  countries: Array<{
-    id: string;
-    countryId: string;
-    countryName: string;
-    countryCode: string;
-    minAmount: number | null;
-    maxAmount: number | null;
-    isActive: boolean;
-    buyRate: number | null;
-    sellRate: number | null;
-  }>;
+  countries: BrandCountry[];
 }
 
 interface Country {
   id: string;
   name: string;
   code: string;
+}
+
+interface BrandCountry {
+  id: string;
+  countryId: string;
+  countryName: string;
+  countryCode: string;
+  minAmount: number | null;
+  maxAmount: number | null;
+  isActive: boolean;
+  buyRate: number | null;
+  sellRate: number | null;
 }
 
 interface BrandsManagerProps {
@@ -81,15 +82,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       setNewBrand({ name: '', slug: '', icon: '📦', image: '' });
       refreshBrands();
     },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error creating brand'),
-  });
-
-  const { execute: executeUpdate, status: updateStatus } = useAction(updateBrand, {
-    onSuccess: () => {
-      showAlert.toast.success('Brand updated');
-      refreshBrands();
-    },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error updating brand'),
+    onError: (e) => showAlert.toast.error('Error creating brand: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeDelete, status: deleteStatus } = useAction(deleteBrand, {
@@ -98,7 +91,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       setSelectedBrandId(null);
       refreshBrands();
     },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error deleting brand'),
+    onError: (e) => showAlert.toast.error('Error deleting brand: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeAddCountry, status: addCountryStatus } = useAction(addCountryToBrand, {
@@ -108,7 +101,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       setNewCountry({ countryId: '', minAmount: '', maxAmount: '' });
       refreshBrands();
     },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error adding country'),
+    onError: (e) => showAlert.toast.error('Error adding country: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeUpdateLimits, status: updateLimitsStatus } = useAction(updateBrandCountryLimits, {
@@ -117,7 +110,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       setEditingCountryId(null);
       refreshBrands();
     },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error updating limits'),
+    onError: (e) => showAlert.toast.error('Error updating limits: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeUpdateRate, status: updateRateStatus } = useAction(updateBrandCountryRate, {
@@ -125,7 +118,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       showAlert.toast.success('Rates updated');
       refreshBrands();
     },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error updating rates'),
+    onError: (e) => showAlert.toast.error('Error updating rates: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeRemoveCountry, status: removeCountryStatus } = useAction(removeCountryFromBrand, {
@@ -133,17 +126,17 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       showAlert.toast.success('Country removed');
       refreshBrands();
     },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error removing country'),
+    onError: (e) => showAlert.toast.error('Error removing country: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeToggleBrand, status: toggleBrandStatus } = useAction(toggleBrandActive, {
     onSuccess: () => refreshBrands(),
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error toggling brand'),
+    onError: (e) => showAlert.toast.error('Error toggling brand: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeToggleCountry, status: toggleCountryStatus } = useAction(toggleBrandCountryActive, {
     onSuccess: () => refreshBrands(),
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error toggling country'),
+    onError: (e) => showAlert.toast.error('Error toggling country: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const refreshBrands = async () => {
@@ -187,7 +180,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
     });
   };
 
-  const handleUpdateLimits = (bc: any) => {
+  const handleUpdateLimits = (bc: BrandCountry) => {
     if (!selectedBrand) return;
     executeUpdateLimits({
       brandId: selectedBrand.id,
@@ -205,9 +198,9 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
   };
 
   return (
-    <div className="flex flex-col gap-4 md:h-[calc(100vh-120px)] md:flex-row">
+    <div className="flex h-full flex-col gap-4 md:flex-row">
       {/* Left Panel: Brands List */}
-      <Card className="flex h-[400px] w-full shrink-0 flex-col overflow-hidden md:h-full md:w-1/3 md:min-w-[320px]">
+      <Card className="flex w-full shrink-0 flex-col overflow-hidden md:w-1/3 md:min-w-[320px]">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle>Brands</CardTitle>
@@ -435,15 +428,16 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                           </Badge>
                         )}
                       </div>
-                      <span className="text-muted-foreground text-xs block">
-                        Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'} | Default Rates: Buy {(bc.buyRate ? bc.buyRate * 100 : 85).toFixed(1)}% / Sell {(bc.sellRate ? bc.sellRate * 100 : 75).toFixed(1)}%
+                      <span className="text-muted-foreground block text-xs">
+                        Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'} | Default Rates: Buy{' '}
+                        {(bc.buyRate ? bc.buyRate * 100 : 85).toFixed(1)}% / Sell {(bc.sellRate ? bc.sellRate * 100 : 75).toFixed(1)}%
                       </span>
                     </div>
                     <div className="flex gap-1">
                       {editingCountryId === bc.id ? (
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="flex flex-col">
-                            <span className="text-[9px] text-muted-foreground">Min ($)</span>
+                            <span className="text-muted-foreground text-[9px]">Min ($)</span>
                             <Input
                               type="number"
                               placeholder="Min"
@@ -453,7 +447,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                             />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-[9px] text-muted-foreground">Max ($)</span>
+                            <span className="text-muted-foreground text-[9px]">Max ($)</span>
                             <Input
                               type="number"
                               placeholder="Max"
@@ -463,7 +457,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                             />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-[9px] text-muted-foreground">Buy Rate (%)</span>
+                            <span className="text-muted-foreground text-[9px]">Buy Rate (%)</span>
                             <Input
                               type="number"
                               placeholder="Buy %"
@@ -473,7 +467,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                             />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-[9px] text-muted-foreground">Sell Rate (%)</span>
+                            <span className="text-muted-foreground text-[9px]">Sell Rate (%)</span>
                             <Input
                               type="number"
                               placeholder="Sell %"
@@ -482,8 +476,12 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                               className="h-8 w-20"
                             />
                           </div>
-                          <div className="flex items-end gap-1 mt-4">
-                            <Button size="sm" onClick={() => handleUpdateLimits(bc)} disabled={updateLimitsStatus === 'executing' || updateRateStatus === 'executing'}>
+                          <div className="mt-4 flex items-end gap-1">
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdateLimits(bc)}
+                              disabled={updateLimitsStatus === 'executing' || updateRateStatus === 'executing'}
+                            >
                               <Check className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => setEditingCountryId(null)}>

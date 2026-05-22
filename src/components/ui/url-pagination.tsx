@@ -5,9 +5,12 @@ import { parseAsInteger } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import type { UrlPaginationProps } from '@/components/ui/types';
 
 const pageParser = parseAsInteger.withDefault(1);
+
+interface UrlPaginationProps {
+  totalPages: number;
+}
 
 export const UrlPagination = ({ totalPages }: UrlPaginationProps) => {
   const pathname = usePathname();

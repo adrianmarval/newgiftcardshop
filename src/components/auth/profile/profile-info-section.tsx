@@ -7,20 +7,43 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { TelegramAvatar } from '@/components/ui/telegram-avatar';
 import { CheckCircle, User, MessageCircle, Link2 } from 'lucide-react';
 import { updateProfile } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
-import type { ProfileInfoSectionProps } from '@/types';
 import { usePathname } from 'next/navigation';
+import { AppSection } from '@/types';
+import Link from 'next/link';
 
-export const ProfileInfoSection = ({ name, email, emailVerified, portal, telegramUser, telegramLinkUrl }: ProfileInfoSectionProps) => {
+export interface ProfileInfoSectionProps {
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  portal: AppSection;
+  telegramUser?: {
+    username: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    hasPhoto: boolean;
+    languageCode: string | null;
+  } | null;
+  telegramPhotoDataUrl?: string | null;
+  telegramLinkUrl?: string | null;
+}
+
+export const ProfileInfoSection = ({
+  name,
+  email,
+  emailVerified,
+  portal,
+  telegramUser,
+  telegramPhotoDataUrl,
+  telegramLinkUrl,
+}: ProfileInfoSectionProps) => {
   const pathname = usePathname();
   const isSpanish = pathname.includes('/admin') || pathname.includes('/buy');
   const [nameValue, setNameValue] = useState(name);
   const [success, setSuccess] = useState(false);
-  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
 
   const { execute, status } = useAction(updateProfile, {
     onSuccess: ({ data }) => {
@@ -35,7 +58,7 @@ export const ProfileInfoSection = ({ name, email, emailVerified, portal, telegra
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     setSuccess(false);
     execute({ name: nameValue });
@@ -45,18 +68,6 @@ export const ProfileInfoSection = ({ name, email, emailVerified, portal, telegra
 
   return (
     <>
-      <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
-          {telegramUser?.photoUrl && (
-            <img
-              src={telegramUser.photoUrl}
-              alt="Profile"
-              className="w-full h-auto object-contain max-h-[70vh]"
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       <Card className="gap-0">
         <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-500/10 md:h-9 md:w-9 md:rounded-lg">
@@ -83,9 +94,7 @@ export const ProfileInfoSection = ({ name, email, emailVerified, portal, telegra
                 <Link2 className="h-5 w-5 text-amber-400" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-amber-300">
-                  {isSpanish ? 'Vincular Telegram' : 'Link Telegram'}
-                </p>
+                <p className="text-sm font-medium text-amber-300">{isSpanish ? 'Vincular Telegram' : 'Link Telegram'}</p>
                 <p className="text-xs text-slate-400">
                   {emailVerified
                     ? isSpanish
@@ -97,14 +106,14 @@ export const ProfileInfoSection = ({ name, email, emailVerified, portal, telegra
                 </p>
               </div>
               {emailVerified ? (
-                <a
+                <Link
                   href={telegramLinkUrl || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-md bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black hover:bg-amber-400"
                 >
                   {isSpanish ? 'Vincular' : 'Link'}
-                </a>
+                </Link>
               ) : (
                 <span className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-400">
                   {isSpanish ? 'Verificar email' : 'Verify email'}
@@ -115,23 +124,15 @@ export const ProfileInfoSection = ({ name, email, emailVerified, portal, telegra
 
           {telegramUser && (
             <div className="flex items-center gap-3 rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
-              {telegramUser.photoUrl ? (
-                <button
-                  type="button"
-                  onClick={() => setImagePreviewOpen(true)}
-                  className="relative rounded-full overflow-hidden ring-2 ring-blue-500/50 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
-                >
-                  <Avatar
-                    src={telegramUser.photoUrl}
-                    name={`${telegramUser.firstName || ''} ${telegramUser.lastName || ''}`.trim() || name}
-                    size="lg"
-                  />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">Ver</span>
-                  </div>
-                </button>
+              {telegramUser.hasPhoto ? (
+                <TelegramAvatar
+                  src={telegramPhotoDataUrl || ''}
+                  name={`${telegramUser.firstName || ''} ${telegramUser.lastName || ''}`.trim() || name}
+                  size="lg"
+                  className="ring-2 ring-blue-500/50"
+                />
               ) : (
-                <Avatar
+                <TelegramAvatar
                   name={`${telegramUser.firstName || ''} ${telegramUser.lastName || ''}`.trim() || name}
                   size="lg"
                   className="ring-2 ring-blue-500/50"
@@ -148,9 +149,7 @@ export const ProfileInfoSection = ({ name, email, emailVerified, portal, telegra
                     {telegramUser.firstName} {telegramUser.lastName}
                   </span>
                 )}
-                {telegramUser.languageCode && (
-                  <span className="text-xs text-slate-500 uppercase">{telegramUser.languageCode}</span>
-                )}
+                {telegramUser.languageCode && <span className="text-xs text-slate-500 uppercase">{telegramUser.languageCode}</span>}
               </div>
               <div className="ml-auto flex items-center gap-1.5 rounded-full bg-blue-500/20 px-2 py-1">
                 <MessageCircle className="h-3 w-3 text-blue-400" />

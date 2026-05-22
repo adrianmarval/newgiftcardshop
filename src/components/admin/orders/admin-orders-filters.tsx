@@ -9,9 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
-import { adminOrdersSearchParamsParsers } from './admin-orders-search-params';
-import type { AdminOrdersFiltersProps } from './types';
+import { adminOrdersSearchParamsParsers } from '@/lib/search-params/admin-orders';
 import { cn } from '@/lib/utils';
+
+interface AdminOrdersFiltersProps {
+  buyers: Array<{ id: string; name: string; email: string }>;
+}
 
 export function AdminOrdersFilters({ buyers }: AdminOrdersFiltersProps) {
   const [params, setParams] = useQueryStates(
@@ -81,7 +84,7 @@ export function AdminOrdersFilters({ buyers }: AdminOrdersFiltersProps) {
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[280px] p-0" align="start">
+                <PopoverContent className="w-70 p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Buscar comprador..." />
                     <CommandList>

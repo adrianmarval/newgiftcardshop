@@ -1,8 +1,8 @@
 import { getSession } from '@/lib/authorization';
 import { Metadata } from 'next';
-import { buyerStats } from '@/actions/order/buyer-stats';
-import { getBuyerOrders } from '@/actions/order/list';
-import { BuyerDashboardClient } from '@/components/buy/buyer-dashboard-client';
+import { buyerStats } from '@/actions/buyer/stats/buyer-stats';
+import { listOrders } from '@/actions/buyer/orders/list-orders';
+import { BuyerDashboard } from '@/components/buy/buyer-dashboard';
 import type { BuyerStats as BuyerStatsType } from '@/types/domain/order';
 import type { BuyerOrder } from '@/types/domain/order';
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function BuyerDashboardPage() {
   const session = await getSession();
 
-  const [statsResult, ordersResult] = await Promise.all([buyerStats(), getBuyerOrders({ page: 1, limit: 3, status: 'PENDING' })]);
+  const [statsResult, ordersResult] = await Promise.all([buyerStats(), listOrders({ page: 1, limit: 3, status: 'PENDING' })]);
 
   if (!statsResult.data) {
     throw new Error('Failed to load buyer stats');
@@ -33,13 +33,10 @@ export default async function BuyerDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto space-y-4 py-2">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-bold">Bienvenido{session.user.name ? `, ${session.user.name}` : ''}</h1>
-        <p className="text-muted-foreground">Explora y compra tarjetas de regalo con descuento</p>
-      </div>
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">BUYER DASHBOARD</h1>
 
-      <BuyerDashboardClient stats={stats} activeOrders={activeOrders} />
+      <BuyerDashboard stats={stats} activeOrders={activeOrders} />
     </div>
   );
 }

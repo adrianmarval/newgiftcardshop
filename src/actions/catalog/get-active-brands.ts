@@ -2,9 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-import { getActiveBrandsOutputSchema } from '@/types/domain/catalog';
-
-export const getActiveBrands = authActionClient.outputSchema(getActiveBrandsOutputSchema).action(async () => {
+export const getActiveBrands = authActionClient.action(async () => {
   const brands = await prisma.brand.findMany({
     where: { isActive: true },
     orderBy: { name: 'asc' },

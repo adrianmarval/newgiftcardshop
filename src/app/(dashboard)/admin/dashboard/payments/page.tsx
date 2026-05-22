@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { adminPayments, adminGetSellers, adminGetBuyers, adminGetAdmins } from '@/actions';
+import { listPayments, getSellers, getBuyers, getAdmins } from '@/actions';
 import { AdminPaymentsView } from '@/components/admin/payments/admin-payments-view';
 import { adminPaymentsSearchParamsCache } from '@/lib/search-params-cache';
 
@@ -25,10 +25,10 @@ export default async function AdminPaymentsPage({
   const dateTo = parsed.dateTo || null;
 
   const [paymentsResult, sellersResult, buyersResult, adminsResult] = await Promise.all([
-    adminPayments({ page, limit, direction, category, userId, search, dateFrom, dateTo }),
-    adminGetSellers(),
-    adminGetBuyers(),
-    adminGetAdmins(),
+    listPayments({ page, limit, direction, category, userId, search, dateFrom, dateTo }),
+    getSellers(),
+    getBuyers(),
+    getAdmins(),
   ]);
 
   if (!paymentsResult.data?.success) {
@@ -40,8 +40,8 @@ export default async function AdminPaymentsPage({
   const admins = adminsResult.data?.success ? adminsResult.data.admins : [];
 
   return (
-    <div className="container mx-auto space-y-4 py-2">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-7xl">HISTORIAL DE PAGOS</h1>
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">HISTORIAL DE PAGOS</h1>
       <AdminPaymentsView
         payments={paymentsResult.data.items}
         pagination={paymentsResult.data.pagination}

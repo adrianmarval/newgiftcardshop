@@ -3,13 +3,33 @@
 import { ProfileInfoSection } from '@/components/auth/profile/profile-info-section';
 import { SecuritySection } from '@/components/auth/profile/security-section';
 import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
-import type { ProfileFormProps } from '@/types';
+import { AppSection } from '@/types';
 
-export const ProfileForm = ({ user, portal, telegramLinkUrl }: ProfileFormProps) => {
+interface ProfileFormProps {
+  user: {
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image?: string | null;
+    twoFactorEnabled: boolean;
+    telegramUser?: {
+      username: string | null;
+      firstName: string | null;
+      lastName: string | null;
+      hasPhoto: boolean;
+      languageCode: string | null;
+    } | null;
+  };
+  telegramPhotoDataUrl?: string | null;
+  portal: AppSection;
+  telegramLinkUrl?: string | null;
+}
+
+export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUrl }: ProfileFormProps) => {
   const emailVerified = true; // From better-auth session
 
   return (
-    <div className="w-full space-y-3 md:space-y-4 md:p-4">
+    <div className="w-full space-y-3">
       <div className="grid gap-3 md:grid-cols-12 md:gap-4">
         <div className="space-y-3 md:col-span-7 md:space-y-4">
           <ProfileInfoSection
@@ -18,6 +38,7 @@ export const ProfileForm = ({ user, portal, telegramLinkUrl }: ProfileFormProps)
             emailVerified={emailVerified}
             portal={portal}
             telegramUser={user.telegramUser}
+            telegramPhotoDataUrl={telegramPhotoDataUrl}
             telegramLinkUrl={telegramLinkUrl}
           />
         </div>

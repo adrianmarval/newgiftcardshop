@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation';
 import { showAlert } from '@/lib/swal';
 import { useAction } from 'next-safe-action/hooks';
 import { logout } from '@/actions';
+import { AppSection } from '@/types';
 
-export const useLogout = (portal: 'buy' | 'sell' | 'admin') => {
+export const useLogout = (portal: AppSection) => {
   const router = useRouter();
   const isSpanish = portal === 'buy' || portal === 'admin';
 

@@ -2,7 +2,24 @@
 
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-import { getBrandByIdInputSchema, getBrandByIdOutputSchema } from '@/types/domain/catalog';
+import { z } from 'zod';
+
+const getBrandByIdInputSchema = z.object({
+  id: z.string(),
+});
+
+const getBrandByIdOutputSchema = z.object({
+  success: z.literal(true),
+  brand: z
+    .object({
+      id: z.string(),
+      slug: z.string(),
+      name: z.string(),
+      icon: z.string().nullable(),
+      image: z.string().nullable(),
+    })
+    .nullable(),
+});
 
 export const getBrandById = authActionClient
   .inputSchema(getBrandByIdInputSchema)
@@ -12,7 +29,7 @@ export const getBrandById = authActionClient
       where: { id },
     });
     if (!brand) {
-      return { success: true as const, brand: null };
+      return { success: true, brand: null };
     }
     return {
       success: true as const,

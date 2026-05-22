@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import {
@@ -14,60 +14,42 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import { publishBatch } from '@/actions/seller/publish-batch';
-import { getSellerRate } from '@/actions/seller/get-rate';
+import { publishBatch } from '@/actions/seller/batches';
+import { getSellerRate } from '@/actions/seller/rates';
 import { BrandStep } from '@/components/sell/steps/brand-step';
 import { DataEntryStep } from '@/components/sell/steps/data-entry-step';
 import { ReviewStep } from '@/components/sell/steps/review-step';
-import type { SellBatchManagerProps } from './types';
 import { showAlert } from '@/lib/swal';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
+import { BrandCountry } from '@/types';
 
-const STEP_LABELS = ['Config', 'Load', 'Review'];
+export const STEP_LABELS = ['Config', 'Load', 'Review'];
+
+export interface SellBatchManagerProps {
+  brandCountries: BrandCountry[];
+  sellRate?: number;
+}
 
 export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: SellBatchManagerProps) => {
-  const { step, resetForm, giftcards, selectedBrandCountry, images, brandCountryLimits } = useSellFlow();
+  const { step, resetForm, giftcards, selectedBrandCountry } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [duplicates, setDuplicates] = useState<string[]>([]);
-  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [sellRate, setSellRate] = useState(sellRateProp ?? 0.75);
   const router = useRouter();
 
   const selectedBrandCountryData = useMemo(() => {
-    return brandCountries.find((bc) => `${bc.brandId}|${bc.countryId}` === selectedBrandCountry);
+    if (!selectedBrandCountry) return null;
+    return brandCountries.find((bc) => `${bc.brandId}|${bc.countryId}` === selectedBrandCountry) ?? null;
   }, [brandCountries, selectedBrandCountry]);
 
-  // Cargar tarifa de venta dinámicamente cuando el vendedor selecciona la marca y país
-  useEffect(() => {
-    if (selectedBrandCountryData) {
-      getSellerRate({
-        brandId: selectedBrandCountryData.brandId,
-        countryId: selectedBrandCountryData.countryId,
-      }).then((res) => {
-        if (res?.data) {
-          if (res.data.success) {
-            setSellRate(res.data.rate);
-          } else {
-            // Mostrar warning amigable en vez de romper la página
-            showAlert.toast.warning(
-              res.data.error || 'Esta combinación no tiene tarifas de venta configuradas. Usando valor por defecto.'
-            );
-            setSellRate(0.75); // Fallback por defecto
-          }
-        }
-      });
-    }
-  }, [selectedBrandCountryData]);
-
-  const { execute, status } = useAction(publishBatch, {
+  const { execute: runPublishBatch, status: publishStatus } = useAction(publishBatch, {
     onSuccess: ({ data }) => {
       if (data?.success) {
         if (data.duplicates && data.duplicates.length > 0) {
           setDuplicates(data.duplicates);
           showAlert.toast.info(
-            'Some cards were duplicates',
-            `${data.duplicates.length} duplicate code${data.duplicates.length !== 1 ? 's' : ''}. They were not added to the batch.`,
+            `${data.duplicates.length} código${data.duplicates.length !== 1 ? 's' : ''} duplicado${data.duplicates.length !== 1 ? 's' : ''}. No fueron agregados al batch.`,
           );
         }
         setShowSuccessDialog(true);
@@ -75,16 +57,31 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
     },
     onError: ({ error }) => {
       const valError = error.validationErrors ? (Object.values(error.validationErrors).flat()[0] as string) : null;
-      showAlert.error('Error publishing batch', error.serverError || valError || 'Could not publish batch');
+      showAlert.toast.error(error.serverError || valError || 'No se pudo publicar el batch');
     },
   });
 
-  const handlePublish = async () => {
+  const fetchRate = (brandId: string, countryId: string) => {
+    getSellerRate({ brandId, countryId }).then((res) => {
+      if (res?.data?.success) {
+        setSellRate(res.data.rate);
+      } else {
+        showAlert.toast.warning(res?.data?.error || 'No hay tarifas configuradas.');
+        setSellRate(0.75);
+      }
+    });
+  };
+
+  const handleBrandSelect = (brandId: string, countryId: string) => {
+    fetchRate(brandId, countryId);
+  };
+
+  const handlePublish = () => {
     if (!selectedBrandCountryData) return;
     const storeImages = useSellFlow.getState().images;
     const unmatchedImagesIds = useSellFlow.getState().unmatchedImages.map((u) => u.imageId);
 
-    execute({
+    runPublishBatch({
       cards: giftcards.map((g) => {
         const matchedImageId = g.evidence?.matchedImageId;
         const matchedImage = matchedImageId ? storeImages.find((img) => img.id === matchedImageId) : null;
@@ -104,10 +101,14 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
     });
   };
 
-  const totalSteps = STEP_LABELS.length;
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false);
+    resetForm();
+    router.push('/sell/dashboard/cards');
+  };
 
   return (
-    <div className="flex h-full w-full flex-col space-y-1 px-0 py-0 md:space-y-6 md:px-0 md:py-0">
+    <div className="flex w-full flex-col space-y-4">
       <div className="bg-card/40 flex flex-row items-center justify-between gap-2.5 rounded-none backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Sell Gift Cards</h1>
@@ -146,7 +147,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
                       {label}
                     </span>
                   </div>
-                  {idx < totalSteps - 1 && (
+                  {idx < STEP_LABELS.length - 1 && (
                     <div className={`h-0.5 w-4 rounded-full transition-all md:w-8 ${s < step ? 'bg-primary/50' : 'bg-muted'} `} />
                   )}
                 </div>
@@ -156,54 +157,56 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
         </motion.div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {step === 1 && (
-          <motion.div
-            key="step-1"
-            className="flex-1"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <BrandStep brandCountries={brandCountries} />
-          </motion.div>
-        )}
+      <div className="relative min-h-0 flex-1 overflow-y-auto">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div
+              key="step-1"
+              className="flex-1"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <BrandStep brandCountries={brandCountries} onBrandSelect={handleBrandSelect} />
+            </motion.div>
+          )}
 
-        {step === 2 && (
-          <motion.div
-            key="step-2-load"
-            className="h-full min-h-0 flex-1"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <DataEntryStep />
-          </motion.div>
-        )}
+          {step === 2 && (
+            <motion.div
+              key="step-2-load"
+              className="h-full min-h-0 flex-1"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DataEntryStep />
+            </motion.div>
+          )}
 
-        {step === 3 && (
-          <motion.div
-            key="step-review"
-            className="flex-1"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {selectedBrandCountryData && (
-              <ReviewStep
-                onPublish={handlePublish}
-                isPublishing={status === 'executing'}
-                brandCountry={selectedBrandCountryData}
-                sellRate={sellRate}
-                backStep={2}
-              />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {step === 3 && (
+            <motion.div
+              key="step-review"
+              className="flex-1"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {selectedBrandCountryData && (
+                <ReviewStep
+                  onPublish={handlePublish}
+                  isPublishing={publishStatus === 'executing'}
+                  brandCountry={selectedBrandCountryData}
+                  sellRate={sellRate}
+                  backStep={2}
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <AlertDialogContent className="border-border bg-card">
@@ -237,37 +240,11 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogAction
-            onClick={() => {
-              setShowSuccessDialog(false);
-              resetForm();
-              router.push('/sell/dashboard/cards');
-            }}
+            onClick={handleSuccessDialogClose}
             className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 h-11"
           >
             Go to Cards History
           </AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
-        <AlertDialogContent className="border-border bg-card">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Discard this batch?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This batch is not automatically saved. If you leave now, you will lose all loaded cards and screenshots.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep editing</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setShowDiscardDialog(false);
-                resetForm();
-              }}
-            >
-              Leave and discard
-            </AlertDialogAction>
-          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>

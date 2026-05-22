@@ -6,14 +6,14 @@ import { RegistryCard } from '@/components/ui/registry-card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { showAlert } from '@/lib/swal';
-import { adminBatchDelete } from '@/actions/admin/admin-batch-delete';
+import { deleteBatch } from '@/actions/admin/batches';
 import { AdminBatchDetails } from './admin-batch-details';
-import type { AdminBatch } from '@/types/domain/admin';
 import { Spinner } from '@/components/ui/spinner';
 import { formatDateTime } from '@/lib/date-formatter';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { useLongPress } from '@/hooks/use-long-press';
 import { motion } from 'framer-motion';
+import { AdminBatch } from '@/types';
 
 interface AdminBatchCardProps {
   batch: AdminBatch;
@@ -55,7 +55,7 @@ export function AdminBatchCard({
     if (!confirmed) return;
     setIsDeleting(true);
     try {
-      const result = await adminBatchDelete({ batchId: batch.id });
+      const result = await deleteBatch({ batchId: batch.id });
       if (result.serverError) {
         showAlert.error('Error', result.serverError);
       } else {
@@ -63,6 +63,7 @@ export function AdminBatchCard({
         onDeleted();
       }
     } catch (error) {
+      console.error(error);
       showAlert.error('Error', 'Error al eliminar');
     } finally {
       setIsDeleting(false);
@@ -121,7 +122,9 @@ export function AdminBatchCard({
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(batch.effectiveTotal, { currency: faceValueCurrency })}</span>
+          <span className="text-md text-foreground font-semibold md:text-lg">
+            {formatCurrency(batch.effectiveTotal, { currency: faceValueCurrency })}
+          </span>
           <span className="text-muted-foreground text-xs md:text-sm">
             A Pagar: {formatCurrency(batch.estimatedPayout, { currency: payoutCurrency })}
           </span>

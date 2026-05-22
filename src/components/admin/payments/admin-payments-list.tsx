@@ -1,38 +1,17 @@
 'use client';
 
-import { History, ArrowUpRight, ArrowDownRight, Copy } from 'lucide-react';
+import { History } from 'lucide-react';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
-import type { AdminPayment } from '@/types/domain/admin';
-import type { AdminPaymentsListProps } from './types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
+import type { Payment } from '@/types/domain';
 import { showAlert } from '@/lib/swal';
+import { paymentCategoryConfig, paymentDirectionConfig } from '@/lib/ui-config';
 
-const categoryConfig: Record<string, { label: string; icon: typeof ArrowUpRight; badge: string }> = {
-  ORDER: { label: 'Orden', icon: ArrowUpRight, badge: 'text-green-700 bg-green-600/10 dark:text-green-400 dark:bg-green-400/10' },
-  BATCH: { label: 'Batch', icon: ArrowDownRight, badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10' },
-  DEPOSIT: {
-    label: 'Depósito',
-    icon: ArrowUpRight,
-    badge: 'text-green-700 bg-green-600/10 dark:text-green-400 dark:bg-green-400/10',
-  },
-  REFUND_BUYER: {
-    label: 'Refund Buyer',
-    icon: ArrowDownRight,
-    badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10',
-  },
-  REFUND_SELLER: {
-    label: 'Refund Seller',
-    icon: ArrowDownRight,
-    badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10',
-  },
-  WITHDRAWAL: {
-    label: 'Retiro',
-    icon: ArrowDownRight,
-    badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10',
-  },
-};
+interface AdminPaymentsListProps {
+  payments: Payment[];
+  totalPages: number;
+}
 
 export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListProps) => {
   if (payments.length === 0) {
@@ -80,7 +59,7 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                     </td>
                     <td className="px-4 py-3">
                       {(() => {
-                        const cat = categoryConfig[payment.category] ?? categoryConfig.ORDER;
+                        const cat = paymentCategoryConfig[payment.category] ?? paymentCategoryConfig.ORDER;
                         const CatIcon = cat.icon;
                         return (
                           <div className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${cat.badge}`}>
@@ -91,17 +70,13 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
                       })()}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <div className="min-w-[120px]">
+                      <div className="min-w-30">
                         <p className="truncate font-medium">{payment.relatedUserName || 'N/A'}</p>
                         <p className="text-muted-foreground truncate text-xs">{payment.relatedUserEmail || '-'}</p>
                       </div>
                     </td>
-                    <td
-                      className={`px-4 py-3 text-right text-sm font-medium ${
-                        payment.direction === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {payment.direction === 'CREDIT' ? '+' : '-'}${Math.abs(payment.amount).toFixed(2)}
+                    <td className={`px-4 py-3 text-right text-sm font-medium ${paymentDirectionConfig[payment.direction].colorClass}`}>
+                      {paymentDirectionConfig[payment.direction].prefix}${Math.abs(payment.amount).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {payment.referenceType && payment.referenceId ? (

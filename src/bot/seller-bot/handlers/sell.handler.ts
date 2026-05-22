@@ -9,6 +9,7 @@ import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { getUserRates } from '@/services/pricing.service';
 import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
+import { MAX_BATCH_SIZE } from '@/lib/constants.js';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -92,7 +93,7 @@ export async function handleCountrySelected(ctx: SellerContext) {
 
   await renderUI(
     ctx,
-    `📝 <b>Enter the codes</b> (max 50)\n\n` +
+    `📝 <b>Enter the codes</b> (max ${MAX_BATCH_SIZE})\n\n` +
       `Brand: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
       `Format (one per line):\n` +
       `<code>CODE AMOUNT</code>\n` +
@@ -100,7 +101,7 @@ export async function handleCountrySelected(ctx: SellerContext) {
       `Example:\n` +
       `<code>ABCD-123456-7890 25</code>\n` +
       `<code>EFGH-098765-4321 50 1234</code>\n\n` +
-      `⚠️ <i>Maximum 50 codes per batch.</i>`,
+      `⚠️ <i>Maximum ${MAX_BATCH_SIZE} codes per batch.</i>`,
     {
       parse_mode: 'HTML',
       reply_markup: new InlineKeyboard().text('⬅️ Back', `sell_brand_${brandId}`).row().text('❌ Cancel', 'sell_cancel'),
@@ -169,11 +170,11 @@ export async function handleCodesText(ctx: SellerContext) {
 
   const { parsed: cards, errors } = parseClaimCodes(text);
 
-  if (cards.length > 50) {
+  if (cards.length > MAX_BATCH_SIZE) {
     return renderUI(
       ctx,
       `❌ <b>Batch too large.</b>\n\n` +
-        `You can only publish up to <b>50 codes</b> at a time via Telegram to ensure message stability.\n\n` +
+        `You can only publish up to <b>${MAX_BATCH_SIZE} codes</b> at a time via Telegram to ensure message stability.\n\n` +
         `Please split your batch and try again.`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start') },
     );

@@ -1,29 +1,41 @@
 'use server';
 
-import { auth } from '@/lib/auth';
+import { z } from 'zod';
+import { authApi } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { registerSchema, registerOutputSchema } from '@/types/auth/schemas';
+import { dashboardMap } from '@/types/';
 
-const dashboardMap = {
-  sell: '/sell/dashboard',
-  buy: '/store/dashboard',
-} as const;
+const registerInputSchema = z
+  .object({
+    fullName: z.string().min(1, 'Full name is required'),
+    email: z.email('Invalid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+      .regex(/[a-z]/, 'Password must contain a lowercase letter')
+      .regex(/[0-9]/, 'Password must contain a number')
+      .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain a special character'),
+    confirmPassword: z.string(),
+    portal: z.enum(['sell', 'buy', 'admin']),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
-const roleMap = {
-  sell: 'SELLER',
-  buy: 'BUYER',
-} as const;
+const registerOutputSchema = z.union([z.object({ success: z.literal(true), redirectTo: z.string() }), z.object({ error: z.string() })]);
 
 export const register = actionClient
-  .inputSchema(registerSchema)
+  .inputSchema(registerInputSchema)
   .outputSchema(registerOutputSchema)
   .action(async function ({ parsedInput: { fullName, email, password, portal } }) {
     const callbackURL = dashboardMap[portal];
-    const role = roleMap[portal];
+    const role = dashboardMap[portal];
 
     try {
-      await (auth.api.signUpEmail as any)({
+      await authApi.signUpEmail({
         body: {
           name: fullName,
           email,

@@ -4,11 +4,18 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { CardFooter } from '@/components/ui/card';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import type { AdminOrderDetailsProps } from './types';
 import type { Giftcard } from '@/types/domain/giftcard';
+import type { AdminOrder } from '@/types';
 
 interface GiftcardWithSeller extends Giftcard {
   seller: { id: string; name: string; email: string } | null;
+}
+
+interface AdminOrderDetailsProps {
+  order: AdminOrder;
+  onAddReport?: (card: Giftcard) => void;
+  onEditReport?: (card: Giftcard) => void;
+  onDeleteReport?: (card: Giftcard) => void;
 }
 
 export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteReport }: AdminOrderDetailsProps) {

@@ -1,5 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { StatCardProps } from '@/types/ui';
+
+export interface StatCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  description?: string;
+}
 
 export function StatCard({ title, value, icon, description }: StatCardProps) {
   return (

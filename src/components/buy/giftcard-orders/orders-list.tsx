@@ -6,7 +6,12 @@ import { History } from 'lucide-react';
 import { OrderCard } from '@/components/buy/giftcard-orders/order-card';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
-import type { OrdersListProps } from './types';
+import { BuyerOrder } from '@/types';
+
+export interface OrdersListProps {
+  orders: BuyerOrder[];
+  totalPages: number;
+}
 
 export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -25,9 +30,12 @@ export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
 
   // Auto-expand order if it contains a search match
   useEffect(() => {
-    const orderWithMatch = orders.find((o) => o.giftcards.some((g) => g.isSearchMatch));
+    const orderWithMatch = orders.find((o: OrdersListProps['orders'][number]) => o.giftcards.some((g) => g.isSearchMatch));
     if (orderWithMatch) {
-      setExpandedId(orderWithMatch.id);
+      const timer = setTimeout(() => {
+        setExpandedId(orderWithMatch.id);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [orders]);
 
@@ -70,8 +78,8 @@ export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
       <div className="space-y-2">
         <AnimatePresence>
           {orders
-            .filter((order) => expandedId === null || expandedId === order.id)
-            .map((order) => (
+            .filter((order: OrdersListProps['orders'][number]) => expandedId === null || expandedId === order.id)
+            .map((order: OrdersListProps['orders'][number]) => (
               <motion.div
                 key={order.id}
                 initial={{ opacity: 0, height: 0, y: -10 }}

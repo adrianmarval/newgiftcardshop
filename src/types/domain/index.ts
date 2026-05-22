@@ -1,10 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Domain Types — Barrel export
-// Import from "@/types/domain" to access domain entities and value objects.
+// Domain — Barrel export
+// Only cross-feature domain types live here.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Enums from Prisma
+export * from './enums';
+
+// Core entities
 export * from './giftcard';
-export * from './order';
-export * from './seller';
-export * from './catalog';
 export * from './payment';
+export * from './order';
+export * from './brand-country';
+
+// Entity collections
+export * from './batch';

@@ -422,13 +422,14 @@ model TwoFactor {
 }
 
 model TelegramUser {
-  id           String  @id @default(cuid())
-  telegramId   String  @unique
-  firstName    String?
-  lastName     String?
-  username     String?
-  languageCode String?
-  photoUrl     String?
+  id             String  @id @default(cuid())
+  telegramId     String  @unique
+  firstName      String?
+  lastName       String?
+  username      String?
+  languageCode  String?
+  photoData     Bytes?  // AES-256-GCM encrypted image buffer
+  photoMimeType String? // "image/jpeg"
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

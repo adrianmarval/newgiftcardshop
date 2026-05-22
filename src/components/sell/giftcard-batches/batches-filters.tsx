@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { sellerBatchesSearchParamsParsers } from '@/types/domain/seller';
-import type { BatchesFiltersProps } from './types';
+import { sellerBatchesSearchParamsParsers } from '@/lib/search-params';
+
+export interface BatchesFiltersProps {
+  onSearchChange?: (search: string) => void;
+}
 
 export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
   const [{ status, search, sort }, setParams] = useQueryStates(sellerBatchesSearchParamsParsers, {
@@ -55,7 +58,7 @@ export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
             <span className="hidden md:inline">Filters</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[280px] p-4" align="end">
+        <PopoverContent className="w-70 p-4" align="end">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Filters</span>

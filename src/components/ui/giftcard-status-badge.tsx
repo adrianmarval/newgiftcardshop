@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Clock, Package, XCircle, AlertTriangle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import type { GiftcardStatusBadgeProps } from '@/components/ui/types';
+import { OrderStatus } from '@/types';
 
 const reportLabels: Record<string, Record<string, string>> = {
   buy: {
@@ -23,6 +23,15 @@ const reportLabels: Record<string, Record<string, string>> = {
     USED: 'Used',
   },
 };
+
+export interface GiftcardStatusBadgeProps {
+  card: {
+    isConfirmed: boolean;
+    status: string;
+    orderId: string | null;
+  };
+  orderStatus?: OrderStatus;
+}
 
 export const GiftcardStatusBadge = ({ card, orderStatus }: GiftcardStatusBadgeProps) => {
   const pathname = usePathname();

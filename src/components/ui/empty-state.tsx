@@ -1,7 +1,12 @@
 'use client';
 
 import { History } from 'lucide-react';
-import type { EmptyStateProps } from '@/components/ui/types';
+
+interface EmptyStateProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
 
 export const EmptyState = ({ icon, title, description }: EmptyStateProps) => {
   return (

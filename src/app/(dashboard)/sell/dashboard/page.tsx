@@ -1,10 +1,10 @@
 import { getSession } from '@/lib/authorization';
 import { Metadata } from 'next';
-import { sellerStats } from '@/actions/seller/seller-stats';
-import { recentBatches } from '@/actions/seller/recent-batches';
+import { getSellerStats } from '@/actions/seller/stats';
+import { recentBatches } from '@/actions/seller/batches';
 import { SellerDashboardClient } from '@/components/sell/seller-dashboard-client';
-import type { SellerStats as SellerStatsType } from '@/types/domain/seller';
-import type { RecentBatch } from '@/types/domain/seller';
+import type { SellerStats as SellerStatsType } from '@/types/domain/batch';
+import type { RecentBatch } from '@/types/domain/batch';
 
 export const metadata: Metadata = {
   title: `Seller Dashboard | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function SellerDashboardPage() {
   const session = await getSession();
 
-  const [statsResult, batchesResult] = await Promise.all([sellerStats(), recentBatches()]);
+  const [statsResult, batchesResult] = await Promise.all([getSellerStats(), recentBatches()]);
 
   if (!statsResult.data) {
     throw new Error('Failed to load seller stats');
@@ -41,11 +41,8 @@ export default async function SellerDashboardPage() {
   }));
 
   return (
-    <div className="container mx-auto space-y-4 py-2">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-bold">Welcome back{session.user.name ? `, ${session.user.name}` : ''}</h1>
-        <p className="text-muted-foreground">Manage your gift cards and track your sales</p>
-      </div>
+    <div className="w-full space-y-4">
+      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">SELLER DASHBOARD</h1>
 
       <SellerDashboardClient stats={stats} recentBatches={recentBatchesList} />
     </div>

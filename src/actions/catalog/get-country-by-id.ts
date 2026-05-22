@@ -2,7 +2,23 @@
 
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-import { getCountryByIdInputSchema, getCountryByIdOutputSchema } from '@/types/domain/catalog';
+import { z } from 'zod';
+
+const getCountryByIdInputSchema = z.object({
+  id: z.string(),
+});
+
+const getCountryByIdOutputSchema = z.object({
+  success: z.literal(true),
+  country: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      code: z.string(),
+      currency: z.string().nullable(),
+    })
+    .nullable(),
+});
 
 export const getCountryById = authActionClient
   .inputSchema(getCountryByIdInputSchema)

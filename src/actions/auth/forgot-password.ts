@@ -1,15 +1,23 @@
 'use server';
 
+import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { forgotPasswordSchema, forgotPasswordOutputSchema } from '@/types/auth/schemas';
+import { appSectionMap, portalSchema } from '@/types';
+
+const forgotPasswordInputSchema = z.object({
+  email: z.email('Invalid email address'),
+  portal: portalSchema,
+});
+
+const forgotPasswordOutputSchema = z.union([z.object({ success: z.literal(true), email: z.string() }), z.object({ error: z.string() })]);
 
 export const forgotPassword = actionClient
-  .inputSchema(forgotPasswordSchema)
+  .inputSchema(forgotPasswordInputSchema)
   .outputSchema(forgotPasswordOutputSchema)
   .action(async function ({ parsedInput: { email, portal } }) {
-    const portalPath = portal === 'buy' ? '/buy' : `/${portal}`;
+    const portalPath = appSectionMap[portal];
     const callbackURL = `${process.env.BETTER_AUTH_URL}${portalPath}/auth/reset-password`;
 
     try {
@@ -20,11 +28,9 @@ export const forgotPassword = actionClient
         },
         headers: await headers(),
       });
-
-      return { success: true, email };
+      return { success: true as const, email };
     } catch (error) {
-      console.error('Forgot password error:', error);
-      // Always return success to prevent email enumeration
-      return { success: true, email };
+      console.error('Password reset error:', error);
+      return { success: false as const, error: 'Failed to send password reset email' };
     }
   });

@@ -1,10 +1,11 @@
 import prisma from '@/lib/prisma';
 import { resend, EMAIL_FROM } from '@/lib/resend';
-import { auth } from '@/lib/auth';
+import { authApi } from '@/lib/auth';
 import type { SellerContext, BuyerContext } from './types.js';
-import { TelegramOtpTemplate } from '@/emails/telegram-otp';
+import { TelegramOtpTemplate } from '@/components/emails';
 import React from 'react';
 import { renderUI, deleteUserInput } from './ui.js';
+import { encryptBuffer } from '@/lib/encryption';
 
 type BotRole = 'SELLER' | 'BUYER';
 type Lang = 'en' | 'es';
@@ -71,7 +72,7 @@ function getLang(role: BotRole): Lang {
   return role === 'SELLER' ? 'en' : 'es';
 }
 
-async function getTelegramProfilePhotoUrl(ctx: RegContext, telegramId: string, botToken: string): Promise<string | null> {
+async function fetchAndEncryptTelegramPhoto(ctx: RegContext, telegramId: string, botToken: string): Promise<{ data: Buffer; mimeType: string } | null> {
   try {
     const photos = await ctx.api.getUserProfilePhotos(Number(telegramId), { limit: 1 });
     if (photos.total_count === 0) return null;
@@ -83,7 +84,14 @@ async function getTelegramProfilePhotoUrl(ctx: RegContext, telegramId: string, b
     const file = await ctx.api.getFile(largestPhoto.file_id);
     if (!file.file_path) return null;
 
-    return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
+    const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
+    const response = await fetch(downloadUrl);
+    if (!response.ok) return null;
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const { data: encryptedData } = encryptBuffer(buffer);
+
+    return { data: encryptedData, mimeType: 'image/jpeg' };
   } catch (error) {
     console.error('Error fetching Telegram profile photo:', error);
     return null;
@@ -274,7 +282,7 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
 
   if (existingUser) {
     const botToken = role === 'SELLER' ? process.env.SELLER_BOT_TOKEN! : process.env.BUYER_BOT_TOKEN!;
-    const photoUrl = await getTelegramProfilePhotoUrl(ctx, telegramId, botToken);
+    const photoResult = await fetchAndEncryptTelegramPhoto(ctx, telegramId, botToken);
 
     await prisma.user.update({
       where: { id: existingUser.id },
@@ -283,8 +291,8 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
 
     await prisma.telegramUser.upsert({
       where: { telegramId },
-      update: { firstName, lastName, username, languageCode, photoUrl },
-      create: { telegramId, firstName, lastName, username, languageCode, photoUrl, userId: existingUser.id },
+      update: { firstName, lastName, username, languageCode, ...(photoResult ? { photoData: new Uint8Array(photoResult.data), photoMimeType: photoResult.mimeType } : {}) },
+      create: { telegramId, firstName, lastName, username, languageCode, photoData: photoResult ? new Uint8Array(photoResult.data) : undefined, photoMimeType: photoResult?.mimeType, userId: existingUser.id },
     });
 
     await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});
@@ -337,7 +345,7 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
   }
 
   try {
-    const result = await (auth.api.signUpEmail as any)({
+    const result = await authApi.signUpEmail({
       body: {
         name,
         email,
@@ -351,7 +359,7 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
     if (!result?.user?.id) throw new Error('signUpEmail failed');
 
     const botToken = role === 'SELLER' ? process.env.SELLER_BOT_TOKEN! : process.env.BUYER_BOT_TOKEN!;
-    const photoUrl = await getTelegramProfilePhotoUrl(ctx, telegramId, botToken);
+    const photoResult = await fetchAndEncryptTelegramPhoto(ctx, telegramId, botToken);
 
     await prisma.user.update({
       where: { id: result.user.id },
@@ -359,7 +367,7 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
     });
 
     await prisma.telegramUser.create({
-      data: { telegramId, firstName, lastName, username, languageCode, photoUrl, userId: result.user.id },
+      data: { telegramId, firstName, lastName, username, languageCode, photoData: photoResult ? new Uint8Array(photoResult.data) : undefined, photoMimeType: photoResult?.mimeType, userId: result.user.id },
     });
 
     await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});

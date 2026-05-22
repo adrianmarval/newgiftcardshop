@@ -11,13 +11,12 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import type { Verify2FAFormProps } from '@/types';
+import { AppSection } from '@/types';
+import { dashboardMap } from '@/types/';
 
-const dashboardMap = {
-  sell: '/sell/dashboard',
-  buy: '/store/dashboard',
-  admin: '/admin/dashboard',
-} as const;
+export interface Verify2FAFormProps {
+  portal: AppSection;
+}
 
 export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
   const router = useRouter();
@@ -28,7 +27,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
 
   const isSpanish = portal === 'buy' || portal === 'admin';
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!isRecoveryMode && code.length !== 6) return;
     if (isRecoveryMode && !code) return;

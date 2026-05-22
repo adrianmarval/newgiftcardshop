@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth — Session types
+// ─────────────────────────────────────────────────────────────────────────────
+
 import type { Role } from '@/generated/prisma/client';
 
 export type TelegramUserSessionData = {
@@ -6,7 +10,7 @@ export type TelegramUserSessionData = {
   lastName: string | null;
   username: string | null;
   languageCode: string | null;
-  photoUrl: string | null;
+  hasPhoto: boolean;
 };
 
 export type SessionUser = {

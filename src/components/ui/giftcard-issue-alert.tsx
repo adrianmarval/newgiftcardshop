@@ -2,7 +2,10 @@
 
 import { AlertTriangle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import type { GiftcardIssueAlertProps } from '@/components/ui/types';
+
+export interface GiftcardIssueAlertProps {
+  status: string;
+}
 
 export const GiftcardIssueAlert = ({ status }: GiftcardIssueAlertProps) => {
   const pathname = usePathname();

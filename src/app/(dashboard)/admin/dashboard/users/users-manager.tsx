@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,8 +14,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/swal';
-import { updateUser, getUserBrandCountryRates, updateUserBrandCountryRate, deleteUserBrandCountryRate } from '@/actions/admin/users';
-import { getAllBrands } from '@/actions/admin/brands';
+import { updateUser, getUserRates, updateUserRates, deleteUserRates } from '@/actions/admin/users/';
+import { getAllBrands } from '@/actions/admin/catalog';
 import { MoreVertical, Edit2, Power, Loader2, ChevronLeft, ChevronRight, ChevronsUpDown, Check } from 'lucide-react';
 
 interface User {
@@ -25,13 +25,43 @@ interface User {
   role: 'ADMIN' | 'SELLER' | 'BUYER';
   isActive: boolean;
   creditLimit: number;
-  buyRate?: number;
-  sellRate?: number;
   minAmountPreference: number | null;
   maxAmountPreference: number | null;
   allowSearchPreferences: boolean;
   allowBuyRateAdjustment: boolean;
   createdAt: Date;
+}
+
+interface UserRate {
+  id: string;
+  brandCountryId: string;
+  brandName: string;
+  countryName: string;
+  countryCode: string;
+  buyRate: number;
+  sellRate: number;
+}
+
+interface BrandCountry {
+  id: string;
+  countryId: string;
+  countryName: string;
+  countryCode: string;
+  minAmount: number | null;
+  maxAmount: number | null;
+  isActive: boolean;
+  buyRate: number | null;
+  sellRate: number | null;
+}
+
+interface BrandWithCountries {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  image: string | null;
+  isActive: boolean;
+  countries: BrandCountry[];
 }
 
 interface UsersManagerProps {
@@ -61,12 +91,11 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
     allowBuyRateAdjustment: false,
   });
 
-  const [userRates, setUserRates] = useState<any[]>([]);
-  const [brands, setBrands] = useState<any[]>([]);
+  const [userRates, setUserRates] = useState<UserRate[]>([]);
+  const [brands, setBrands] = useState<BrandWithCountries[]>([]);
   const [selectedBrandCountryId, setSelectedBrandCountryId] = useState('');
   const [openBrandCountry, setOpenBrandCountry] = useState(false);
   const [rateForm, setRateForm] = useState({ buyRate: '', sellRate: '' });
-  const [isLoadingRates, setIsLoadingRates] = useState(false);
 
   const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
     onSuccess: () => {
@@ -74,7 +103,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
       router.refresh();
       setEditUser(null);
     },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error actualizando usuario'),
+    onError: (e) => showAlert.toast.error('Error actualizando usuario: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeToggle, status: toggleStatus } = useAction(updateUser, {
@@ -82,7 +111,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
       showAlert.toast.success('Estado actualizado');
       router.refresh();
     },
-    onError: (e) => showAlert.error('Error', e.error?.serverError || 'Error actualizando usuario'),
+    onError: (e) => showAlert.toast.error('Error actualizando usuario: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const openEditDialog = (user: User) => {
@@ -98,25 +127,29 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   };
 
   useEffect(() => {
-    if (editUser) {
-      setIsLoadingRates(true);
-      getUserBrandCountryRates({ userId: editUser.id }).then((res) => {
-        if (res?.data?.success) {
-          setUserRates(res.data.rates);
-        }
-        setIsLoadingRates(false);
+    if (!editUser) {
+      // Wrap setState in startTransition to avoid cascading renders warning
+      startTransition(() => {
+        setUserRates([]);
+        setSelectedBrandCountryId('');
+        setRateForm({ buyRate: '', sellRate: '' });
       });
-
-      getAllBrands().then((res) => {
-        if (res?.data?.success) {
-          setBrands(res.data.brands);
-        }
-      });
-    } else {
-      setUserRates([]);
-      setSelectedBrandCountryId('');
-      setRateForm({ buyRate: '', sellRate: '' });
+      return;
     }
+
+    // Use async IIFE to avoid synchronous setState in effect body
+    (async () => {
+      const [ratesRes, brandsRes] = await Promise.all([getUserRates({ userId: editUser.id }), getAllBrands()]);
+
+      startTransition(() => {
+        if (ratesRes?.data?.success) {
+          setUserRates(ratesRes.data.rates);
+        }
+        if (brandsRes?.data?.success) {
+          setBrands(brandsRes.data.brands);
+        }
+      });
+    })();
   }, [editUser]);
 
   const handleAddRate = async () => {
@@ -137,18 +170,15 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
       return;
     }
 
-    const buyVal = buyRequired ? (parseFloat(rateForm.buyRate) / 100) : 0.85;
-    const sellVal = sellRequired ? (parseFloat(rateForm.sellRate) / 100) : 0.75;
+    const buyVal = buyRequired ? parseFloat(rateForm.buyRate) / 100 : 0.85;
+    const sellVal = sellRequired ? parseFloat(rateForm.sellRate) / 100 : 0.75;
 
-    if (
-      (buyRequired && (isNaN(buyVal) || buyVal < 0 || buyVal > 1)) ||
-      (sellRequired && (isNaN(sellVal) || sellVal < 0 || sellVal > 1))
-    ) {
+    if ((buyRequired && (isNaN(buyVal) || buyVal < 0 || buyVal > 1)) || (sellRequired && (isNaN(sellVal) || sellVal < 0 || sellVal > 1))) {
       showAlert.toast.error('Tarifas deben estar entre 0% y 100%');
       return;
     }
 
-    const res = await updateUserBrandCountryRate({
+    const res = await updateUserRates({
       userId: editUser.id,
       brandCountryId: selectedBrandCountryId,
       buyRate: buyVal,
@@ -157,7 +187,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
 
     if (res?.data?.success) {
       showAlert.toast.success('Tarifa guardada');
-      const ratesRes = await getUserBrandCountryRates({ userId: editUser.id });
+      const ratesRes = await getUserRates({ userId: editUser.id });
       if (ratesRes?.data?.success) {
         setUserRates(ratesRes.data.rates);
       }
@@ -171,14 +201,14 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   const handleDeleteRate = async (brandCountryId: string) => {
     if (!editUser) return;
 
-    const res = await deleteUserBrandCountryRate({
+    const res = await deleteUserRates({
       userId: editUser.id,
       brandCountryId,
     });
 
     if (res?.data?.success) {
       showAlert.toast.success('Tarifa eliminada');
-      const ratesRes = await getUserBrandCountryRates({ userId: editUser.id });
+      const ratesRes = await getUserRates({ userId: editUser.id });
       if (ratesRes?.data?.success) {
         setUserRates(ratesRes.data.rates);
       }
@@ -188,10 +218,10 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   };
 
   const brandCountryOptions = brands.flatMap((b) =>
-    b.countries.map((c: any) => ({
+    b.countries.map((c: BrandCountry) => ({
       id: c.id,
       label: `${b.icon} ${b.name} (${c.countryCode})`,
-    }))
+    })),
   );
 
   const handleSaveEdit = () => {
@@ -238,7 +268,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
           />
         </div>
         <Select value={role} onValueChange={(r) => setRole(r)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -325,7 +355,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
       )}
 
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
-        <DialogContent className="sm:max-w-[425px] md:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-106.25 md:max-w-125">
           <DialogHeader>
             <DialogTitle>Editar Usuario</DialogTitle>
             <DialogDescription>{editUser?.email}</DialogDescription>
@@ -415,12 +445,13 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
 
             {/* Sección de Tarifas por Brand/País */}
             <div className="mt-4 border-t pt-4">
-              <h3 className="text-sm font-semibold mb-2">Tarifas por Brand/País</h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                Configura tarifas específicas de compra/venta para este usuario. Si no se configuran, se utilizarán las globales de la marca.
+              <h3 className="mb-2 text-sm font-semibold">Tarifas por Brand/País</h3>
+              <p className="text-muted-foreground mb-4 text-xs">
+                Configura tarifas específicas de compra/venta para este usuario. Si no se configuran, se utilizarán las globales de la
+                marca.
               </p>
 
-              <div className="grid gap-3 p-3 rounded-lg bg-muted/30 border">
+              <div className="bg-muted/30 grid gap-3 rounded-lg border p-3">
                 <div className="grid gap-2">
                   <label className="text-xs font-medium">Seleccionar Marca y País</label>
                   <Popover open={openBrandCountry} onOpenChange={setOpenBrandCountry}>
@@ -437,7 +468,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[340px] sm:w-[380px] p-0" align="start">
+                    <PopoverContent className="w-85 p-0 sm:w-95" align="start">
                       <Command>
                         <CommandInput placeholder="Buscar marca o país..." />
                         <CommandList className="max-h-48 overflow-y-auto">
@@ -453,12 +484,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                                 }}
                                 className="text-xs"
                               >
-                                <Check
-                                  className={cn(
-                                    'mr-2 h-4 w-4',
-                                    selectedBrandCountryId === opt.id ? 'opacity-100' : 'opacity-0'
-                                  )}
-                                />
+                                <Check className={cn('mr-2 h-4 w-4', selectedBrandCountryId === opt.id ? 'opacity-100' : 'opacity-0')} />
                                 {opt.label}
                               </CommandItem>
                             ))}
@@ -469,10 +495,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                   </Popover>
                 </div>
 
-                <div className={cn(
-                  "grid gap-2",
-                  editUser?.role === 'ADMIN' ? "grid-cols-2" : "grid-cols-1"
-                )}>
+                <div className={cn('grid gap-2', editUser?.role === 'ADMIN' ? 'grid-cols-2' : 'grid-cols-1')}>
                   {editUser?.role !== 'SELLER' && (
                     <div className="grid gap-2">
                       <label className="text-xs font-medium">Buy Rate (%)</label>
@@ -497,48 +520,38 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                   )}
                 </div>
 
-                <Button
-                  size="sm"
-                  onClick={handleAddRate}
-                  className="w-full mt-1 bg-primary text-primary-foreground"
-                >
+                <Button size="sm" onClick={handleAddRate} className="bg-primary text-primary-foreground mt-1 w-full">
                   Agregar / Actualizar Tarifa
                 </Button>
               </div>
 
               {/* Lista de tarifas */}
-              <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
-                {isLoadingRates ? (
-                  <div className="flex justify-center p-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : userRates.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center p-2">
-                    No hay tarifas personalizadas configuradas.
-                  </p>
+              <div className="mt-4 max-h-48 space-y-2 overflow-y-auto">
+                {userRates.length === 0 ? (
+                  <p className="text-muted-foreground p-2 text-center text-xs">No hay tarifas personalizadas configuradas.</p>
                 ) : (
                   userRates.map((rate) => (
                     <div
                       key={rate.id}
-                      className="flex items-center justify-between p-2 rounded-md border bg-card text-card-foreground text-xs"
+                      className="bg-card text-card-foreground flex items-center justify-between rounded-md border p-2 text-xs"
                     >
                       <div>
                         <span className="font-semibold">{rate.brandName}</span> ({rate.countryCode})
                         <div className="text-muted-foreground mt-0.5">
                           {editUser?.role === 'ADMIN' && (
                             <>
-                              Buy: <span className="font-medium text-foreground">{rate.buyRate * 100}%</span> |{' '}
-                              Sell: <span className="font-medium text-foreground">{rate.sellRate * 100}%</span>
+                              Buy: <span className="text-foreground font-medium">{rate.buyRate * 100}%</span> | Sell:{' '}
+                              <span className="text-foreground font-medium">{rate.sellRate * 100}%</span>
                             </>
                           )}
                           {editUser?.role === 'BUYER' && (
                             <>
-                              Buy: <span className="font-medium text-foreground">{rate.buyRate * 100}%</span>
+                              Buy: <span className="text-foreground font-medium">{rate.buyRate * 100}%</span>
                             </>
                           )}
                           {editUser?.role === 'SELLER' && (
                             <>
-                              Sell: <span className="font-medium text-foreground">{rate.sellRate * 100}%</span>
+                              Sell: <span className="text-foreground font-medium">{rate.sellRate * 100}%</span>
                             </>
                           )}
                         </div>
@@ -546,7 +559,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                        className="text-destructive hover:bg-destructive/10 h-7 w-7"
                         onClick={() => handleDeleteRate(rate.brandCountryId)}
                       >
                         ✕

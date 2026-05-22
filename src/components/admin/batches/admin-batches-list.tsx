@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { History } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
 import { AdminBatchCard } from './admin-batch-card';
-import type { AdminBatch } from '@/types/domain/admin';
+import { AdminBatch } from '@/types';
 
 interface AdminBatchesListProps {
   batches: AdminBatch[];
@@ -21,6 +22,7 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [lastExpandedId, setLastExpandedId] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const userInteractingRef = useRef(false);
 
   // Scroll to top when expanding
   useEffect(() => {
@@ -33,14 +35,22 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
   }, [expandedId]);
 
   // Auto-expand batch if it contains a search match
-  useEffect(() => {
-    const batchWithMatch = batches.find((b) => b.giftcards.some((g) => g.isSearchMatch));
-    if (batchWithMatch) {
-      setExpandedId(batchWithMatch.id);
-    }
+  const batchWithMatchId = useMemo(() => {
+    const batch = batches.find((b) => b.giftcards.some((g) => g.isSearchMatch));
+    return batch?.id ?? null;
   }, [batches]);
 
-  const handleToggle = (batchId: number) => {
+  // Auto-expand when batchWithMatchId changes and user isn't interacting
+  useEffect(() => {
+    if (batchWithMatchId && !userInteractingRef.current) {
+      flushSync(() => {
+        setExpandedId(batchWithMatchId);
+      });
+    }
+  }, [batchWithMatchId]);
+
+  const handleToggle = useCallback((batchId: number) => {
+    userInteractingRef.current = true;
     setExpandedId((prev) => {
       const next = prev === batchId ? null : batchId;
       if (next === null) {
@@ -50,7 +60,11 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
       }
       return next;
     });
-  };
+    // Reset user interaction flag after a delay
+    setTimeout(() => {
+      userInteractingRef.current = false;
+    }, 500);
+  }, []);
 
   useEffect(() => {
     if (expandedId === null && lastExpandedId !== null) {

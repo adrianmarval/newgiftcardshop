@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { orderSearchParamsParsers } from '@/components/buy/giftcard-orders/orders-search-params';
-import type { OrdersFiltersProps } from './types';
+import { orderSearchParamsParsers } from '@/lib/search-params';
+
+export interface OrdersFiltersProps {
+  onSearchChange?: (search: string) => void;
+}
 
 export const OrdersFilters = ({ onSearchChange }: OrdersFiltersProps) => {
   const [{ status, search, sort }, setParams] = useQueryStates(orderSearchParamsParsers, {
@@ -56,7 +59,7 @@ export const OrdersFilters = ({ onSearchChange }: OrdersFiltersProps) => {
             <span className="hidden md:inline">Filtros</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[280px] p-4" align="end">
+        <PopoverContent className="w-70 p-4" align="end">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Filtros</span>

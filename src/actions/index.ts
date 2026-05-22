@@ -1,53 +1,50 @@
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export { login } from './auth/login';
-export { register } from './auth/register';
 export { logout } from './auth/logout';
-export { forgotPassword } from './auth/forgot-password';
-export { resetPassword } from './auth/reset-password';
-export { verifyEmail } from './auth/verify-email';
+export { register } from './auth/register';
 export { resendVerification } from './auth/resend-verification';
 export { verify2FA } from './auth/verify-2fa';
 export { updateProfile } from './auth/update-profile';
+export { forgotPassword } from './auth/forgot-password';
+export { resetPassword } from './auth/reset-password';
 
 // ── Catalog ────────────────────────────────────────────────────────────────────
 export { getActiveBrands } from './catalog/get-active-brands';
 export { getBrandById } from './catalog/get-brand-by-id';
 export { getActiveCountries } from './catalog/get-active-countries';
 export { getCountryById } from './catalog/get-country-by-id';
-export { getBrandsByCountry, getBrandCountryById, getActiveBrandCountries } from './catalog/brand-country';
+export { getBrandsByCountry } from './catalog/get-brands-by-country';
+export { getBrandCountryById } from './catalog/get-brand-country-by-id';
+export { getActiveBrandCountries } from './catalog/get-active-brand-countries';
 
 // ── Giftcard ────────────────────────────────────────────────────────────────────
-export { searchGiftcards } from './giftcard/search';
-export { getOrderCards } from './giftcard/get-order-cards';
-export { reportGiftcardIssue } from './giftcard/issues/report';
-export { undoGiftcardIssue } from './giftcard/issues/undo';
-export { uploadProvenanceImage } from './giftcard/ocr/upload-image';
-export { extractDraftBatch } from './giftcard/ocr/extract-draft';
+export { searchGiftcards } from './buyer/giftcards/search-giftcards';
+export { getOrderCards } from './buyer/giftcards/get-order-cards';
+export { reportIssue } from './buyer/giftcards/issues/report-issue';
+export { undoIssue } from './buyer/giftcards/issues/undo-issue';
+export { uploadImage } from './buyer/giftcards/ocr/upload-image';
+export { extractDraft } from './buyer/giftcards/ocr/extract-draft';
 
 // ── Order ──────────────────────────────────────────────────────────────────────
-export { getUserBuyRate } from './order/get-user-buy-rate';
-export { createOrder } from './order/create';
-export { confirmOrderUsage } from './order/confirm-usage';
-export { completeOrder } from './order/complete';
-export { cancelOrder } from './order/cancel';
-export { getOrderById } from './order/get-order-by-id';
-export { getBuyerOrders } from './order/list';
+export { getUserBuyRate } from './buyer/orders/get-user-buy-rate';
+export { createOrder } from './buyer/orders/create-order';
+export { confirmUsage } from './buyer/orders/confirm-usage';
+export { completeOrder } from './buyer/orders/complete-order';
+export { cancelOrder } from './buyer/orders/cancel-order';
+export { getOrderById } from './buyer/orders/get-order-by-id';
+export { listOrders } from './buyer/orders/list-orders';
 
 // ── Seller ─────────────────────────────────────────────────────────────────────
-export { publishBatch } from './seller/publish-batch';
-export { getSellerBatches } from './seller/get-batches';
-export { getSellerRate } from './seller/get-rate';
-export { checkExistingCodes } from './seller/check-codes';
-export { sellerStats } from './seller/seller-stats';
-export { recentBatches } from './seller/recent-batches';
+export { publishBatch, listBatches, checkCodes, recentBatches } from './seller/batches';
+export { getSellerRate } from './seller/rates';
+export { getSellerStats } from './seller/stats';
 
 // ── Platform ──────────────────────────────────────────────────────────────────
 export { getPlatformSetting, setPlatformSetting } from './platform/settings';
 
 // ── Admin Payments ──────────────────────────────────────────────────────────
-export { adminPayments } from './admin/admin-payments-list';
-export { adminGetSellers } from './admin/admin-get-sellers';
-export { adminGetBuyers } from './admin/admin-get-buyers';
-export { adminGetAdmins } from './admin/admin-get-admins';
-export { createDeposit } from './admin/admin-create-deposit';
-export { createRefund } from './admin/admin-create-refund';
+export { listPayments } from './admin/payments/list-payments';
+export { getBuyers } from './admin/users/get-buyers';
+export { getSellers } from './admin/users/get-sellers';
+export { getAdmins } from './admin/users/get-admins';
+export { createDeposit, createRefund } from './admin/payments';
