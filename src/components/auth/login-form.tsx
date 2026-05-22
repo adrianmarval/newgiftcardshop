@@ -48,18 +48,20 @@ export const LoginForm = ({
       } else if ('error' in data && data.error) {
         const needsVerification = 'needsVerification' in data && data.needsVerification;
         if (needsVerification) {
-          showSwal.fire({
-            icon: 'error',
-            title: isSpanish ? 'Email no verificado' : 'Email not verified',
-            text: data.error,
-            confirmButtonText: isSpanish ? 'Reenviar email' : 'Resend email',
-            cancelButtonText: isSpanish ? 'Cancelar' : 'Cancel',
-            showCancelButton: true,
-          }).then((result) => {
-            if (result.isConfirmed && email) {
-              resendExecute({ portal: portalValue, email });
-            }
-          });
+          showSwal
+            .fire({
+              icon: 'error',
+              title: isSpanish ? 'Email no verificado' : 'Email not verified',
+              text: data.error,
+              confirmButtonText: isSpanish ? 'Reenviar email' : 'Resend email',
+              cancelButtonText: isSpanish ? 'Cancelar' : 'Cancel',
+              showCancelButton: true,
+            })
+            .then((result) => {
+              if (result.isConfirmed && email) {
+                resendExecute({ portal: portalValue, email });
+              }
+            });
         } else {
           showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
         }
