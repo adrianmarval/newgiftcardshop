@@ -1,0 +1,1 @@
+(function(){try{var t=localStorage.getItem('theme');var e=t||'dark';document.documentElement.classList.toggle('dark',e==='dark');document.cookie='theme='+e+';path=/;max-age=31536000';}catch(e){}})();
