@@ -20,7 +20,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
       <AutoRefreshProvider interval={15000}>
         <Card className="bg-background flex h-svh flex-col gap-2 p-1 ring-0 lg:flex-row lg:gap-4 lg:py-14 2xl:px-36">
           {/*main content*/}
-          <Card className="order-1 flex-1 overflow-hidden py-0 lg:order-2">
+          <Card className="order-1 flex-1 overflow-hidden py-0 lg:order-2 shadow-[var(--shadow-dashboard)]">
             <div className="custom-scrollbar h-full w-full overflow-y-auto px-1 pt-2 pb-10 lg:p-4 lg:pb-4">{children}</div>
           </Card>
 
