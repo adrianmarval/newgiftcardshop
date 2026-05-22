@@ -1,10 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Domain — Barrel export
 // Only cross-feature domain types live here.
+// Note: Enums are imported directly from '@/generated/prisma/enums'
 // ─────────────────────────────────────────────────────────────────────────────
-
-// Enums from Prisma
-export * from './enums';
 
 // Core entities
 export * from './giftcard';

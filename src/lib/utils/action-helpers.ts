@@ -6,7 +6,7 @@ import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import type { Giftcard, GiftcardStatus } from '@/types/domain/giftcard';
 import type { Payment, PaymentDirection, PaymentCategory } from '@/types/domain/payment';
-import { GiftcardStatus as GiftcardStatusEnum } from '@/types/domain/enums';
+import { GiftcardStatus as GiftcardStatusEnum } from '@/generated/prisma/enums';
 
 /**
  * Computes face value and effective totals from a list of giftcards.

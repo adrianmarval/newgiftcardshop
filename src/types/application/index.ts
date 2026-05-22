@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';
+import type { Role } from '@/generated/prisma/enums';
 
 // ── App Section ───────────────────────────────────────────────────────────────
 
@@ -11,7 +12,7 @@ export type AppSection = 'admin' | 'buy' | 'sell';
 
 export const portalSchema = z.enum(['sell', 'buy', 'admin']);
 
-export const roleMap: Record<AppSection, string> = {
+export const roleMap: Record<AppSection, Role> = {
   admin: 'ADMIN',
   buy: 'BUYER',
   sell: 'SELLER',
