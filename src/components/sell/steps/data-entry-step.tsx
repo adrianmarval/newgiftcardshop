@@ -454,7 +454,7 @@ export function DataEntryStep() {
       {/* Main Compose Card */}
       <Card
         className={cn(
-          'border-border bg-card/50 flex flex-1 flex-col gap-0 backdrop-blur-sm transition-all',
+          'bg-card/50 flex flex-1 flex-col gap-0 border backdrop-blur-sm transition-all',
           isDragOver && 'border-primary bg-primary/5 scale-[1.01]',
         )}
       >
@@ -516,9 +516,8 @@ export function DataEntryStep() {
             }}
             disabled={isProcessing}
             className={cn(
-              'border-border bg-muted/20 focus-visible:ring-primary text-md h-96 resize-none rounded-xl font-mono transition-all md:text-sm lg:h-70',
+              'border-border bg-muted/20 focus-visible:ring-primary text-md min-h-42 resize-none rounded-xl font-mono transition-all md:text-sm lg:h-70',
               isDragOver && 'border-primary',
-              showFormatHelp && 'h-84 lg:h-50',
               validationErrors.length > 0 && 'border-destructive/50 ring-destructive/20 ring-1',
             )}
           />

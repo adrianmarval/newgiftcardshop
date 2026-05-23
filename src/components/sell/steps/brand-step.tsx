@@ -59,7 +59,7 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
 
   return (
     <div className="grid grid-cols-1 items-start gap-1 md:grid-cols-12 md:gap-6">
-      <Card className="flex flex-col border md:col-span-4 md:space-y-6 md:p-6">
+      <Card className="flex flex-col border p-1 md:col-span-4 md:space-y-6 md:p-6">
         <div className="space-y-1">
           <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
@@ -99,10 +99,10 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
         </div>
       </Card>
 
-      <Card className="bg-card/50 flex h-[540px] flex-col gap-1.5 border px-1 py-2 backdrop-blur-sm md:col-span-8 md:p-6">
-        <CardContent className="custom-scrollbar grid flex-1 grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
+      <Card className="bg-card/50 flex h-86 flex-col border p-1 backdrop-blur-sm md:col-span-8 md:h-[540px] md:p-4">
+        <CardContent className="custom-scrollbar grid grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
           {showEmptyState ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+            <div className="col-span-full flex flex-col items-center justify-center text-center">
               <Globe className="text-muted-foreground/30 mb-4 h-16 w-16" />
               <h3 className="text-foreground mb-2 text-lg font-semibold">Select a country first</h3>
               <p className="text-muted-foreground max-w-xs text-sm">
@@ -167,7 +167,7 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
             </AnimatePresence>
           )}
         </CardContent>
-        <div>
+        <div className="flex justify-center">
           <Button onClick={() => setStep(2)} disabled={!isStep1Valid} className="p-4">
             Continuar <ChevronRight className="ml-1 h-4 w-4 md:ml-2" />
           </Button>

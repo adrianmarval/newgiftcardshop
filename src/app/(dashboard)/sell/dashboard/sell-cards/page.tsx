@@ -14,7 +14,7 @@ export default async function SellBatchPage() {
 
   return (
     <div className="w-full space-y-4">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">SELL CARDS</h1>
+      {/* <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">SELL CARDS</h1> */}
       <SellBatchManager brandCountries={brandCountriesResult.data.brandCountries} />
     </div>
   );
