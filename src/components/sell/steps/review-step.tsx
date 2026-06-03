@@ -135,52 +135,56 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
   return (
     // Ajustado h-screen/h-full dinámico para asegurar que flex-1 y min-h-0 confinen la UI perfectamente en mobile
-    <div className="flex h-[calc(100vh-140px)] min-h-0 w-full max-w-full flex-col gap-1 overflow-hidden md:h-full">
+    <div className="flex h-full min-h-0 w-full max-w-full flex-col gap-1">
       {/* Barra de progreso superior */}
       <div className="shrink-0">
         <StepsProgress />
       </div>
 
       {/* Contenedor Split Principal */}
-      <div className="flex min-h-0 w-full max-w-full flex-1 flex-col gap-1 overflow-hidden md:flex-row">
+      <div className="flex min-h-0 w-full max-w-full flex-1 flex-col gap-1 md:flex-row">
         {/* Columna Izquierda: Panel de Resumen (Compactado en móvil para ocupar el mínimo espacio arriba) */}
         <Card className="flex w-full shrink-0 flex-col gap-0 border p-1 backdrop-blur-sm md:w-80 md:flex-col md:gap-0 md:space-y-4 md:p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-white md:text-lg">Review</h2>
           </div>
 
-          {/* En mobile se tiran en una fila compacta en lugar de bloques masivos */}
-          <div className="flex flex-wrap items-center gap-2 md:grid md:grid-cols-2 md:gap-2">
-            <div className="flex-1 rounded-lg border bg-slate-800/30 p-1 md:block md:p-2">
-              <span className="text-[9px] font-medium text-slate-400 uppercase md:text-[10px]">Cards</span>
-              <p className="md:text-md text-xs font-black text-white">{giftcards.length}</p>
+          {/* Opción B: 2 columnas arriba, full-width abajo */}
+          <div className="flex flex-col gap-1">
+            {/* Fila 1: Cards | Total */}
+            <div className="grid grid-cols-2 gap-1">
+              <div className="flex flex-col justify-center rounded-lg border border-slate-500/20 bg-slate-800/30 p-1.5">
+                <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400">Cards</span>
+                <p className="text-base font-black text-white">{giftcards.length}</p>
+              </div>
+
+              <div className="flex flex-col justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-1.5">
+                <span className="text-[9px] font-medium uppercase tracking-wider text-emerald-400">Total</span>
+                <p className="text-base font-black text-emerald-400">
+                  {currencySymbol}
+                  {totalAmount.toFixed(2)}
+                </p>
+              </div>
             </div>
 
-            <div className="flex-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-1 md:block md:p-2">
-              <span className="text-[9px] font-medium text-emerald-400 uppercase md:text-[10px]">Total</span>
-              <p className="md:text-md text-xs font-black text-emerald-400">
-                {currencySymbol}
-                {totalAmount.toFixed(2)}
-              </p>
-            </div>
-
+            {/* Fila 2: Missing Screens y You Receive apilados al 100% */}
             {noEvidenceCount > 0 && (
-              <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-2 py-1 md:col-span-2 md:w-full">
-                <span className="text-[10px] font-medium text-amber-300 md:text-xs">Missing Screens</span>
-                <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-black text-amber-300 md:px-2">
+              <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 px-2 py-1">
+                <span className="text-[9px] font-medium uppercase tracking-wider text-amber-300">Missing Screens</span>
+                <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black text-amber-300">
                   {noEvidenceCount}
                 </span>
               </div>
             )}
 
-            <div className="flex flex-1 items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-1.5 px-2 md:col-span-2 md:w-full md:p-3">
-              <div>
-                <span className="text-[9px] font-medium text-emerald-400 uppercase md:text-[10px]">You receive</span>
-                <p className="text-xs font-black text-emerald-400 md:text-xl">${totalToReceive.toFixed(2)}</p>
+            <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-medium uppercase tracking-wider text-emerald-400">You receive</span>
+                <p className="text-base font-black text-emerald-400">${totalToReceive.toFixed(2)}</p>
               </div>
               <Badge
                 variant="outline"
-                className="border-emerald-500/30 bg-emerald-500/5 text-[9px] font-bold text-emerald-400 md:text-[10px]"
+                className="border-emerald-500/30 bg-emerald-500/5 text-[9px] font-bold text-emerald-400"
               >
                 {sellRate * 100}%
               </Badge>
@@ -189,7 +193,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         </Card>
 
         {/* Columna Derecha: Listado de Tarjetas (Toma todo el alto disponible en mobile y escupe scroll) */}
-        <Card className="py-1 flex min-h-0 w-full max-w-full flex-1 flex-col gap-0 overflow-hidden border backdrop-blur-sm">
+        <Card className="flex min-h-0 w-full max-w-full flex-1 flex-col gap-0 border py-1 backdrop-blur-sm">
           <CardHeader className="flex shrink-0 flex-row items-center justify-between md:px-4 md:py-3">
             <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase md:text-xs">Cards Queue</Label>
             <Badge variant="outline" className="border-border text-muted-foreground text-[10px] font-medium">
@@ -197,7 +201,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
             </Badge>
           </CardHeader>
 
-          <CardContent className="custom-scrollbar min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto p-1 md:p-4">
+          <CardContent className="custom-scrollbar min-h-0 w-full flex-1 p-1 md:p-4">
             <div className="grid w-full max-w-full grid-cols-1 gap-1 sm:grid-cols-2 md:gap-3">
               {sortedGiftcards.map((card, idx) => {
                 const matchedImageId = card.evidence?.matchedImageId;
@@ -215,7 +219,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(idx * 0.02, 0.2) }}
                     className={cn(
-                      'group border-border bg-muted/20 relative w-full max-w-full overflow-hidden rounded-xl border p-2 transition-all md:p-3',
+                      'group border-border bg-muted/20 relative w-full max-w-full rounded-xl border p-2 transition-all md:p-3',
                       isBlocking ? 'border-primary/40 bg-primary/5 ring-primary/20 shadow-sm ring-1' : 'hover:border-primary/30',
                     )}
                   >
@@ -366,7 +370,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
       </div>
 
       {/* Barra de Botones de Acción (Fija abajo en ambos layouts) */}
-      <div className="flex shrink-0 items-center justify-between gap-2 ">
+      <div className="flex shrink-0 items-center justify-between gap-2">
         <Button onClick={handleBack} variant="outline" size="sm" className="h-9 flex-1 text-xs font-bold md:h-10">
           Back
         </Button>

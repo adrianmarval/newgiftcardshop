@@ -452,12 +452,7 @@ export function DataEntryStep() {
 
   return (
     // CAMBIO CRÍTICO: "h-full flex flex-col min-h-0" para forzar el viewport estricto
-    <div
-      className="flex h-full min-h-0 flex-col gap-2 md:gap-1"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div className="flex h-full min-h-0 flex-col gap-1" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       <StepsProgress />
 
       {/* El Card pasa a flex-1 y min-h-0 para confinar sus dimensiones */}
