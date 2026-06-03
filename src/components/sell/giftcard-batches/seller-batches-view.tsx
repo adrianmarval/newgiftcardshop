@@ -12,7 +12,7 @@ export interface SellerBatchesViewProps {
 
 export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <StatusLeyend language="en" />
       <BatchesFilters />
       <BatchesList batches={batches} totalPages={pagination?.totalPages} />

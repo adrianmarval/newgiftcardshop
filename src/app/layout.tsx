@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Aldrich, Lora, IBM_Plex_Mono } from 'next/font/google';
-import Script from 'next/script';
 import './globals.css';
 import { Providers } from '@/components/providers';
 import { getServerTheme } from '@/lib/theme-utils';
@@ -47,12 +46,6 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={theme} suppressHydrationWarning>
-      <head>
-        <Script
-          src="/theme-init.js"
-          strategy="beforeInteractive"
-        />
-      </head>
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>

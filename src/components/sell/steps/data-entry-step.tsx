@@ -18,6 +18,7 @@ import { showAlert } from '@/lib/swal';
 import { cn } from '@/lib/utils';
 import { ProcessingStage, STAGE_LABELS, STAGE_PROGRESS } from '@/lib/ui-config';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
+import { StepsProgress } from './steps-progress';
 
 // ─── DataEntryStep ──────────────────────────────────────────────────────────
 
@@ -450,24 +451,39 @@ export function DataEntryStep() {
   const hasExistingCards = giftcards.length > 0;
 
   return (
-    <div className="flex h-full flex-col gap-2 md:gap-6" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-      {/* Main Compose Card */}
+    // CAMBIO CRÍTICO: "h-full flex flex-col min-h-0" para forzar el viewport estricto
+    <div
+      className="flex h-full min-h-0 flex-col gap-2 md:gap-1"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <StepsProgress />
+
+      {/* El Card pasa a flex-1 y min-h-0 para confinar sus dimensiones */}
       <Card
         className={cn(
-          'bg-card/50 flex flex-1 flex-col gap-0 border backdrop-blur-sm transition-all',
+          'flex min-h-0 flex-1 flex-col gap-0 border py-0 backdrop-blur-sm transition-all',
           isDragOver && 'border-primary bg-primary/5 scale-[1.01]',
         )}
       >
-        {/* Header */}
-        <CardHeader className="px-1">
-          <CardTitle className="text-foreground text-lg font-bold md:text-2xl">Load Gift Cards</CardTitle>
-          <CardDescription className="text-muted-foreground flex flex-col gap-1 text-xs md:block md:text-sm">
+        {/* Header con shrink-0 para preservar su tamaño exacto */}
+        <CardHeader className="border-border/40 shrink-0 border-b px-3 py-3 md:px-6">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-foreground text-md font-bold md:text-xl">Load Gift Cards</CardTitle>
+            {hasExistingCards && (
+              <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary text-[10px] md:text-xs">
+                {giftcards.length} card{giftcards.length !== 1 ? 's' : ''} loaded
+              </Badge>
+            )}
+          </div>
+          <CardDescription className="text-muted-foreground mt-1 flex flex-col gap-1 text-xs md:text-sm">
             Paste codes and attach screenshots — like composing an email.
-            {/* Format help (collapsible) */}
             <Button
               type="button"
+              variant="link"
               onClick={() => setShowFormatHelp(!showFormatHelp)}
-              className="text-muted-foreground hover:text-foreground text-md flex justify-start gap-1 transition-colors md:text-xs"
+              className="text-muted-foreground hover:text-foreground flex h-auto w-auto justify-start gap-1 p-0 text-[11px] font-medium transition-colors md:text-xs"
             >
               <Code className="h-3 w-3" />
               <span>Expected format</span>
@@ -479,7 +495,7 @@ export function DataEntryStep() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
+                  className="mt-1 overflow-hidden"
                 >
                   <div className="border-border bg-muted/30 space-y-1 rounded-lg border p-2 md:p-3">
                     <p className="text-muted-foreground text-[10px] md:text-xs">
@@ -488,22 +504,16 @@ export function DataEntryStep() {
                     <div className="text-muted-foreground/70 font-mono text-[10px] md:text-xs">
                       <div>HPGE-JV9RR4-8SA9 30.00</div>
                       <div>XXBS-7W4HDV-D2AN 30.00</div>
-                      <div>ZART-GWX7EB-ZVAR 5.60</div>
                     </div>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-            {hasExistingCards && (
-              <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary text-[10px] md:text-xs">
-                {giftcards.length} card{giftcards.length !== 1 ? 's' : ''} loaded
-              </Badge>
-            )}
           </CardDescription>
         </CardHeader>
 
-        {/* Textarea — the compose area */}
-        <CardContent className="flex min-h-32 flex-1 flex-col space-y-1 p-1 md:min-h-48">
+        {/* CONTENEDOR CENTRAL: Cambiado a flex-1 y min-h-0. Distribuye el Textarea y los Errores de forma balanceada */}
+        <CardContent className="flex min-h-0 flex-1 flex-col space-y-2 p-2">
           <Textarea
             placeholder="Paste your gift card codes here…"
             value={pasteContent}
@@ -515,28 +525,30 @@ export function DataEntryStep() {
               }
             }}
             disabled={isProcessing}
+            // CAMBIO: flex-1 y h-full obligan al textarea a tomar TODO el espacio vertical libre del CardContent
             className={cn(
-              'border-border bg-muted/20 focus-visible:ring-primary text-md min-h-42 resize-none rounded-xl font-mono transition-all md:text-sm lg:h-70',
+              'border-border bg-muted/20 focus-visible:ring-primary h-full w-full flex-1 resize-none rounded-xl p-3 font-mono text-sm transition-all md:text-sm',
               isDragOver && 'border-primary',
               validationErrors.length > 0 && 'border-destructive/50 ring-destructive/20 ring-1',
             )}
           />
 
+          {/* Caja de Errores con max-h-36 y scroll interno aislado */}
           <AnimatePresence>
             {validationErrors.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="border-destructive/20 bg-destructive/5 rounded-xl border p-3"
+                className="border-destructive/20 bg-destructive/5 shrink-0 rounded-xl border p-3"
               >
-                <div className="mb-2 flex items-center gap-2">
+                <div className="mb-1.5 flex items-center gap-2">
                   <div className="bg-destructive h-1.5 w-1.5 animate-pulse rounded-full" />
                   <p className="text-destructive text-[10px] font-bold tracking-wider uppercase">Format Errors Detected</p>
                 </div>
-                <div className="custom-scrollbar max-h-32 space-y-1 overflow-y-auto pr-2">
+                <div className="custom-scrollbar max-h-24 space-y-1 overflow-y-auto pr-2 md:max-h-32">
                   {validationErrors.map((err, idx) => (
-                    <div key={idx} className="flex gap-2 text-[10px] md:text-xs">
+                    <div key={idx} className="flex gap-2 text-[11px] md:text-xs">
                       <span className="text-destructive/50 font-mono">•</span>
                       <p className="text-destructive/80 font-mono leading-relaxed">{err}</p>
                     </div>
@@ -547,14 +559,14 @@ export function DataEntryStep() {
           </AnimatePresence>
         </CardContent>
 
-        {/* Attachments strip */}
+        {/* Adjuntos: shrink-0 para que use solo su franja exacta horizontal */}
         <AnimatePresence>
           {hasAttachments && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
+              className="border-border/40 shrink-0 overflow-hidden border-t px-2 py-2 md:px-4"
             >
               <div className="border-border bg-muted/20 rounded-lg border p-2">
                 <div className="mb-1.5 flex items-center justify-between">
@@ -575,8 +587,8 @@ export function DataEntryStep() {
                   </Button>
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  <AnimatePresence>
+                <div className="custom-scrollbar flex gap-2 overflow-x-auto pb-1">
+                  <AnimatePresence mode="popLayout">
                     {allPreviews.map((preview) => (
                       <motion.div
                         key={preview.id}
@@ -600,7 +612,6 @@ export function DataEntryStep() {
                     ))}
                   </AnimatePresence>
 
-                  {/* Add more button */}
                   {!isProcessing && (
                     <button
                       type="button"
@@ -617,14 +628,14 @@ export function DataEntryStep() {
           )}
         </AnimatePresence>
 
-        {/* Processing progress */}
+        {/* Barra de progreso de subida / OCR */}
         <AnimatePresence>
           {isProcessing && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
+              className="shrink-0 overflow-hidden px-2 pb-2 md:px-4 md:pb-4"
             >
               <div className="border-primary/20 bg-primary/5 space-y-2 rounded-xl border p-3">
                 <div className="flex items-center justify-between gap-3 text-sm">
@@ -647,54 +658,51 @@ export function DataEntryStep() {
           )}
         </AnimatePresence>
 
-        {/* Action bar */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 p-2">
-          <Button
-            onClick={() => setStep(1)}
-            variant="outline"
-            size="sm"
-            disabled={isProcessing}
-            className="h-8 text-xs font-bold md:h-10 md:text-sm"
-          >
-            Back
-          </Button>
-
-          {/* Attach button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isProcessing}
-            className="border-primary/20 bg-primary/5 hover:bg-primary/10 h-8 gap-1.5 text-xs md:h-10 md:text-sm"
-          >
-            <Paperclip className="h-3.5 w-3.5" />
-            <span className="hidden md:inline">Attach Screenshots</span>
-            <span className="md:hidden">Attach</span>
-          </Button>
-
-          {/* Process button */}
-          <Button
-            onClick={handleProcessCards}
-            disabled={isProcessing || !hasContent}
-            size="sm"
-            className="bg-primary text-primary-foreground h-8 text-xs font-bold md:h-10 md:text-sm"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                Processing…
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                Process Cards
-              </>
-            )}
-          </Button>
-        </div>
+        {/* Action bar inferior: Fija con shrink-0 */}
       </Card>
+      <div className="flex items-center justify-center-safe gap-2">
+        <Button
+          onClick={() => setStep(1)}
+          variant="outline"
+          size="sm"
+          disabled={isProcessing}
+          className="h-9 text-xs font-bold md:h-10 md:text-sm"
+        >
+          Back
+        </Button>
 
-      {/* Hidden file input */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isProcessing}
+          className="border-primary/20 bg-primary/5 hover:bg-primary/10 h-9 gap-1.5 text-xs md:h-10 md:text-sm"
+        >
+          <Paperclip className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">Attach Screenshots</span>
+          <span className="md:hidden">Attach</span>
+        </Button>
+
+        <Button
+          onClick={handleProcessCards}
+          disabled={isProcessing || !hasContent}
+          size="sm"
+          className="bg-primary text-primary-foreground h-9 text-xs font-bold md:h-10 md:text-sm"
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              Processing…
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+              Process Cards
+            </>
+          )}
+        </Button>
+      </div>
+
       <input
         ref={fileInputRef}
         type="file"
@@ -709,7 +717,6 @@ export function DataEntryStep() {
         }}
       />
 
-      {/* Drag overlay */}
       <AnimatePresence>
         {isDragOver && (
           <motion.div

@@ -49,7 +49,7 @@ export function RegistryCard({
     <Card
       id={`registry-card-${id}`}
       onClick={onToggle}
-      className={`hover:border-primary/30 relative cursor-pointer scroll-mt-2 gap-0 overflow-hidden border py-2 transition-all duration-200 ease-out ${
+      className={`hover:border-primary/30 relative cursor-pointer scroll-mt-2 gap-0 overflow-hidden border py-1 transition-all duration-200 ease-out ${
         isExpanded || isHighlighted ? `${activeBgClass || 'bg-primary/10 dark:bg-primary/15'} shadow-sm` : ''
       } ${isHighlighted ? 'border-primary/50 ring-primary/20 ring-1' : ''} ${className}`}
     >

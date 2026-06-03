@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import Image from 'next/image';
 import { BrandCountry } from '@/types';
+import { StepsProgress } from './steps-progress';
 
 export interface BrandStepProps {
   brandCountries: BrandCountry[];
@@ -58,121 +59,133 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
   const showEmptyState = !selectedCountryId;
 
   return (
-    <div className="grid grid-cols-1 items-start gap-1 md:grid-cols-12 md:gap-6">
-      <Card className="flex flex-col border p-1 md:col-span-4 md:space-y-6 md:p-6">
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
-            <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
-              1. Select Country
-            </Label>
-            <div className="w-40 md:w-full">
-              <Select value={selectedCountryId} onValueChange={handleCountryChange}>
-                <SelectTrigger className="h-9 w-full">
-                  <SelectValue placeholder="Select Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map((country) => (
-                    <SelectItem key={country.id} value={country.id}>
-                      {country.name} ({country.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+    <div className="flex h-full flex-col gap-1 overflow-hidden">
+      {/* Barra de progreso superior */}
+      <StepsProgress />
+
+      {/* Contenedor principal estructurado para Grid en Desktop y Flex en Móvil */}
+      <div className="flex min-h-0 flex-1 flex-col gap-1 md:grid md:grid-cols-12">
+        {/* Columna Izquierda: Filtros (País y Marca) */}
+        <Card className="flex shrink-0 flex-col border p-3 md:col-span-4 md:row-span-11 md:min-h-0 md:p-6">
+          <div className="space-y-1 md:flex-1 md:space-y-6 md:overflow-y-auto">
+            {/* Selector de País */}
+            <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
+              <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+                1. Select Country
+              </Label>
+              <div className="w-44 md:w-full">
+                <Select value={selectedCountryId} onValueChange={handleCountryChange}>
+                  <SelectTrigger className="h-9 w-full">
+                    <SelectValue placeholder="Select Country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.id} value={country.id}>
+                        {country.name} ({country.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Buscador de Marca */}
+            <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
+              <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
+                2. Select Brand
+              </Label>
+              <div className="relative w-44 md:w-full">
+                <Search className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
+                <Input
+                  placeholder={selectedCountryId ? 'Search Brand' : 'Select country first'}
+                  value={searchBrand}
+                  onChange={(e) => setSearchBrand(e.target.value)}
+                  disabled={!selectedCountryId}
+                  className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-9 pl-9 text-sm md:h-8 md:pl-10"
+                />
+              </div>
             </div>
           </div>
+        </Card>
 
-          <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
-            <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
-              2. Select Brand
-            </Label>
-            <div className="relative w-40 md:w-full">
-              <Search className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
-              <Input
-                placeholder={selectedCountryId ? 'Search Brand' : 'Select country first'}
-                value={searchBrand}
-                onChange={(e) => setSearchBrand(e.target.value)}
-                disabled={!selectedCountryId}
-                className="border-border bg-muted/50 text-foreground placeholder:text-muted-foreground/50 h-8 pl-9 text-sm md:pl-10"
-              />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="bg-card/50 flex h-86 flex-col border p-1 backdrop-blur-sm md:col-span-8 md:h-[540px] md:p-4">
-        <CardContent className="custom-scrollbar grid grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
-          {showEmptyState ? (
-            <div className="col-span-full flex flex-col items-center justify-center text-center">
-              <Globe className="text-muted-foreground/30 mb-4 h-16 w-16" />
-              <h3 className="text-foreground mb-2 text-lg font-semibold">Select a country first</h3>
-              <p className="text-muted-foreground max-w-xs text-sm">
-                Choose a country from the dropdown to see available brands in that region.
-              </p>
-            </div>
-          ) : (
-            <AnimatePresence mode="popLayout">
-              {filteredBrandCountries.map((bc) => (
-                <motion.button
-                  key={`${bc.brandId}_${bc.countryId}`}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  disabled={!bc.isActive}
-                  onClick={() => handleBrandClick(bc)}
-                  className={`group relative flex h-20 flex-col items-center justify-center overflow-hidden rounded-xl border-2 pb-1 transition-all md:h-32 ${
-                    !bc.isActive
-                      ? 'border-border bg-muted/10 cursor-not-allowed opacity-80'
-                      : selectedBrandCountry === `${bc.brandId}|${bc.countryId}`
-                        ? 'border-primary bg-primary/10 shadow-primary/20 cursor-pointer shadow-lg'
-                        : 'border-border bg-muted/20 hover:border-muted-foreground/30 hover:bg-muted/40 cursor-pointer'
-                  } `}
-                  whileHover={bc.isActive ? { scale: 1.02, y: -2 } : {}}
-                  whileTap={bc.isActive ? { scale: 0.98 } : {}}
-                >
-                  <div
-                    className={`relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 ${bc.isActive ? 'group-hover:scale-110' : 'opacity-40 grayscale'} dark:bg-white`}
+        {/* Columna Derecha: Grid de Marcas Disponibles */}
+        <Card className="flex min-h-0 flex-1 flex-col border backdrop-blur-sm md:col-span-8 md:row-span-11 md:h-full">
+          <CardContent className="custom-scrollbar grid flex-1 auto-rows-max grid-cols-3 gap-1.5 overflow-y-auto p-1.5 sm:grid-cols-3 md:gap-1 md:p-2">
+            {showEmptyState ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-8 text-center md:py-0">
+                <Globe className="text-muted-foreground/30 mb-4 h-16 w-16" />
+                <h3 className="text-foreground mb-2 text-lg font-semibold">Select a country first</h3>
+                <p className="text-muted-foreground max-w-xs text-sm">
+                  Choose a country from the dropdown to see available brands in that region.
+                </p>
+              </div>
+            ) : (
+              <AnimatePresence mode="popLayout">
+                {filteredBrandCountries.map((bc) => (
+                  <motion.button
+                    key={`${bc.brandId}_${bc.countryId}`}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    disabled={!bc.isActive}
+                    onClick={() => handleBrandClick(bc)}
+                    className={`group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl border-2 p-1 transition-all md:aspect-auto md:h-32 md:pb-1 ${
+                      !bc.isActive
+                        ? 'border-border bg-muted/10 cursor-not-allowed opacity-80'
+                        : selectedBrandCountry === `${bc.brandId}|${bc.countryId}`
+                          ? 'border-primary bg-primary/10 shadow-primary/20 cursor-pointer shadow-lg'
+                          : 'border-border bg-muted/20 hover:border-muted-foreground/30 hover:bg-muted/40 cursor-pointer'
+                    } `}
+                    whileHover={bc.isActive ? { scale: 1.02, y: -2 } : {}}
+                    whileTap={bc.isActive ? { scale: 0.98 } : {}}
                   >
-                    {bc.brandImage ? (
-                      <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-contain" loading="eager" />
-                    ) : (
-                      <span className="text-xl md:text-5xl">{bc.brandIcon}</span>
-                    )}
-                  </div>
-                  <div
-                    className={`w-full truncate px-1 text-center text-[11px] font-bold tracking-tight md:text-base ${!bc.isActive ? 'text-muted-foreground' : ''}`}
-                  >
-                    {bc.brandName}
-                  </div>
-
-                  {!bc.isActive && (
-                    <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden">
-                      <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-2 text-center text-[9px] font-black tracking-[0.4em] whitespace-nowrap text-white uppercase shadow-2xl backdrop-blur-md md:py-3 md:text-[14px]">
-                        Coming Soon
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedBrandCountry === `${bc.brandId}|${bc.countryId}` && bc.isActive && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="bg-primary absolute top-1 right-1 rounded-full p-0.5 shadow-lg md:top-2 md:right-2 md:p-1"
+                    <div
+                      className={`relative flex w-full flex-1 items-center justify-center transition-transform duration-300 ${bc.isActive ? 'group-hover:scale-110' : 'opacity-40 grayscale'} dark:bg-white`}
                     >
-                      <Check className="text-primary-foreground h-2 w-2 md:h-3 md:w-3" />
-                    </motion.div>
-                  )}
-                </motion.button>
-              ))}
-            </AnimatePresence>
-          )}
-        </CardContent>
-        <div className="flex justify-center">
-          <Button onClick={() => setStep(2)} disabled={!isStep1Valid} className="p-4">
-            Continuar <ChevronRight className="ml-1 h-4 w-4 md:ml-2" />
-          </Button>
-        </div>
-      </Card>
+                      {bc.brandImage ? (
+                        <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-contain p-0.5" loading="eager" />
+                      ) : (
+                        <span className="text-xl md:text-5xl">{bc.brandIcon}</span>
+                      )}
+                    </div>
+                    <div
+                      className={`w-full shrink-0 truncate px-0.5 text-center text-[10px] font-bold tracking-tight md:px-1 md:text-base ${!bc.isActive ? 'text-muted-foreground' : ''}`}
+                    >
+                      {bc.brandName}
+                    </div>
+
+                    {!bc.isActive && (
+                      <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden">
+                        <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-1 text-center text-[8px] font-black tracking-[0.2em] whitespace-nowrap text-white uppercase shadow-2xl backdrop-blur-md md:py-3 md:text-[14px] md:tracking-[0.4em]">
+                          Coming Soon
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedBrandCountry === `${bc.brandId}|${bc.countryId}` && bc.isActive && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="bg-primary absolute top-1 right-1 rounded-full p-0.5 shadow-lg md:top-2 md:right-2 md:p-1"
+                      >
+                        <Check className="text-primary-foreground h-2 w-2 md:h-3 md:w-3" />
+                      </motion.div>
+                    )}
+                  </motion.button>
+                ))}
+              </AnimatePresence>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Botón inferior fijo */}
+      <div className="flex items-center justify-center-safe gap-2">
+        <Button onClick={() => setStep(2)} disabled={!isStep1Valid} className="flex shrink-0 items-center justify-center p-4">
+          Continuar <ChevronRight className="h-4 md:ml-2" />
+        </Button>
+      </div>
     </div>
   );
 }

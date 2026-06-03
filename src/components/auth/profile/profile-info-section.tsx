@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TelegramAvatar } from '@/components/ui/telegram-avatar';
 import { CheckCircle, User, MessageCircle, Link2 } from 'lucide-react';
 import { updateProfile } from '@/actions';
@@ -69,18 +69,13 @@ export const ProfileInfoSection = ({
   return (
     <>
       <Card className="gap-0">
-        <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-500/10 md:h-9 md:w-9 md:rounded-lg">
-            <User className="h-3.5 w-3.5 text-emerald-400 md:h-4 md:w-4" />
-          </div>
-          <div>
-            <CardTitle className="text-sm md:text-lg">{isSpanish ? 'Información Personal' : 'Personal Info'}</CardTitle>
-            <p className="text-muted-foreground hidden text-xs md:block md:text-sm">
-              {isSpanish ? 'Detalles de tu cuenta' : 'Your account details'}
-            </p>
-          </div>
+        <CardHeader>
+          <CardTitle className="text-sm md:text-lg">{isSpanish ? 'Información Personal' : 'Personal Info'}</CardTitle>
+          <CardDescription className="text-muted-foreground hidden text-xs md:block md:text-sm">
+            {isSpanish ? 'Detalles de tu cuenta' : 'Your account details'}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 pt-0">
+        <CardContent>
           {success && (
             <div className="flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2">
               <CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-400" />

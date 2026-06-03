@@ -163,7 +163,7 @@ export const RedeemStep = () => {
   return (
     <div className="grid grid-cols-1 items-start gap-2 md:h-full md:grid-cols-12 md:gap-6">
       {/* Left Column: Order Summary & Actions */}
-      <Card className="border-border bg-card/50 flex h-auto flex-col gap-1 space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
+      <Card className="border-border flex h-auto flex-col gap-1 space-y-2 p-2 backdrop-blur-sm md:col-span-4 md:h-full md:space-y-6 md:p-6">
         <div>
           <h2 className="mb-0.5 text-xl font-bold md:mb-1 md:text-2xl">Redimir y Verificar</h2>
           <p className="text-muted-foreground text-xs md:text-sm">Copia tus códigos y reporta cualquier problema.</p>
@@ -196,7 +196,7 @@ export const RedeemStep = () => {
       </Card>
 
       {/* Right Column: Cards Reveal & Reporting */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
+      <Card className="border-border flex min-h-100 flex-col gap-1 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <Label className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">Códigos Revelados</Label>

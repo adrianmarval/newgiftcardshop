@@ -89,7 +89,7 @@ export const ConfirmUsageStep = () => {
 
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
-      <Card className="border-border bg-card/50 flex flex-col items-center space-y-4 p-4 text-center backdrop-blur-sm md:col-span-12 md:space-y-6 md:p-8">
+      <Card className="border-border flex flex-col items-center space-y-4 p-4 text-center backdrop-blur-sm md:col-span-12 md:space-y-6 md:p-8">
         <div className="max-w-2xl space-y-2 md:space-y-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}

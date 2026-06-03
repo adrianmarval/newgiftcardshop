@@ -93,7 +93,7 @@ export const PaymentStep = () => {
   return (
     <div className="grid h-full grid-cols-1 items-start gap-4 md:grid-cols-12 md:gap-6">
       {/* Full-width Payment Panel */}
-      <Card className="border-border bg-card/50 flex flex-col items-center space-y-4 p-4 text-center backdrop-blur-sm md:col-span-12 md:space-y-8 md:p-8">
+      <Card className="border-border flex flex-col items-center space-y-4 p-4 text-center backdrop-blur-sm md:col-span-12 md:space-y-8 md:p-8">
         <div className="max-w-2xl space-y-2 md:space-y-4">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
@@ -144,7 +144,7 @@ export const PaymentStep = () => {
               placeholder="ID de transacción"
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
-              className="border-border bg-card/50 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 h-10 text-center font-mono text-lg font-bold"
+              className="border-border text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 h-10 text-center font-mono text-lg font-bold"
             />
           </div>
 

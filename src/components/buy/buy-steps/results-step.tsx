@@ -213,7 +213,7 @@ export const ResultsStep = () => {
         </CardContent>
       </Card>
       {/* Right Column: Cards List */}
-      <Card className="bg-card/50 flex h-full flex-col px-2 backdrop-blur-sm md:col-span-8 md:px-1">
+      <Card className="flex h-full flex-col px-2 backdrop-blur-sm md:col-span-8 md:px-1">
         <CardHeader className="flex items-center justify-between">
           <CardTitle className="text-muted-foreground text-xs font-semibold tracking-wider uppercase md:text-sm">
             Combinación Encontrada

@@ -70,7 +70,7 @@ export function BatchesList({ batches }: BatchesListProps) {
   }
 
   return (
-    <div className="space-y-2" ref={listRef}>
+    <div className="space-y-1" ref={listRef}>
       <AnimatePresence>
         {batches
           .filter((batch) => expandedBatch === null || expandedBatch === batch.id.toString())

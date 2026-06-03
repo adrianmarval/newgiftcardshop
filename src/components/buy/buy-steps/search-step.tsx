@@ -240,7 +240,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   return (
     <div className="grid grid-cols-1 items-start gap-1 md:grid-cols-12 md:gap-6">
       {/* Left Column: Filters */}
-      <Card className="border-border bg-card/50 flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
+      <Card className="border-border flex flex-col space-y-1.5 px-2 py-2 backdrop-blur-sm md:col-span-4 md:space-y-6 md:p-6">
         <div className="space-y-1">
           {/* Configuración Header Omitted */}
 
@@ -405,7 +405,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       </Card>
 
       {/* Right Column: Brand Grid */}
-      <Card className="border-border bg-card/50 flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
+      <Card className="border-border flex min-h-100 flex-col gap-1.5 px-1 py-2 backdrop-blur-sm md:col-span-8 md:min-h-125 md:p-6">
         <CardContent className="custom-scrollbar grid flex-1 grid-cols-3 gap-1 overflow-y-auto px-0 sm:grid-cols-3 md:gap-3 md:px-2 md:pr-2 lg:grid-cols-4">
           {showEmptyState ? (
             <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">

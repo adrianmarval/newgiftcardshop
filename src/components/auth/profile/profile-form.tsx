@@ -30,7 +30,7 @@ export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUr
 
   return (
     <div className="w-full space-y-3">
-      <div className="grid gap-3 md:grid-cols-12 md:gap-4">
+      <div className="grid gap-1 md:grid-cols-12 md:gap-4">
         <div className="space-y-3 md:col-span-7 md:space-y-4">
           <ProfileInfoSection
             name={user.name}

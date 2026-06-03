@@ -55,7 +55,7 @@ export async function DashboardSidebar({ portal }: DashboardSidebarProps) {
         <div className="flex flex-col gap-0">{items.map((item) => renderSidebarItem(item))}</div>
       </nav>
       {/*Mobile Sidebar*/}
-      <div className="fixed right-0 bottom-0 left-0 z-50 lg:hidden">
+      <div className="lg:hidden">
         <nav className="bg-background/95 border-border flex items-center justify-around border-t px-2 pt-2 backdrop-blur-xl">
           {visibleItems.map((item) => renderSidebarItem(item))}
           {hiddenItems.length > 0 && <MoreDropDownMenu items={hiddenItems} />}
