@@ -71,6 +71,7 @@ export const createOrder = buyerActionClient
       const createdOrder = await tx.order.create({
         data: {
           userId: ctx.auth.user.id,
+          brandCountryId: firstCard.brandCountryId,
           total: total,
           buyRate: buyRate,
           status: 'PENDING',

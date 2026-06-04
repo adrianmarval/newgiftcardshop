@@ -195,6 +195,7 @@ model BrandCountry {
   minAmount Decimal? @db.Decimal(10, 2)
   maxAmount Decimal? @db.Decimal(10, 2)
 
+  orders    Order[]
   giftcards Giftcard[]
   rate      BrandCountryRate?
   userRates UserBrandCountryRate[]
@@ -213,11 +214,13 @@ model Order {
   buyRate       Decimal     @db.Decimal(10, 4)
   status        OrderStatus
 
-  userId    String
-  user      User            @relation(fields: [userId], references: [id])
-  giftcards Giftcard[]
-  payments  Payment[]
-  issues    GiftcardIssue[]
+  userId         String
+  brandCountryId String?
+  user           User            @relation(fields: [userId], references: [id])
+  brandCountry   BrandCountry?   @relation(fields: [brandCountryId], references: [id])
+  giftcards      Giftcard[]
+  payments       Payment[]
+  issues         GiftcardIssue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import Image from 'next/image';
 import { BrandCountry } from '@/types';
-import { StepsProgress } from './steps-progress';
+import { SellStepsProgress } from './sell-steps-progress';
 
 export interface BrandStepProps {
   brandCountries: BrandCountry[];
@@ -59,9 +59,9 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
   const showEmptyState = !selectedCountryId;
 
   return (
-    <div className="flex h-full flex-col gap-1 overflow-hidden">
+    <div className="flex h-full flex-col gap-1">
       {/* Barra de progreso superior */}
-      <StepsProgress />
+      <SellStepsProgress />
 
       {/* Contenedor principal estructurado para Grid en Desktop y Flex en Móvil */}
       <div className="flex min-h-0 flex-1 flex-col gap-1 md:grid md:grid-cols-12">

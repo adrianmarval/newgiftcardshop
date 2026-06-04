@@ -302,6 +302,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   const giftcards = await prisma.giftcard.findMany({
     where: { id: { in: selectedGiftcardIds }, inStock: true, status: 'UNUSED' },
+    select: { id: true, amount: true, brandCountryId: true, escalationTier: true, claimCode: true, pinCode: true },
   });
 
   const buyerBuyRate = Math.floor(Number(buyRate) * 100);
@@ -326,6 +327,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     const created = await tx.order.create({
       data: {
         userId: ctx.user.id,
+        brandCountryId: giftcards[0]?.brandCountryId,
         total,
         buyRate: buyRate,
         status: 'PENDING',

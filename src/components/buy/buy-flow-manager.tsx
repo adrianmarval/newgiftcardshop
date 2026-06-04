@@ -4,8 +4,8 @@ import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { BuyFlowCard, useBuyFlow } from '@/hooks/use-buy-flow';
-import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep } from '@/components/buy/buy-steps';
-import { PaymentStep } from '@/components/buy/buy-steps/payment-step';
+import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep } from '@/components/buy/steps';
+import { PaymentStep } from '@/components/buy/steps/payment-step';
 import { BrandCountry, BuyerOrder, GiftcardStatus } from '@/types';
 
 export const STEP_LABELS = ['Buscar', 'Seleccionar', 'Redimir', 'Uso', 'Pagar'];
@@ -34,7 +34,11 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
         pinCode: card.pinCode || undefined,
         status: card.status as GiftcardStatus,
         reportedAmount: card.reportedAmount ?? undefined,
+        country: card.country ?? undefined,
       }));
+
+      const firstCard = resumeOrder.giftcards[0];
+      const resumeBrandCountryId = firstCard?.brandCountryId ?? resumeOrder.brandCountryId ?? '';
 
       let resumeStep = 1;
       if (resumeOrder.status === 'PENDING') resumeStep = 3;
@@ -45,7 +49,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
         orderId: resumeOrder.id,
         adjustedTotal: resumeOrder.adjustedTotal,
         foundGiftcards: giftcards,
-        selectedBrand: '',
+        selectedBrand: resumeBrandCountryId,
         selectedCountry: '',
         targetAmount: '',
       });
@@ -56,57 +60,9 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
   }
 
   return (
-    <div className="flex w-full flex-col space-y-4">
-      <div className="flex flex-row items-center justify-between gap-2.5 rounded-none backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-          <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Pasos de Compra</h1>
-          <p className="text-muted-foreground hidden text-xs md:block md:text-base">Completa los pasos para comprar giftcards.</p>
-        </motion.div>
-        {/* Compact Progress Steps */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex items-center justify-center md:justify-end"
-        >
-          <div className="flex items-center md:gap-2">
-            {STEP_LABELS.map((label, idx) => {
-              const s = idx + 1;
-              return (
-                <div key={s} className="flex items-center">
-                  <div className="group relative">
-                    <motion.div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold transition-all md:h-10 md:w-10 md:text-base ${
-                        s === step
-                          ? 'border-primary/50 bg-primary shadow-primary/30 text-white shadow-lg'
-                          : s < step
-                            ? 'border-primary/50 bg-primary/20 text-primary'
-                            : 'border-border bg-muted/50 text-muted-foreground/50'
-                      } `}
-                      animate={{ scale: s === step ? 1.05 : 1 }}
-                    >
-                      {s < step ? <Check className="h-4 w-4 md:h-5 md:w-5" /> : s}
-                    </motion.div>
-                    <span
-                      className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] font-bold tracking-wider whitespace-nowrap uppercase sm:block md:text-sm ${
-                        s === step ? 'text-primary' : 'text-muted-foreground/70'
-                      } `}
-                    >
-                      {label}
-                    </span>
-                  </div>
-                  {idx < STEP_LABELS.length - 1 && (
-                    <div className={`h-0.5 w-4 rounded-full transition-all md:w-8 ${s < step ? 'bg-primary/50' : 'bg-muted'} `} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      </div>
-
+    <div className="h-full">
       {/* Steps Content */}
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+      <div className="flex h-full flex-col">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -114,13 +70,68 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="flex h-full min-h-[300px] flex-col overflow-hidden"
+            className="h-full"
           >
-            {step === 1 && <SearchStep brandCountries={brandCountries} />}
-            {step === 2 && <ResultsStep />}
-            {step === 3 && <RedeemStep />}
-            {step === 4 && <ConfirmUsageStep />}
-            {step === 5 && <PaymentStep />}
+            {step === 1 && (
+              <motion.div
+                key="step-1"
+                className="h-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <SearchStep brandCountries={brandCountries} />
+              </motion.div>
+            )}
+            {step === 2 && (
+              <motion.div
+                key="step-1"
+                className="h-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ResultsStep />
+              </motion.div>
+            )}
+            {step === 3 && (
+              <motion.div
+                key="step-1"
+                className="h-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <RedeemStep />
+              </motion.div>
+            )}
+            {step === 4 && (
+              <motion.div
+                key="step-1"
+                className="h-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ConfirmUsageStep />
+              </motion.div>
+            )}
+            {step === 5 && (
+              <motion.div
+                key="step-1"
+                className="h-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <PaymentStep />
+              </motion.div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -111,52 +111,61 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
     <div className="h-full">
       <div className="flex h-full flex-col">
         <AnimatePresence mode="wait">
-          {step === 1 && (
-            <motion.div
-              key="step-1"
-              className="h-full"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <BrandStep brandCountries={brandCountries} onBrandSelect={handleBrandSelect} />
-            </motion.div>
-          )}
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="h-full"
+          >
+            {step === 1 && (
+              <motion.div
+                key="step-1"
+                className="h-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <BrandStep brandCountries={brandCountries} onBrandSelect={handleBrandSelect} />
+              </motion.div>
+            )}
 
-          {step === 2 && (
-            <motion.div
-              key="step-2-load"
-              className="h-full"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <DataEntryStep />
-            </motion.div>
-          )}
+            {step === 2 && (
+              <motion.div
+                key="step-2-load"
+                className="h-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <DataEntryStep />
+              </motion.div>
+            )}
 
-          {step === 3 && (
-            <motion.div
-              key="step-review"
-              className="h-full"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {selectedBrandCountryData && (
-                <ReviewStep
-                  onPublish={handlePublish}
-                  isPublishing={publishStatus === 'executing'}
-                  brandCountry={selectedBrandCountryData}
-                  sellRate={sellRate}
-                  backStep={2}
-                />
-              )}
-            </motion.div>
-          )}
+            {step === 3 && (
+              <motion.div
+                key="step-review"
+                className="h-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {selectedBrandCountryData && (
+                  <ReviewStep
+                    onPublish={handlePublish}
+                    isPublishing={publishStatus === 'executing'}
+                    brandCountry={selectedBrandCountryData}
+                    sellRate={sellRate}
+                    backStep={2}
+                  />
+                )}
+              </motion.div>
+            )}
+          </motion.div>
         </AnimatePresence>
       </div>
 

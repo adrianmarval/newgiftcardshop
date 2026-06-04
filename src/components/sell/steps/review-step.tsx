@@ -21,7 +21,7 @@ import { validationStatusConfig } from '@/lib/ui-config';
 import { BrandCountry } from '@/types';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
 import Image from 'next/image';
-import { StepsProgress } from './steps-progress';
+import { SellStepsProgress } from './sell-steps-progress';
 
 export interface ReviewStepProps {
   onPublish: () => void;
@@ -138,7 +138,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
     <div className="flex h-full min-h-0 w-full max-w-full flex-col gap-1">
       {/* Barra de progreso superior */}
       <div className="shrink-0">
-        <StepsProgress />
+        <SellStepsProgress />
       </div>
 
       {/* Contenedor Split Principal */}
@@ -154,12 +154,12 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
             {/* Fila 1: Cards | Total */}
             <div className="grid grid-cols-2 gap-1">
               <div className="flex flex-col justify-center rounded-lg border border-slate-500/20 bg-slate-800/30 p-1.5">
-                <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400">Cards</span>
+                <span className="text-[9px] font-medium tracking-wider text-slate-400 uppercase">Cards</span>
                 <p className="text-base font-black text-white">{giftcards.length}</p>
               </div>
 
               <div className="flex flex-col justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-1.5">
-                <span className="text-[9px] font-medium uppercase tracking-wider text-emerald-400">Total</span>
+                <span className="text-[9px] font-medium tracking-wider text-emerald-400 uppercase">Total</span>
                 <p className="text-base font-black text-emerald-400">
                   {currencySymbol}
                   {totalAmount.toFixed(2)}
@@ -170,22 +170,17 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
             {/* Fila 2: Missing Screens y You Receive apilados al 100% */}
             {noEvidenceCount > 0 && (
               <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 px-2 py-1">
-                <span className="text-[9px] font-medium uppercase tracking-wider text-amber-300">Missing Screens</span>
-                <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black text-amber-300">
-                  {noEvidenceCount}
-                </span>
+                <span className="text-[9px] font-medium tracking-wider text-amber-300 uppercase">Missing Screens</span>
+                <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black text-amber-300">{noEvidenceCount}</span>
               </div>
             )}
 
             <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1">
               <div className="flex flex-col">
-                <span className="text-[9px] font-medium uppercase tracking-wider text-emerald-400">You receive</span>
+                <span className="text-[9px] font-medium tracking-wider text-emerald-400 uppercase">You receive</span>
                 <p className="text-base font-black text-emerald-400">${totalToReceive.toFixed(2)}</p>
               </div>
-              <Badge
-                variant="outline"
-                className="border-emerald-500/30 bg-emerald-500/5 text-[9px] font-bold text-emerald-400"
-              >
+              <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/5 text-[9px] font-bold text-emerald-400">
                 {sellRate * 100}%
               </Badge>
             </div>
@@ -201,8 +196,8 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
             </Badge>
           </CardHeader>
 
-          <CardContent className="custom-scrollbar min-h-0 w-full flex-1 p-1 md:p-4">
-            <div className="grid w-full max-w-full grid-cols-1 gap-1 sm:grid-cols-2 md:gap-3">
+          <CardContent className="custom-scrollbar min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto p-1 md:p-4">
+            <div className="grid w-full max-w-full grid-cols-1 gap-1 sm:grid-cols-2">
               {sortedGiftcards.map((card, idx) => {
                 const matchedImageId = card.evidence?.matchedImageId;
                 const evidenceStatus = card.evidence?.status;

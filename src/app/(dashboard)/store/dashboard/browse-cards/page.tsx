@@ -18,10 +18,5 @@ export default async function BrowseCardsPage({ searchParams }: { searchParams: 
     }
   }
 
-  return (
-    <div className="w-full space-y-4">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">COMPRAR GIFTCARDS</h1>
-      <BuyGiftcardManager brandCountries={brandCountries} resumeOrder={resumeOrder} />
-    </div>
-  );
+  return <BuyGiftcardManager brandCountries={brandCountries} resumeOrder={resumeOrder} />;
 }

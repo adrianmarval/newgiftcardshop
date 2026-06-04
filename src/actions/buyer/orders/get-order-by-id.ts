@@ -53,6 +53,7 @@ export const getOrderById = buyerActionClient
         reportedAmount: card.reportedAmount ? Number(card.reportedAmount) : null,
         orderId: card.orderId,
         batchId: card.batchId ?? undefined,
+        brandCountryId: card.brandCountryId,
         brand: {
           name: card.brandCountry.brand.name,
           icon: card.brandCountry.brand.icon,
@@ -74,6 +75,8 @@ export const getOrderById = buyerActionClient
       createdAt: p.createdAt.toISOString(),
     }));
     const totals = computeOrderGiftcardTotals(order.giftcards, order.buyRate);
+    const firstCard = order.giftcards[0];
+    const brandCountryId = firstCard?.brandCountryId ?? undefined;
 
     return {
       success: true as const,
@@ -89,6 +92,7 @@ export const getOrderById = buyerActionClient
         updatedAt: order.updatedAt.toISOString(),
         giftcards,
         payments,
+        brandCountryId,
       },
     };
   });

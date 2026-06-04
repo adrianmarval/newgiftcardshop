@@ -23,13 +23,10 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <div className="w-full space-y-4">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">USUARIOS</h1>
-      <UsersManager
-        initialUsers={result.data.items}
-        pagination={result.data.pagination}
-        searchParams={{ search: parsed.search, role: parsed.role }}
-      />
-    </div>
+    <UsersManager
+      initialUsers={result.data.items}
+      pagination={result.data.pagination}
+      searchParams={{ search: parsed.search, role: parsed.role }}
+    />
   );
 }

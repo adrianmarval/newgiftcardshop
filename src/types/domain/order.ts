@@ -22,6 +22,7 @@ export interface BuyerOrder {
   payments: Payment[];
   effectiveTotal: number;
   faceValueTotal: number;
+  brandCountryId?: string;
 }
 
 // --- AdminOrder ──────────────────────────────────────────────────────────────

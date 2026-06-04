@@ -13,9 +13,5 @@ export default async function ConfigurationPage() {
     throw new Error('Failed to load platform settings');
   }
 
-  return (
-    <div className="w-full space-y-4">
-      <ConfigManager initialSettings={result.data.settings} />
-    </div>
-  );
+  return <ConfigManager initialSettings={result.data.settings} />;
 }

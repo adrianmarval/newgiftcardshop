@@ -18,7 +18,7 @@ import { showAlert } from '@/lib/swal';
 import { cn } from '@/lib/utils';
 import { ProcessingStage, STAGE_LABELS, STAGE_PROGRESS } from '@/lib/ui-config';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
-import { StepsProgress } from './steps-progress';
+import { SellStepsProgress } from './sell-steps-progress';
 
 // ─── DataEntryStep ──────────────────────────────────────────────────────────
 
@@ -453,7 +453,7 @@ export function DataEntryStep() {
   return (
     // CAMBIO CRÍTICO: "h-full flex flex-col min-h-0" para forzar el viewport estricto
     <div className="flex h-full min-h-0 flex-col gap-1" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-      <StepsProgress />
+      <SellStepsProgress />
 
       {/* El Card pasa a flex-1 y min-h-0 para confinar sus dimensiones */}
       <Card

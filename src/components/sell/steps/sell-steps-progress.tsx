@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 export const STEP_LABELS = ['Config', 'Load', 'Review'];
 
-export const StepsProgress = () => {
+export const SellStepsProgress = () => {
   const step = useSellFlow((s) => s.step);
   return (
     <div className="flex items-center justify-between gap-2.5 rounded-none p-1 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">

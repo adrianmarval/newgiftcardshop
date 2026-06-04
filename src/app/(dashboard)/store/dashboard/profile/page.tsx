@@ -30,21 +30,18 @@ export default async function BuyerProfilePage() {
   const telegramLinkUrl = botUsername ? `https://t.me/${botUsername}` : null;
 
   return (
-    <div className="w-full space-y-4">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">MI PERFIL</h1>
-      <ProfileForm
-        user={{
-          name: session.user.name,
-          email: session.user.email,
-          emailVerified: session.user.emailVerified,
-          image: null,
-          twoFactorEnabled: !!session.user.twoFactorEnabled,
-          telegramUser,
-        }}
-        telegramPhotoDataUrl={telegramPhotoDataUrl}
-        portal="buy"
-        telegramLinkUrl={telegramLinkUrl}
-      />
-    </div>
+    <ProfileForm
+      user={{
+        name: session.user.name,
+        email: session.user.email,
+        emailVerified: session.user.emailVerified,
+        image: null,
+        twoFactorEnabled: !!session.user.twoFactorEnabled,
+        telegramUser,
+      }}
+      telegramPhotoDataUrl={telegramPhotoDataUrl}
+      portal="buy"
+      telegramLinkUrl={telegramLinkUrl}
+    />
   );
 }

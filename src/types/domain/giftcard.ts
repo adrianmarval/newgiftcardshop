@@ -19,6 +19,7 @@ export interface Giftcard {
   orderId: string | null;
   batchId?: number | null;
   provenanceImageId?: string | null;
+  brandCountryId?: string;
   brand: { name: string; icon: string; image: string | null };
   country: { name: string; code: string; currency: string | null } | null;
   isSearchMatch?: boolean;

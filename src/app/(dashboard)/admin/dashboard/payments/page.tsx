@@ -40,15 +40,12 @@ export default async function AdminPaymentsPage({
   const admins = adminsResult.data?.success ? adminsResult.data.admins : [];
 
   return (
-    <div className="w-full space-y-4">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">HISTORIAL DE PAGOS</h1>
-      <AdminPaymentsView
-        payments={paymentsResult.data.items}
-        pagination={paymentsResult.data.pagination}
-        sellers={sellers}
-        buyers={buyers}
-        admins={admins}
-      />
-    </div>
+    <AdminPaymentsView
+      payments={paymentsResult.data.items}
+      pagination={paymentsResult.data.pagination}
+      sellers={sellers}
+      buyers={buyers}
+      admins={admins}
+    />
   );
 }
