@@ -53,7 +53,7 @@ export function CompactSearchBar({
       {/* Country Selector - Globe hidden on mobile to save space */}
       <div className="flex items-center">
         <Select value={selectedCountry} onValueChange={onCountryChange}>
-          <SelectTrigger className="h-8 w-[70px] border-0 bg-transparent p-1 text-xs font-medium focus:ring-0 md:w-[90px] md:text-sm [&>span]:line-clamp-1">
+          <SelectTrigger className="h-8 w-[75px] border-0 bg-transparent p-1 text-xs font-medium focus:ring-0 md:w-[90px] md:text-sm [&>span]:line-clamp-1">
             <SelectValue placeholder="País">
               {selectedCountry &&
                 (() => {

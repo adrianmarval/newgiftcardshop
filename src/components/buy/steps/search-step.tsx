@@ -242,7 +242,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       />
 
       {/* Brand Grid */}
-      <Card className="flex min-h-0 flex-1 flex-col border backdrop-blur-sm md:col-span-8 md:row-span-11 md:h-full">
+      <Card className="flex min-h-0 flex-1 flex-col border py-0 backdrop-blur-sm md:col-span-8 md:row-span-11 md:h-full">
         <CardContent className="custom-scrollbar grid flex-1 auto-rows-max grid-cols-3 gap-1.5 overflow-y-auto p-1.5 sm:grid-cols-3 md:gap-1 md:p-2">
           {showEmptyState ? (
             <div className="col-span-full flex flex-col items-center justify-center py-8 text-center">
@@ -268,7 +268,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
                   exit={{ opacity: 0, scale: 0.9 }}
                   disabled={!bc.isActive}
                   onClick={() => handleBrandSelect({ brandId: bc.brandId, countryId: bc.countryId })}
-                  className={`group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl border-2 p-1 transition-all md:aspect-auto md:h-32 md:pb-1 ${
+                  className={`group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl p-1 transition-all md:aspect-auto md:h-32 md:pb-1 ${
                     !bc.isActive
                       ? 'border-border bg-muted/10 cursor-not-allowed opacity-80'
                       : selectedBrand === `${bc.brandId}|${bc.countryId}`
@@ -318,7 +318,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         <Button
           onClick={handleSearch}
           disabled={!isValid || status === 'executing'}
-          className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-10 w-full text-sm font-bold shadow-lg md:h-11 md:text-base"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-full text-sm font-bold md:h-11 md:text-base"
         >
           {isSearching ? (
             <>

@@ -257,7 +257,7 @@ export const ResultsStep = () => {
         <Button
           onClick={() => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }))}
           disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === 'executing'}
-          className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 flex-1 text-xs font-bold shadow-lg md:h-10 md:text-sm"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 flex-1 text-xs font-bold md:h-10 md:text-sm"
         >
           Realizar Pedido <ChevronRight className="ml-1 h-3 w-3 md:ml-2 md:h-4 md:w-4" />
         </Button>

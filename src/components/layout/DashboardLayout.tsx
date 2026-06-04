@@ -18,9 +18,9 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
   return (
     <NotificationProvider>
       <AutoRefreshProvider interval={15000}>
-        <div className="flex h-svh flex-col py-2 ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
+        <div className="flex h-svh flex-col pb-2 ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}
-          <Card className="order-1 flex-10 overflow-hidden rounded-none shadow-2xl md:rounded-t-4xl md:p-4 lg:order-2">
+          <Card className="order-1 flex-10 overflow-hidden rounded-none py-0 shadow-2xl md:rounded-t-4xl md:p-4 lg:order-2">
             <div className="custom-scrollbar h-full overflow-x-hidden overflow-y-auto p-1">{children}</div>
           </Card>
 
