@@ -3,6 +3,7 @@
 import { Decimal } from '@/generated/prisma/internal/prismaNamespace';
 import prisma from '@/lib/prisma';
 import { adminActionClient, authActionClient } from '@/lib/safe-action';
+import { SETTING_KEYS, SETTING_DEFINITIONS, validateSettingValue, serializeSettingValue, type SettingKey } from '@/lib/settings/schemas';
 import z from 'zod';
 
 const platformSettingSchema = z.object({
@@ -29,7 +30,7 @@ export const getPlatformSetting = adminActionClient.outputSchema(getPlatformSett
       key: s.key,
       value: s.value,
       description: s.description ?? null,
-      balance: s.balance.toNumber(),
+      balance: s.balance?.toNumber() ?? undefined,
     })),
   };
 });
@@ -38,7 +39,7 @@ const getBinancePayPaymentIdOutputSchema = z.object({ binancePayId: z.string() }
 
 export const getBinancePayPaymentId = authActionClient.outputSchema(getBinancePayPaymentIdOutputSchema).action(async () => {
   const binancePayId = await prisma.platformSettings.findFirst({
-    where: { key: 'binance_pay_id' },
+    where: { key: SETTING_KEYS.BINANCE_PAY_ID },
     select: { value: true },
   });
 
@@ -52,7 +53,6 @@ const setPlatformSettingInputSchema = z.object({
   key: z.string(),
   value: z.string(),
   description: z.string().optional(),
-  balance: z.number().optional(),
 });
 
 const setPlatformSettingOutputSchema = z.object({ success: z.boolean() });
@@ -60,12 +60,31 @@ const setPlatformSettingOutputSchema = z.object({ success: z.boolean() });
 export const setPlatformSetting = adminActionClient
   .inputSchema(setPlatformSettingInputSchema)
   .outputSchema(setPlatformSettingOutputSchema)
-  .action(async ({ parsedInput: { key, value, description, balance } }) => {
+  .action(async ({ parsedInput: { key, value, description } }) => {
+    const settingKey = key as SettingKey;
+    const definition = SETTING_DEFINITIONS[settingKey];
+
+    if (!definition) {
+      throw new Error(`Setting "${key}" is not a defined configuration`);
+    }
+
+    if (definition.auditOnly) {
+      throw new Error(`Setting "${key}" is audit-only and cannot be edited`);
+    }
+
+    const validation = validateSettingValue(settingKey, value);
+    if (!validation.valid) {
+      throw new Error(`Invalid value for ${key}: ${validation.error}`);
+    }
+
+    const serialized = serializeSettingValue(settingKey, value);
+
     await prisma.platformSettings.upsert({
       where: { key },
-      update: { value, description, ...(balance !== undefined && { balance }) },
-      create: { key, value, description, ...(balance !== undefined && { balance }) },
+      update: { value: serialized, description: description ?? definition.description },
+      create: { key, value: serialized, description: description ?? definition.description },
     });
+
     return { success: true as const };
   });
 
@@ -77,6 +96,17 @@ export const deletePlatformSetting = adminActionClient
   .inputSchema(deletePlatformSettingInputSchema)
   .outputSchema(deletePlatformSettingOutputSchema)
   .action(async ({ parsedInput: { key } }) => {
+    const settingKey = key as SettingKey;
+    const definition = SETTING_DEFINITIONS[settingKey];
+
+    if (!definition) {
+      throw new Error(`Setting "${key}" is not a defined configuration`);
+    }
+
+    if (definition.auditOnly) {
+      throw new Error(`Setting "${key}" is audit-only and cannot be deleted`);
+    }
+
     await prisma.platformSettings.delete({
       where: { key },
     });
@@ -92,7 +122,7 @@ export const updatePlatformBalance = authActionClient
   .outputSchema(updatePlatformBalanceOutputSchema)
   .action(async ({ parsedInput: { amount, type } }) => {
     await prisma.platformSettings.update({
-      where: { key: 'platformBalance' },
+      where: { key: SETTING_KEYS.PLATFORM_BALANCE },
       data: { balance: type === 'add' ? { increment: amount } : { decrement: amount } },
     });
     return { success: true as const };
@@ -101,7 +131,7 @@ export const updatePlatformBalance = authActionClient
 const getPlatformBalanceOutputSchema = z.object({ balance: z.instanceof(Decimal) });
 export const getPlatformBalance = authActionClient.outputSchema(getPlatformBalanceOutputSchema).action(async () => {
   const platformBalance = await prisma.platformSettings.findFirst({
-    where: { key: 'platformBalance' },
+    where: { key: SETTING_KEYS.PLATFORM_BALANCE },
     select: { balance: true },
   });
 

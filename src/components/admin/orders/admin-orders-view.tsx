@@ -58,7 +58,7 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <StatusLeyend />
       <AdminOrdersFilters buyers={buyers} />
       <AdminOrdersList

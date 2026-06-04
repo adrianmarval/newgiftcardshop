@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/client';
+import { settingsService } from '@/lib/settings/settings.service';
 
 export interface EscalationConfig {
   enabled: boolean;
@@ -14,31 +15,9 @@ export interface TierInfo {
   tiers: { tier: number; amount: string }[];
 }
 
-const DEFAULT_CONFIG: EscalationConfig = {
-  enabled: true,
-  durationMinutes: 5,
-  dropAmount: 1,
-};
-
-const ESCALATION_KEYS = {
-  ENABLED: 'escalation_enabled',
-  DURATION_MINUTES: 'escalation_duration_minutes',
-  DROP_AMOUNT: 'escalation_drop_amount',
-};
-
 export class GiftcardEscalationService {
   async getConfig(): Promise<EscalationConfig> {
-    const settings = await prisma.platformSettings.findMany({
-      where: { key: { in: [ESCALATION_KEYS.ENABLED, ESCALATION_KEYS.DURATION_MINUTES, ESCALATION_KEYS.DROP_AMOUNT] } },
-    });
-
-    const configMap = new Map(settings.map((s) => [s.key, s.value]));
-
-    return {
-      enabled: configMap.get(ESCALATION_KEYS.ENABLED) !== 'false',
-      durationMinutes: parseInt(configMap.get(ESCALATION_KEYS.DURATION_MINUTES) || '', 10) || DEFAULT_CONFIG.durationMinutes,
-      dropAmount: parseInt(configMap.get(ESCALATION_KEYS.DROP_AMOUNT) || '', 10) || DEFAULT_CONFIG.dropAmount,
-    };
+    return settingsService.getEscalationConfig();
   }
 
   async getInitialTier(brandCountryId: string): Promise<number> {

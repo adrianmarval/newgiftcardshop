@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Settings, Globe, DollarSign } from 'lucide-react';
+import { Search, Settings, DollarSign } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,6 @@ export function CompactSearchBar({
     <div className={cn('bg-card/50 flex items-center gap-1 rounded-xl border p-1 backdrop-blur-sm md:gap-3 md:p-3', className)}>
       {/* Country Selector - Globe hidden on mobile to save space */}
       <div className="flex items-center">
-        <Globe className="text-muted-foreground hidden h-3.5 w-3.5 shrink-0 md:block md:h-4 md:w-4" />
         <Select value={selectedCountry} onValueChange={onCountryChange}>
           <SelectTrigger className="h-8 w-[70px] border-0 bg-transparent p-1 text-xs font-medium focus:ring-0 md:w-[90px] md:text-sm [&>span]:line-clamp-1">
             <SelectValue placeholder="País">

@@ -3,224 +3,219 @@
 import React, { useState } from 'react';
 import { PlatformSetting } from '@/actions/platform/settings';
 import { useAction } from 'next-safe-action/hooks';
-import { setPlatformSetting, deletePlatformSetting } from '@/actions/platform/settings';
+import { setPlatformSetting } from '@/actions/platform/settings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { IconTrash, IconEdit, IconPlus } from '@tabler/icons-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { IconEdit } from '@tabler/icons-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from '@/components/ui/alert-dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { SETTING_KEYS, SETTING_DEFINITIONS, type SettingKey } from '@/lib/settings/schemas';
+
+const AUDIT_ONLY_KEYS: SettingKey[] = [SETTING_KEYS.PLATFORM_BALANCE];
 
 interface ConfigManagerProps {
   initialSettings: PlatformSetting[];
 }
 
 export function ConfigManager({ initialSettings }: ConfigManagerProps) {
-  const [settings, setSettings] = useState<PlatformSetting[]>(initialSettings);
-
-  // States para el modal de Crear/Editar
+  const settingsMap = new Map(initialSettings.map((s) => [s.key, s]));
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingSetting, setEditingSetting] = useState<PlatformSetting | null>(null);
-  const [formData, setFormData] = useState({ key: '', value: '', description: '', balance: '' });
-
-  // States para el alert de Eliminar
-  const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [editingKey, setEditingKey] = useState<SettingKey | null>(null);
+  const [formData, setFormData] = useState({ value: '', description: '' });
+  const [formError, setFormError] = useState<string | null>(null);
 
   const { executeAsync: executeSetSetting, status: setStatus } = useAction(setPlatformSetting);
-  const { executeAsync: executeDeleteSetting, status: deleteStatus } = useAction(deletePlatformSetting);
 
-  const handleOpenForm = (setting?: PlatformSetting) => {
-    if (setting) {
-      setEditingSetting(setting);
-      setFormData({
-        key: setting.key,
-        value: setting.value,
-        description: setting.description || '',
-        balance: setting.balance?.toString() || '0',
-      });
-    } else {
-      setEditingSetting(null);
-      setFormData({ key: '', value: '', description: '', balance: '' });
+  const getDefinition = (key: SettingKey) => SETTING_DEFINITIONS[key];
+  const isAuditOnly = (key: SettingKey) => AUDIT_ONLY_KEYS.includes(key);
+
+  const getInputType = (key: SettingKey): 'text' | 'number' | 'boolean' => {
+    const def = getDefinition(key);
+    if (def?.type === 'boolean') return 'boolean';
+    if (def?.type === 'number' || def?.type === 'decimal') return 'number';
+    return 'text';
+  };
+
+  const validateValue = (key: SettingKey, value: string): string | null => {
+    const def = getDefinition(key);
+    if (!def) return 'Configuración desconocida';
+
+    if (def.type === 'boolean') {
+      if (value !== 'true' && value !== 'false') return 'El valor debe ser true o false';
     }
+
+    if (def.type === 'number' || def.type === 'decimal') {
+      const num = parseFloat(value);
+      if (isNaN(num)) return 'Debe ser un número válido';
+      if (def.validation?.min !== undefined && num < def.validation.min) {
+        return `El valor debe ser mayor o igual a ${def.validation.min}`;
+      }
+      if (def.validation?.max !== undefined && num > def.validation.max) {
+        return `El valor debe ser menor o igual a ${def.validation.max}`;
+      }
+    }
+
+    if (def.type === 'string' && def.validation?.pattern && !def.validation.pattern.test(value)) {
+      return 'El valor no cumple con el formato esperado';
+    }
+
+    return null;
+  };
+
+  const handleOpenForm = (key: SettingKey) => {
+    setFormError(null);
+    setEditingKey(key);
+    const current = settingsMap.get(key);
+    setFormData({
+      value: current?.value ?? String(SETTING_DEFINITIONS[key].default),
+      description: current?.description ?? '',
+    });
     setIsFormOpen(true);
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.key || !formData.value) return;
+    if (!editingKey || !formData.value) return;
+
+    const validationError = validateValue(editingKey, formData.value);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+
+    if (isAuditOnly(editingKey)) {
+      setFormError('Este setting es de solo lectura para auditoría');
+      return;
+    }
 
     try {
       const result = await executeSetSetting({
-        key: formData.key,
+        key: editingKey,
         value: formData.value,
         description: formData.description,
-        ...(formData.balance !== '' && { balance: Number(formData.balance) }),
       });
 
       if (result?.data?.success) {
-        setSettings((prev) => {
-          const existingIndex = prev.findIndex((s) => s.key === formData.key);
-          const newSetting = {
-            id: editingSetting?.id || `temp-${Date.now()}`,
-            key: formData.key,
-            value: formData.value,
-            description: formData.description || null,
-            balance: formData.balance !== '' ? Number(formData.balance) : 0,
-          };
-          if (existingIndex >= 0) {
-            const newSettings = [...prev];
-            newSettings[existingIndex] = newSetting;
-            return newSettings;
-          }
-          return [...prev, newSetting];
-        });
         setIsFormOpen(false);
       }
     } catch (e) {
       console.error(e);
+      setFormError('Error al guardar la configuración');
     }
   };
 
-  const handleOpenAlert = (key: string) => {
-    setDeletingKey(key);
-    setIsAlertOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingKey) return;
-    try {
-      const result = await executeDeleteSetting({ key: deletingKey });
-      if (result?.data?.success) {
-        setSettings((prev) => prev.filter((s) => s.key !== deletingKey));
-        setIsAlertOpen(false);
-        setDeletingKey(null);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const settingKeys = Object.values(SETTING_KEYS);
 
   return (
     <div className="w-full space-y-4">
       <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">CONFIGURACIÓN</h1>
-      <div className="space-y-2">
-        <div className="flex flex-row items-center justify-end">
-          <Button onClick={() => handleOpenForm()} className="gap-2">
-            <IconPlus size={16} />
-          </Button>
-        </div>
-        <div>
-          {settings.length === 0 ? (
-            <div className="text-muted-foreground p-8 text-center">No hay configuraciones registradas.</div>
-          ) : (
-            <div className="overflow-hidden rounded-md border">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-muted/50 text-muted-foreground">
-                  <tr>
-                    <th className="h-12 px-4 align-middle font-medium">Clave</th>
-                    <th className="h-12 px-4 align-middle font-medium">Valor</th>
-                    <th className="h-12 px-4 align-middle font-medium">Balance</th>
-                    <th className="h-12 px-4 align-middle font-medium">Descripción</th>
-                    <th className="h-12 w-25 px-4 align-middle font-medium">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {settings.map((setting) => (
-                    <tr key={setting.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="p-4 align-middle font-medium">{setting.key}</td>
-                      <td className="p-4 align-middle break-all">{setting.value}</td>
-                      <td className="p-4 align-middle">{setting.balance !== undefined ? setting.balance : '-'}</td>
-                      <td className="text-muted-foreground p-4 align-middle">{setting.description || '-'}</td>
+      <div>
+        {settingKeys.length === 0 ? (
+          <div className="text-muted-foreground p-8 text-center">No hay configuraciones definidas.</div>
+        ) : (
+          <div className="overflow-hidden rounded-md border">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/50 text-muted-foreground">
+                <tr>
+                  <th className="h-12 px-4 align-middle font-medium">Clave</th>
+                  <th className="h-12 px-4 align-middle font-medium">Valor</th>
+                  <th className="h-12 px-4 align-middle font-medium">Tipo</th>
+                  <th className="h-12 px-4 align-middle font-medium">Descripción</th>
+                  <th className="h-12 w-25 px-4 align-middle font-medium">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {settingKeys.map((key) => {
+                  const setting = settingsMap.get(key);
+                  const def = getDefinition(key);
+                  const isAudit = isAuditOnly(key);
+                  const currentValue = setting?.value ?? String(def.default);
+
+                  return (
+                    <tr key={key} className="hover:bg-muted/50 transition-colors">
+                      <td className="p-4 align-middle font-medium">
+                        <div className="flex flex-col gap-1">
+                          <span>{key}</span>
+                          {isAudit && (
+                            <span className="text-xs text-orange-500 font-medium">AUDIT</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4 align-middle break-all">
+                        {def.type === 'boolean' ? (
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${currentValue === 'true' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {currentValue}
+                          </span>
+                        ) : (
+                          currentValue
+                        )}
+                      </td>
+                      <td className="p-4 align-middle text-muted-foreground">{def.type}</td>
+                      <td className="text-muted-foreground p-4 align-middle">{def.description}</td>
                       <td className="p-4 align-middle">
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenForm(setting)}>
-                            <IconEdit size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleOpenAlert(setting.key)}
-                          >
-                            <IconTrash size={16} />
-                          </Button>
+                          {!isAudit && (
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenForm(key)}>
+                              <IconEdit size={16} />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Formulario Modal (Dialog) */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <form onSubmit={handleFormSubmit}>
             <DialogHeader>
-              <DialogTitle>{editingSetting ? 'Editar Configuración' : 'Nueva Configuración'}</DialogTitle>
-              <DialogDescription>
-                {editingSetting
-                  ? 'Modifica los valores de esta configuración.'
-                  : 'Agrega un nuevo par clave-valor a las configuraciones globales del sistema.'}
-              </DialogDescription>
+              <DialogTitle>Editar {editingKey}</DialogTitle>
+              <DialogDescription>Modifica el valor de esta configuración.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="key">Clave (Key)</Label>
+                <Label>Valor</Label>
                 <Input
-                  id="key"
                   required
-                  disabled={!!editingSetting}
-                  placeholder="Ej: MIN_BUY_AMOUNT"
-                  value={formData.key}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, key: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="value">Valor</Label>
-                <Input
-                  id="value"
-                  required
-                  placeholder="Ej: 10"
+                  placeholder={
+                    editingKey
+                      ? getInputType(editingKey) === 'boolean'
+                        ? 'true o false'
+                        : getInputType(editingKey) === 'number'
+                        ? 'Ej: 10'
+                        : 'Ej: texto'
+                      : ''
+                  }
+                  type={editingKey && getInputType(editingKey) === 'number' ? 'number' : 'text'}
+                  step={editingKey && getInputType(editingKey) === 'number' ? '1' : undefined}
                   value={formData.value}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, value: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, value: e.target.value }));
+                    setFormError(null);
+                  }}
                 />
+                {editingKey && getInputType(editingKey) === 'boolean' && (
+                  <p className="text-xs text-muted-foreground">Usa &quot;true&quot; o &quot;false&quot;</p>
+                )}
+                {editingKey && getDefinition(editingKey)?.validation?.min !== undefined && (
+                  <p className="text-xs text-muted-foreground">
+                    Rango: {getDefinition(editingKey)?.validation?.min} - {getDefinition(editingKey)?.validation?.max}
+                  </p>
+                )}
               </div>
+              {formError && <p className="text-sm text-destructive">{formError}</p>}
               <div className="space-y-2">
-                <Label htmlFor="desc">Descripción</Label>
+                <Label>Descripción</Label>
                 <Input
-                  id="desc"
                   placeholder="Descripción opcional"
                   value={formData.description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="balance">
-                  Balance <span className="text-muted-foreground font-normal">(Opcional)</span>
-                </Label>
-                <Input
-                  id="balance"
-                  type="number"
-                  step="0.01"
-                  placeholder="Ej: 1500.50"
-                  value={formData.balance}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, balance: e.target.value }))}
                 />
               </div>
             </div>
@@ -236,31 +231,6 @@ export function ConfigManager({ initialSettings }: ConfigManagerProps) {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Alerta de Eliminación */}
-      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción eliminará la configuración <strong>{deletingKey}</strong>. Esto podría afectar el funcionamiento de la plataforma.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={(e) => {
-                e.preventDefault();
-                handleDeleteConfirm();
-              }}
-            >
-              {deleteStatus === 'executing' ? <Spinner size="sm" className="mr-2 text-white" /> : null}
-              Sí, eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

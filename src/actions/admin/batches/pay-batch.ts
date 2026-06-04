@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
+import { SETTING_KEYS } from '@/lib/settings/schemas';
 
 const payBatchInputSchema = z.object({ batchIds: z.array(z.number().int().positive()) });
 
@@ -11,12 +12,6 @@ export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).actio
   const { batchIds } = parsedInput;
 
   const results: { batchId: number; paymentId: string; amount: number }[] = [];
-
-  const lastPayment = await prisma.payment.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: { balanceAfter: true },
-  });
-  let currentBalance = lastPayment ? Number(lastPayment.balanceAfter) : 0;
 
   for (const batchId of batchIds) {
     const batch = await prisma.giftcardBatch.findUnique({
@@ -41,29 +36,33 @@ export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).actio
 
     const paymentAmount = effectiveTotal.mul(batch.sellRate);
 
-    const newBalance = currentBalance - Number(paymentAmount);
-    currentBalance = newBalance;
+    await prisma.$transaction(async (tx) => {
+      const updatedSettings = await tx.platformSettings.update({
+        where: { key: SETTING_KEYS.PLATFORM_BALANCE },
+        data: { balance: { decrement: paymentAmount } },
+      });
 
-    const payment = await prisma.payment.create({
-      data: {
-        amount: paymentAmount,
-        balanceAfter: newBalance,
-        direction: 'DEBIT',
-        category: 'BATCH',
-        batchId: batch.id,
-        relatedUserId: batch.user?.id ?? null,
-      },
-    });
+      const payment = await tx.payment.create({
+        data: {
+          amount: paymentAmount,
+          balanceAfter: updatedSettings.balance,
+          direction: 'DEBIT',
+          category: 'BATCH',
+          batchId: batch.id,
+          relatedUserId: batch.user?.id ?? null,
+        },
+      });
 
-    await prisma.giftcardBatch.update({
-      where: { id: batchId },
-      data: { isPaid: true },
-    });
+      await tx.giftcardBatch.update({
+        where: { id: batchId },
+        data: { isPaid: true },
+      });
 
-    results.push({
-      batchId,
-      paymentId: payment.id,
-      amount: Number(payment.amount),
+      results.push({
+        batchId,
+        paymentId: payment.id,
+        amount: Number(payment.amount),
+      });
     });
   }
 

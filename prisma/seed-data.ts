@@ -127,7 +127,7 @@ export const seedData: SeedData = {
     {
       balance: 0,
       key: 'platformBalance',
-      description: 'Saldo disponible en la plataforma',
+      description: 'Saldo disponible en la plataforma (auditoría)',
       value: '0',
     },
     {

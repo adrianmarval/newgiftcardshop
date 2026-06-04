@@ -12,7 +12,7 @@ export interface BuyerOrdersViewProps {
 
 export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <StatusLeyend />
       <OrdersFilters />
       <OrdersList orders={orders} totalPages={pagination.totalPages} />

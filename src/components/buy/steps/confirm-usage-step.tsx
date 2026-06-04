@@ -15,12 +15,23 @@ import { showAlert } from '@/lib/swal';
 import { Spinner } from '@/components/ui/spinner';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 export const ConfirmUsageStep = () => {
   const { foundGiftcards, setStep, orderId, setAdjustedTotal, resetForm, selectedBrand, selectedCountry } = useBuyFlow();
   const router = useRouter();
   const [buyRate, setBuyRate] = useState(0.85);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const { execute: executeGetUserBuyRate } = useAction(getUserBuyRate, {
     onSuccess: ({ data }) => {
@@ -63,6 +74,12 @@ export const ConfirmUsageStep = () => {
 
   const handleConfirmUsage = () => {
     if (!orderId) return;
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmDialogConfirm = () => {
+    if (!orderId) return;
+    setShowConfirmDialog(false);
     setErrorMessage(null);
     confirmExecute({ orderId });
   };
@@ -163,15 +180,53 @@ export const ConfirmUsageStep = () => {
         </Button>
 
         {allCardsWorthless ? (
-          <Button variant={'destructive'} onClick={handleCancelOrder} disabled={cancelStatus === 'executing' || !orderId} className="h-9 text-xs md:h-10 md:text-sm">
+          <Button
+            variant={'destructive'}
+            onClick={handleCancelOrder}
+            disabled={cancelStatus === 'executing' || !orderId}
+            className="h-9 text-xs md:h-10 md:text-sm"
+          >
             {cancelStatus === 'executing' ? <Spinner size="sm" /> : 'Cancelar Orden'}
           </Button>
         ) : (
-          <Button onClick={handleConfirmUsage} disabled={confirmStatus === 'executing' || !orderId} className="bg-primary text-primary-foreground h-9 text-xs font-bold md:h-10 md:text-sm">
+          <Button
+            onClick={handleConfirmUsage}
+            disabled={confirmStatus === 'executing' || !orderId}
+            className="bg-primary text-primary-foreground h-9 text-xs font-bold md:h-10 md:text-sm"
+          >
             {confirmStatus === 'executing' ? <Spinner size="sm" /> : 'Confirmar y Pagar'}
           </Button>
         )}
       </div>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Liberar Pago al Proveedor?</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              ¿Ya redimiste y reportaste correctamente todas tus tarjetas?
+              <br />
+              <span className="text-destructive mt-2 block font-medium">El pago no se puede revertir.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowConfirmDialog(false);
+                setStep(3);
+              }}
+              className="flex-1"
+            >
+              Seguir Reportando
+            </Button>
+            <AlertDialogAction onClick={handleConfirmDialogConfirm} disabled={confirmStatus === 'executing'} className="flex-1">
+              {confirmStatus === 'executing' ? <Spinner size="sm" className="mr-2" /> : null}
+              Confirmar y Pagar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
