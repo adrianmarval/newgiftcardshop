@@ -4,6 +4,7 @@ import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';
 import { NotificationProvider } from '@/contexts/notification-context';
 import { AppSection } from '@/types';
 import { Role } from '@/generated/prisma/enums';
+import { Card } from '../ui/card';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,9 +20,9 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
       <AutoRefreshProvider interval={15000}>
         <div className="flex h-svh flex-col py-2 ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}
-          <div className="order-1 flex-10 overflow-hidden md:rounded-t-2xl lg:order-2">
+          <Card className="order-1 flex-10 overflow-hidden rounded-none shadow-2xl md:rounded-t-4xl md:p-4 lg:order-2">
             <div className="custom-scrollbar h-full overflow-x-hidden overflow-y-auto p-1">{children}</div>
-          </div>
+          </Card>
 
           {/*sidebar*/}
           <div className="bg-background order-1 flex-1 p-0 ring-0">

@@ -152,9 +152,9 @@ export function findGiftcardCombination(
   const addTierInfo = (result: GiftcardSelectionResult): GiftcardSelectionWithTierInfo => ({
     ...result,
     tierInfo: {
-      accessibleCards: result.selectedCards,
+      accessibleCards,
       inaccessibleCards,
-      accessibleAmount: result.total,
+      accessibleAmount,
       inaccessibleAmount,
       buyerBuyRate,
     },

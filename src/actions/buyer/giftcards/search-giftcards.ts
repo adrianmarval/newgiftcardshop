@@ -154,6 +154,7 @@ export const searchGiftcards = buyerActionClient
     if (result.selectedCards.length === 0 && allGiftcards.length > 0) {
       const totalInaccessible = result.tierInfo.inaccessibleAmount.toNumber();
       const totalAccessible = result.tierInfo.accessibleAmount.toNumber();
+      const accessibleCards = result.tierInfo.accessibleCards;
 
       if (totalInaccessible > 0 && totalAccessible === 0) {
         return {
@@ -163,10 +164,22 @@ export const searchGiftcards = buyerActionClient
         };
       }
 
+      // Tarjetas accesibles existen pero la mínima supera el monto buscado
+      if (accessibleCards.length > 0) {
+        const minCard = accessibleCards.reduce((min, c) => (c.amount.lt(min.amount) ? c : min), accessibleCards[0]);
+        if (minCard.amount.gt(amount)) {
+          return {
+            success: true as const,
+            giftcards: [],
+            error: `La tarjeta más chica disponible es de $${minCard.amount.toFixed(2)}. Intentá con un monto mayor o igual.`,
+          };
+        }
+      }
+
       return {
         success: true as const,
         giftcards: [],
-        error: `Podés acceder a ${result.tierInfo.accessibleCards.length} tarjetas ($${totalAccessible.toFixed(2)}).\n\nEl total disponible no alcanza las tarjetas que buscás. Intentá con un monto menor.`,
+        error: `No se encontró una combinación exacta para $${amount.toFixed(2)}. Probá con otro monto.`,
       };
     }
 
