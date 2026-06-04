@@ -34,7 +34,7 @@ export const MoreDropDownMenu = ({ items }: MoreMenuProps) => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex items-center justify-center gap-2 rounded-xl p-3 transition-all duration-200',
+          'flex items-center justify-center gap-1 rounded-xl p-3 transition-all duration-200',
           isOpen ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
         )}
         aria-label="More options"

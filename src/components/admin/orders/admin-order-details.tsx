@@ -67,7 +67,7 @@ export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteRe
         <span className="text-muted-foreground text-xs font-medium md:text-sm">Tasa: {(order.buyRate * 100).toFixed(1)}%</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {order.giftcards.map((card) => (
           <GiftcardItem
             key={card.id}
@@ -76,7 +76,7 @@ export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteRe
             contextualInfo={
               (card as GiftcardWithSeller).seller ? (
                 <CardFooter className="bg-muted/30 mt-auto flex items-center justify-between border-t p-1 px-3">
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-1">
                     <div className="border-primary/20 bg-primary/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
                       <span className="text-primary text-[10px] font-bold">
                         {(card as GiftcardWithSeller).seller!.name.charAt(0).toUpperCase()}

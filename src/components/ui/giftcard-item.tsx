@@ -72,7 +72,7 @@ export function GiftcardItem({
         <div className="bg-muted/50 relative h-28 w-full shrink-0">
           {card.isSearchMatch && (
             <div className="absolute top-0 right-0 z-50">
-              <Badge className="bg-primary animate-pulse rounded-none rounded-bl-lg px-2 py-1 text-[10px] font-black tracking-tighter text-white shadow-lg">
+              <Badge className="bg-primary animate-pulse rounded-none rounded-bl-lg px-2 py-1 text-[10px] font-black tracking-tighter shadow-lg">
                 MATCH
               </Badge>
             </div>
@@ -100,7 +100,7 @@ export function GiftcardItem({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="bg-background/40 hover:bg-background/60 size-7 rounded-full text-white shadow-sm backdrop-blur-md hover:text-white"
+                        className="bg-background/40 hover:bg-background/60 size-7 rounded-full shadow-sm backdrop-blur-md hover:text-white"
                       >
                         <EllipsisVertical className="h-3.5 w-3.5" />
                       </Button>
@@ -109,7 +109,7 @@ export function GiftcardItem({
                   </DropdownMenu>
                 ) : showIssues ? (
                   <div
-                    className="bg-destructive/90 flex h-7 w-7 items-center justify-center rounded-full text-white shadow-sm backdrop-blur-sm"
+                    className="bg-destructive/90 flex h-7 w-7 items-center justify-center rounded-full shadow-sm backdrop-blur-sm"
                     title="Con problemas"
                   >
                     <AlertTriangle className="h-3.5 w-3.5" />
@@ -123,7 +123,7 @@ export function GiftcardItem({
                     }}
                     variant="ghost"
                     size="icon"
-                    className="hover:bg-destructive/90 bg-background/40 h-7 w-7 rounded-full text-white opacity-0 shadow-sm backdrop-blur-md transition-all group-hover:opacity-100 hover:text-white"
+                    className="hover:bg-destructive/90 bg-background/40 h-7 w-7 rounded-full opacity-0 shadow-sm backdrop-blur-md transition-all group-hover:opacity-100 hover:text-white"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
@@ -136,7 +136,7 @@ export function GiftcardItem({
                     }}
                     variant="ghost"
                     size="icon"
-                    className="bg-background/40 h-7 w-7 rounded-full text-white opacity-0 shadow-sm backdrop-blur-md transition-all group-hover:opacity-100 hover:text-white"
+                    className="bg-background/40 h-7 w-7 rounded-full opacity-0 shadow-sm backdrop-blur-md transition-all group-hover:opacity-100 hover:text-white"
                   >
                     <Eye className="h-3.5 w-3.5" />
                   </Button>
@@ -152,7 +152,7 @@ export function GiftcardItem({
                     <span className="text-lg leading-none font-black tracking-tight text-white/50 line-through drop-shadow-lg">
                       {formatCurrency(card.amount, { currency })}
                     </span>
-                    <span className="text-3xl leading-none font-black tracking-tight text-white drop-shadow-lg">
+                    <span className="text-3xl leading-none font-black tracking-tight drop-shadow-lg">
                       {formatCurrency(card.reportedAmount, { currency })}
                     </span>
                   </div>
@@ -161,7 +161,7 @@ export function GiftcardItem({
                     {formatCurrency(card.amount, { currency })}
                   </span>
                 ) : (
-                  <span className="text-3xl leading-none font-black tracking-tight text-white drop-shadow-lg">
+                  <span className="text-3xl leading-none font-black tracking-tight drop-shadow-lg">
                     {formatCurrency(card.amount, { currency })}
                   </span>
                 )}

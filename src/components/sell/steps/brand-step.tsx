@@ -69,7 +69,7 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
         <Card className="flex shrink-0 flex-col border p-3 md:col-span-4 md:row-span-11 md:min-h-0 md:p-6">
           <div className="space-y-1 md:flex-1 md:space-y-6 md:overflow-y-auto">
             {/* Selector de País */}
-            <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
+            <div className="flex items-center justify-between gap-1 md:flex-col md:items-start md:justify-start md:gap-1">
               <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
                 1. Select Country
               </Label>
@@ -90,7 +90,7 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
             </div>
 
             {/* Buscador de Marca */}
-            <div className="flex items-center justify-between gap-4 md:flex-col md:items-start md:justify-start md:gap-2">
+            <div className="flex items-center justify-between gap-1 md:flex-col md:items-start md:justify-start md:gap-1">
               <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
                 2. Select Brand
               </Label>
@@ -113,7 +113,7 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
           <CardContent className="custom-scrollbar grid flex-1 auto-rows-max grid-cols-3 gap-1.5 overflow-y-auto p-1.5 sm:grid-cols-3 md:gap-1 md:p-2">
             {showEmptyState ? (
               <div className="col-span-full flex flex-col items-center justify-center py-8 text-center md:py-0">
-                <Globe className="text-muted-foreground/30 mb-4 h-16 w-16" />
+                <Globe className="text-muted-foreground/30 mb-2 h-16 w-16" />
                 <h3 className="text-foreground mb-2 text-lg font-semibold">Select a country first</h3>
                 <p className="text-muted-foreground max-w-xs text-sm">
                   Choose a country from the dropdown to see available brands in that region.
@@ -157,7 +157,7 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
 
                     {!bc.isActive && (
                       <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden">
-                        <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-1 text-center text-[8px] font-black tracking-[0.2em] whitespace-nowrap text-white uppercase shadow-2xl backdrop-blur-md md:py-3 md:text-[14px] md:tracking-[0.4em]">
+                        <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-1 text-center text-[8px] font-black tracking-[0.2em] whitespace-nowrap uppercase shadow-2xl backdrop-blur-md md:py-3 md:text-[14px] md:tracking-[0.4em]">
                           Coming Soon
                         </div>
                       </div>
@@ -181,7 +181,7 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
       </div>
 
       {/* Botón inferior fijo */}
-      <div className="flex items-center justify-center-safe gap-2">
+      <div className="flex items-center justify-center-safe gap-1">
         <Button onClick={() => setStep(2)} disabled={!isStep1Valid} className="flex shrink-0 items-center justify-center p-4">
           Continuar <ChevronRight className="h-4 md:ml-2" />
         </Button>

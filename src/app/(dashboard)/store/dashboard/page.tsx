@@ -33,7 +33,7 @@ export default async function BuyerDashboardPage() {
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-1">
       <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">BUYER DASHBOARD</h1>
 
       <BuyerDashboard stats={stats} activeOrders={activeOrders} />

@@ -39,7 +39,7 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <div className="relative flex-1">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
@@ -52,13 +52,13 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-10 md:gap-2 md:px-3">
+          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-10 md:gap-1 md:px-3">
             <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4" />
             <span className="hidden md:inline md:text-lg">Filtros</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[320px] p-4" align="end">
-          <div className="space-y-4">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Filtros</span>
               {hasActiveFilters && (
@@ -69,7 +69,7 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
               )}
             </div>
 
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-1">
               <Label className="text-xs">Vendedor</Label>
               <Popover open={openSeller} onOpenChange={setOpenSeller}>
                 <PopoverTrigger asChild>
@@ -121,7 +121,7 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
               </Popover>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label className="text-xs">Estado</Label>
               <Select value={params.status || 'ALL'} onValueChange={(value) => setParams({ status: value as typeof params.status })}>
                 <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
@@ -137,7 +137,7 @@ export function AdminBatchesFilters({ sellers }: AdminBatchesFiltersProps) {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label className="text-xs">Ordenar por</Label>
               <Select value={params.sort || 'newest'} onValueChange={(value) => setParams({ sort: value as typeof params.sort })}>
                 <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">

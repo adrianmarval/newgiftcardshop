@@ -19,7 +19,7 @@ export function BatchDetails({ batch }: BatchDetailsProps) {
         <span className="text-muted-foreground text-xs font-medium md:text-base">Batch Rate: {(batch.sellRate * 100).toFixed(1)}%</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-1 sm:grid-cols-2 md:gap-3 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-1 sm:grid-cols-2 md:gap-1 xl:grid-cols-3">
         {batch.giftcards.map((card) => (
           <GiftcardItem key={card.id} card={card} showCopyButton={false} />
         ))}
@@ -32,7 +32,7 @@ export function BatchDetails({ batch }: BatchDetailsProps) {
               key={p.id}
               className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2 py-2"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                 <span className="text-[10px] text-emerald-500">#{p.id.slice(-6).toUpperCase()}</span>
               </div>

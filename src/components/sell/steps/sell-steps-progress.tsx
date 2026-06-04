@@ -6,7 +6,7 @@ export const STEP_LABELS = ['Config', 'Load', 'Review'];
 export const SellStepsProgress = () => {
   const step = useSellFlow((s) => s.step);
   return (
-    <div className="flex items-center justify-between gap-2.5 rounded-none p-1 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
+    <div className="flex items-center justify-between gap-1.5 rounded-none p-1 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
       <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Sell Gift Cards</h1>
         <p className="text-muted-foreground hidden text-xs md:block md:text-base">Complete the batch in this session.</p>
@@ -17,7 +17,7 @@ export const SellStepsProgress = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="flex justify-center md:justify-end"
       >
-        <div className="flex items-center gap-1 md:gap-2">
+        <div className="flex items-center gap-1 md:gap-1">
           {STEP_LABELS.map((label, idx) => {
             const s = idx + 1;
             return (
@@ -26,7 +26,7 @@ export const SellStepsProgress = () => {
                   <motion.div
                     className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold transition-all md:h-10 md:w-10 md:text-base ${
                       s === step
-                        ? 'border-primary/50 bg-primary shadow-primary/30 text-white shadow-lg'
+                        ? 'border-primary/50 bg-primary shadow-primary/30 shadow-lg'
                         : s < step
                           ? 'border-primary/50 bg-primary/20 text-primary'
                           : 'border-border bg-muted/50 text-muted-foreground/50'

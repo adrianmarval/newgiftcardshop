@@ -38,7 +38,7 @@ export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
   const hasActiveFilters = status !== 'ALL' || search || sort !== 'newest';
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <div className="relative flex-1">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <form onSubmit={handleSearchSubmit}>
@@ -53,13 +53,13 @@ export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-10 md:gap-2 md:px-3">
+          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-10 md:gap-1 md:px-3">
             <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4" />
             <span className="hidden md:inline">Filters</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-70 p-4" align="end">
-          <div className="space-y-4">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Filters</span>
               {hasActiveFilters && (
@@ -70,7 +70,7 @@ export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-muted-foreground text-xs font-medium">Status</label>
               <Select value={status} onValueChange={(value) => setParams({ status: value as typeof status, page: 1 })}>
                 <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
@@ -86,7 +86,7 @@ export const BatchesFilters = ({ onSearchChange }: BatchesFiltersProps) => {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-muted-foreground text-xs font-medium">Sort</label>
               <Select value={sort} onValueChange={(value) => setParams({ sort: value as typeof sort, page: 1 })}>
                 <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">

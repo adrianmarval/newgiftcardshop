@@ -100,9 +100,9 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
   }
 
   return (
-    <div className="space-y-2" ref={listRef}>
+    <div className="space-y-1" ref={listRef}>
       {payableBatches.length > 0 && (
-        <div className="flex items-center gap-2 px-1">
+        <div className="flex items-center gap-1 px-1">
           <Checkbox checked={allPayableSelected} onCheckedChange={handleSelectAll} className="cursor-pointer" />
           <span className="text-muted-foreground text-sm md:text-lg">Seleccionar todos los pagables</span>
         </div>

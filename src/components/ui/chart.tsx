@@ -174,7 +174,7 @@ function ChartTooltipContent({
               <div
                 key={index}
                 className={cn(
-                  '[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
+                  '[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-1 [&>svg]:h-2.5 [&>svg]:w-2.5',
                   indicator === 'dot' && 'items-center',
                 )}
               >
@@ -242,7 +242,7 @@ function ChartLegendContent({
   }
 
   return (
-    <div className={cn('flex items-center justify-center gap-4', verticalAlign === 'top' ? 'pb-3' : 'pt-3', className)}>
+    <div className={cn('flex items-center justify-center gap-1', verticalAlign === 'top' ? 'pb-3' : 'pt-3', className)}>
       {payload
         .filter((item) => item.type !== 'none')
         .map((item, index) => {

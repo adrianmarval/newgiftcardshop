@@ -55,7 +55,7 @@ export default async function PendingActivationPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h1 className="text-4xl font-black tracking-tighter uppercase italic sm:text-6xl">{t.title}</h1>
             <p className="text-muted-foreground text-lg leading-tight">
               <span className="text-foreground font-bold">{t.greeting}</span> <br />
@@ -83,8 +83,8 @@ export default async function PendingActivationPage() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 sm:flex-row">
             <LogoutButton portal={portal} variant="destructive" className="h-12 w-full" />
           </div>
           <p className="text-muted-foreground/40 text-[10px] font-bold tracking-[0.3em] uppercase">{t.footer}</p>

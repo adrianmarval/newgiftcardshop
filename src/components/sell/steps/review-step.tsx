@@ -144,9 +144,9 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
       {/* Contenedor Split Principal */}
       <div className="flex min-h-0 w-full max-w-full flex-1 flex-col gap-1 md:flex-row">
         {/* Columna Izquierda: Panel de Resumen (Compactado en móvil para ocupar el mínimo espacio arriba) */}
-        <Card className="flex w-full shrink-0 flex-col gap-0 border p-1 backdrop-blur-sm md:w-80 md:flex-col md:gap-0 md:space-y-4 md:p-4">
+        <Card className="flex w-full shrink-0 flex-col gap-0 border p-1 backdrop-blur-sm md:w-80 md:flex-col md:gap-0 md:space-y-1 md:p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-white md:text-lg">Review</h2>
+            <h2 className="text-sm font-bold md:text-lg">Review</h2>
           </div>
 
           {/* Opción B: 2 columnas arriba, full-width abajo */}
@@ -218,7 +218,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                       isBlocking ? 'border-primary/40 bg-primary/5 ring-primary/20 shadow-sm ring-1' : 'hover:border-primary/30',
                     )}
                   >
-                    <div className="flex w-full flex-col gap-1.5 md:gap-2">
+                    <div className="flex w-full flex-col gap-1.5 md:gap-1">
                       <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <div className="bg-primary/20 text-primary flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-black md:h-5 md:w-5 md:text-[10px]">
@@ -247,7 +247,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                       </div>
 
                       <div className="flex w-full flex-col gap-1 md:gap-1.5">
-                        <div className="flex w-full items-center justify-between gap-2 text-[11px] md:text-sm">
+                        <div className="flex w-full items-center justify-between gap-1 text-[11px] md:text-sm">
                           <span className="text-muted-foreground shrink-0 text-[9px] font-semibold tracking-tighter uppercase md:text-[10px]">
                             Code
                           </span>
@@ -310,13 +310,13 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
-                          className="border-border mt-1 w-full space-y-1.5 overflow-hidden rounded-lg border bg-amber-500/10 p-1.5 md:space-y-2 md:p-2"
+                          className="border-border mt-1 w-full space-y-1.5 overflow-hidden rounded-lg border bg-amber-500/10 p-1.5 md:space-y-1 md:p-2"
                         >
                           <p className="text-[9px] font-bold text-amber-300 md:text-xs">Amount Mismatch</p>
                           <div className="grid grid-cols-2 gap-1">
                             <div className="rounded border border-amber-500/10 bg-black/20 p-1 md:p-1.5">
                               <p className="text-[8px] font-medium text-amber-200/50 uppercase">Written</p>
-                              <p className="text-[11px] font-black text-white md:text-xs">
+                              <p className="text-[11px] font-black md:text-xs">
                                 {currencySymbol}
                                 {card.amount}
                               </p>
@@ -365,7 +365,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
       </div>
 
       {/* Barra de Botones de Acción (Fija abajo en ambos layouts) */}
-      <div className="flex shrink-0 items-center justify-between gap-2">
+      <div className="flex shrink-0 items-center justify-between gap-1">
         <Button onClick={handleBack} variant="outline" size="sm" className="h-9 flex-1 text-xs font-bold md:h-10">
           Back
         </Button>

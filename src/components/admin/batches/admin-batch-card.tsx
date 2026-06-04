@@ -131,7 +131,7 @@ export function AdminBatchCard({
         </>
       }
       date={
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1">
           <span>{formatDateTime(batch.createdAt, 'es-AR')}</span>
           {canDelete && (
             <Button

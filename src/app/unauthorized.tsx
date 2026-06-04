@@ -30,13 +30,13 @@ export default async function UnauthorizedPage() {
         </svg>
       </div>
 
-      <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-red-800 lg:text-5xl">Acceso Denegado!</h1>
+      <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-red-800 lg:text-5xl">Acceso Denegado!</h1>
 
       <p className="text-muted-foreground mb-8 max-w-md text-xl">
         No tenés los permisos necesarios para ver esta página, o tu sesión expiró.
       </p>
 
-      <div className="flex gap-4">
+      <div className="flex gap-1">
         <Link
           href={loginPath}
           className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-ring inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-semibold shadow-lg transition-all outline-none hover:scale-105 focus:ring-2 focus:ring-offset-2"

@@ -68,7 +68,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <StatusLeyend />
 
       <AdminBatchesFilters sellers={sellers} />
@@ -82,7 +82,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
       />
 
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1">
           <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1}>
             Anterior
           </Button>
@@ -111,11 +111,11 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
       />
 
       {showFloatingBar && (
-        <div className="bg-card border-border fixed bottom-22 left-1/2 z-9999 flex -translate-x-1/2 items-center gap-4 rounded-full border px-4 py-2 shadow-lg">
+        <div className="bg-card border-border fixed bottom-22 left-1/2 z-9999 flex -translate-x-1/2 items-center gap-1 rounded-full border px-4 py-2 shadow-lg">
           <span className="text-sm font-medium">
             {selectedBatches.length} lote{selectedBatches.length > 1 ? 's' : ''} seleccionado{selectedBatches.length > 1 ? 's' : ''}
           </span>
-          <Button onClick={() => setPayDialogOpen(true)} size="sm" className="gap-2">
+          <Button onClick={() => setPayDialogOpen(true)} size="sm" className="gap-1">
             <IconCurrencyDollar className="h-4 w-4" />
             Pagar ${selectedBatches.reduce((s, b) => s + b.estimatedPayout, 0).toFixed(2)}
           </Button>

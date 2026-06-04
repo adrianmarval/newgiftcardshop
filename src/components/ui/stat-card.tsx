@@ -10,7 +10,7 @@ export interface StatCardProps {
 export function StatCard({ title, value, icon, description }: StatCardProps) {
   return (
     <Card size="sm">
-      <CardHeader className="flex flex-row items-center gap-2">
+      <CardHeader className="flex flex-row items-center gap-1">
         {icon}
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>

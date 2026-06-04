@@ -65,7 +65,7 @@ export function EntityCard({
     >
       <CardHeader>
         <CardTitle>
-          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 md:gap-4">
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-1 md:gap-1">
             {image && (
               <Image
                 src={image}

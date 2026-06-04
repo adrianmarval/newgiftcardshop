@@ -33,7 +33,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
   return (
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-muted-foreground flex items-center gap-4 text-xs md:text-sm">
+        <div className="text-muted-foreground flex items-center gap-1 text-xs md:text-sm">
           <span>{batch.cardsCount} tarjetas</span>
           <span>Confirmadas: {batch.confirmedCount}</span>
           <span>Tasa: {(batch.sellRate * 100).toFixed(1)}%</span>
@@ -41,7 +41,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
         <AdminBatchGallery batchId={batch.id.toString()} />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {batch.giftcards.map((card) => (
           <GiftcardItem
             key={card.id}
@@ -51,7 +51,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
             contextualInfo={
               card.buyer ? (
                 <CardFooter className="bg-muted/30 mt-auto flex items-center justify-between border-t p-1 px-3">
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-1">
                     <div className="border-primary/20 bg-primary/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
                       <span className="text-primary text-[10px] font-bold">{card.buyer.name.charAt(0).toUpperCase()}</span>
                     </div>
@@ -75,7 +75,7 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
               key={p.id}
               className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2 py-2"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <span className="text-[10px] text-emerald-500">Pago #{p.id.slice(-6).toUpperCase()}</span>
               </div>
               <span className="text-xs font-semibold text-emerald-500">+{formatCurrency(p.amount, { currency: 'USD' })}</span>

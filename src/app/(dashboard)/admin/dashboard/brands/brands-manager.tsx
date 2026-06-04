@@ -198,7 +198,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
   };
 
   return (
-    <div className="flex h-full flex-col gap-4 md:flex-row">
+    <div className="flex h-full flex-col gap-1 md:flex-row">
       {/* Left Panel: Brands List */}
       <Card className="flex w-full shrink-0 flex-col overflow-hidden md:w-1/3 md:min-w-[320px]">
         <CardHeader className="pb-2">
@@ -215,7 +215,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                   <DialogTitle>Create New Brand</DialogTitle>
                   <DialogDescription className="sr-only">Detalles de la nueva marca</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
+                <div className="space-y-1 py-4">
                   <div>
                     <Label>Name</Label>
                     <Input
@@ -253,14 +253,14 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
             <Input placeholder="Search brands..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
           </div>
         </CardHeader>
-        <CardContent className="custom-scrollbar flex-1 space-y-2 overflow-y-auto">
+        <CardContent className="custom-scrollbar flex-1 space-y-1 overflow-y-auto">
           <AnimatePresence>
             {filteredBrands.map((brand) => (
               <motion.div
                 key={brand.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
+                className={`flex cursor-pointer items-center gap-1 rounded-lg border p-3 transition-colors ${
                   selectedBrandId === brand.id ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted/50'
                 }`}
                 onClick={() => setSelectedBrandId(brand.id)}
@@ -280,7 +280,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <span className="truncate font-medium">{brand.name}</span>
                     {!brand.isActive && (
                       <Badge variant="secondary" className="text-xs">
@@ -302,7 +302,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
           <>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
                     {selectedBrand.image ? (
                       <Image
@@ -322,7 +322,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                     <span className="text-muted-foreground text-sm">/{selectedBrand.slug}</span>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <Button
                     variant={selectedBrand.isActive ? 'outline' : 'default'}
                     size="sm"
@@ -347,7 +347,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-2 flex items-center justify-between">
                 <h3 className="font-semibold">Countries ({selectedBrand.countries.length})</h3>
                 <Dialog open={isAddCountryDialogOpen} onOpenChange={setIsAddCountryDialogOpen}>
                   <DialogTrigger asChild>
@@ -360,7 +360,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                       <DialogTitle>Add Country to {selectedBrand.name}</DialogTitle>
                       <DialogDescription className="sr-only">Configuración del país a añadir</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-1 py-4">
                       <div>
                         <Label>Country</Label>
                         <Select value={newCountry.countryId} onValueChange={(v) => setNewCountry((p) => ({ ...p, countryId: v }))}>
@@ -376,7 +376,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-1">
                         <div>
                           <Label>Min Amount (optional)</Label>
                           <Input
@@ -409,17 +409,17 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                 </Dialog>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {selectedBrand.countries.map((bc) => (
                   <div
                     key={bc.id}
-                    className={`flex items-center gap-3 rounded-lg border p-3 ${bc.isActive ? 'border-border' : 'border-amber-500/30 bg-amber-500/5'}`}
+                    className={`flex items-center gap-1 rounded-lg border p-3 ${bc.isActive ? 'border-border' : 'border-amber-500/30 bg-amber-500/5'}`}
                   >
                     <div className="bg-muted flex h-8 w-8 items-center justify-center rounded">
                       <Globe className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <span className="font-medium">{bc.countryName}</span>
                         <span className="text-muted-foreground text-xs">({bc.countryCode})</span>
                         {!bc.isActive && (
@@ -435,7 +435,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                     </div>
                     <div className="flex gap-1">
                       {editingCountryId === bc.id ? (
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-1">
                           <div className="flex flex-col">
                             <span className="text-muted-foreground text-[9px]">Min ($)</span>
                             <Input

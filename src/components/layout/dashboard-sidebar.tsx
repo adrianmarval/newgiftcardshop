@@ -51,7 +51,7 @@ export async function DashboardSidebar({ portal }: DashboardSidebarProps) {
   return (
     <>
       {/*Desktop Sidebar*/}
-      <nav className="hidden h-full items-center justify-center lg:flex lg:flex-col lg:gap-3 lg:p-4">
+      <nav className="hidden h-full items-center justify-center lg:flex lg:flex-col lg:gap-1 lg:p-4">
         <div className="flex flex-col gap-0">{items.map((item) => renderSidebarItem(item))}</div>
       </nav>
       {/*Mobile Sidebar*/}

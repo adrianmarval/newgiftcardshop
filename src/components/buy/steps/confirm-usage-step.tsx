@@ -109,12 +109,12 @@ export const ConfirmUsageStep = () => {
     <div className="flex h-full min-h-0 flex-col gap-1">
       <BuyStepsProgress />
 
-      <Card className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 border p-3 text-center backdrop-blur-sm md:gap-6 md:p-6">
-        <div className="max-w-xl space-y-2">
+      <Card className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 border p-3 text-center backdrop-blur-sm md:gap-6 md:p-6">
+        <div className="max-w-xl space-y-1">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full md:mb-4 md:h-16 md:w-16 ${allCardsWorthless ? 'bg-destructive/10' : 'bg-primary/10'}`}
+            className={`mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full md:mb-2 md:h-16 md:w-16 ${allCardsWorthless ? 'bg-destructive/10' : 'bg-primary/10'}`}
           >
             {allCardsWorthless ? (
               <Ban className="text-destructive h-6 w-6 md:h-8 md:w-8" />
@@ -133,7 +133,7 @@ export const ConfirmUsageStep = () => {
           </p>
         </div>
 
-        <div className="grid w-full max-w-md grid-cols-2 gap-2 md:gap-4">
+        <div className="grid w-full max-w-md grid-cols-2 gap-1 md:gap-1">
           <div className="border-border bg-muted/50 rounded-xl border p-2 md:p-3">
             <div className="text-muted-foreground mb-0.5 text-[9px] font-black uppercase md:text-xs">Tarjetas</div>
             <div className="text-lg font-black md:text-2xl">{foundGiftcards.length}</div>
@@ -151,14 +151,14 @@ export const ConfirmUsageStep = () => {
         </div>
 
         {allCardsWorthless ? (
-          <div className="flex w-full max-w-md gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-2 text-left md:p-3">
+          <div className="flex w-full max-w-md gap-1 rounded-xl border border-amber-500/20 bg-amber-500/5 p-2 text-left md:p-3">
             <XCircle className="mt-0.5 h-3.5 w-3.5 text-amber-500 md:h-4 md:w-4" />
             <p className="text-muted-foreground text-[10px] leading-relaxed italic md:text-sm">
               Todas las tarjetas han sido reportadas. Puedes cancelar esta orden o volver para revisar tus reportes.
             </p>
           </div>
         ) : (
-          <div className="border-primary/20 bg-primary/5 flex w-full max-w-md gap-2 rounded-xl border p-2 text-left md:p-3">
+          <div className="border-primary/20 bg-primary/5 flex w-full max-w-md gap-1 rounded-xl border p-2 text-left md:p-3">
             <Info className="text-primary mt-0.5 h-3.5 w-3.5 md:h-4 md:w-4" />
             <p className="text-muted-foreground text-xs leading-relaxed italic md:text-sm">
               La confirmación es irreversible. Asegúrate de haber redimido o reportado los códigos correctamente.
@@ -169,7 +169,7 @@ export const ConfirmUsageStep = () => {
         {errorMessage && <p className="text-destructive text-xs font-medium md:text-sm">{errorMessage}</p>}
       </Card>
 
-      <div className="flex items-center justify-center-safe gap-2">
+      <div className="flex items-center justify-center-safe gap-1">
         <Button
           variant="ghost"
           onClick={() => setStep(3)}
@@ -209,7 +209,7 @@ export const ConfirmUsageStep = () => {
               <span className="text-destructive mt-2 block font-medium">El pago no se puede revertir.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-2">
+          <AlertDialogFooter className="gap-1 sm:gap-1">
             <Button
               variant="outline"
               onClick={() => {

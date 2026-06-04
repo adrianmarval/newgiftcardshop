@@ -99,14 +99,18 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
         const msg = data?.error || getMsg(portal, 'updateFailed');
         if (msg.toLowerCase().includes('incorrect') || msg.toLowerCase().includes('wrong')) {
           setFieldErrors((prev) => ({ ...prev, current: getMsg(portal, 'currentIncorrect') }));
-          setAlert({ variant: 'error', title: getMsg(portal, 'currentIncorrect'), description: isSpanish ? 'Verifica e intenta de nuevo' : 'Verify and try again' });
+          setAlert({
+            variant: 'error',
+            title: getMsg(portal, 'currentIncorrect'),
+            description: isSpanish ? 'Verifica e intenta de nuevo' : 'Verify and try again',
+          });
         } else {
           setAlert({ variant: 'error', title: msg });
         }
       }
     },
     onError: ({ error }) => {
-      console.log(error)
+      console.log(error);
       setAlert({ variant: 'error', title: error.serverError || getMsg(portal, 'updateFailed') });
     },
   });
@@ -171,7 +175,7 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
   return (
     <Card className="gap-0">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-500/10 md:h-9 md:w-9 md:rounded-lg">
             <Lock className="h-3.5 w-3.5 text-emerald-400 md:h-4 md:w-4" />
           </div>
@@ -186,8 +190,9 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
           type="button"
           variant="outline"
           size="sm"
-          className={`h-7 rounded-md text-xs font-medium md:h-8 ${showPasswordFields ? 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20' : ''
-            }`}
+          className={`h-7 rounded-md text-xs font-medium md:h-8 ${
+            showPasswordFields ? 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20' : ''
+          }`}
           onClick={() => {
             setShowPasswordFields(!showPasswordFields);
             setAlert(null);
@@ -200,7 +205,7 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
           {showPasswordFields ? (isSpanish ? 'Cancelar' : 'Cancel') : isSpanish ? 'Cambiar' : 'Change'}
         </Button>
       </CardHeader>
-      <CardContent className="space-y-4 pt-0">
+      <CardContent className="space-y-1 pt-0">
         <AnimatePresence>
           {showPasswordFields && (
             <motion.div
@@ -240,7 +245,7 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
                 {fieldErrors.current && <p className="text-destructive text-xs">{fieldErrors.current}</p>}
               </div>
 
-              <div className="grid gap-2 md:grid-cols-2 md:gap-3">
+              <div className="grid gap-1 md:grid-cols-2 md:gap-1">
                 <div className="space-y-1.5">
                   <Label htmlFor="newPassword" className="text-xs font-medium md:text-sm">
                     {isSpanish ? 'Nueva contraseña' : 'New password'}
@@ -292,7 +297,7 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
         </AnimatePresence>
 
         {!showPasswordFields && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <p className="text-muted-foreground text-xs md:text-sm">{isSpanish ? 'Oculto por seguridad' : 'Hidden for security'}</p>
             <LogoutButton
               portal={portal}

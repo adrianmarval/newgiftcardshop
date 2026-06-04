@@ -41,7 +41,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
   if (status === 'success') {
     return (
       <div className="space-y-8">
-        <div className="space-y-2 text-center">
+        <div className="space-y-1 text-center">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
             <CheckCircle className="h-8 w-8 text-emerald-400" />
           </div>
@@ -54,9 +54,9 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
         <Button
           type="button"
           onClick={() => router.push(targetDashboard)}
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold text-white hover:bg-emerald-400"
+          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400"
         >
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-1">
             {isSpanish ? 'Ir al Dashboard' : 'Go to Dashboard'}
             <ArrowRight className="h-4 w-4" />
           </span>
@@ -68,7 +68,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
   if (status === 'error') {
     return (
       <div className="space-y-8">
-        <div className="space-y-2 text-center">
+        <div className="space-y-1 text-center">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
             <XCircle className="h-8 w-8 text-red-400" />
           </div>
@@ -94,7 +94,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2 text-center">
+      <div className="space-y-1 text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
           <Mail className="h-8 w-8 text-emerald-400" />
         </div>

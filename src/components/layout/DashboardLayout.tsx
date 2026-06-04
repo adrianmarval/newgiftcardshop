@@ -17,7 +17,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
   return (
     <NotificationProvider>
       <AutoRefreshProvider interval={15000}>
-        <div className="flex h-svh flex-col py-2 ring-0 lg:flex-row lg:gap-4 lg:py-14 2xl:px-40">
+        <div className="flex h-svh flex-col py-2 ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}
           <div className="order-1 flex-10 overflow-hidden md:rounded-t-2xl lg:order-2">
             <div className="custom-scrollbar h-full overflow-x-hidden overflow-y-auto p-1">{children}</div>

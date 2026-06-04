@@ -41,7 +41,7 @@ export default async function SellerDashboardPage() {
   }));
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-1">
       <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">SELLER DASHBOARD</h1>
 
       <SellerDashboardClient stats={stats} recentBatches={recentBatchesList} />

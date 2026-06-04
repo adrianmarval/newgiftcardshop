@@ -19,7 +19,7 @@ export const LogoutButton = ({ portal, className, variant = 'destructive', showI
   const isSpanish = portal === 'buy' || portal === 'admin';
 
   return (
-    <Button variant={variant} className={cn('gap-2', className)} disabled={isLoggingOut} onClick={handleLogout}>
+    <Button variant={variant} className={cn('gap-1', className)} disabled={isLoggingOut} onClick={handleLogout}>
       {isLoggingOut ? <Spinner size="sm" /> : showIcon && <IconLogout size={18} />}
       {isSpanish ? 'Cerrar Sesión' : 'Logout'}
     </Button>

@@ -165,14 +165,14 @@ export const RedeemStep = () => {
     <div className="flex h-full min-h-0 flex-col gap-1">
       <BuyStepsProgress />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-1 md:grid md:grid-cols-12 md:gap-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-1 md:grid md:grid-cols-12 md:gap-1">
         {/* Left Column: Order Summary & Actions */}
-        <Card className="flex min-h-0 shrink-0 flex-col gap-1 border p-2 backdrop-blur-sm md:col-span-4 md:gap-3 md:p-4">
+        <Card className="flex min-h-0 shrink-0 flex-col gap-1 border p-2 backdrop-blur-sm md:col-span-4 md:gap-1 md:p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold md:text-lg">Redimir y Verificar</h2>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Monto en Giftcards</span>
               <span className="font-bold">{formatCurrency(rawTotal, { currency: selectedCurrency })}</span>
@@ -202,7 +202,7 @@ export const RedeemStep = () => {
             </div>
           </CardHeader>
 
-          <CardContent className="custom-scrollbar min-h-0 flex-1 space-y-1.5 overflow-y-auto px-1 py-1 md:space-y-2 md:px-2 md:py-2">
+          <CardContent className="custom-scrollbar min-h-0 flex-1 space-y-1.5 overflow-y-auto px-1 py-1 md:space-y-1 md:px-2 md:py-2">
             <AnimatePresence>
               {foundGiftcards.map((card, idx) => {
                 const isCopied = redeemState.copiedIds.has(card.id);
@@ -220,8 +220,8 @@ export const RedeemStep = () => {
                           : 'border-border bg-card/30'
                     } `}
                   >
-                    <div className="flex flex-row items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 md:gap-3">
+                    <div className="flex flex-row items-center justify-between gap-1">
+                      <div className="flex items-center gap-1 md:gap-1">
                         <div
                           className={`flex h-6 w-6 items-center justify-center rounded-lg text-[9px] font-black md:h-9 md:w-9 md:text-xs ${
                             card.status !== 'UNUSED'
@@ -260,7 +260,7 @@ export const RedeemStep = () => {
                               </Badge>
                             )}
                           </div>
-                          <div className="mt-0.5 flex items-center gap-2">
+                          <div className="mt-0.5 flex items-center gap-1">
                             {card.claimCode ? (
                               <div
                                 className={`group flex cursor-pointer items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold md:text-sm ${
@@ -342,7 +342,7 @@ export const RedeemStep = () => {
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
-                        className="border-border mt-2 flex items-center gap-2 overflow-hidden border-t pt-2"
+                        className="border-border mt-2 flex items-center gap-1 overflow-hidden border-t pt-2"
                       >
                         <div className="relative max-w-32 flex-1">
                           <span className="text-muted-foreground/50 absolute top-1.5 left-2 text-xs">$</span>
@@ -390,7 +390,7 @@ export const RedeemStep = () => {
         </Card>
       </div>
 
-      <div className="flex items-center justify-center-safe gap-2">
+      <div className="flex items-center justify-center-safe gap-1">
         <Button
           onClick={() => setStep(4)}
           className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 text-xs font-bold shadow-lg md:h-10 md:text-sm"

@@ -225,7 +225,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   const showEmptyState = !selectedCountry;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-1">
       <BuyStepsProgress />
 
       {/* Compact Search Bar */}
@@ -295,7 +295,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
                   {!bc.isActive && (
                     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden">
-                      <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-1 text-center text-[8px] font-black tracking-[0.2em] whitespace-nowrap text-white uppercase shadow-2xl backdrop-blur-md md:py-2 md:text-[12px] md:tracking-[0.4em]">
+                      <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-1 text-center text-[8px] font-black tracking-[0.2em] whitespace-nowrap uppercase shadow-2xl backdrop-blur-md md:py-2 md:text-[12px] md:tracking-[0.4em]">
                         Coming Soon
                       </div>
                     </div>

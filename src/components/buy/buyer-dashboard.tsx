@@ -16,8 +16,8 @@ export function BuyerDashboard({ stats, activeOrders }: BuyerDashboardProps) {
   return (
     <div className="w-full space-y-4">
       <section>
-        <h2 className="mb-4 text-xl font-semibold">Estadísticas</h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <h2 className="text-xl font-semibold">Estadísticas</h2>
+        <div className="grid grid-cols-2 gap-1 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Disponibles"
             value={stats.availableCards.toLocaleString()}
@@ -34,7 +34,7 @@ export function BuyerDashboard({ stats, activeOrders }: BuyerDashboardProps) {
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-semibold">Acciones Rápidas</h2>
+        <h2 className="text-xl font-semibold">Acciones Rápidas</h2>
         <Card className="p-1">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -44,7 +44,7 @@ export function BuyerDashboard({ stats, activeOrders }: BuyerDashboardProps) {
               </div>
               <Link
                 href="/store/dashboard/browse-cards"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-lg px-2 py-2 font-medium"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-lg px-2 py-2 font-medium"
               >
                 <IconPlus className="h-4 w-4" />
                 Buscar Giftcards
@@ -55,17 +55,17 @@ export function BuyerDashboard({ stats, activeOrders }: BuyerDashboardProps) {
       </section>
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Órdenes Activas</h2>
           <Link href="/store/dashboard/orders" className="text-primary text-sm hover:underline">
             Ver todas →
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-1 md:grid-cols-2 lg:grid-cols-3">
           {activeOrders.length > 0 ? (
             activeOrders.map((order) => (
               <Card key={order.id}>
-                <CardHeader className="flex flex-row items-center gap-3">
+                <CardHeader className="flex flex-row items-center gap-1">
                   {order.giftcards[0]?.brand.image ? (
                     <div className="relative h-10 w-10">
                       <Image src={order.giftcards[0].brand.image} alt={order.giftcards[0].brand.name} fill className="object-contain" />
@@ -95,7 +95,7 @@ export function BuyerDashboard({ stats, activeOrders }: BuyerDashboardProps) {
           ) : (
             <Card className="col-span-full">
               <CardHeader>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
                   <IconGift className="text-muted-foreground h-6 w-6" />
                   <CardDescription>No hay órdenes activas. Busca gift cards para comenzar.</CardDescription>
                 </div>

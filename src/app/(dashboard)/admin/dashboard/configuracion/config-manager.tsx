@@ -108,7 +108,7 @@ export function ConfigManager({ initialSettings }: ConfigManagerProps) {
   const settingKeys = Object.values(SETTING_KEYS);
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-1">
       <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">CONFIGURACIÓN</h1>
       <div>
         {settingKeys.length === 0 ? (
@@ -137,24 +137,24 @@ export function ConfigManager({ initialSettings }: ConfigManagerProps) {
                       <td className="p-4 align-middle font-medium">
                         <div className="flex flex-col gap-1">
                           <span>{key}</span>
-                          {isAudit && (
-                            <span className="text-xs text-orange-500 font-medium">AUDIT</span>
-                          )}
+                          {isAudit && <span className="text-xs font-medium text-orange-500">AUDIT</span>}
                         </div>
                       </td>
                       <td className="p-4 align-middle break-all">
                         {def.type === 'boolean' ? (
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${currentValue === 'true' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          <span
+                            className={`rounded px-2 py-1 text-xs font-medium ${currentValue === 'true' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                          >
                             {currentValue}
                           </span>
                         ) : (
                           currentValue
                         )}
                       </td>
-                      <td className="p-4 align-middle text-muted-foreground">{def.type}</td>
+                      <td className="text-muted-foreground p-4 align-middle">{def.type}</td>
                       <td className="text-muted-foreground p-4 align-middle">{def.description}</td>
                       <td className="p-4 align-middle">
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                           {!isAudit && (
                             <Button variant="ghost" size="icon" onClick={() => handleOpenForm(key)}>
                               <IconEdit size={16} />
@@ -178,8 +178,8 @@ export function ConfigManager({ initialSettings }: ConfigManagerProps) {
               <DialogTitle>Editar {editingKey}</DialogTitle>
               <DialogDescription>Modifica el valor de esta configuración.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
+            <div className="grid gap-1 py-4">
+              <div className="space-y-1">
                 <Label>Valor</Label>
                 <Input
                   required
@@ -188,8 +188,8 @@ export function ConfigManager({ initialSettings }: ConfigManagerProps) {
                       ? getInputType(editingKey) === 'boolean'
                         ? 'true o false'
                         : getInputType(editingKey) === 'number'
-                        ? 'Ej: 10'
-                        : 'Ej: texto'
+                          ? 'Ej: 10'
+                          : 'Ej: texto'
                       : ''
                   }
                   type={editingKey && getInputType(editingKey) === 'number' ? 'number' : 'text'}
@@ -201,16 +201,16 @@ export function ConfigManager({ initialSettings }: ConfigManagerProps) {
                   }}
                 />
                 {editingKey && getInputType(editingKey) === 'boolean' && (
-                  <p className="text-xs text-muted-foreground">Usa &quot;true&quot; o &quot;false&quot;</p>
+                  <p className="text-muted-foreground text-xs">Usa &quot;true&quot; o &quot;false&quot;</p>
                 )}
                 {editingKey && getDefinition(editingKey)?.validation?.min !== undefined && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Rango: {getDefinition(editingKey)?.validation?.min} - {getDefinition(editingKey)?.validation?.max}
                   </p>
                 )}
               </div>
-              {formError && <p className="text-sm text-destructive">{formError}</p>}
-              <div className="space-y-2">
+              {formError && <p className="text-destructive text-sm">{formError}</p>}
+              <div className="space-y-1">
                 <Label>Descripción</Label>
                 <Input
                   placeholder="Descripción opcional"

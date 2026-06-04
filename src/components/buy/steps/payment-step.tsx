@@ -68,7 +68,7 @@ export const PaymentStep = () => {
     return (
       <div className="flex h-full min-h-0 flex-col gap-1">
         <BuyStepsProgress />
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center gap-1 text-center">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -76,11 +76,11 @@ export const PaymentStep = () => {
           >
             <Check className="text-primary h-8 w-8 md:h-10 md:w-10" />
           </motion.div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h2 className="text-2xl font-black tracking-tight uppercase italic md:text-3xl">¡Pago Notificado!</h2>
             <p className="text-muted-foreground max-w-sm text-sm">
-              Hemos recibido tu notificación de pago para la orden <strong>#{storedOrderId?.slice(-8)}</strong>. La orden ha sido marcada como
-              completada.
+              Hemos recibido tu notificación de pago para la orden <strong>#{storedOrderId?.slice(-8)}</strong>. La orden ha sido marcada
+              como completada.
             </p>
           </div>
           <Button
@@ -98,8 +98,8 @@ export const PaymentStep = () => {
     <div className="flex h-full min-h-0 flex-col gap-1">
       <BuyStepsProgress />
 
-      <Card className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 border p-3 text-center backdrop-blur-sm md:gap-6 md:p-6">
-        <div className="max-w-md space-y-2 md:max-w-xl md:space-y-3">
+      <Card className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 border p-3 text-center backdrop-blur-sm md:gap-6 md:p-6">
+        <div className="max-w-md space-y-1 md:max-w-xl md:space-y-3">
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -119,7 +119,7 @@ export const PaymentStep = () => {
 
           <div className="relative z-10 space-y-1.5">
             <Label className="text-muted-foreground text-[9px] font-black uppercase md:text-[10px]">ID de Binance Pay</Label>
-            <div className="border-border bg-card flex items-center justify-center gap-2 rounded-lg border p-1.5 font-mono text-sm font-bold md:p-2 md:text-base">
+            <div className="border-border bg-card flex items-center justify-center gap-1 rounded-lg border p-1.5 font-mono text-sm font-bold md:p-2 md:text-base">
               {binancePayId}
               {binancePayId !== '—' && (
                 <Button
@@ -140,7 +140,7 @@ export const PaymentStep = () => {
           </div>
         </div>
 
-        <div className="w-full max-w-xs space-y-2 md:max-w-sm md:space-y-3">
+        <div className="w-full max-w-xs space-y-1 md:max-w-sm md:space-y-3">
           <div className="space-y-1 text-left">
             <Label className="text-muted-foreground ml-1 text-[9px] font-black tracking-tight uppercase md:text-[10px]">
               ID de Transacción (opcional)
@@ -155,14 +155,14 @@ export const PaymentStep = () => {
 
           {errorMessage && <p className="text-destructive text-center text-xs font-medium">{errorMessage}</p>}
 
-          <div className="border-primary/20 bg-primary/5 flex w-full max-w-xs gap-2 rounded-xl border p-2 text-left md:max-w-sm md:p-3">
+          <div className="border-primary/20 bg-primary/5 flex w-full max-w-xs gap-1 rounded-xl border p-2 text-left md:max-w-sm md:p-3">
             <Info className="text-primary mt-0.5 h-3.5 w-3.5 md:h-4 md:w-4" />
             <p className="text-muted-foreground text-xs leading-relaxed italic md:text-sm">La verificación es instantanea.</p>
           </div>
         </div>
       </Card>
 
-      <div className="flex items-center justify-center-safe gap-2">
+      <div className="flex items-center justify-center-safe gap-1">
         <Button
           onClick={handleNotify}
           disabled={!storedOrderId || completeStatus === 'executing'}

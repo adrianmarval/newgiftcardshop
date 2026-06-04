@@ -50,7 +50,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'bg-popover text-popover-foreground ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl p-4 text-sm ring-1 duration-100 outline-none sm:max-w-sm',
+          'bg-popover text-popover-foreground ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-1 rounded-xl p-4 text-sm ring-1 duration-100 outline-none sm:max-w-sm',
           className,
         )}
         {...props}
@@ -70,7 +70,7 @@ function DialogContent({
 }
 
 function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="dialog-header" className={cn('flex flex-col gap-2', className)} {...props} />;
+  return <div data-slot="dialog-header" className={cn('flex flex-col gap-1', className)} {...props} />;
 }
 
 function DialogFooter({
@@ -84,7 +84,7 @@ function DialogFooter({
   return (
     <div
       data-slot="dialog-footer"
-      className={cn('bg-muted/50 -mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t p-4 sm:flex-row sm:justify-end', className)}
+      className={cn('bg-muted/50 -mx-4 -mb-2 flex flex-col-reverse gap-1 rounded-b-xl border-t p-4 sm:flex-row sm:justify-end', className)}
       {...props}
     >
       {children}

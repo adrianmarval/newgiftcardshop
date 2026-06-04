@@ -86,11 +86,7 @@ export function InlineAlert({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className={cn(
-            'relative flex items-start gap-3 rounded-xl border p-3',
-            variantStyles.container,
-            className,
-          )}
+          className={cn('relative flex items-start gap-1 rounded-xl border p-3', variantStyles.container, className)}
         >
           <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', variantStyles.icon)} />
           <div className="flex-1 space-y-1">
@@ -103,7 +99,7 @@ export function InlineAlert({
                 setVisible(false);
                 setTimeout(() => onDismiss(), 200);
               }}
-              className={cn('absolute right-2 top-2 cursor-pointer opacity-50 transition-opacity hover:opacity-100', variantStyles.icon)}
+              className={cn('absolute top-2 right-2 cursor-pointer opacity-50 transition-opacity hover:opacity-100', variantStyles.icon)}
             >
               <X className="h-3.5 w-3.5" />
             </button>

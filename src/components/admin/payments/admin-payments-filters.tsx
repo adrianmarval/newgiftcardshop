@@ -47,7 +47,7 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
   const selectedUser = allUsers.find((u) => u.id === params.userId);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <div className="relative flex-1">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
@@ -60,13 +60,13 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-10 md:gap-2 md:px-3">
+          <Button variant={hasActiveFilters ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 px-2 md:h-10 md:gap-1 md:px-3">
             <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4" />
             <span className="hidden md:inline">Filtros</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[320px] p-4" align="end">
-          <div className="space-y-4">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Filtros</span>
               {hasActiveFilters && (
@@ -78,7 +78,7 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
             </div>
 
             {/* Usuario (sellers + buyers) */}
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-1">
               <Label className="text-xs">Usuario</Label>
               <Popover open={openUser} onOpenChange={setOpenUser}>
                 <PopoverTrigger asChild>
@@ -150,7 +150,7 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
             </div>
 
             {/* Dirección contable */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label className="text-xs">Dirección</Label>
               <Select
                 value={params.direction || 'ALL'}
@@ -168,7 +168,7 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
             </div>
 
             {/* Categoría */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label className="text-xs">Categoría</Label>
               <Select value={params.category || 'ALL'} onValueChange={(value) => setParams({ category: value as typeof params.category })}>
                 <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
@@ -186,8 +186,8 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
             </div>
 
             {/* Rango de fechas */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-1">
+              <div className="space-y-1">
                 <Label className="text-xs">Desde</Label>
                 <Input
                   type="date"
@@ -196,7 +196,7 @@ export const AdminPaymentsFilters = ({ sellers, buyers }: AdminPaymentsFiltersPr
                   className="h-8 text-xs md:h-9"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label className="text-xs">Hasta</Label>
                 <Input
                   type="date"

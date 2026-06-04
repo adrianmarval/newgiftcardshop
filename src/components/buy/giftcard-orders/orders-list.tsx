@@ -75,7 +75,7 @@ export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
 
   return (
     <div ref={listRef}>
-      <div className="space-y-2">
+      <div className="space-y-1">
         <AnimatePresence>
           {orders
             .filter((order: OrdersListProps['orders'][number]) => expandedId === null || expandedId === order.id)

@@ -79,7 +79,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
             <AlertCircle className="h-8 w-8 text-red-400" />
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <h1 className="text-xl font-medium tracking-tight text-white">{isSpanish ? 'Enlace Inválido' : 'Invalid Link'}</h1>
           <p className="text-sm text-slate-400">
             {isSpanish ? 'Este enlace es inválido o ha expirado.' : 'This reset link is invalid or has expired.'}
@@ -87,7 +87,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
         </div>
         <Link
           href={`${authPath}/forgot-password`}
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-500 px-6 text-sm font-semibold text-white hover:bg-emerald-400"
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-500 px-6 text-sm font-semibold hover:bg-emerald-400"
         >
           {isSpanish ? 'Solicitar nuevo enlace' : 'Request new link'}
         </Link>
@@ -97,7 +97,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
+      <div className="space-y-1">
         <h1 className="text-2xl font-medium tracking-tight text-white">{isSpanish ? 'Nueva Contraseña' : 'New Password'}</h1>
         <p className="text-sm text-slate-400">{isSpanish ? 'Crea una contraseña segura' : 'Create a secure password'}</p>
       </div>
@@ -119,7 +119,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
             onChange={handlePasswordChange}
             required
             disabled={status === 'executing'}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
           />
           {newPassword && (
             <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-3">
@@ -147,18 +147,18 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
             disabled={status === 'executing'}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
           />
           {confirmPassword && !passwordsMatch && <p className="text-xs text-red-400">{isSpanish ? 'No coinciden' : 'Do not match'}</p>}
         </div>
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold text-white hover:bg-emerald-400 focus:ring-emerald-500/50"
+          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
           disabled={status === 'executing' || !allValid || !passwordsMatch}
         >
           {status === 'executing' ? (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
               <Spinner size="sm" className="text-white" />
               {isSpanish ? 'Restableciendo...' : 'Resetting...'}
             </span>
@@ -171,7 +171,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
       </form>
 
       <div className="flex items-center justify-center">
-        <Link href={`${authPath}/login`} className="flex items-center gap-2 text-sm font-medium text-emerald-400 hover:text-emerald-300">
+        <Link href={`${authPath}/login`} className="flex items-center gap-1 text-sm font-medium text-emerald-400 hover:text-emerald-300">
           <ArrowLeft className="h-4 w-4" />
           {isSpanish ? 'Volver al inicio' : 'Back to sign in'}
         </Link>

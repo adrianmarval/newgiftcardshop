@@ -104,7 +104,7 @@ export const LoginForm = ({
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
+      <div className="space-y-1">
         <h1 className="text-2xl font-medium tracking-tight text-white">{title}</h1>
         <p className="text-sm text-slate-400">{subtitle}</p>
       </div>
@@ -125,7 +125,7 @@ export const LoginForm = ({
             disabled={status === 'executing'}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
           />
         </div>
 
@@ -147,17 +147,17 @@ export const LoginForm = ({
             disabled={status === 'executing'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
           />
         </div>
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold text-white hover:bg-emerald-400 focus:ring-emerald-500/50"
+          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
           disabled={status === 'executing'}
         >
           {status === 'executing' ? (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
               <Spinner size="sm" className="text-white" />
               {isSpanish ? 'Iniciando...' : 'Signing in...'}
             </span>

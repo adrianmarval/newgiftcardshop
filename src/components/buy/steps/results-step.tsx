@@ -135,15 +135,13 @@ export const ResultsStep = () => {
       <BuyStepsProgress />
 
       {/* Compact Summary Bar - solo info crítica en mobile */}
-      <div className="flex min-h-0 shrink-0 flex-col gap-1 md:grid md:grid-cols-12 md:gap-2">
+      <div className="flex min-h-0 shrink-0 flex-col gap-1 md:grid md:grid-cols-12 md:gap-1">
         {/* Info bar - izquierda en desktop */}
-        <div className="border-border bg-muted/20 flex items-center justify-between gap-3 rounded-lg border p-2 md:col-span-4 md:flex-col md:items-start md:gap-1">
+        <div className="border-border bg-muted/20 flex items-center justify-between gap-1 rounded-lg border p-2 md:col-span-4 md:flex-col md:items-start md:gap-1">
           <span className="text-muted-foreground text-xs">
             <span className="font-semibold">Monto objetivo:</span>
           </span>
-          <span className="text-lg font-black text-white md:text-xl">
-            {formatCurrency(Number(targetAmount), { currency: selectedCurrency })}
-          </span>
+          <span className="text-lg font-black md:text-xl">{formatCurrency(Number(targetAmount), { currency: selectedCurrency })}</span>
           {tierInfo && Number(tierInfo.inaccessibleAmount) > 0 && (
             <span className="text-muted-foreground text-[10px] md:text-xs">
               <span className="font-semibold">No disp:</span>{' '}
@@ -180,7 +178,7 @@ export const ResultsStep = () => {
           <span className="text-muted-foreground/50 text-[10px] md:text-xs">{foundGiftcards.length} ítems</span>
         </CardHeader>
 
-        <CardContent className="custom-scrollbar min-h-0 flex-1 space-y-1.5 overflow-y-auto px-1 py-1 md:space-y-2 md:px-2 md:py-2">
+        <CardContent className="custom-scrollbar min-h-0 flex-1 space-y-1.5 overflow-y-auto px-1 py-1 md:space-y-1 md:px-2 md:py-2">
           {foundGiftcards.map((card, idx) => (
             <motion.div
               key={card.id}
@@ -189,8 +187,8 @@ export const ResultsStep = () => {
               transition={{ delay: idx * 0.05 }}
               className="group border-border bg-muted/20 hover:border-primary/30 relative overflow-hidden rounded-xl border px-2 py-1.5 transition-all md:px-3 md:py-2"
             >
-              <div className="relative z-10 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 md:gap-3">
+              <div className="relative z-10 flex items-center justify-between gap-1">
+                <div className="flex items-center gap-1 md:gap-1">
                   <div className="bg-card relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg shadow-sm md:h-12 md:w-12">
                     {resultsState.brandData?.image ? (
                       <Image
@@ -248,7 +246,7 @@ export const ResultsStep = () => {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-center-safe gap-2">
+      <div className="flex items-center justify-center-safe gap-1">
         <Button
           onClick={() => setStep(1)}
           variant="outline"

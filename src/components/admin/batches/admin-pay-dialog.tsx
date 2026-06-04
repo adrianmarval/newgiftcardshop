@@ -71,7 +71,7 @@ export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPay
           />
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           {batches.map((batch) => (
             <div key={batch.id} className="flex items-center justify-between text-sm">
               <span>

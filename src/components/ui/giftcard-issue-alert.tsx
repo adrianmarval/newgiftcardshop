@@ -26,7 +26,7 @@ export const GiftcardIssueAlert = ({ status }: GiftcardIssueAlertProps) => {
   const current = content[portal] || content.sell;
 
   return (
-    <div className="border-destructive/20 bg-destructive/10 relative flex gap-4 overflow-hidden rounded-2xl border p-5 italic">
+    <div className="border-destructive/20 bg-destructive/10 relative flex gap-1 overflow-hidden rounded-2xl border p-5 italic">
       <div className="bg-destructive/5 absolute top-0 right-0 -mt-12 -mr-12 h-24 w-24 rounded-full blur-2xl" />
       <AlertTriangle className="text-destructive mt-1 h-6 w-6 shrink-0" />
       <div className="space-y-1.5">

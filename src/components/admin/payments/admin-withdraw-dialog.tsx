@@ -50,7 +50,7 @@ export const AdminWithdrawDialog = ({ open, onOpenChange, onSuccess }: AdminWith
           <DialogDescription>Retira USDT de la cuenta de Binance hacia la billetera configurada en tu entorno.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-1">
           {error && <p className="rounded bg-red-100 p-2 text-sm text-red-600">{error}</p>}
 
           <div>
@@ -66,7 +66,7 @@ export const AdminWithdrawDialog = ({ open, onOpenChange, onSuccess }: AdminWith
             />
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-1">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>

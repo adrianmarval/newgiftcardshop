@@ -71,10 +71,10 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <AdminPaymentsFilters sellers={sellers} buyers={buyers} />
       <AdminPaymentsList payments={payments} totalPages={pagination.totalPages} />
-      <div className="flex gap-2">
+      <div className="flex gap-1">
         <Button onClick={() => setDepositOpen(true)}>+ Registrar Depósito</Button>
         <Button variant={'secondary'} onClick={() => setRefundOpen(true)}>
           + Registrar Refund

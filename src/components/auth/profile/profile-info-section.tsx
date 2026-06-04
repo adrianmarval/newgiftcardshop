@@ -77,14 +77,14 @@ export const ProfileInfoSection = ({
         </CardHeader>
         <CardContent>
           {success && (
-            <div className="flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2">
+            <div className="flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2">
               <CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
               <p className="text-xs text-emerald-300 md:text-sm">{isSpanish ? '¡Perfil actualizado!' : 'Profile updated!'}</p>
             </div>
           )}
 
           {showTelegramLinkBanner && (
-            <div className="flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
+            <div className="flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
                 <Link2 className="h-5 w-5 text-amber-400" />
               </div>
@@ -118,7 +118,7 @@ export const ProfileInfoSection = ({
           )}
 
           {telegramUser && (
-            <div className="flex items-center gap-3 rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
+            <div className="flex items-center gap-1 rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
               {telegramUser.hasPhoto ? (
                 <TelegramAvatar
                   src={telegramPhotoDataUrl || ''}
@@ -154,7 +154,7 @@ export const ProfileInfoSection = ({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="grid gap-2 md:grid-cols-2 md:gap-3">
+            <div className="grid gap-1 md:grid-cols-2 md:gap-1">
               <div className="space-y-1">
                 <Label htmlFor="name" className="text-xs font-medium text-slate-300 md:text-sm">
                   {isSpanish ? 'Nombre' : 'Name'}
@@ -184,11 +184,11 @@ export const ProfileInfoSection = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-1">
               <p className="text-xs text-slate-500 md:text-sm">{isSpanish ? 'El correo no se puede cambiar' : 'Email cannot be changed'}</p>
               <Button
                 type="submit"
-                className="h-8 rounded-md bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-400 md:h-9 md:rounded-lg md:text-sm"
+                className="h-8 rounded-md bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 md:h-9 md:rounded-lg md:text-sm"
                 disabled={status === 'executing'}
               >
                 {status === 'executing' ? (

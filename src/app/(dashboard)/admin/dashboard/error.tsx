@@ -9,7 +9,7 @@ export default function AdminDashboardError({ error, reset }: { error: Error & {
   }, [error]);
 
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-1">
       <h2 className="text-2xl font-bold">Algo salió mal</h2>
       <p className="text-muted-foreground max-w-md text-center">{error.message}</p>
       <Button

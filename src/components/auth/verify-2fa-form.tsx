@@ -71,7 +71,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2 text-center">
+      <div className="space-y-1 text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
           {isRecoveryMode ? <KeyRound className="h-8 w-8 text-emerald-400" /> : <ShieldCheck className="h-8 w-8 text-emerald-400" />}
         </div>
@@ -102,12 +102,12 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
               placeholder={isSpanish ? 'Código de respaldo' : 'Backup code'}
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="h-12 max-w-xs rounded-xl border border-slate-700/50 bg-slate-800/30 text-center font-mono tracking-widest text-white uppercase placeholder:text-slate-500 focus:border-emerald-500/50"
+              className="h-12 max-w-xs rounded-xl border border-slate-700/50 bg-slate-800/30 text-center font-mono tracking-widest uppercase placeholder:text-slate-500 focus:border-emerald-500/50"
               disabled={isPending}
               autoFocus
             />
           ) : (
-            <InputOTP maxLength={6} value={code} onChange={setCode} disabled={isPending} className="gap-2">
+            <InputOTP maxLength={6} value={code} onChange={setCode} disabled={isPending} className="gap-1">
               <InputOTPGroup>
                 <InputOTPSlot index={0} className="rounded-lg border border-slate-700/50 bg-slate-800/30 focus:border-emerald-500/50" />
                 <InputOTPSlot index={1} className="rounded-lg border border-slate-700/50 bg-slate-800/30 focus:border-emerald-500/50" />
@@ -121,7 +121,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
         </div>
 
         {!isRecoveryMode && (
-          <div className="flex items-center gap-3 rounded-xl border border-slate-700/30 bg-slate-800/20 p-4">
+          <div className="flex items-center gap-1 rounded-xl border border-slate-700/30 bg-slate-800/20 p-4">
             <Checkbox
               id="trust"
               checked={trustDevice}
@@ -129,7 +129,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
               disabled={isPending}
               className="border-slate-600 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500"
             />
-            <Label htmlFor="trust" className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+            <Label htmlFor="trust" className="flex cursor-pointer items-center gap-1 text-sm text-slate-300">
               <Laptop className="h-4 w-4" />
               {isSpanish ? 'Confiar este dispositivo' : 'Trust this device'}
             </Label>
@@ -138,11 +138,11 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold text-white hover:bg-emerald-400 focus:ring-emerald-500/50"
+          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
           disabled={isPending || (isRecoveryMode ? !code : code.length !== 6)}
         >
           {isPending ? (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
               <Spinner size="sm" className="text-white" />
               {isSpanish ? 'Verificando...' : 'Verifying...'}
             </span>

@@ -19,7 +19,7 @@ export default function Home() {
           href="/sell/auth/login"
           className="group flex-1 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-8 text-center transition-all hover:border-emerald-400/60 hover:bg-emerald-500/10"
         >
-          <IconCreditCard className="mx-auto mb-4 h-10 w-10 text-emerald-400 transition-transform group-hover:scale-110" />
+          <IconCreditCard className="mx-auto mb-2 h-10 w-10 text-emerald-400 transition-transform group-hover:scale-110" />
           <h2 className="mb-2 text-3xl font-semibold">Start Selling</h2>
           <p className="text-base text-neutral-400">Login or register to submit your cards securely.</p>
         </Link>

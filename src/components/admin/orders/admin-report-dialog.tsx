@@ -102,7 +102,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
           <DialogDescription className="sr-only">{title}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 pt-4">
+        <div className="space-y-1 pt-4">
           {alert && (
             <InlineAlert
               variant={alert.variant}
@@ -115,7 +115,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
           )}
 
           {card && (
-            <div className="bg-muted/30 flex items-center gap-3 rounded-2xl p-3">
+            <div className="bg-muted/30 flex items-center gap-1 rounded-2xl p-3">
               <div>
                 <p className="font-black">{card.brand.name}</p>
                 <p className="text-muted-foreground text-sm">${card.amount.toFixed(2)}</p>
@@ -125,7 +125,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
 
           {currentMode === 'ADD' && (
             <>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label className="text-xs">Tipo de Issue</Label>
                 <Select value={issueType} onValueChange={(v) => setIssueType(v as typeof issueType)}>
                   <SelectTrigger className="h-9">
@@ -141,7 +141,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
               </div>
 
               {issueType === 'WRONG_AMOUNT' && (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label className="text-xs">Monto Reportado</Label>
                   <Input
                     type="number"
@@ -157,7 +157,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
           )}
 
           {currentMode === 'EDIT' && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label className="text-xs">Monto Reportado</Label>
               <Input
                 type="number"
@@ -176,7 +176,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
             </p>
           )}
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-1 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1" disabled={isLoading}>
               Cancelar
             </Button>

@@ -35,17 +35,17 @@ export default async function AdminDashboardPage() {
     <div className="w-full space-y-4">
       <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">PANEL DE ADMINISTRACIÓN</h1>
 
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+      <div className="grid auto-rows-min gap-1 md:grid-cols-3">
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+            <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
               <Bitcoin className="h-5 w-5" />
               Balance Binance
             </CardTitle>
             <CardDescription className="sr-only">Saldo en Binance</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <span className="text-4xl font-bold">{formatCurrency(binanceBalance?.total || 0)}</span>
               {!serverError && (
                 <div className={`mt-1 flex items-center text-xs font-medium ${diffColor}`}>
@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
         </Card>
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+            <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
               <CircleDollarSignIcon className="h-5 w-5" />
               Balance Plataforma
             </CardTitle>
@@ -76,7 +76,7 @@ export default async function AdminDashboardPage() {
         </Card>
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+            <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
               <IconCreditCard className="h-5 w-5" />
               Volumen de Giftcards (HOY)
             </CardTitle>
@@ -89,7 +89,7 @@ export default async function AdminDashboardPage() {
 
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+            <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
               <IconCurrencyDollar className="h-5 w-5" />
               Ganancia (Hoy)
             </CardTitle>
@@ -102,7 +102,7 @@ export default async function AdminDashboardPage() {
 
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+            <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
               <IconChartBar className="h-5 w-5" />
               Ganancia (Semana)
             </CardTitle>
@@ -115,7 +115,7 @@ export default async function AdminDashboardPage() {
 
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-base font-medium">
+            <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
               <IconCalendarEvent className="h-5 w-5" />
               Ganancia (Mes)
             </CardTitle>
@@ -127,7 +127,7 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-1 md:grid-cols-2 lg:grid-cols-6">
         <div className="col-span-1 md:col-span-1 lg:col-span-3">
           <InventoryChart data={inventoryData} />
         </div>

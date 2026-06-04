@@ -56,7 +56,7 @@ export const AdminDepositDialog = ({ open, onOpenChange, onSuccess }: AdminDepos
           <DialogDescription>Registrar el ingreso de dinero por parte de un administrador a la plataforma.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-1">
           {error && <p className="rounded bg-red-100 p-2 text-sm text-red-600">{error}</p>}
 
           <div>
@@ -88,7 +88,7 @@ export const AdminDepositDialog = ({ open, onOpenChange, onSuccess }: AdminDepos
             />
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-1">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>

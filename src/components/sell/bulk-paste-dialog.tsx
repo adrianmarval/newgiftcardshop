@@ -74,10 +74,10 @@ ZZZZ-ZZZZZZ-ZZZZZ 75.50`;
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-1.5 md:space-y-4">
+        <div className="space-y-1.5 md:space-y-1">
           <Card className="bg-card border-none p-1 md:p-4">
             <div className="space-y-1">
-              <div className="flex items-center gap-1.5 md:gap-2">
+              <div className="flex items-center gap-1.5 md:gap-1">
                 <Code className="text-primary h-4 w-4 md:h-5 md:w-5" />
                 <h3 className="text-foreground text-sm font-semibold md:text-base">Expected format</h3>
               </div>
@@ -100,11 +100,11 @@ XXXX-XXXXXX-XXXX 50.00
                 </Button>
               </div>
 
-              <div className="hidden space-y-2 pt-2 md:block">
+              <div className="hidden space-y-1 pt-2 md:block">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Format Examples</span>
                 </div>
-                <div className="border-border bg-muted/20 grid grid-cols-2 gap-2 rounded-xl border p-2 font-mono text-[10px]">
+                <div className="border-border bg-muted/20 grid grid-cols-2 gap-1 rounded-xl border p-2 font-mono text-[10px]">
                   <div className="text-muted-foreground">CODE123, 50.00</div>
                   <div className="text-muted-foreground">CODE123 50.00</div>
                   <div className="text-muted-foreground">CODE123:PIN456, 100.00</div>
@@ -147,11 +147,11 @@ XXXX-XXXXXX-XXXX 50.00
                 className="space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-foreground flex items-center gap-1.5 font-bold md:gap-2">
+                  <h4 className="text-foreground flex items-center gap-1.5 font-bold md:gap-1">
                     <Check className="text-primary h-4 w-4 md:h-5 md:w-5" />
                     Preview ({parsedCards.length})
                   </h4>
-                  <div className="flex items-center gap-1 md:gap-2">
+                  <div className="flex items-center gap-1 md:gap-1">
                     {parseDuplicateCount > 0 && (
                       <Badge variant="outline" className="border-amber-500 px-1 py-0 text-[9px] text-amber-500 md:px-2 md:text-[10px]">
                         {parseDuplicateCount} Duplicates
@@ -182,7 +182,7 @@ XXXX-XXXXXX-XXXX 50.00
                       transition={{ delay: idx * 0.05 }}
                       className="border-border bg-muted/30 flex items-center justify-between rounded border px-2 py-1.5 text-xs md:p-2 md:text-base"
                     >
-                      <div className="flex flex-1 items-center gap-2 md:gap-3">
+                      <div className="flex flex-1 items-center gap-1 md:gap-1">
                         <div className="bg-primary/20 text-primary flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black md:h-6 md:w-6 md:text-sm">
                           {idx + 1}
                         </div>
@@ -197,8 +197,8 @@ XXXX-XXXXXX-XXXX 50.00
           </AnimatePresence>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-2 pt-2 md:flex-row md:gap-3">
-            <div className="flex flex-1 gap-2">
+          <div className="flex flex-col gap-1 pt-2 md:flex-row md:gap-1">
+            <div className="flex flex-1 gap-1">
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}

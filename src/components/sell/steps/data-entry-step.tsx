@@ -508,7 +508,7 @@ export function DataEntryStep() {
         </CardHeader>
 
         {/* CONTENEDOR CENTRAL: Cambiado a flex-1 y min-h-0. Distribuye el Textarea y los Errores de forma balanceada */}
-        <CardContent className="flex min-h-0 flex-1 flex-col space-y-2 p-2">
+        <CardContent className="flex min-h-0 flex-1 flex-col space-y-1 p-2">
           <Textarea
             placeholder="Paste your gift card codes here…"
             value={pasteContent}
@@ -537,13 +537,13 @@ export function DataEntryStep() {
                 exit={{ opacity: 0, y: 10 }}
                 className="border-destructive/20 bg-destructive/5 shrink-0 rounded-xl border p-3"
               >
-                <div className="mb-1.5 flex items-center gap-2">
+                <div className="mb-1.5 flex items-center gap-1">
                   <div className="bg-destructive h-1.5 w-1.5 animate-pulse rounded-full" />
                   <p className="text-destructive text-[10px] font-bold tracking-wider uppercase">Format Errors Detected</p>
                 </div>
                 <div className="custom-scrollbar max-h-24 space-y-1 overflow-y-auto pr-2 md:max-h-32">
                   {validationErrors.map((err, idx) => (
-                    <div key={idx} className="flex gap-2 text-[11px] md:text-xs">
+                    <div key={idx} className="flex gap-1 text-[11px] md:text-xs">
                       <span className="text-destructive/50 font-mono">•</span>
                       <p className="text-destructive/80 font-mono leading-relaxed">{err}</p>
                     </div>
@@ -582,7 +582,7 @@ export function DataEntryStep() {
                   </Button>
                 </div>
 
-                <div className="custom-scrollbar flex gap-2 overflow-x-auto pb-1">
+                <div className="custom-scrollbar flex gap-1 overflow-x-auto pb-1">
                   <AnimatePresence mode="popLayout">
                     {allPreviews.map((preview) => (
                       <motion.div
@@ -632,9 +632,9 @@ export function DataEntryStep() {
               exit={{ height: 0, opacity: 0 }}
               className="shrink-0 overflow-hidden px-2 pb-2 md:px-4 md:pb-4"
             >
-              <div className="border-primary/20 bg-primary/5 space-y-2 rounded-xl border p-3">
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <div className="text-primary flex items-center gap-2">
+              <div className="border-primary/20 bg-primary/5 space-y-1 rounded-xl border p-3">
+                <div className="flex items-center justify-between gap-1 text-sm">
+                  <div className="text-primary flex items-center gap-1">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>{STAGE_LABELS[stage]}</span>
                   </div>
@@ -655,7 +655,7 @@ export function DataEntryStep() {
 
         {/* Action bar inferior: Fija con shrink-0 */}
       </Card>
-      <div className="flex items-center justify-center-safe gap-2">
+      <div className="flex items-center justify-center-safe gap-1">
         <Button
           onClick={() => setStep(1)}
           variant="outline"
@@ -720,7 +720,7 @@ export function DataEntryStep() {
             exit={{ opacity: 0 }}
             className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           >
-            <div className="border-primary bg-card flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed p-8">
+            <div className="border-primary bg-card flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed p-8">
               <Upload className="text-primary h-12 w-12" />
               <p className="text-foreground text-lg font-bold">Drop screenshots here</p>
             </div>

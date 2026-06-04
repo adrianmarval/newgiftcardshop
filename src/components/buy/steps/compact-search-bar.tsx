@@ -49,7 +49,7 @@ export function CompactSearchBar({
   })();
 
   return (
-    <div className={cn('bg-card/50 flex items-center gap-1 rounded-xl border p-1 backdrop-blur-sm md:gap-3 md:p-3', className)}>
+    <div className={cn('bg-card/50 flex items-center gap-1 rounded-xl border p-1 backdrop-blur-sm md:gap-1 md:p-3', className)}>
       {/* Country Selector - Globe hidden on mobile to save space */}
       <div className="flex items-center">
         <Select value={selectedCountry} onValueChange={onCountryChange}>

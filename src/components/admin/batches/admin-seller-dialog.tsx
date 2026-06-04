@@ -29,7 +29,7 @@ export function AdminSellerDialog({ seller, open, onOpenChange }: SellerDialogPr
           <DialogDescription className="sr-only">Datos completos del vendedor</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 pt-4">
+        <div className="space-y-1 pt-4">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-xs font-medium tracking-widest uppercase">Nombre</span>
             <span className="font-bold">{seller.name}</span>

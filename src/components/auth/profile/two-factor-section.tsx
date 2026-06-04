@@ -82,7 +82,7 @@ export const TwoFactorSection = ({ initialEnabled }: TwoFactorSectionProps) => {
     }
   };
 
-const handleRegenerateBackupCodes = async () => {
+  const handleRegenerateBackupCodes = async () => {
     if (!password) {
       setTwoFactorError(isSpanish ? 'Se requiere contraseña' : 'Password is required');
       return;
@@ -106,7 +106,7 @@ const handleRegenerateBackupCodes = async () => {
     }
   };
 
-const handleDisable2FA = async () => {
+  const handleDisable2FA = async () => {
     if (!password) {
       setTwoFactorError(isSpanish ? 'Se requiere contraseña' : 'Password is required');
       return;
@@ -145,7 +145,7 @@ const handleDisable2FA = async () => {
     <>
       <Card className="gap-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <div
               className={`flex h-7 w-7 items-center justify-center rounded-md md:h-9 md:w-9 ${is2FAEnabled ? 'bg-emerald-500/10' : 'bg-muted'}`}
             >
@@ -172,7 +172,7 @@ const handleDisable2FA = async () => {
           ) : (
             <Button
               size="sm"
-              className="h-7 rounded-md bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-400 md:h-8"
+              className="h-7 rounded-md bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 md:h-8"
               onClick={() => setShow2FADialog(true)}
               disabled={is2FAPending}
             >
@@ -180,7 +180,7 @@ const handleDisable2FA = async () => {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="space-y-4 pt-0">
+        <CardContent className="space-y-1 pt-0">
           {is2FAEnabled && (
             <div className="border-border flex items-center justify-between border-t pt-2 md:pt-3">
               <p className="text-xs text-emerald-400 md:text-sm">{isSpanish ? 'Protegida' : 'Protected'}</p>
@@ -241,7 +241,7 @@ const handleDisable2FA = async () => {
 
           {showBackupCodes ? (
             <div className="space-y-3">
-              <div className="flex flex-col items-center justify-center gap-2 text-center">
+              <div className="flex flex-col items-center justify-center gap-1 text-center">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10">
                   <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 </div>
@@ -272,14 +272,14 @@ const handleDisable2FA = async () => {
                   setShowBackupCodes(false);
                   setTwoStepEnable(false);
                 }}
-                className="h-8 w-full rounded-md bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-400 md:h-9 md:text-sm"
+                className="h-8 w-full rounded-md bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 md:h-9 md:text-sm"
               >
                 {isSpanish ? 'He Guardado' : "I've Saved"}
               </Button>
             </div>
           ) : !twoStepEnable ? (
             <div className="space-y-3">
-              <div className="flex flex-col items-center justify-center gap-2 text-center">
+              <div className="flex flex-col items-center justify-center gap-1 text-center">
                 <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-full">
                   <ShieldCheck className="text-muted-foreground h-4 w-4" />
                 </div>
@@ -295,7 +295,7 @@ const handleDisable2FA = async () => {
               </div>
 
               {twoFactorError && (
-                <div className="flex items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 p-2">
+                <div className="flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 p-2">
                   <AlertCircle className="h-3 w-3 text-red-400" />
                   <span className="text-xs text-red-400">{twoFactorError}</span>
                 </div>
@@ -317,7 +317,7 @@ const handleDisable2FA = async () => {
 
               <Button
                 onClick={is2FAEnabled ? handleRegenerateBackupCodes : handleEnable2FA}
-                className="h-8 w-full rounded-md bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-400 md:h-9 md:text-sm"
+                className="h-8 w-full rounded-md bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 md:h-9 md:text-sm"
                 disabled={is2FAPending || !password}
               >
                 {is2FAPending ? (
@@ -339,13 +339,13 @@ const handleDisable2FA = async () => {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex flex-col items-center justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-1">
                 <div className="rounded-md bg-white p-2">{qrCodeData && <QRCodeSVG value={qrCodeData} size={120} />}</div>
                 <p className="text-muted-foreground text-xs break-all md:text-sm">{qrCodeData}</p>
               </div>
 
               {twoFactorError && (
-                <div className="flex items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 p-2">
+                <div className="flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 p-2">
                   <AlertCircle className="h-3 w-3 text-red-400" />
                   <span className="text-xs text-red-400">{twoFactorError}</span>
                 </div>
@@ -367,7 +367,7 @@ const handleDisable2FA = async () => {
 
               <Button
                 onClick={handleVerify2FA}
-                className="h-9 w-full rounded-md bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-400 md:h-10"
+                className="h-9 w-full rounded-md bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 md:h-10"
                 disabled={is2FAPending || totpCode.length !== 6}
               >
                 {is2FAPending ? (
@@ -396,13 +396,7 @@ const handleDisable2FA = async () => {
 
           <div className="space-y-3">
             {twoFactorError && (
-              <InlineAlert
-                variant="error"
-                title={twoFactorError}
-                autoDismiss
-                dismissAfter={3000}
-                onDismiss={() => setTwoFactorError('')}
-              />
+              <InlineAlert variant="error" title={twoFactorError} autoDismiss dismissAfter={3000} onDismiss={() => setTwoFactorError('')} />
             )}
 
             <div className="space-y-1.5">

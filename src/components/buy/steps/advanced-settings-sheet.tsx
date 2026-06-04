@@ -51,10 +51,10 @@ export function AdvancedSettingsSheet({
           <SheetDescription className="text-xs">Configura filtros personalizados y tu tarifa de compra</SheetDescription>
         </SheetHeader>
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 space-y-1">
           {/* Buy Rate Adjustment */}
           {allowBuyRateAdjustment && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <Label className="text-foreground text-xs font-medium" htmlFor="buy-rate">
                   Mi Tarifa de Compra (%)
@@ -62,7 +62,7 @@ export function AdvancedSettingsSheet({
                 <span className="text-muted-foreground text-[10px]">80% - 100%</span>
               </div>
               {!selectedBcExists ? (
-                <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-500">
+                <div className="flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-500">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                   Selecciona una marca primero para ajustar tu tarifa
                 </div>
@@ -84,9 +84,9 @@ export function AdvancedSettingsSheet({
 
           {/* Min/Max Amount Filters */}
           {allowSearchPreferences && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label className="text-foreground text-xs font-medium">Rango de Montos</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1">
                 <div className="space-y-1">
                   <span className="text-muted-foreground text-[10px]">Mínimo ($)</span>
                   <Input
@@ -116,7 +116,7 @@ export function AdvancedSettingsSheet({
         </div>
 
         {/* Actions */}
-        <div className="mt-6 flex items-center gap-2">
+        <div className="mt-6 flex items-center gap-1">
           <Button
             variant="outline"
             onClick={onClear}

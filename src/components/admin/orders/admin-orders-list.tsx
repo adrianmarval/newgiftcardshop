@@ -102,7 +102,7 @@ export function AdminOrdersList({ orders, totalPages, onViewBuyer, onAddReport, 
   }
 
   return (
-    <div className="space-y-2" ref={listRef}>
+    <div className="space-y-1" ref={listRef}>
       <AnimatePresence>
         {orders
           .filter((order) => expandedId === null || expandedId === order.id)

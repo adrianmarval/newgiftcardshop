@@ -62,7 +62,7 @@ export function RegistryCard({
 
       <CardHeader className="px-2">
         <CardTitle className="text-inherit">
-          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 md:gap-4">
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-1 md:gap-1">
             {icon && <div className="flex h-10 w-10 shrink-0 items-center justify-center">{icon}</div>}
 
             <div className="flex min-w-0 flex-col gap-0.5">
@@ -76,7 +76,7 @@ export function RegistryCard({
       </CardHeader>
 
       <CardContent className="flex items-center justify-between px-4 py-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {date && <span className="text-muted-foreground text-sm">{date instanceof Date ? formatDateTime(date, 'es-AR') : date}</span>}
         </div>
         <ChevronDown className={`text-muted-foreground h-5 w-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />

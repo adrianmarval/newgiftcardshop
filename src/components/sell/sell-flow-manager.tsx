@@ -176,7 +176,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-              className="mx-auto mb-4"
+              className="mx-auto mb-2"
             >
               <div className="bg-primary/20 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
                 <Check className="text-primary h-10 w-10" />

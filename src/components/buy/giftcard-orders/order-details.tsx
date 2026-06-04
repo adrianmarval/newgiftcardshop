@@ -15,7 +15,7 @@ export function OrderDetails({ order }: OrderDetailsProps) {
         <span className="text-muted-foreground text-xs font-medium md:text-base">Order Rate: {order.buyRate * 100}%</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-1 sm:grid-cols-2 xl:grid-cols-3">
         {order.giftcards.map((card) => (
           <GiftcardItem key={card.id} card={card} showCopyButton={false} />
         ))}

@@ -16,9 +16,9 @@ interface SellerDashboardClientProps {
 export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardClientProps) {
   return (
     <div className="w-full space-y-4">
-      <section className="space-y-4">
+      <section className="space-y-1">
         <h2 className="text-xl font-semibold">Statistics</h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-1 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Cards"
             value={stats.totalCards.toString()}
@@ -43,7 +43,7 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-semibold">Quick Actions</h2>
+        <h2 className="text-xl font-semibold">Quick Actions</h2>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -53,7 +53,7 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
               </div>
               <Link
                 href="/sell/dashboard/sell-cards"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 font-medium"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-lg px-4 py-2 font-medium"
               >
                 <IconPlus className="h-4 w-4" />
                 Sell Cards
@@ -64,17 +64,17 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
       </section>
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Recent Batches</h2>
           <Link href="/sell/dashboard/cards" className="text-primary text-sm hover:underline">
             View all →
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-1 md:grid-cols-2 lg:grid-cols-3">
           {recentBatches.length > 0 ? (
             recentBatches.map((batch) => (
               <Card key={batch.id}>
-                <CardHeader className="flex flex-row items-center gap-3">
+                <CardHeader className="flex flex-row items-center gap-1">
                   {batch.giftcards[0]?.brand.image ? (
                     <div className="relative h-10 w-10">
                       <Image src={batch.giftcards[0].brand.image} alt={batch.giftcards[0].brand.name} fill className="object-contain" />
@@ -104,7 +104,7 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
           ) : (
             <Card className="col-span-full">
               <CardHeader>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
                   <IconGift className="text-muted-foreground h-6 w-6" />
                   <CardDescription>No batches yet. Start selling cards to see them here.</CardDescription>
                 </div>

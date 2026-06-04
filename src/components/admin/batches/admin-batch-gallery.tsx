@@ -94,7 +94,7 @@ export function AdminBatchGallery({ batchId }: AdminBatchGalleryProps) {
               <DialogDescription>Imágenes provistas por el seller durante la publicación.</DialogDescription>
             </div>
             {hasImages && (
-              <Button onClick={handleDownloadZip} disabled={isZipping} variant="default" size="sm" className="gap-2">
+              <Button onClick={handleDownloadZip} disabled={isZipping} variant="default" size="sm" className="gap-1">
                 {isZipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 {isZipping ? 'Comprimiendo...' : 'Descargar ZIP'}
               </Button>
@@ -105,12 +105,12 @@ export function AdminBatchGallery({ batchId }: AdminBatchGalleryProps) {
         <div className="bg-muted/10 flex flex-1 flex-col overflow-hidden">
           {isLoading ? (
             <div className="text-muted-foreground flex h-full flex-col items-center justify-center p-6 py-12">
-              <Loader2 className="text-primary mb-4 h-8 w-8 animate-spin" />
+              <Loader2 className="text-primary mb-2 h-8 w-8 animate-spin" />
               <p>Descifrando imágenes...</p>
             </div>
           ) : !hasImages ? (
             <div className="text-muted-foreground flex h-full flex-col items-center justify-center p-6 py-12">
-              <ImageIcon className="mb-4 h-12 w-12 opacity-20" />
+              <ImageIcon className="mb-2 h-12 w-12 opacity-20" />
               <p>No se encontró evidencia para este lote.</p>
             </div>
           ) : selectedImage ? (

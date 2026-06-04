@@ -256,8 +256,8 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   const isUpdating = updateStatus === 'executing' || toggleStatus === 'executing';
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 md:flex-row">
+    <div className="space-y-1">
+      <div className="flex flex-col gap-1 md:flex-row">
         <div className="relative flex-1">
           <Input
             placeholder="Buscar por nombre o email..."
@@ -281,12 +281,12 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
         <Button onClick={handleFilterChange}>Buscar</Button>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         {initialUsers.map((user) => (
           <Card key={user.id} className="hover:bg-muted/50 transition-colors">
-            <CardContent className="flex items-center gap-3 p-3">
+            <CardContent className="flex items-center gap-1 p-3">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <span className="truncate font-medium">{user.name}</span>
                   {!user.isActive && (
                     <Badge variant="secondary" className="text-xs">
@@ -333,7 +333,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
           <p className="text-muted-foreground text-sm">
             Página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalCount} usuarios)
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <Button
               variant="outline"
               size="sm"
@@ -360,8 +360,8 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
             <DialogTitle>Editar Usuario</DialogTitle>
             <DialogDescription>{editUser?.email}</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+          <div className="grid gap-1 py-4">
+            <div className="grid gap-1">
               <label className="text-sm font-medium">Rol</label>
               <Select value={editForm.role} onValueChange={(role) => setEditForm((f) => ({ ...f, role }))}>
                 <SelectTrigger>
@@ -376,7 +376,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
             </div>
 
             {editForm.role === 'BUYER' && (
-              <div className="grid gap-2">
+              <div className="grid gap-1">
                 <label className="text-sm font-medium">Límite de Crédito ($)</label>
                 <Input
                   type="number"
@@ -387,8 +387,8 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
             )}
 
             {editForm.role === 'BUYER' && (
-              <div className="grid grid-cols-2 gap-2">
-                <div className="grid gap-2">
+              <div className="grid grid-cols-2 gap-1">
+                <div className="grid gap-1">
                   <label className="text-sm font-medium">Min. Denominación ($)</label>
                   <Input
                     type="number"
@@ -397,7 +397,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                     onChange={(e) => setEditForm((f) => ({ ...f, minAmount: e.target.value }))}
                   />
                 </div>
-                <div className="grid gap-2">
+                <div className="grid gap-1">
                   <label className="text-sm font-medium">Max. Denominación ($)</label>
                   <Input
                     type="number"
@@ -446,13 +446,13 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
             {/* Sección de Tarifas por Brand/País */}
             <div className="mt-4 border-t pt-4">
               <h3 className="mb-2 text-sm font-semibold">Tarifas por Brand/País</h3>
-              <p className="text-muted-foreground mb-4 text-xs">
+              <p className="text-muted-foreground mb-2 text-xs">
                 Configura tarifas específicas de compra/venta para este usuario. Si no se configuran, se utilizarán las globales de la
                 marca.
               </p>
 
-              <div className="bg-muted/30 grid gap-3 rounded-lg border p-3">
-                <div className="grid gap-2">
+              <div className="bg-muted/30 grid gap-1 rounded-lg border p-3">
+                <div className="grid gap-1">
                   <label className="text-xs font-medium">Seleccionar Marca y País</label>
                   <Popover open={openBrandCountry} onOpenChange={setOpenBrandCountry}>
                     <PopoverTrigger asChild>
@@ -495,9 +495,9 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                   </Popover>
                 </div>
 
-                <div className={cn('grid gap-2', editUser?.role === 'ADMIN' ? 'grid-cols-2' : 'grid-cols-1')}>
+                <div className={cn('grid gap-1', editUser?.role === 'ADMIN' ? 'grid-cols-2' : 'grid-cols-1')}>
                   {editUser?.role !== 'SELLER' && (
-                    <div className="grid gap-2">
+                    <div className="grid gap-1">
                       <label className="text-xs font-medium">Buy Rate (%)</label>
                       <Input
                         type="number"
@@ -508,7 +508,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
                     </div>
                   )}
                   {editUser?.role !== 'BUYER' && (
-                    <div className="grid gap-2">
+                    <div className="grid gap-1">
                       <label className="text-xs font-medium">Sell Rate (%)</label>
                       <Input
                         type="number"
@@ -526,7 +526,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
               </div>
 
               {/* Lista de tarifas */}
-              <div className="mt-4 max-h-48 space-y-2 overflow-y-auto">
+              <div className="mt-4 max-h-48 space-y-1 overflow-y-auto">
                 {userRates.length === 0 ? (
                   <p className="text-muted-foreground p-2 text-center text-xs">No hay tarifas personalizadas configuradas.</p>
                 ) : (
