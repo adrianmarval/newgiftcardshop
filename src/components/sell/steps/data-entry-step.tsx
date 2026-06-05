@@ -33,7 +33,7 @@ export function DataEntryStep() {
   const [dbBlockedCodes, setDbBlockedCodes] = useState<string[]>([]);
   const [localImages, setLocalImages] = useState<Array<{ file: File; previewUrl: string }>>([]);
   const [stage, setStage] = useState<ProcessingStage>('idle');
-  const [showFormatHelp, setShowFormatHelp] = useState(false);
+  const [showFormatHelp, setShowFormatHelp] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingDbCheckRef = useRef<(() => void) | null>(null);
   const pendingCodeToLineMapRef = useRef<Map<string, number>>(new Map());
@@ -473,7 +473,7 @@ export function DataEntryStep() {
             )}
           </div>
           <CardDescription className="text-muted-foreground mt-1 flex flex-col gap-1 text-xs md:text-sm">
-            Paste codes and attach screenshots — like composing an email.
+            Paste codes and attach screenshots (optional)
             <Button
               type="button"
               variant="link"
@@ -481,7 +481,7 @@ export function DataEntryStep() {
               className="text-muted-foreground hover:text-foreground flex h-auto w-auto justify-start gap-1 p-0 text-[11px] font-medium transition-colors md:text-xs"
             >
               <Code className="h-3 w-3" />
-              <span>Expected format</span>
+              <span>Expected ClaimCode Format</span>
               {showFormatHelp ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             </Button>
             <AnimatePresence>
@@ -493,10 +493,10 @@ export function DataEntryStep() {
                   className="mt-1 overflow-hidden"
                 >
                   <div className="border-border bg-muted/30 space-y-1 rounded-lg border p-2 md:p-3">
-                    <p className="text-muted-foreground text-[10px] md:text-xs">
+                    <p className="text-muted-foreground text-[12px] md:text-xs">
                       One card per line: <span className="text-foreground font-mono font-bold">CODE AMOUNT</span>
                     </p>
-                    <div className="text-muted-foreground/70 font-mono text-[10px] md:text-xs">
+                    <div className="text-muted-foreground/70 font-mono text-[12px] md:text-xs">
                       <div>HPGE-JV9RR4-8SA9 30.00</div>
                       <div>XXBS-7W4HDV-D2AN 30.00</div>
                     </div>
