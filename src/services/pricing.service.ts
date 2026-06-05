@@ -30,6 +30,14 @@ export async function getUserRates(
     brandCountryId = bc?.id;
   }
 
+  if (!brandCountryId && brandId && !countryId) {
+    const bc = await prisma.brandCountry.findUnique({
+      where: { id: brandId },
+      select: { id: true },
+    });
+    brandCountryId = bc?.id;
+  }
+
   if (!brandCountryId) {
     throw new Error('Combinación de marca y país no válida.');
   }

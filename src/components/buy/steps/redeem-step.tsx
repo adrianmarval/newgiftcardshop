@@ -47,7 +47,12 @@ export const RedeemStep = () => {
   });
 
   useEffect(() => {
-    executeGetUserBuyRate({ brandId: selectedBrand, countryId: selectedCountry });
+    if (selectedBrand.includes('|')) {
+      const [brandId, countryId] = selectedBrand.split('|');
+      executeGetUserBuyRate({ brandId, countryId });
+    } else if (selectedBrand) {
+      executeGetUserBuyRate({ brandCountryId: selectedBrand });
+    }
   }, [executeGetUserBuyRate, selectedBrand, selectedCountry]);
 
   const setLoading = (id: string, loading: boolean) => {
@@ -393,7 +398,7 @@ export const RedeemStep = () => {
       <div className="flex items-center justify-center-safe gap-1">
         <Button
           onClick={() => setStep(4)}
-          className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 h-9 text-xs font-bold shadow-lg md:h-10 md:text-sm"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 text-xs font-bold md:h-10 md:text-sm"
         >
           Confirmar uso/reportes <ChevronRight className="ml-1 h-3 w-3 md:ml-2 md:h-4 md:w-4" />
         </Button>

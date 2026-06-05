@@ -30,40 +30,44 @@ export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).actio
 
     const effectiveTotal = batch.giftcards.reduce((sum, card) => {
       if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
-      if (card.status === 'USED' || card.status === 'UNUSED') return sum.plus(card.amount);
+      if (card.status === 'USED') return sum.plus(card.amount);
       return sum;
     }, new Prisma.Decimal(0));
 
+    console.log({ effectiveTotal });
+
     const paymentAmount = effectiveTotal.mul(batch.sellRate);
 
-    await prisma.$transaction(async (tx) => {
-      const updatedSettings = await tx.platformSettings.update({
-        where: { key: SETTING_KEYS.PLATFORM_BALANCE },
-        data: { balance: { decrement: paymentAmount } },
-      });
+    console.log({ paymentAmount });
 
-      const payment = await tx.payment.create({
-        data: {
-          amount: paymentAmount,
-          balanceAfter: updatedSettings.balance,
-          direction: 'DEBIT',
-          category: 'BATCH',
-          batchId: batch.id,
-          relatedUserId: batch.user?.id ?? null,
-        },
-      });
+    // await prisma.$transaction(async (tx) => {
+    //   const updatedSettings = await tx.platformSettings.update({
+    //     where: { key: SETTING_KEYS.PLATFORM_BALANCE },
+    //     data: { balance: { decrement: paymentAmount } },
+    //   });
 
-      await tx.giftcardBatch.update({
-        where: { id: batchId },
-        data: { isPaid: true },
-      });
+    //   const payment = await tx.payment.create({
+    //     data: {
+    //       amount: paymentAmount,
+    //       balanceAfter: updatedSettings.balance,
+    //       direction: 'DEBIT',
+    //       category: 'BATCH',
+    //       batchId: batch.id,
+    //       relatedUserId: batch.user?.id ?? null,
+    //     },
+    //   });
 
-      results.push({
-        batchId,
-        paymentId: payment.id,
-        amount: Number(payment.amount),
-      });
-    });
+    //   await tx.giftcardBatch.update({
+    //     where: { id: batchId },
+    //     data: { isPaid: true },
+    //   });
+
+    //   results.push({
+    //     batchId,
+    //     paymentId: payment.id,
+    //     amount: Number(payment.amount),
+    //   });
+    // });
   }
 
   return { success: true as const, results };

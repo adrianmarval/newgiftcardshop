@@ -45,7 +45,12 @@ export const ConfirmUsageStep = () => {
   });
 
   useEffect(() => {
-    executeGetUserBuyRate({ brandId: selectedBrand, countryId: selectedCountry });
+    if (selectedBrand.includes('|')) {
+      const [brandId, countryId] = selectedBrand.split('|');
+      executeGetUserBuyRate({ brandId, countryId });
+    } else if (selectedBrand) {
+      executeGetUserBuyRate({ brandCountryId: selectedBrand });
+    }
   }, [executeGetUserBuyRate, selectedBrand, selectedCountry]);
 
   const rawTotal = foundGiftcards.reduce((sum, card) => {

@@ -117,7 +117,7 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
       actions={
         isActionable ? (
           <>
-            <Button onClick={handleResumeOrder} size="sm" className="h-8 px-3 text-xs md:h-9 md:px-4 md:text-sm">
+            <Button variant="destructive" onClick={handleResumeOrder} size="sm" className="h-8 px-3 text-xs md:h-9 md:px-4 md:text-sm">
               Completar Orden
             </Button>
             {canCancel && (
