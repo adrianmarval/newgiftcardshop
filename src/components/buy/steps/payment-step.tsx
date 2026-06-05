@@ -143,7 +143,7 @@ export const PaymentStep = () => {
         <div className="w-full max-w-xs space-y-1 md:max-w-sm md:space-y-3">
           <div className="space-y-1 text-left">
             <Label className="text-muted-foreground ml-1 text-[9px] font-black tracking-tight uppercase md:text-[10px]">
-              ID de Transacción (opcional)
+              ID de Transacción
             </Label>
             <Input
               placeholder="ID de transacción"

@@ -153,7 +153,7 @@ export const ResultsStep = () => {
         {/* Resumen compactado - derecha en desktop */}
         <div className="grid grid-cols-3 gap-1 md:col-span-8">
           <div className="flex flex-col justify-center rounded-lg border border-slate-500/20 bg-slate-800/30 p-1.5">
-            <span className="text-[9px] font-medium tracking-wider text-slate-400 uppercase">Monto Disp.</span>
+            <span className="text-[10px] font-medium tracking-wider text-slate-400 uppercase">Monto Encontrado</span>
             <p className="text-base font-black text-white">{formatCurrency(rawTotal, { currency: selectedCurrency })}</p>
           </div>
 
@@ -272,8 +272,7 @@ export const ResultsStep = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Realizar Pedido?</AlertDialogTitle>
             <AlertDialogDescription>
-              El proceso no se puede revertir porque los códigos serán revelados. Una vez revelados, se consideran tuyos y debes aplicarlos
-              y pagarlos.
+              Nota: Proceso irreversible. Una vez revelados los códigos, asumes la propiedad, aplicación y pago de los mismos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

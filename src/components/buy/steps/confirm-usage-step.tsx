@@ -207,9 +207,9 @@ export const ConfirmUsageStep = () => {
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Liberar Pago al Proveedor?</AlertDialogTitle>
+            <AlertDialogTitle>¡Atención!</AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              ¿Ya redimiste y reportaste correctamente todas tus tarjetas?
+              Esta acción liberará el pago al proveedor. Si tuviste problemas con alguna tarjeta debes reportarla antes de pagar
               <br />
               <span className="text-destructive mt-2 block font-medium">El pago no se puede revertir.</span>
             </AlertDialogDescription>
@@ -223,11 +223,11 @@ export const ConfirmUsageStep = () => {
               }}
               className="flex-1"
             >
-              Seguir Reportando
+              Reportar tarjetas
             </Button>
             <AlertDialogAction onClick={handleConfirmDialogConfirm} disabled={confirmStatus === 'executing'} className="flex-1">
               {confirmStatus === 'executing' ? <Spinner size="sm" className="mr-2" /> : null}
-              Confirmar y Pagar
+              Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

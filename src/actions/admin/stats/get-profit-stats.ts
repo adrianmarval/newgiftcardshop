@@ -24,6 +24,7 @@ export const getProfitStatsAction = adminActionClient.action(async () => {
     select: {
       amount: true,
       reportedAmount: true,
+      status: true,
       order: { select: { buyRate: true, createdAt: true } },
       batch: { select: { sellRate: true } },
     },
@@ -45,8 +46,12 @@ export const getProfitStatsAction = adminActionClient.action(async () => {
   for (const gc of soldGiftcards) {
     if (!gc.order || !gc.batch) continue;
 
-    // Si tiene reportedAmount (por WRONG_AMOUNT), lo usamos, sino el amount nominal.
-    const effectiveAmount = gc.reportedAmount !== null ? gc.reportedAmount.toNumber() : gc.amount.toNumber();
+    let effectiveAmount = gc.amount.toNumber();
+    if (gc.status === 'WRONG_AMOUNT' && gc.reportedAmount !== null) {
+      effectiveAmount = gc.reportedAmount.toNumber();
+    } else if (['INVALID', 'ALREADY_USED', 'DEACTIVATED'].includes(gc.status)) {
+      effectiveAmount = 0;
+    }
     const buyRate = gc.order.buyRate.toNumber();
     const sellRate = gc.batch.sellRate.toNumber();
 
