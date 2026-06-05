@@ -140,8 +140,8 @@ export const ConfirmUsageStep = () => {
 
         <div className="grid w-full max-w-md grid-cols-2 gap-1 md:gap-1">
           <div className="border-border bg-muted/50 rounded-xl border p-2 md:p-3">
-            <div className="text-muted-foreground mb-0.5 text-[9px] font-black uppercase md:text-xs">Tarjetas</div>
-            <div className="text-lg font-black md:text-2xl">{foundGiftcards.length}</div>
+            <div className="text-muted-foreground mb-0.5 text-[9px] font-black uppercase md:text-xs">Monto en Giftcards</div>
+            <div className="text-lg font-black md:text-2xl">{formatCurrency(rawTotal, { currency: 'USD' })}</div>
           </div>
           <div
             className={`rounded-xl border p-2 md:p-3 ${allCardsWorthless ? 'border-destructive/20 bg-destructive/10' : 'border-primary/20 bg-primary/10'}`}
