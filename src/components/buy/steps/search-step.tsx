@@ -188,7 +188,15 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         if (tierInfo) {
           setTierInfo(tierInfo);
         }
-        showAlert.error('Error', error);
+        if (error.includes('No hay tarjetas disponibles para tu tasa')) {
+          showAlert.info('Disponibilidad', error);
+        } else if (error.includes('límite de crédito') || error.includes('excedería')) {
+          showAlert.warning('Límite de crédito', error);
+        } else if (error.includes('tarjeta más chica') || error.includes('combinación exacta')) {
+          showAlert.warning('Aviso de Stock', error);
+        } else {
+          showAlert.error('Error', error);
+        }
       } else {
         showAlert.warning('Sin stock', 'No se encontraron tarjetas disponibles con los criterios seleccionados.');
       }

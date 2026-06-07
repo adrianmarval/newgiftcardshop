@@ -239,7 +239,7 @@ export async function handleAmountText(ctx: BuyerContext) {
 
     const currency = ctx.session.wizard.countryCurrency || 'USD';
     if (inaccessibleAmount.gt(0) && accessibleAmount.eq(0)) {
-      msg = `😔 No hay tarjetas disponibles a tu tasa (${buyerRatePercent}%).\n\n⏱️ Reintentá en unos minutos.`;
+      msg = `😔 No hay tarjetas disponibles para tu tasa del ${buyerRatePercent}% (actualmente hay <b>${fmt$(Number(inaccessibleAmount), currency)}</b> en stock no accesibles a tu tarifa).`;
     } else {
       msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}).\n\nEl total no alcanza lo que buscás.`;
     }

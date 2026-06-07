@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { authApi } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { dashboardMap, roleMap } from '@/types/';
+import { appSectionMap, roleMap } from '@/types/';
 
 const registerInputSchema = z
   .object({
@@ -31,8 +31,9 @@ export const register = actionClient
   .inputSchema(registerInputSchema)
   .outputSchema(registerOutputSchema)
   .action(async function ({ parsedInput: { fullName, email, password, portal } }) {
-    const callbackURL = dashboardMap[portal];
+    const callbackURL = `${appSectionMap[portal]}/auth/login`;
     const role = roleMap[portal];
+    console.log({ callbackURL });
 
     try {
       await authApi.signUpEmail({

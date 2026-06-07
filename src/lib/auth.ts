@@ -85,9 +85,7 @@ export const auth = betterAuth({
       return {
         user: {
           ...user,
-          telegramUser: telegramUser
-            ? { ...telegramUser, hasPhoto: !!telegramUser.photoData, photoData: undefined }
-            : undefined,
+          telegramUser: telegramUser ? { ...telegramUser, hasPhoto: !!telegramUser.photoData, photoData: undefined } : undefined,
         },
       };
     }),

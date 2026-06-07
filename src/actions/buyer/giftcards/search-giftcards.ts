@@ -160,7 +160,7 @@ export const searchGiftcards = buyerActionClient
         return {
           success: true as const,
           giftcards: [],
-          error: `No hay tarjetas disponibles a tu tasa (${buyerBuyRate}%).\n\nReintentá en unos minutos.`,
+          error: `No hay tarjetas disponibles para tu tasa del ${buyerBuyRate}% (actualmente hay $${totalInaccessible.toFixed(2)} en stock no accesibles a tu tarifa).`,
         };
       }
 

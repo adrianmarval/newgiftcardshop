@@ -131,13 +131,13 @@ export class GiftcardEscalationService {
 
     let buyerBuyRate: number;
     if (userRate) {
-      buyerBuyRate = Math.floor(userRate.buyRate.toNumber());
+      buyerBuyRate = Math.floor(userRate.buyRate.toNumber() * 100);
     } else {
       const defaultRate = await prisma.brandCountryRate.findUnique({
         where: { brandCountryId },
         select: { buyRate: true },
       });
-      buyerBuyRate = defaultRate ? Math.floor(defaultRate.buyRate.toNumber()) : 100;
+      buyerBuyRate = defaultRate ? Math.floor(defaultRate.buyRate.toNumber() * 100) : 100;
     }
 
     const availableCards = await prisma.giftcard.findMany({
