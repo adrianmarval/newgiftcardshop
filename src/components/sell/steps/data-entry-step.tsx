@@ -463,7 +463,7 @@ export function DataEntryStep() {
         )}
       >
         {/* Header con shrink-0 para preservar su tamaño exacto */}
-        <CardHeader className="border-border/40 shrink-0 border-b px-3 py-3 md:px-6">
+        <CardHeader className="border-border/40 shrink-0 border-b px-3 py-3 md:px-6 [.border-b]:pb-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-foreground text-md font-bold md:text-xl">Load Gift Cards</CardTitle>
             {hasExistingCards && (
