@@ -387,12 +387,56 @@ Comportamiento:
 
 ```
 Situación:
-- minTier = 70 (hardcoded fallback en getMinTierForBrandCountry)
-- Una tarjeta llega a tier 70
+- minTier = 80 (hardcoded fallback en getMinTierForBrandCountry)
+- Una tarjeta llega a tier 80
 
 Comportamiento:
-- El tier NO baja más de 70
+- El tier se detiene en 80 por defecto
 - processEscalationTiers usa Math.max(newTier, minTier)
+```
+
+### Edge Case 6: Tarjeta no comprada en tier mínimo → tier 0 (Acceso Universal)
+
+```
+Situación:
+- Usuarios existentes: 89%, 85%, 83%
+- Tarjeta llega a tier mínimo 83 y nadie la compra
+- Se registra nuevo usuario con 80%
+
+Comportamiento:
+- Si la tarjeta permanece en tier 83 por 3 ciclos sin ser comprada
+- El tier desciende a 0, haciéndola accesible para CUALQUIER buyer
+- Timeout: 3 * escalation_duration_minutes (ej: 3 * 5min = 15 min en el mínimo)
+
+Lógica en processEscalationTiers():
+  if (card.escalationTier === minTier) {
+    const timeInMinTier = Date.now() - card.tierStartedAt.getTime();
+    const minTierTimeout = config.durationMinutes * 60 * 1000 * 3;
+    if (timeInMinTier >= minTierTimeout) {
+      const newTier = card.escalationTier - config.dropAmount;
+      updates.push({ id: card.id, newTier: Math.max(newTier, 0) });
+    }
+  }
+
+Importancia: Resuelve el bug donde usuarios con baja tasa (80%) no podían
+acceder a tarjetas publicadas cuando no existían usuarios con esa tasa.
+```
+
+### Edge Case 7: Nuevo usuario con rate bajo vs tarjetas existentes
+
+```
+Situación:
+- 3 usuarios publican tarjetas: 89%, 85%, 83%
+- Se registra usuario D con 80%
+- Las tarjetas existentes están en tier 83 (mínimo de usuarios existentes)
+
+Comportamiento:
+- Usuario D NO puede comprar las tarjetas existentes (83 > 80)
+- Las tarjetas nuevas que se publiquen sí podrán descender hasta 80
+- Las tarjetas existentes pueden bajar a 0 si no son compradas en 3 ciclos
+
+Solución: El timeout de 3 ciclos permite que tarjetas no reclamadas
+lleguen a tier 0, haciéndolas accesibles para cualquier buyer.
 ```
 
 ---
@@ -415,6 +459,7 @@ Comportamiento:
 ESCALATION_ENABLED = true
 ESCALATION_DURATION_MINUTES = 5
 ESCALATION_DROP_AMOUNT = 1
+ESCALATION_MIN_TIER_FALLBACK = 80  // Fallback del tier mínimo
 ```
 
 ---
@@ -426,10 +471,10 @@ ESCALATION_DROP_AMOUNT = 1
 ```
 src/lib/services/giftcard-escalation.ts
 ├── getInitialTier(brandCountryId)         # Línea 23-44
-├── getMinTierForBrandCountry(brandCountryId)  # Línea 46-67
-├── processEscalationTiers()               # Línea 69-124
-├── getTierInfoForBuyer(buyerId, brandCountryId)  # Línea 126-177
-└── canBuyerAccessTier(buyerBuyRate, cardTier)  # Línea 179-181
+├── getMinTierForBrandCountry(brandCountryId)  # Línea 46-67 (fallback 80)
+├── processEscalationTiers()               # Línea 69-127 (incluye lógica tier 0)
+├── getTierInfoForBuyer(buyerId, brandCountryId)  # Línea 129-179
+└── canBuyerAccessTier(buyerBuyRate, cardTier)  # Línea 181-183
 ```
 
 ### Algoritmo de Búsqueda
@@ -516,6 +561,39 @@ return Math.floor(minUserRate.buyRate.toNumber() * 100);
 return Math.floor(defaultRate.buyRate.toNumber() * 100);
 ```
 
+### Bug 3: Tier mínimo 70 hardcodeado - Usuarios con rate bajo no podían acceder
+
+**Archivo:** `giftcard-escalation.ts:líneas 66 y 102`
+
+**Problema:** El fallback del tier mínimo era 70, y la lógica no permitía descender más allá del mínimo de usuarios existentes. Si se publicaban tarjetas con usuarios al 89%, 85%, 83%, el mínimo era 83, y un usuario con 80% no podía comprar nunca esas tarjetas.
+
+**Solución implementada:**
+1. Fallback cambiado de 70 a 80
+2. Nueva lógica: si una tarjeta está 3 ciclos en el tier mínimo sin ser comprada, puede descender a 0
+
+```typescript
+// ❌ ANTES
+return 70;
+if (card.escalationTier > minTier) {
+  const newTier = card.escalationTier - config.dropAmount;
+  updates.push({ id: card.id, newTier: Math.max(newTier, minTier) });
+}
+
+// ✅ CORREGIDO
+return 80;
+// Nueva lógica en processEscalationTiers:
+} else if (card.escalationTier === minTier) {
+  const timeInMinTier = Date.now() - card.tierStartedAt.getTime();
+  const minTierTimeout = config.durationMinutes * 60 * 1000 * 3;
+  if (timeInMinTier >= minTierTimeout) {
+    const newTier = card.escalationTier - config.dropAmount;
+    updates.push({ id: card.id, newTier: Math.max(newTier, 0) });
+  }
+}
+```
+
+**Regla:** Tier 0 = accesible para cualquier buyer (cualquier buyRate > 0 puede comprar)
+
 ---
 
 ## Limitaciones Conocidas
@@ -525,6 +603,8 @@ return Math.floor(defaultRate.buyRate.toNumber() * 100);
 2. **Global rate ignorado si existe UserBrandCountryRate**: La lógica actual usa solo `UserBrandCountryRate` para calcular el tier inicial, ignorando la global aunque sea mayor. Esto puede causar que buyers sin personalizada (que usarían la global) no puedan acceder a tarjetas hasta que el tier baje lo suficiente.
 
 3. **Rate entre búsqueda y confirmación**: Si el rate del usuario cambia entre que ve las tarjetas y confirma, puede recibir error. Esto es intencional - protege contra inconsistencias.
+
+4. **Timeout de 3 ciclos hardcodeado**: El tiempo que una tarjeta debe permanecer en el tier mínimo antes de poder descender a 0 está fijo en 3 ciclos. No es configurable actualmente.
 
 ---
 

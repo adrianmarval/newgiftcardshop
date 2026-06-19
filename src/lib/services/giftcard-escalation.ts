@@ -63,7 +63,7 @@ export class GiftcardEscalationService {
       return Math.floor(defaultRate.buyRate.toNumber() * 100);
     }
 
-    return 70;
+    return 80;
   }
 
   async processEscalationTiers(): Promise<{ processed: number }> {
@@ -89,7 +89,7 @@ export class GiftcardEscalationService {
         status: 'UNUSED',
         tierStartedAt: { lte: cutoffTime },
       },
-      select: { id: true, brandCountryId: true, escalationTier: true },
+      select: { id: true, brandCountryId: true, escalationTier: true, tierStartedAt: true },
     });
 
     if (cardsToEscalate.length === 0) {
@@ -99,10 +99,17 @@ export class GiftcardEscalationService {
     const updates: { id: string; newTier: number }[] = [];
 
     for (const card of cardsToEscalate) {
-      const minTier = minTiersByBrandCountry.get(card.brandCountryId) ?? 70;
+      const minTier = minTiersByBrandCountry.get(card.brandCountryId) ?? 80;
       if (card.escalationTier > minTier) {
         const newTier = card.escalationTier - config.dropAmount;
         updates.push({ id: card.id, newTier: Math.max(newTier, minTier) });
+      } else if (card.escalationTier === minTier) {
+        const timeInMinTier = Date.now() - card.tierStartedAt.getTime();
+        const minTierTimeout = config.durationMinutes * 60 * 1000 * 3;
+        if (timeInMinTier >= minTierTimeout) {
+          const newTier = card.escalationTier - config.dropAmount;
+          updates.push({ id: card.id, newTier: Math.max(newTier, 0) });
+        }
       }
     }
 
