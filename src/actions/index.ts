@@ -48,3 +48,6 @@ export { getBuyers } from './admin/users/get-buyers';
 export { getSellers } from './admin/users/get-sellers';
 export { getAdmins } from './admin/users/get-admins';
 export { createDeposit, createRefund } from './admin/payments';
+
+// ── Notifications ──────────────────────────────────────────────────────────────
+export { listNotifications, markAsRead, getUnreadCount, updateNotificationPreferences } from './notifications';

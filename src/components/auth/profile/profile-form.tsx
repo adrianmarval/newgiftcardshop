@@ -3,6 +3,7 @@
 import { ProfileInfoSection } from '@/components/auth/profile/profile-info-section';
 import { SecuritySection } from '@/components/auth/profile/security-section';
 import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
+import { NotificationsSection } from '@/components/auth/profile/notifications-section';
 import { AppSection } from '@/types';
 
 interface ProfileFormProps {
@@ -23,10 +24,21 @@ interface ProfileFormProps {
   telegramPhotoDataUrl?: string | null;
   portal: AppSection;
   telegramLinkUrl?: string | null;
+  notificationPreferences?: {
+    telegramEnabled: boolean;
+    whatsappEnabled: boolean;
+    whatsappPhone: string | null;
+  };
 }
 
-export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUrl }: ProfileFormProps) => {
-  const emailVerified = true; // From better-auth session
+export const ProfileForm = ({
+  user,
+  telegramPhotoDataUrl,
+  portal,
+  telegramLinkUrl,
+  notificationPreferences,
+}: ProfileFormProps) => {
+  const emailVerified = true;
 
   return (
     <div className="w-full space-y-3">
@@ -44,6 +56,11 @@ export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUr
         </div>
 
         <div className="space-y-3 md:col-span-5 md:space-y-1">
+          <NotificationsSection
+            portal={portal}
+            telegramLinked={!!user.telegramUser}
+            initialPreferences={notificationPreferences}
+          />
           <SecuritySection />
           <TwoFactorSection initialEnabled={user.twoFactorEnabled} />
         </div>

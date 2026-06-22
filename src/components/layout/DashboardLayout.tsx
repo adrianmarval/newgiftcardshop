@@ -5,6 +5,8 @@ import { NotificationProvider } from '@/contexts/notification-context';
 import { AppSection } from '@/types';
 import { Role } from '@/generated/prisma/enums';
 import { Card } from '../ui/card';
+import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/authorization';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -12,11 +14,28 @@ interface DashboardLayoutProps {
   requiredRoles: Role[];
 }
 
+const PORTAL_BADGE_KEY: Record<AppSection, 'buyer' | 'seller' | 'admin'> = {
+  buy: 'buyer',
+  sell: 'seller',
+  admin: 'admin',
+};
+
 export const DashboardLayout = async ({ children, portal, requiredRoles }: DashboardLayoutProps) => {
-  await authorizeByRequiredRole(requiredRoles);
+  const session = await authorizeByRequiredRole(requiredRoles);
+
+  let initialUnreadCounts: Record<string, number> | undefined;
+  try {
+    const unreadCount = await prisma.notification.count({
+      where: { userId: session.user.id, read: false },
+    });
+    const badgeKey = PORTAL_BADGE_KEY[portal];
+    initialUnreadCounts = { buyer: 0, seller: 0, admin: 0, [badgeKey]: unreadCount };
+  } catch (err) {
+    console.error('[DashboardLayout] Error fetching unread count:', err);
+  }
 
   return (
-    <NotificationProvider>
+    <NotificationProvider initialUnreadCounts={initialUnreadCounts}>
       <AutoRefreshProvider interval={15000}>
         <div className="flex h-svh flex-col pb-2 ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}

@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/client';
 import { settingsService } from '@/lib/settings/settings.service';
+import { notificationService } from '@/lib/notifications/notification.service';
 
 export interface EscalationConfig {
   enabled: boolean;
@@ -13,6 +14,13 @@ export interface TierInfo {
   accessibleAmount: string;
   totalAvailableAmount: string;
   tiers: { tier: number; amount: string }[];
+}
+
+interface TierDropEvent {
+  giftcardId: string;
+  brandCountryId: string;
+  oldTier: number;
+  newTier: number;
 }
 
 export class GiftcardEscalationService {
@@ -108,6 +116,27 @@ export class GiftcardEscalationService {
           }),
         ),
       );
+
+      const tierDropEvents: TierDropEvent[] = cardsToEscalate
+        .filter((card) => {
+          const update = updates.find((u) => u.id === card.id);
+          return update !== undefined && update.newTier < card.escalationTier;
+        })
+        .map((card) => {
+          const update = updates.find((u) => u.id === card.id)!;
+          return {
+            giftcardId: card.id,
+            brandCountryId: card.brandCountryId,
+            oldTier: card.escalationTier,
+            newTier: update.newTier,
+          };
+        });
+
+      if (tierDropEvents.length > 0) {
+        notificationService
+          .notifyBuyersTierDrop(tierDropEvents)
+          .catch((err) => console.error('[Escalation] Error al notificar tier drops (non-blocking):', err));
+      }
     }
 
     return { processed: updates.length };

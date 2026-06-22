@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaBell,
@@ -22,6 +22,19 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useNotifications } from '@/contexts/notification-context';
+import { listNotifications, markAsRead } from '@/actions';
+import { useAction } from 'next-safe-action/hooks';
+import { Spinner } from '@/components/ui/spinner';
+
+export type NotificationItemType =
+  | 'STOCK_AVAILABLE'
+  | 'TIER_DROP_ACCESS'
+  | 'PAYMENT_PENDING'
+  | 'ORDER_COMPLETED'
+  | 'BATCH_PAID'
+  | 'BATCH_STATUS'
+  | 'BATCH_UNDER_REVIEW'
+  | 'RATE_UPDATE';
 
 export interface NotificationItem {
   id: string;
@@ -29,189 +42,38 @@ export interface NotificationItem {
   description: string;
   createdAt: Date;
   read: boolean;
-  type:
-    | 'stock_available'
-    | 'payment_pending'
-    | 'order_completed'
-    | 'rate_promo'
-    | 'batch_paid'
-    | 'batch_status'
-    | 'batch_under_review'
-    | 'rate_update'
-    | 'new_batch_submitted'
-    | 'high_value_order'
-    | 'low_stock_warning'
-    | 'rate_mismatch_warning';
-  actionUrl?: string;
-  meta?: {
-    brandName?: string;
-    amount?: number;
-    currency?: string;
-    batchId?: number;
-    orderId?: string;
-    timeLeftMinutes?: number;
-    spread?: number;
-    sellerName?: string;
-    buyerName?: string;
-  };
+  type: NotificationItemType;
+  actionUrl?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface NotificationsViewProps {
   portal: 'buyer' | 'seller' | 'admin';
   initialNotifications?: NotificationItem[];
+  initialUnreadCount?: number;
 }
 
-const DEFAULT_NOTIFICATIONS: Record<'buyer' | 'seller' | 'admin', NotificationItem[]> = {
-  buyer: [
-    {
-      id: 'n-buyer-1',
-      title: 'Amazon US disponible',
-      description: 'Tarjetas disponibles para compra',
-      createdAt: new Date(Date.now() - 1000 * 60 * 15),
-      read: false,
-      type: 'stock_available',
-      actionUrl: '/store/dashboard/browse-cards',
-      meta: { brandName: 'Amazon US' },
-    },
-    {
-      id: 'n-buyer-2',
-      title: 'Pago pendiente',
-      description: 'Orden #ORD-8849 - Transferí USDT',
-      createdAt: new Date(Date.now() - 1000 * 60 * 45),
-      read: false,
-      type: 'payment_pending',
-      actionUrl: '/store/dashboard/orders',
-      meta: { orderId: 'ORD-8849', amount: 50.0, timeLeftMinutes: 8 },
-    },
-    {
-      id: 'n-buyer-3',
-      title: 'Orden #ORD-8712 completada',
-      description: 'Códigos disponibles para descarga',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
-      read: true,
-      type: 'order_completed',
-      actionUrl: '/store/dashboard/orders',
-      meta: { orderId: 'ORD-8712', amount: 42.5 },
-    },
-    {
-      id: 'n-buyer-4',
-      title: 'Nueva tasa para Apple US',
-      description: 'Tasa preferencial activada',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      read: true,
-      type: 'rate_promo',
-      actionUrl: '/store/dashboard/browse-cards',
-    },
-  ],
-  seller: [
-    {
-      id: 'n-seller-1',
-      title: 'Lote #BATCH-4029 liquidado',
-      description: '$240.00 USDT transferidos',
-      createdAt: new Date(Date.now() - 1000 * 60 * 10),
-      read: false,
-      type: 'batch_paid',
-      actionUrl: '/sell/dashboard/cards',
-      meta: { batchId: 4029, amount: 240.0 },
-    },
-    {
-      id: 'n-seller-2',
-      title: 'Lote #BATCH-3991 procesado',
-      description: '9 tarjetas aprobadas, 1 rechazada',
-      createdAt: new Date(Date.now() - 1000 * 60 * 120),
-      read: false,
-      type: 'batch_status',
-      actionUrl: '/sell/dashboard/cards',
-      meta: { batchId: 3991 },
-    },
-    {
-      id: 'n-seller-3',
-      title: 'Tasa aumentada - Steam Global',
-      description: 'Nueva tasa de 72% para tus lotes',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6),
-      read: true,
-      type: 'rate_update',
-      actionUrl: '/sell/dashboard/sell-cards',
-    },
-    {
-      id: 'n-seller-4',
-      title: 'Lote #BATCH-4050 en auditoría',
-      description: 'Códigos siendo validados',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      read: true,
-      type: 'batch_under_review',
-      actionUrl: '/sell/dashboard/cards',
-      meta: { batchId: 4050 },
-    },
-  ],
-  admin: [
-    {
-      id: 'n-admin-1',
-      title: 'Nuevo lote por auditar',
-      description: '@juancarlos cargó 15 tarjetas Amazon US',
-      createdAt: new Date(Date.now() - 1000 * 60 * 5),
-      read: false,
-      type: 'new_batch_submitted',
-      actionUrl: '/admin/dashboard/batches',
-      meta: { sellerName: 'juancarlos' },
-    },
-    {
-      id: 'n-admin-2',
-      title: 'Pago por verificar',
-      description: '@pedrogift envió $1,200.00 USDT',
-      createdAt: new Date(Date.now() - 1000 * 60 * 30),
-      read: false,
-      type: 'high_value_order',
-      actionUrl: '/admin/dashboard/orders',
-      meta: { amount: 1200.0 },
-    },
-    {
-      id: 'n-admin-3',
-      title: 'Spread negativo - Apple US',
-      description: 'Revisar configuración de tasas',
-      createdAt: new Date(Date.now() - 1000 * 60 * 120),
-      read: false,
-      type: 'rate_mismatch_warning',
-      actionUrl: '/admin/dashboard/brands',
-      meta: { brandName: 'Apple US' },
-    },
-    {
-      id: 'n-admin-4',
-      title: 'Stock bajo - Apple US',
-      description: 'Solo 3 tarjetas disponibles',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      read: true,
-      type: 'low_stock_warning',
-      actionUrl: '/admin/dashboard/brands',
-    },
-  ],
-};
-
-const getNotificationIcon = (type: NotificationItem['type']) => {
+const getNotificationIcon = (type: NotificationItemType) => {
   switch (type) {
-    case 'payment_pending':
-    case 'high_value_order':
+    case 'PAYMENT_PENDING':
       return <FaExclamationTriangle className="h-5 w-5 shrink-0 text-orange-500" />;
-    case 'stock_available':
-    case 'order_completed':
-    case 'batch_paid':
+    case 'STOCK_AVAILABLE':
+    case 'TIER_DROP_ACCESS':
+    case 'ORDER_COMPLETED':
+    case 'BATCH_PAID':
       return <FaCheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />;
-    case 'rate_promo':
-    case 'rate_update':
+    case 'RATE_UPDATE':
       return <FaBolt className="h-5 w-5 shrink-0 text-amber-500" />;
-    case 'new_batch_submitted':
-    case 'batch_under_review':
+    case 'BATCH_STATUS':
+    case 'BATCH_UNDER_REVIEW':
       return <FaBell className="text-primary h-5 w-5 shrink-0" />;
-    case 'low_stock_warning':
-    case 'rate_mismatch_warning':
-      return <FaExclamationCircle className="h-5 w-5 shrink-0 text-red-500" />;
     default:
       return <FaInfoCircle className="h-5 w-5 shrink-0 text-blue-500" />;
   }
 };
 
 const formatTimeAgo = (date: Date) => {
-  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
   if (seconds < 60) return 'Ahora';
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m`;
@@ -221,35 +83,84 @@ const formatTimeAgo = (date: Date) => {
   return `${days}d`;
 };
 
-export const NotificationsView = ({ portal, initialNotifications }: NotificationsViewProps) => {
+export const NotificationsView = ({
+  portal,
+  initialNotifications,
+  initialUnreadCount,
+}: NotificationsViewProps) => {
   const [, startTransition] = useTransition();
   const { setUnreadCount } = useNotifications();
-  const defaultItems = initialNotifications || DEFAULT_NOTIFICATIONS[portal];
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>(defaultItems);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications ?? []);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+  const [loading, setLoading] = useState(!initialNotifications);
+
+  const { execute: executeList } = useAction(listNotifications, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        setNotifications(
+          data.notifications.map((n) => ({
+            ...n,
+            createdAt: new Date(n.createdAt),
+          })),
+        );
+      }
+      setLoading(false);
+    },
+    onError: () => {
+      setLoading(false);
+    },
+  });
+
+  const { execute: executeMarkAsRead } = useAction(markAsRead, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        refreshUnreadCount();
+      }
+    },
+  });
+
+  const refreshUnreadCount = useCallback(() => {
+    startTransition(() => {
+      executeList({ page: 1, limit: 50, filter: 'all' });
+    });
+  }, [executeList]);
+
+  useEffect(() => {
+    if (!initialNotifications) {
+      executeList({ page: 1, limit: 50, filter: 'all' });
+    }
+  }, [executeList, initialNotifications]);
 
   const unreadCount = React.useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
   useEffect(() => {
-    setUnreadCount(portal, unreadCount);
-  }, [portal, unreadCount, setUnreadCount]);
+    setUnreadCount(portal, initialUnreadCount ?? unreadCount);
+  }, [portal, unreadCount, setUnreadCount, initialUnreadCount]);
 
   const handleMarkAsRead = (id: string) => {
     setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, read: true } : item)));
+    executeMarkAsRead({ notificationId: id });
   };
 
   const handleMarkAllAsRead = () => {
     startTransition(() => {
       setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
+      executeMarkAsRead({ all: true });
     });
   };
 
   const handleToggleRead = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, read: !item.read } : item)));
+    setNotifications((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, read: !item.read } : item)),
+    );
+    const item = notifications.find((n) => n.id === id);
+    if (item && !item.read) {
+      executeMarkAsRead({ notificationId: id });
+    }
   };
 
   const handleDeleteNotification = (id: string, e: React.MouseEvent) => {
@@ -260,10 +171,9 @@ export const NotificationsView = ({ portal, initialNotifications }: Notification
 
   const filteredNotifications = notifications.filter((item) => {
     const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
-
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = activeTab === 'all' || (activeTab === 'unread' && !item.read);
-
     return matchesSearch && matchesTab;
   });
 
@@ -303,7 +213,7 @@ export const NotificationsView = ({ portal, initialNotifications }: Notification
 
       <CardContent className="flex flex-1 flex-col overflow-hidden p-0">
         <div className="border-border bg-muted/10 flex flex-col gap-1 border-b p-4 px-6 sm:flex-row sm:items-center sm:justify-between">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full sm:w-auto">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'unread')} className="w-full sm:w-auto">
             <TabsList className="bg-muted/50 border-border h-10 rounded-xl border p-1">
               <TabsTrigger
                 value="all"
@@ -337,7 +247,11 @@ export const NotificationsView = ({ portal, initialNotifications }: Notification
         </div>
 
         <div className="custom-scrollbar flex-1 overflow-y-auto p-6">
-          {filteredNotifications.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Spinner className="text-muted-foreground" />
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="bg-muted/40 border-border relative mb-2 rounded-full border p-6">
                 <FaRegEnvelope className="text-muted-foreground/40 h-10 w-10" />

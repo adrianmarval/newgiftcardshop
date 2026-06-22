@@ -26,6 +26,11 @@ export default async function AdminProfilePage() {
     }
   }
 
+  const notificationPreference = await prisma.notificationPreference.findUnique({
+    where: { userId: session.user.id },
+    select: { telegramEnabled: true, whatsappEnabled: true, whatsappPhone: true },
+  });
+
   return (
     <ProfileForm
       user={{
@@ -38,6 +43,15 @@ export default async function AdminProfilePage() {
       }}
       telegramPhotoDataUrl={telegramPhotoDataUrl}
       portal="admin"
+      notificationPreferences={
+        notificationPreference
+          ? {
+              telegramEnabled: notificationPreference.telegramEnabled,
+              whatsappEnabled: notificationPreference.whatsappEnabled,
+              whatsappPhone: notificationPreference.whatsappPhone,
+            }
+          : undefined
+      }
     />
   );
 }

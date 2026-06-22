@@ -8,6 +8,7 @@ import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
 import { getUserRates } from '@/services/pricing.service';
 import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
+import { notificationService } from '@/lib/notifications/notification.service';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
 
 const publishBatchInputSchema = z.object({
@@ -205,6 +206,10 @@ export const publishBatch = sellerActionClient
 
       return createdBatch;
     });
+
+    notificationService
+      .notifyBuyersStockAvailable(brandCountryId, initialTier)
+      .catch((err) => console.error('[publish-batch] Error al notificar buyers (non-blocking):', err));
 
     return {
       success: true as const,

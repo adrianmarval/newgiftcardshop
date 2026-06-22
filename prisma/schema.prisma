@@ -50,6 +50,11 @@ model User {
   twoFactor        TwoFactor?
   twoFactorEnabled Boolean    @default(false)
 
+  // Notificaciones
+  notificationPreference NotificationPreference?
+  notifications          Notification[]
+  notificationLogs       NotificationLog[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -198,6 +203,9 @@ model BrandCountry {
   orders    Order[]
   giftcards Giftcard[]
   userRates UserBrandCountryRate[]
+
+  // Suscripciones de notificaciones de stock (buyers)
+  subscriptions BrandCountrySubscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -480,4 +488,85 @@ model UserBrandCountryRate {
 
   @@unique([userId, brandCountryId])
   @@map("user_brand_country_rate")
+}
+
+// --------------------------------------
+// Sistema de Notificaciones Multicanal
+// --------------------------------------
+
+model NotificationPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Channels
+  telegramEnabled Boolean  @default(true)
+  whatsappEnabled Boolean  @default(false)
+  whatsappPhone   String?  // E.164 (+1234567890)
+
+  // Suscripciones explícitas a brand-countries (buyers que quieren alertas de stock nuevo)
+  subscriptions BrandCountrySubscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_preference")
+}
+
+model BrandCountrySubscription {
+  id             String @id @default(cuid())
+  preferenceId   String
+  preference     NotificationPreference @relation(fields: [preferenceId], references: [id], onDelete: Cascade)
+  brandCountryId String
+  brandCountry   BrandCountry @relation(fields: [brandCountryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([preferenceId, brandCountryId])
+  @@map("brand_country_subscription")
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  title       String
+  description String
+  read        Boolean          @default(false)
+  actionUrl   String?
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, read])
+  @@map("notification")
+}
+
+// Tracking anti-spam: evita re-notificar el mismo evento al mismo usuario
+model NotificationLog {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          NotificationType
+  referenceType String           // 'BRAND_COUNTRY' | 'GIFTCARD' | 'BATCH' | 'ORDER'
+  referenceId   String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, type, referenceType, referenceId])
+  @@index([userId, type])
+  @@map("notification_log")
+}
+
+enum NotificationType {
+  STOCK_AVAILABLE
+  TIER_DROP_ACCESS
+  PAYMENT_PENDING
+  ORDER_COMPLETED
+  BATCH_PAID
+  BATCH_STATUS
+  BATCH_UNDER_REVIEW
+  RATE_UPDATE
 }

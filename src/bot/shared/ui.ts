@@ -9,7 +9,7 @@ const TRUNCATION_SUFFIX = '\n\n…(mensaje truncado)';
 /**
  * Truncates text to fit Telegram's 4096 char limit, preserving a suffix indicator.
  */
-function truncateForTelegram(text: string): string {
+export function truncateForTelegram(text: string): string {
   if (text.length <= TG_MAX_LEN) return text;
   const cut = TG_MAX_LEN - TRUNCATION_SUFFIX.length;
   return text.slice(0, cut) + TRUNCATION_SUFFIX;

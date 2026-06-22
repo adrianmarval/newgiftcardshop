@@ -9,12 +9,15 @@ interface NotificationContextValue {
 
 const NotificationContext = React.createContext<NotificationContextValue | null>(null);
 
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [unreadCounts, setUnreadCounts] = React.useState<Record<string, number>>({
-    buyer: 0,
-    seller: 0,
-    admin: 0,
-  });
+interface NotificationProviderProps {
+  children: React.ReactNode;
+  initialUnreadCounts?: Record<string, number>;
+}
+
+export function NotificationProvider({ children, initialUnreadCounts }: NotificationProviderProps) {
+  const [unreadCounts, setUnreadCounts] = React.useState<Record<string, number>>(
+    initialUnreadCounts ?? { buyer: 0, seller: 0, admin: 0 },
+  );
 
   const setUnreadCount = React.useCallback((portal: string, count: number) => {
     setUnreadCounts((prev) => {
@@ -25,7 +28,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const value = React.useMemo(
     () => ({ unreadCounts, setUnreadCount }),
-    [unreadCounts, setUnreadCount]
+    [unreadCounts, setUnreadCount],
   );
 
   return (

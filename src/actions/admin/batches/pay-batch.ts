@@ -5,6 +5,7 @@ import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 import { SETTING_KEYS } from '@/lib/settings/schemas';
+import { notificationService } from '@/lib/notifications/notification.service';
 
 const payBatchInputSchema = z.object({ batchIds: z.array(z.number().int().positive()) });
 
@@ -34,18 +35,15 @@ export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).actio
       return sum;
     }, new Prisma.Decimal(0));
 
-    console.log({ effectiveTotal });
-
     const paymentAmount = effectiveTotal.mul(batch.sellRate);
 
-    console.log({ paymentAmount });
-
-    // await prisma.$transaction(async (tx) => {
+    // ── Transacción de pago (actualmente deshabilitada — desconmentar cuando se valide el flujo)
+    // const payment = await prisma.$transaction(async (tx) => {
     //   const updatedSettings = await tx.platformSettings.update({
     //     where: { key: SETTING_KEYS.PLATFORM_BALANCE },
     //     data: { balance: { decrement: paymentAmount } },
     //   });
-
+    //
     //   const payment = await tx.payment.create({
     //     data: {
     //       amount: paymentAmount,
@@ -56,18 +54,26 @@ export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).actio
     //       relatedUserId: batch.user?.id ?? null,
     //     },
     //   });
-
+    //
     //   await tx.giftcardBatch.update({
     //     where: { id: batchId },
     //     data: { isPaid: true },
     //   });
-
+    //
     //   results.push({
     //     batchId,
     //     paymentId: payment.id,
     //     amount: Number(payment.amount),
     //   });
     // });
+
+    // ── Hook de notificación al seller ───────────────────────────────────────
+    // Cuando la tx se desconmente y results se popule, este bloque ya funcionará sin cambios.
+    if (batch.user?.id) {
+      notificationService
+        .notifySellerBatchPaid(batch.user.id, batchId, Number(paymentAmount))
+        .catch((err) => console.error('[pay-batch] Error al notificar seller (non-blocking):', err));
+    }
   }
 
   return { success: true as const, results };

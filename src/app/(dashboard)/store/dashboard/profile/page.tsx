@@ -26,6 +26,11 @@ export default async function BuyerProfilePage() {
     }
   }
 
+  const notificationPreference = await prisma.notificationPreference.findUnique({
+    where: { userId: session.user.id },
+    select: { telegramEnabled: true, whatsappEnabled: true, whatsappPhone: true },
+  });
+
   const botUsername = process.env.BUYER_BOT_USERNAME;
   const telegramLinkUrl = botUsername ? `https://t.me/${botUsername}` : null;
 
@@ -42,6 +47,15 @@ export default async function BuyerProfilePage() {
       telegramPhotoDataUrl={telegramPhotoDataUrl}
       portal="buy"
       telegramLinkUrl={telegramLinkUrl}
+      notificationPreferences={
+        notificationPreference
+          ? {
+              telegramEnabled: notificationPreference.telegramEnabled,
+              whatsappEnabled: notificationPreference.whatsappEnabled,
+              whatsappPhone: notificationPreference.whatsappPhone,
+            }
+          : undefined
+      }
     />
   );
 }
