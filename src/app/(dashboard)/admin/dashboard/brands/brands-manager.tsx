@@ -22,7 +22,6 @@ import {
   removeCountryFromBrand,
   toggleBrandActive,
   toggleBrandCountryActive,
-  updateBrandCountryRate,
 } from '@/actions/admin/catalog';
 
 interface BrandWithCountries {
@@ -49,8 +48,6 @@ interface BrandCountry {
   minAmount: number | null;
   maxAmount: number | null;
   isActive: boolean;
-  buyRate: number | null;
-  sellRate: number | null;
 }
 
 interface BrandsManagerProps {
@@ -68,11 +65,9 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
 
   const [newBrand, setNewBrand] = useState({ name: '', slug: '', icon: '📦', image: '' });
   const [newCountry, setNewCountry] = useState({ countryId: '', minAmount: '', maxAmount: '' });
-  const [countryLimits, setCountryLimits] = useState<{ minAmount: string; maxAmount: string; buyRate: string; sellRate: string }>({
+  const [countryLimits, setCountryLimits] = useState<{ minAmount: string; maxAmount: string }>({
     minAmount: '',
     maxAmount: '',
-    buyRate: '',
-    sellRate: '',
   });
 
   const { execute: executeCreate, status: createStatus } = useAction(createBrand, {
@@ -111,14 +106,6 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       refreshBrands();
     },
     onError: (e) => showAlert.toast.error('Error updating limits: ' + (e.error?.serverError || 'Unknown error')),
-  });
-
-  const { execute: executeUpdateRate, status: updateRateStatus } = useAction(updateBrandCountryRate, {
-    onSuccess: () => {
-      showAlert.toast.success('Rates updated');
-      refreshBrands();
-    },
-    onError: (e) => showAlert.toast.error('Error updating rates: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const { execute: executeRemoveCountry, status: removeCountryStatus } = useAction(removeCountryFromBrand, {
@@ -187,13 +174,6 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       countryId: bc.countryId,
       minAmount: countryLimits.minAmount ? parseFloat(countryLimits.minAmount) : null,
       maxAmount: countryLimits.maxAmount ? parseFloat(countryLimits.maxAmount) : null,
-    });
-    const bRate = countryLimits.buyRate ? parseFloat(countryLimits.buyRate) / 100 : 0.85;
-    const sRate = countryLimits.sellRate ? parseFloat(countryLimits.sellRate) / 100 : 0.75;
-    executeUpdateRate({
-      brandCountryId: bc.id,
-      buyRate: bRate,
-      sellRate: sRate,
     });
   };
 
@@ -429,8 +409,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                         )}
                       </div>
                       <span className="text-muted-foreground block text-xs">
-                        Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'} | Default Rates: Buy{' '}
-                        {(bc.buyRate ? bc.buyRate * 100 : 85).toFixed(1)}% / Sell {(bc.sellRate ? bc.sellRate * 100 : 75).toFixed(1)}%
+                        Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'}
                       </span>
                     </div>
                     <div className="flex gap-1">
@@ -456,31 +435,11 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                               className="h-8 w-16"
                             />
                           </div>
-                          <div className="flex flex-col">
-                            <span className="text-muted-foreground text-[9px]">Buy Rate (%)</span>
-                            <Input
-                              type="number"
-                              placeholder="Buy %"
-                              value={countryLimits.buyRate}
-                              onChange={(e) => setCountryLimits((p) => ({ ...p, buyRate: e.target.value }))}
-                              className="h-8 w-20"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-muted-foreground text-[9px]">Sell Rate (%)</span>
-                            <Input
-                              type="number"
-                              placeholder="Sell %"
-                              value={countryLimits.sellRate}
-                              onChange={(e) => setCountryLimits((p) => ({ ...p, sellRate: e.target.value }))}
-                              className="h-8 w-20"
-                            />
-                          </div>
                           <div className="mt-4 flex items-end gap-1">
                             <Button
                               size="sm"
                               onClick={() => handleUpdateLimits(bc)}
-                              disabled={updateLimitsStatus === 'executing' || updateRateStatus === 'executing'}
+                              disabled={updateLimitsStatus === 'executing'}
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -499,8 +458,6 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                               setCountryLimits({
                                 minAmount: bc.minAmount?.toString() || '',
                                 maxAmount: bc.maxAmount?.toString() || '',
-                                buyRate: (bc.buyRate ? bc.buyRate * 100 : 85).toString(),
-                                sellRate: (bc.sellRate ? bc.sellRate * 100 : 75).toString(),
                               });
                             }}
                           >

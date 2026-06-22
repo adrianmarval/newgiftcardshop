@@ -100,7 +100,7 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
       if (attempt < maxAttempts) {
         const delay = Math.pow(2, attempt) * 1000;
         console.log(
-          `[AI-VISION] [${imgId}] ⚠️ Attempt ${attempt} failed: ${err instanceof Error ? err.message : 'Unknown error'}. Retrying in ${delay}ms...`,
+          `[AI-VISION] [${imgId}]  Attempt ${attempt} failed: ${err instanceof Error ? err.message : 'Unknown error'}. Retrying in ${delay}ms...`,
         );
         await new Promise((r) => setTimeout(r, delay));
         continue;

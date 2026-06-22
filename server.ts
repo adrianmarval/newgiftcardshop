@@ -56,7 +56,7 @@ type BotEntry = { bot: any; webhookPath: string; name: string };
 async function tryInitBot(name: string, tokenVar: string, importPath: string, factoryFn: string): Promise<BotEntry | null> {
   const token = process.env[tokenVar];
   if (!token) {
-    console.warn(`[Server] ⚠️  ${tokenVar} no configurado — ${name} deshabilitado`);
+    console.warn(`[Server]   ${tokenVar} no configurado — ${name} deshabilitado`);
     return null;
   }
   try {
@@ -84,9 +84,19 @@ const httpServer = createServer(async (req, res) => {
 
     // Webhook routing — solo en producción
     if (isProd && sellerEntry && pathname === sellerEntry.webhookPath) {
+      const secret = process.env.WEBHOOK_SECRET_TOKEN;
+      if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+        res.statusCode = 401;
+        return res.end('Unauthorized');
+      }
       return webhookCallback(sellerEntry.bot, 'http')(req, res);
     }
     if (isProd && buyerEntry && pathname === buyerEntry.webhookPath) {
+      const secret = process.env.WEBHOOK_SECRET_TOKEN;
+      if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+        res.statusCode = 401;
+        return res.end('Unauthorized');
+      }
       return webhookCallback(buyerEntry.bot, 'http')(req, res);
     }
 
@@ -109,8 +119,10 @@ async function startBot(entry: BotEntry): Promise<void> {
   if (isProd) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '');
     if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL es obligatorio en producción');
+    const webhookSecret = process.env.WEBHOOK_SECRET_TOKEN;
     await entry.bot.api.setWebhook(`${appUrl}${entry.webhookPath}`, {
       drop_pending_updates: true,
+      ...(webhookSecret ? { secret_token: webhookSecret } : {}),
     });
     console.log(`[${entry.name}] Webhook registrado: ${appUrl}${entry.webhookPath} ✓`);
   } else {

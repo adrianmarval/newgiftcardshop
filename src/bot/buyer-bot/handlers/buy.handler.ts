@@ -5,11 +5,12 @@ import { decrypt } from '@/lib/encryption';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
 import { findGiftcardCombination } from '@/lib/browse-giftcards';
-import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
+import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
 import { getUserRates } from '@/services/pricing.service';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
+import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard-reservation.service';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -47,7 +48,6 @@ export async function startBuyWizard(ctx: BuyerContext) {
 
   const msg = '🛒 <b>¿Qué marca querés comprar?</b>';
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
-  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 // ── Step 2: Elegir Country ────────────────────────────────────────────────────
@@ -89,7 +89,6 @@ export async function handleBuyBrandSelected(ctx: BuyerContext) {
   kb.text('⬅️ Volver', 'buy_start').row().text('❌ Cancelar', 'buy_cancel');
 
   await renderUI(ctx, `🌍 <b>País para ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
-  return ctx.answerCallbackQuery();
 }
 
 // ── Step 3: Ingresar monto ────────────────────────────────────────────────────
@@ -101,6 +100,15 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
   const country = await prisma.country.findUnique({ where: { id: countryId } });
   if (!country) return ctx.answerCallbackQuery('País no encontrado');
 
+  const { brandId } = ctx.session.wizard;
+  if (!brandId) return ctx.answerCallbackQuery('Sesión expirada. Empezá de nuevo con /buy');
+
+  try {
+    await getUserRates(ctx.user.id, { brandId, countryId });
+  } catch {
+    return ctx.answerCallbackQuery('No tenés tarifa para comprar aquí. Contactá al admin.');
+  }
+
   ctx.session.wizard.countryId = country.id;
   ctx.session.wizard.countryName = country.name;
   ctx.session.wizard.countryCurrency = country.currency || 'USD';
@@ -109,7 +117,7 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
   await renderUI(
     ctx,
     `💵 <b>¿Qué monto de tarjetas querés? (${ctx.session.wizard.countryCurrency})</b>\n\n` +
-      `Marca: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
+      `Marca: <b>${escapeHTML(ctx.session.wizard.brandName ?? '')} — ${escapeHTML(country.name)}</b>\n\n` +
       `Escribí el monto. Ejemplo: <code>50</code>`,
     {
       parse_mode: 'HTML',
@@ -119,7 +127,6 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
         .text('❌ Cancelar', 'buy_cancel'),
     },
   );
-  return ctx.answerCallbackQuery();
 }
 
 // ── Step 4: Buscar y previsualizar ────────────────────────────────────────────
@@ -158,20 +165,24 @@ export async function handleAmountText(ctx: BuyerContext) {
     const rates = await getUserRates(ctx.user.id, { brandId, countryId });
     buyRate = rates.buyRate as Decimal;
   } catch (error: any) {
-    return renderUI(ctx, `❌ ${error.message || 'No se han configurado tarifas para esta marca y país.'}`, {
-      reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
-    });
+    return renderUI(
+      ctx,
+      `❌ ${error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.'}`,
+      {
+        reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
+      },
+    );
   }
 
   const unpaidOrders = await prisma.order.findMany({
-    where: { 
-      userId: ctx.user.id, 
-      status: { in: ['PENDING', 'AWAITING_PAYMENT'] } 
+    where: {
+      userId: ctx.user.id,
+      status: { in: ['PENDING', 'AWAITING_PAYMENT'] },
     },
     select: { adjustedTotal: true, total: true, status: true },
   });
   const unpaidTotal = unpaidOrders.reduce((s, o) => s.plus(o.adjustedTotal ?? o.total), new Decimal(0));
-  const pendingCount = unpaidOrders.filter(o => o.status === 'PENDING').length;
+  const pendingCount = unpaidOrders.filter((o) => o.status === 'PENDING').length;
   const hasPendingOrders = pendingCount > 0;
 
   const amountDec = new Decimal(amount);
@@ -181,7 +192,7 @@ export async function handleAmountText(ctx: BuyerContext) {
   if (unpaidTotal.gte(user.creditLimit)) {
     return renderUI(
       ctx,
-      `⚠️ <b>Límite de crédito alcanzado</b>\n\n` +
+      ` <b>Límite de crédito alcanzado</b>\n\n` +
         `Tu límite: <b>${fmt$(user.creditLimit)}</b>\n` +
         `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n\n` +
         `Debes completar los pagos antes de comprar más tarjetas.`,
@@ -197,7 +208,7 @@ export async function handleAmountText(ctx: BuyerContext) {
       : '';
     return renderUI(
       ctx,
-      `⚠️ <b>Crédito insuficiente</b>\n\n` +
+      ` <b>Crédito insuficiente</b>\n\n` +
         `Tu límite: <b>${fmt$(user.creditLimit)}</b>\n` +
         unpaidText +
         `Disponible: <b>${fmt$(availableCredit)}</b>\n` +
@@ -295,9 +306,13 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     buyRate = rates.buyRate as Prisma.Decimal;
   } catch (error: any) {
     await ctx.answerCallbackQuery('Error al obtener la tasa de compra');
-    return renderUI(ctx, `❌ ${error.message || 'No se han configurado tarifas para esta marca y país.'}`, {
-      reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
-    });
+    return renderUI(
+      ctx,
+      `❌ ${error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.'}`,
+      {
+        reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
+      },
+    );
   }
 
   const giftcards = await prisma.giftcard.findMany({
@@ -306,7 +321,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
   });
 
   const buyerBuyRate = Math.floor(Number(buyRate) * 100);
-  const blockedCards = giftcards.filter((c) => (c.escalationTier ?? 100) > buyerBuyRate);
+  const blockedCards = giftcards.filter((c) => c.escalationTier > buyerBuyRate);
   if (blockedCards.length > 0) {
     await ctx.answerCallbackQuery('Algunas tarjetas cambiaron de tier. Intentá de nuevo.');
     return renderUI(ctx, '😔 Algunas tarjetas ya no están disponibles para tu tasa. Intentá de nuevo con /buy.', {
@@ -323,23 +338,34 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   const total = giftcards.reduce((s, c) => s.plus(c.amount.mul(buyRate)), new Prisma.Decimal(0));
 
-  const order = await prisma.$transaction(async (tx) => {
-    const created = await tx.order.create({
-      data: {
-        userId: ctx.user.id,
-        brandCountryId: giftcards[0]?.brandCountryId,
-        total,
-        buyRate: buyRate,
-        status: 'PENDING',
-        giftcards: { connect: giftcards.map((c) => ({ id: c.id })) },
-      },
+  let order;
+  try {
+    order = await prisma.$transaction(async (tx) => {
+      const created = await tx.order.create({
+        data: {
+          userId: ctx.user.id,
+          brandCountryId: giftcards[0]?.brandCountryId,
+          total,
+          buyRate: buyRate,
+          status: 'PENDING',
+        },
+      });
+      await reserveGiftcards(
+        tx,
+        giftcards.map((c) => c.id),
+        created.id,
+      );
+      return created;
     });
-    await tx.giftcard.updateMany({
-      where: { id: { in: giftcards.map((c) => c.id) } },
-      data: { inStock: false },
-    });
-    return created;
-  });
+  } catch (error) {
+    if (error instanceof GiftcardReservationError) {
+      await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
+      return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.', {
+        reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
+      });
+    }
+    throw error;
+  }
 
   ctx.session.wizard.selectedGiftcardIds = undefined;
 
@@ -352,12 +378,17 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
   const currency = ctx.session.wizard.countryCurrency || 'USD';
   const cardsText = decryptedCards
     .map((c, i) => {
-      const pinPart = c.pin ? ` | PIN: <code>${c.pin}</code>` : '';
-      return `${i + 1}. <code>${c.code}</code> — ${fmt$(c.amount, currency)}${pinPart}`;
+      const pinPart = c.pin ? ` | PIN: <code>${escapeHTML(c.pin)}</code>` : '';
+      return `${i + 1}. <code>${escapeHTML(c.code)}</code> — ${fmt$(c.amount, currency)}${pinPart}`;
     })
     .join('\n');
 
-  const kb = new InlineKeyboard().text('✅ Confirmar uso', `confirm_usage_${order.id}`).row().text('🚩 Reportar problema', `report_issues_${order.id}`).row().text('📋 Ver Mis órdenes', 'my_orders');
+  const kb = new InlineKeyboard()
+    .text('✅ Confirmar uso', `confirm_usage_${order.id}`)
+    .row()
+    .text('🚩 Reportar problema', `report_issues_${order.id}`)
+    .row()
+    .text('📋 Ver Mis órdenes', 'my_orders');
 
   await renderUI(
     ctx,
@@ -366,9 +397,8 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
       `Total a pagar: <b>${fmt$(total, 'USD')}</b>\n\n` +
       `<b>Códigos para aplicar:</b>\n${cardsText}\n\n` +
       `📝 <i>Aplicá los códigos, luego confirmá el uso desde los botones de abajo.</i>`,
-    { parse_mode: 'HTML', reply_markup: kb },
+    { parse_mode: 'HTML', reply_markup: kb, callbackText: '¡Orden creada!' },
   );
-  return ctx.answerCallbackQuery('¡Orden creada!');
 }
 
 export async function handleBuyCancel(ctx: BuyerContext) {
@@ -377,5 +407,4 @@ export async function handleBuyCancel(ctx: BuyerContext) {
   await renderUI(ctx, '❌ Compra cancelada.', {
     reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start').row().text('🛒 Comprar tarjetas', 'buy_start'),
   });
-  return ctx.answerCallbackQuery();
 }

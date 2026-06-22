@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
-import { getPlatformBalance, updatePlatformBalance } from '@/actions/platform/settings';
 
 const createDepositInputSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
@@ -29,20 +28,16 @@ export const createDeposit = adminActionClient.inputSchema(createDepositInputSch
     throw new Error('El depósito debe estar asociado a un administrador');
   }
 
-  const response = await getPlatformBalance();
-
-  const balanceAfter = response.data?.balance ? response.data.balance.add(new Prisma.Decimal(amount)) : new Prisma.Decimal(amount);
-
   const payment = await prisma.$transaction(async (tx) => {
-    // update balance de la plataforma
-    const response = await updatePlatformBalance({ amount: new Prisma.Decimal(amount), type: 'add' });
-    if (!response.data?.success) {
-      throw new Error('Error al actualizar el balance de la plataforma');
-    }
+    const updatedSettings = await tx.platformSettings.upsert({
+      where: { key: 'platformBalance' },
+      update: { balance: { increment: new Prisma.Decimal(amount) } },
+      create: { key: 'platformBalance', value: '', description: 'Balance General', balance: new Prisma.Decimal(amount) },
+    });
     return await tx.payment.create({
       data: {
         amount: new Prisma.Decimal(amount),
-        balanceAfter: balanceAfter,
+        balanceAfter: updatedSettings.balance,
         direction: 'CREDIT',
         category: 'DEPOSIT',
         relatedUserId,

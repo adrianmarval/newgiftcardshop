@@ -1,267 +1,139 @@
 ---
 name: sell-flow
 displayName: Sell Flow
-description: Sistema de venta de gift cards. Incluye flujo de 3 pasos (Config, Intake, Review), validación OCR, fuzzy matching, estados de validación, bulk import con deduplicación. Úsese al trabajar en el sistema de venta de gift cards, componentes de intake, validación o acciones de seller.
-version: 1.0.0
+description: Sistema de venta de gift cards. Flujo de 3 pasos (Config, DataEntry, Review), OCR, bulk import con deduplicación, publicación via server action. Úsese al trabajar en el sistema de venta de gift cards, componentes de intake, validación o acciones de seller.
+version: 2.0.0
 ---
 
 # Sell Flow - Sistema de Venta de Gift Cards
 
-Sistema completo para que sellers carguen gift cards y las publiquen en lote. Maneja carga manual, bulk import, y extracción OCR con validación de evidencia.
+Sistema completo para que sellers carguen gift cards y las publiquen en lote. Maneja carga manual, bulk import, y extracción OCR.
 
 ## Overview del Sistema
 
-El sell flow es un wizard de 3 pasos dónde el seller:
+El sell flow es un wizard de 3 pasos:
 
-1. **Config**: Selecciona marca y país
-2. **Intake**: Carga las tarjetas (manual, bulk, u OCR)
-3. **Review**: Revisa el lote y publica
+1. **Config** (`brand-step.tsx`): Selecciona marca y país
+2. **DataEntry** (`data-entry-step.tsx`): Carga las tarjetas (paste de códigos + OCR opcional)
+3. **Review** (`review-step.tsx`): Revisa el lote y publica
 
 ---
 
-## Flujo Paso a Paso
+## Archivos reales (NO los del header del parser)
 
-### Step 1: BrandStep (Configuración)
+```
+src/hooks/use-sell-flow.ts          # Zustand store (sin persist)
+src/components/sell/
+├── sell-flow-manager.tsx           # Orchestrator del wizard
+├── steps/
+│   ├── brand-step.tsx              # Step 1: Config
+│   ├── data-entry-step.tsx         # Step 2: Carga (textarea inline + dropzone inline)
+│   └── review-step.tsx             # Step 3: Review
+src/actions/seller/batches/
+├── publish-batch.ts                # Server action principal
+├── check-codes.ts                  # Check duplicados contra DB
+├── list-batches.ts                 # Listar batches del seller
+└── get-seller-rate.ts              # Obtener sellRate
+src/actions/buyer/giftcards/ocr/    # NOTA: actions de OCR viven aquí pero usan sellerActionClient
+├── upload-image.ts
+└── extract-draft.ts
+src/lib/utils/claim-code-parser.ts  # Parser (compartido bot+web)
+src/types/domain/giftcard.ts        # Tipos de dominio
+```
 
-- `src/components/sell/steps/brand-step.tsx`
-- Seller selecciona país y marca
-- Ambos campos son requeridos para continuar
-- Validación: Solo continúa si `selectedBrand && selectedCountry`
+**NOTA:** `sell-batch-manager.tsx`, `intake-step.tsx`, `image-dropzone.tsx`, `seller-actions.ts`, `types/sell/validation.ts` **NO EXISTEN**. Los nombres reales son los de arriba.
 
-### Step 2: IntakeStep (Carga de Tarjetas)
+---
 
-- `src/components/sell/steps/intake-step.tsx`
-- Múltiples métodos de carga:
-  - **Bulk import**: Pegar códigos en texto (formato: `CODE MONTO` por línea)
-  - **OCR**: Subir imágenes de capturas y extraer códigos/montos con AI
-  - **Manual**: Ingresar código y monto manualmente
+## Parser de Códigos
 
-### Step 3: ReviewStep (Revisión y Publicación)
+- `src/lib/utils/claim-code-parser.ts` — `parseClaimCodes()`
+- Formato: `CODE AMOUNT [PIN]` (uno por línea)
+- **Acepta coma decimal**: `25,50` → `25.50`, `1.000` → `1000`
+- Claim codes: **14 o 15 chars** alfanuméricos (NO 12 — el header del parser dice 12 pero el código rechaza 12)
+- Normalización: uppercase + strip spaces/hyphens → canonical format `4-6-4` (14) o `4-6-5` (15)
+- Dedup intra-paste: primera ocurrencia gana, duplicados silenciosamente descartados
 
-- `src/components/sell/steps/review-step.tsx`
-- Muestra resumen del lote
-- Calcula total y payout estimado
-- Botón para publicar
+```typescript
+export function normalizeClaimCode(input: string): string | null {
+  const stripped = input.toUpperCase().replace(/[ -]/g, '');
+  if (!/^[A-Z0-9]+$/.test(stripped)) return null;
+  if (stripped.length !== 14 && stripped.length !== 15) return null;  // NO 12
+  return stripped;
+}
+```
 
-### Publicación
+**INCONSISTENCIA:** `src/types/domain/giftcard.ts:58-63` tiene un `normalizeClaimCode` DUPLICADO que acepta 12 chars. Ese está sin uso. El que se usa es el del parser.
 
-- `src/actions/seller-actions.ts` - `publishBatch`
-- Validaciones server-side
-- Deduplicación contra base de datos
-- Transacción atómica para crear batch + giftcards
+---
+
+## Deduplicación
+
+### En el parser (intra-paste)
+- `seen` Set de normalized keys
+- Primera ocurrencia gana
+- Duplicados descartados silenciosamente
+
+### En check-codes (contra DB)
+- `src/actions/seller/batches/check-codes.ts`
+- Query por `codeHash` **GLOBAL** (sin filtro `brandCountryId` — fix aplicado)
+- Retorna claim codes descifrados (deuda: debería retornar solo booleanos/hashes)
+
+### En publish-batch (server action)
+- `src/actions/seller/batches/publish-batch.ts`
+- **Doble check**: `useValidated` (línea 76) + re-check en `.action` (línea 112)
+- Ambos checks son **globales** (sin `brandCountryId`)
+- `useValidated` throws si hay cualquier duplicado → all-or-nothing
+- El re-check del `.action` recolecta `duplicates[]` y filtra → partial publish
+- **TOCTOU**: los checks están fuera de la `$transaction` (deuda)
+
+---
+
+## Publicación
+
+### Web (`publish-batch.ts`)
+- Server action con `sellerActionClient` (autorización por rol)
+- Zod schema: `cards[]`, `brandId`, `countryId`, `unmatchedImages[]`
+- Validación: `amount > 0`, `claimCode` no vacío. **NO** valida formato de claimCode ni minAmount/maxAmount (deuda)
+- Si `normalizeClaimCode` retorna null → **fallback a raw uppercased** (deuda: debería rechazar)
+- Transacción atómica: crea batch + giftcards + provenanceImages
+- Imágenes: cifradas con `encryptBuffer` (AES-256-GCM)
+- `codeHash @unique` global es la última línea de defensa
+
+### Bot (`sell.handler.ts`)
+- **NO usa `publish-batch.ts`** — re-implementa inline (deuda: divergencia con web)
+- Diferencias con web:
+  - Duplicados: partial publish (filtra) vs web all-or-nothing (throw)
+  - Imágenes: solo `telegramFileId` vs web cifrada
+  - No re-normaliza claimCode (confía en el parser)
+  - No valida amount server-side
+
+---
+
+## OCR (Data Entry)
+
+- `src/actions/buyer/giftcards/ocr/upload-image.ts` — sube y comprime (usa `sellerActionClient`)
+- `src/actions/buyer/giftcards/ocr/extract-draft.ts` — llama a AI vision (Gemini/OpenRouter)
+- `src/lib/giftcard-vision.ts` — wrapper del provider de AI
+- `src/lib/image-utils.ts` — `compressImage()` con sharp (max 1024px, quality 0.8)
+- Chunks de 10 imágenes, sin cap total (deuda: DoS/costo)
+- 3 retries con backoff 2s/4s
+
+**DEUDA CRÍTICA:** `addImageToCard` en `use-sell-flow.ts:336` es **no-op**. La feature de "adjuntar screenshot a una card en Review" no funciona. Sube la imagen, corre OCR, muestra toast verde, pero no hace nada.
 
 ---
 
 ## Estados de Validación
 
-Definidos en `src/types/sell/validation.ts`:
+NO existe `fuzzyMatch` (Levenshtein). NO existe `undo-remove`. El matching es exacto (normalized string equality).
 
-| Estado              | Significado        | Bloquea Progreso? | Descripción                                    |
-| ------------------- | ------------------ | ----------------- | ---------------------------------------------- |
-| `verified`          | Verificado         | ❌ No             | OCR encontró código y monto exacto             |
-| `amount_not_found`  | Monto no detectado | ✅ Sí             | OCR detectó código pero no el monto            |
-| `amount_mismatch`   | Monto diferente    | ✅ Sí             | Monto declarado ≠ monto extraído               |
-| `fuzzy_match`       | Código similar     | ✅ Sí             | OCR encontró código a distancia ≤2 Levenshtein |
-| `no_capture`        | Sin captura        | ❌ No             | No hay screenshot (aceptado)                   |
-| `skipped`           | Omitido            | ❌ No             | Seller eligió omitir evidencia                 |
-| `capture_mismatch`  | Captura incorrecta | ✅ Sí             | Error en procesamiento                         |
-| `processing_error`  | Error              | ✅ Sí             | Falló el procesamiento                         |
-| `code_new_detected` | DEPRECATED         | ❌ No             | Mantenido por compatibilidad                   |
-
-### Estados que Bloquean Progreso
-
-`BLOCKING_EVIDENCE_STATES` en `src/types/sell/validation.ts:39-45`:
-
-```typescript
-const BLOCKING_EVIDENCE_STATES = ['amount_mismatch', 'capture_mismatch', 'processing_error', 'fuzzy_match', 'amount_not_found'] as const;
-```
-
-### Función Bloqueante
-
-```typescript
-// src/types/sell/validation.ts
-export function isBlockingEvidenceState(state: ValidationState | undefined): boolean {
-  if (!state) return false;
-  return BLOCKING_EVIDENCE_STATES.includes(state);
-}
-```
+El store tiene `validationState` pero los estados que se usan en la práctica son simples (verified, no_capture, skipped). Los estados complejos del tipo `amount_mismatch`, `fuzzy_match` existen en el tipo pero no se alcanzan en el flujo actual.
 
 ---
 
-## Escenarios de OCR y Cómo se Manejan
+## Tipos principales
 
-### Lógica Principal: ingestOCRDraft
-
-- Ubicación: `src/hooks/use-sell-flow.ts`, líneas 246-331
-- Función que procesa tarjetas extraídas por OCR y las integra con las existentes
-
-### Matriz de Escenarios
-
-| #   | Escenario                                 | Entrada Inicial                      | Entrada OCR                      | Resultado          | Manejo                                         |
-| --- | ----------------------------------------- | ------------------------------------ | -------------------------------- | ------------------ | ---------------------------------------------- |
-| 1   | OCR detecta code + monto exacto           | -                                    | code: "ABC123", amount: "50.00"  | `verified`         | Match exacto → verified                        |
-| 2   | OCR detecta code sin monto                | -                                    | code: "ABC123", amount: null     | `amount_not_found` | Bloquea hasta resolver                         |
-| 3   | OCR detecta code + monto diferente        | -                                    | code: "ABC123", amount: "25.00"  | `amount_mismatch`  | Bloquea, muestra opciones                      |
-| 4   | OCR fuzzy match (código similar)          | claimCode: "ABC123"                  | code: "ABC124", amount: "50.00"  | `fuzzy_match`      | Bloquea, confirmar/rechazar                    |
-| 5   | Manual + OCR mismo code + mismo monto     | amount: "50.00"                      | code: "ABC123", amount: "50.00"  | `verified`         | Actualiza evidencia                            |
-| 6   | Manual + OCR mismo code + monto diferente | amount: "50.00"                      | code: "ABC123", amount: "25.00"  | `amount_mismatch`  | Bloquea, resuelto: mantener o aceptar extraído |
-| 7   | Manual con monto + OCR no detecta monto   | amount: "50.00"                      | code: "ABC123", amount: null     | `verified`         | Se confía en monto del usuario                 |
-| 8   | Manual sin evidencia                      | amount: "50.00", claimCode: "ABC123" | (ninguna)                        | `no_capture`       | Aceptado                                       |
-| 9   | OCR detecta code nuevo                    | -                                    | code: "XYZ999", amount: "100.00" | `verified`         | Nueva tarjeta creada                           |
-| 10  | Fuzzy + confirma match                    | `fuzzy_match`                        | confirmFuzzyMatch()              | `verified`         | Confirma, mantiene código originale            |
-| 11  | Fuzzy + rechaza match                     | `fuzzy_match`                        | rejectFuzzyMatch()               | `verified`         | Crea NUEVA tarjeta con código del OCR          |
-
----
-
-## Bulk Import y Deduplicación
-
-### Parsing de Códigos
-
-- `src/lib/utils/claim-code-parser.ts` - `parseClaimCodes()`
-- Formato esperado: `CODIGO MONTO` (uno por línea)
-- Soporta 12, 14, o 15 caracteres (formatos Amazon)
-
-### Normalización de Códigos
-
-```typescript
-// src/lib/utils/claim-code-parser.ts
-export function normalizeClaimCode(input: string): string | null {
-  const stripped = input.toUpperCase().replace(/[ -]/g, '');
-  if (!/^[A-Z0-9]+$/.test(stripped)) return null;
-  if (stripped.length !== 12 && stripped.length !== 14 && stripped.length !== 15) return null;
-  return stripped;
-}
-```
-
-### Deduplicación en HandleBulkImport
-
-- `src/hooks/use-sell-flow.ts:196-243`
-- Líneas 207-222: Build set de normalized keys + filtering
-- Primera ocurrencia gana
-- Duplicados dentro del mismo paste se descartan silenciosamente
-
-### Deduplicación en Server (publishBatch)
-
-- `src/actions/seller-actions.ts:30-55`
-- Deduplicación intra-request
-- Deduplicación contra base de datos existente
-
----
-
-## Resolución de Conflictos
-
-### amount_mismatch
-
-Opciones mostradas al usuario:
-
-- **"Keep typed amount"**: Mantiene monto declarado por usuario → `verified`
-- **"Use screenshot amount"**: Usa monto extraído → `verified`
-- **"Remove card"**: Elimina la tarjeta del lote
-
-### fuzzy_match
-
-Opciones:
-
-- **"Yes, it's the same code"**: Confirma match → `verified`, mantiene código original
-- **"No, keep both codes"**: Rechaza match → crea NUEVA tarjeta con código extraído
-
-### amount_not_found
-
-El usuario debe:
-
-- Ingresar el monto manualmente → luego se marca como `verified`
-- O eliminar la tarjeta
-
----
-
-## Comportamientos Importantes
-
-###Publish Sin Evidencia ES Permitido
-
-- El sistema permite publicar lotes sin screenshots de evidencia
-- Estados `no_capture` y `skipped` NO bloquean el flujo
-- Esta es una decisión de negocio intencional
-
-### fuzzyMatching
-
-- Usa distancia Levenshtein con threshold ≤1
-- Solo considera candidatos con monto matching también
-- Línea 33-73 en `use-sell-flow.ts`: `getFuzzyCandidate()`
-
-### Edición de Monto Post-OCR
-
-- Si usuario edita el monto de una tarjeta была procesada por OCR
-- El sistema detecta si el nuevo monto ≠ monto extraído
-- Cambia estado a `amount_mismatch` (líneas 168-189)
-
-### Eliminación de Tarjeta
-
-- Si se elimina una tarjeta que tiene imagen asociada
-- La imagen también se elimina del store
-- Líneas 136-141 en `use-sell-flow.ts`
-
-### Undo Remove
-
-- El sistema guarda `lastRemovedCard` con índice original
-- Permite deshacer eliminación antes de otra acción
-- Líneas 145-152
-
----
-
-## Code References
-
-### Hook Principal (Zustand Store)
-
-```
-src/hooks/use-sell-flow.ts
-├── parseAmount() - líneas 21-25
-├── formatAmount() - líneas 27-31
-├── getFuzzyCandidate() - líneas 33-73
-├── ingestOCRDraft() - líneas 246-331
-├── handleBulkImport() - líneas 196-243
-├── acceptExtractedAmount() - líneas 334-348
-├── keepDeclaredAmount() - líneas 350-360
-├── confirmFuzzyMatch() - líneas 362-372
-├── rejectFuzzyMatch() - líneas 374-413
-├── resolveAmountMismatch() - líneas 415-423
-└── removeGiftcard() - líneas 132-143
-```
-
-### Componentes del Wizard
-
-```
-src/components/sell/
-├── sell-batch-manager.tsx    # Wizard principal, orchestration
-├── steps/
-│   ├── brand-step.tsx        # Step 1: Config país+marca
-│   ├── intake-step.tsx        # Step 2: Carga y resolución
-│   └── review-step.tsx        # Step 3: Review y publish
-├── bulk-paste-dialog.tsx     # Dialog para bulk import
-└── image-dropzone.tsx        # Upload de imágenes
-```
-
-### Acciones Server
-
-```
-src/actions/seller-actions.ts
-├── publishBatch() - líneas 15-145  # Validación + persistencia
-├── getSellerBatches() - líneas 147-226
-└── getSellerRate() - líneas 228-237
-```
-
-### Tipos y Utilidades
-
-```
-src/types/sell/validation.ts          # Estados y validación
-src/types/giftcard/giftcard.ts       # Tipos de giftcard
-src/lib/utils/claim-code-parser.ts  # Normalización
-```
-
----
-
-## Tipos Principales
-
-### SellFlowGiftcard
+### SellFlowGiftcard (del store Zustand)
 
 ```typescript
 interface SellFlowGiftcard {
@@ -278,52 +150,29 @@ interface SellFlowGiftcard {
 }
 ```
 
-### SellFlowCardEvidence
+### ParsedGiftcard (del parser)
 
 ```typescript
-interface SellFlowCardEvidence {
-  status: ValidationState;
-  matchedImageId?: string;
-  extractedCode?: string;
-  extractedAmount?: string;
-  fuzzyConfirmed?: boolean;
-  amountDecision?: 'accept-extracted' | 'keep-declared';
-}
-```
-
-### SellFlowImage
-
-```typescript
-interface SellFlowImage {
-  id: string;
-  compressedData: string;
-  previewUrl: string;
+interface ParsedGiftcard {
+  claimCode: string;  // canonical format
+  amount: string;     // string, comma normalized to dot
+  pinCode?: string;
+  line: number;       // línea original del paste
 }
 ```
 
 ---
 
-## Validaciones de Negocio
+## Problemas conocidos (P2 — no urgente)
 
-| Regla                | Ubicación                        | Comportamiento                         |
-| -------------------- | -------------------------------- | -------------------------------------- |
-| Monto > 0            | Server (seller-actions.ts:21-23) | Rechaza si ≤0 o NaN                    |
-| Código no vacío      | Server                           | Rechaza claimCode vacío                |
-| claimCode válido     | `normalizeClaimCode()`           | Solo 12/14/15 caracteres alfanuméricos |
-| Dedupe server        | `publishBatch`                   | Intra-request + contra BD              |
-| sellRate del usuario | `publishBatch:89`                | Se得到 del usuario logueado            |
-
----
-
-## Notas para Desarrollo
-
-1. **Legacy Fields**: El código mantiene `validationState`, `extractedCode`, `extractedAmount`, `matchedImageId` como campos flat además del objeto `evidence` para compatibilidad. Ambosen sincronización.
-
-2. ** fuente de Tarjeta (`source`)**: Indica cómo fue creada la tarjeta:
-   - `manual`: Usuario escribió a mano
-   - `ocr`: Extraída por OCR
-   - `bulk`:Importada desde texto
-
-3. **Imágenes No Se Reusan**: Si una imagen já fue asociada a una tarjeta, puede volverse a associate (en fuzzy reject crea nuevo card). Esto es comportamientoby diseño.
-
-4. **Estados Deprecated**: `code_new_detected` está marcado `@deprecated` pero se mantiene para compatibilidad con datos legacy.
+| Problema | Archivo | Descripción |
+|----------|---------|-------------|
+| `addImageToCard` no-op | `use-sell-flow.ts:336` | Feature de evidencia en Review completamente rota |
+| Sin validación server de claimCode | `publish-batch.ts:55-61` | Fallback a raw uppercased si normalizeClaimCode falla |
+| Sin validación de minAmount/maxAmount | `publish-batch.ts:42-45` | BrandCountry limits nunca se chequean |
+| Back navigation destruye batch | `data-entry-step.tsx:433-437` | useEffect wipe en mount |
+| Sin persist | `use-sell-flow.ts:149` | Refresh = pérdida total |
+| Blob URL leaks | `use-sell-flow.ts:326,164,332,338` | Nunca se revocan |
+| `console.table` con claim codes | `data-entry-step.tsx:157,160` | Secretos en consola |
+| Doble `normalizeClaimCode` | `claim-code-parser.ts` vs `types/domain/giftcard.ts` | Criterios distintos (12 vs 14/15) |
+| TOCTOU en dedup | `publish-batch.ts:76-86,112-116` | Checks fuera de la tx |

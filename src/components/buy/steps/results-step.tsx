@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -107,6 +107,8 @@ export const ResultsStep = () => {
     executeGetUserBuyRate({ brandId: selectedBrand.split('|')[0], countryId: selectedCountry });
   }, [selectedBrand, selectedCountry, executeGetBrandById, executeGetUserBuyRate]);
 
+  const idempotencyKeyRef = useRef(crypto.randomUUID());
+
   const { execute: createOrderExecute, status: createOrderStatus } = useAction(createOrder, {
     onSuccess: ({ data }) => {
       if (data?.success && data.orderId) {
@@ -124,7 +126,7 @@ export const ResultsStep = () => {
   const handlePlaceOrder = () => {
     setResultsState((prev) => ({ ...prev, isConfirming: true }));
     const cardIds = foundGiftcards.map((c) => c.id);
-    createOrderExecute({ giftcardIds: cardIds });
+    createOrderExecute({ giftcardIds: cardIds, idempotencyKey: idempotencyKeyRef.current });
   };
 
   const rawTotal = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);

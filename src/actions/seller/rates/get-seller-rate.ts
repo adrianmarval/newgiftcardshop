@@ -31,7 +31,7 @@ export const getSellerRate = sellerActionClient
       console.error(error);
       return {
         success: false as const,
-        error: 'No se han configurado tarifas para esta marca y país.',
+        error: 'You do not have a rate assigned for this brand and country. Contact the administrator.',
       };
     }
   });

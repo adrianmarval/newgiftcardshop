@@ -50,9 +50,10 @@ export const reportIssue = buyerActionClient
     if (existingIssue) throw new ActionError('Ya has reportado un problema con esta tarjeta en esta orden');
     const foundGiftcard = await prisma.giftcard.findUnique({
       where: { id: giftcardId },
-      select: { ownerId: true },
+      select: { ownerId: true, orderId: true },
     });
     if (!foundGiftcard) throw new ActionError('Giftcard not found');
+    if (foundGiftcard.orderId !== orderId) throw new ActionError('La tarjeta no pertenece a esta orden');
     return next({ ctx: { foundGiftcard } });
   })
   .action(async ({ parsedInput: { giftcardId, orderId, issueType, reportedAmount, proofImageUrl }, ctx }) => {

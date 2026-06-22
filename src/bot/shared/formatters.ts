@@ -4,10 +4,7 @@ type Lang = 'en' | 'es';
 
 // ── Money ─────────────────────────────────────────────────────────────────────
 
-export function fmt$(
-  amount: number | string | { toNumber(): number },
-  currency: string = 'USD'
-): string {
+export function fmt$(amount: number | string | { toNumber(): number }, currency: string = 'USD'): string {
   const n = typeof amount === 'object' ? amount.toNumber() : Number(amount);
   const symbol = currency === 'GBP' ? '£' : currency === 'CAD' ? 'C$' : '$';
   return `${symbol}${n.toFixed(2)}`;
@@ -54,7 +51,7 @@ export function fmtGiftcardStatus(status: string, lang: Lang = 'es'): string {
     es: {
       UNUSED: '🟢 Sin usar',
       USED: '✅ Usada',
-      ALREADY_USED: '⚠️ Ya usada',
+      ALREADY_USED: ' Ya usada',
       INVALID: '❌ Inválida',
       DEACTIVATED: '🚫 Desactivada',
       WRONG_AMOUNT: '💰 Monto incorrecto',
@@ -62,7 +59,7 @@ export function fmtGiftcardStatus(status: string, lang: Lang = 'es'): string {
     en: {
       UNUSED: '🟢 Unused',
       USED: '✅ Used',
-      ALREADY_USED: '⚠️ Already Used',
+      ALREADY_USED: ' Already Used',
       INVALID: '❌ Invalid',
       DEACTIVATED: '🚫 Deactivated',
       WRONG_AMOUNT: '💰 Wrong Amount',

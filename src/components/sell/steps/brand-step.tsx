@@ -16,9 +16,10 @@ import { SellStepsProgress } from './sell-steps-progress';
 export interface BrandStepProps {
   brandCountries: BrandCountry[];
   onBrandSelect: (brandId: string, countryId: string) => void;
+  rateError: string | null;
 }
 
-export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
+export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandStepProps) {
   const { selectedBrandCountry, setSelectedBrandCountry, setStep } = useSellFlow();
 
   const [searchBrand, setSearchBrand] = useState('');
@@ -55,7 +56,7 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
     onBrandSelect(bc.brandId, bc.countryId);
   };
 
-  const isStep1Valid = selectedBrandCountry !== '';
+  const isStep1Valid = selectedBrandCountry !== '' && !rateError;
   const showEmptyState = !selectedCountryId;
 
   return (
@@ -181,7 +182,8 @@ export function BrandStep({ brandCountries, onBrandSelect }: BrandStepProps) {
       </div>
 
       {/* Botón inferior fijo */}
-      <div className="flex items-center justify-center-safe gap-1">
+      <div className="flex flex-col items-center gap-1">
+        {rateError && selectedBrandCountry && <p className="text-destructive text-center text-xs font-medium md:text-sm">{rateError}</p>}
         <Button onClick={() => setStep(2)} disabled={!isStep1Valid} className="flex shrink-0 items-center justify-center p-4">
           Continuar <ChevronRight className="h-4 md:ml-2" />
         </Button>

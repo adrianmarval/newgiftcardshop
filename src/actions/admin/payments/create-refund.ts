@@ -5,7 +5,6 @@ import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 import { PaymentReferenceType } from '@/generated/prisma/enums';
-import { getPlatformBalance, updatePlatformBalance } from '@/actions/platform/settings';
 
 const createRefundInputSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
@@ -53,22 +52,17 @@ export const createRefund = adminActionClient.inputSchema(createRefundInputSchem
     batchId = batch.id;
   }
 
-  const response = await getPlatformBalance();
-
-  const balanceAfter = response.data
-    ? response.data.balance.sub(new Prisma.Decimal(amount))
-    : new Prisma.Decimal(0).sub(new Prisma.Decimal(amount));
-
   const payment = await prisma.$transaction(async (tx) => {
-    const updateResponse = await updatePlatformBalance({ amount: new Prisma.Decimal(amount), type: 'substract' });
-    if (!updateResponse.data?.success) {
-      throw new Error('Error al actualizar el balance de la plataforma');
-    }
+    const updatedSettings = await tx.platformSettings.upsert({
+      where: { key: 'platformBalance' },
+      update: { balance: { decrement: new Prisma.Decimal(amount) } },
+      create: { key: 'platformBalance', value: '', description: 'Balance General', balance: new Prisma.Decimal(0).sub(new Prisma.Decimal(amount)) },
+    });
 
     return await tx.payment.create({
       data: {
         amount: new Prisma.Decimal(amount),
-        balanceAfter: balanceAfter,
+        balanceAfter: updatedSettings.balance,
         direction: 'DEBIT',
         category,
         relatedUserId,

@@ -20,47 +20,30 @@ export class GiftcardEscalationService {
     return settingsService.getEscalationConfig();
   }
 
-  async getInitialTier(brandCountryId: string): Promise<number> {
+  async getInitialTier(brandCountryId: string): Promise<number | null> {
     const maxUserRate = await prisma.userBrandCountryRate.findFirst({
-      where: { brandCountryId },
+      where: { brandCountryId, user: { role: 'BUYER' } },
       orderBy: { buyRate: 'desc' },
       select: { buyRate: true },
     });
 
     if (maxUserRate && maxUserRate.buyRate.gt(0)) {
+      console.log('me ejecute');
       return Math.floor(maxUserRate.buyRate.toNumber() * 100);
     }
 
-    const defaultRate = await prisma.brandCountryRate.findUnique({
-      where: { brandCountryId },
-      select: { buyRate: true },
-    });
-
-    if (defaultRate && defaultRate.buyRate.gt(0)) {
-      return Math.floor(defaultRate.buyRate.toNumber() * 100);
-    }
-
-    return 100;
+    return null;
   }
 
   async getMinTierForBrandCountry(brandCountryId: string): Promise<number> {
     const minUserRate = await prisma.userBrandCountryRate.findFirst({
-      where: { brandCountryId },
+      where: { brandCountryId, user: { role: 'BUYER' } },
       orderBy: { buyRate: 'asc' },
       select: { buyRate: true },
     });
 
     if (minUserRate && minUserRate.buyRate.gt(0)) {
       return Math.floor(minUserRate.buyRate.toNumber() * 100);
-    }
-
-    const defaultRate = await prisma.brandCountryRate.findUnique({
-      where: { brandCountryId },
-      select: { buyRate: true },
-    });
-
-    if (defaultRate && defaultRate.buyRate.gt(0)) {
-      return Math.floor(defaultRate.buyRate.toNumber() * 100);
     }
 
     return 80;
@@ -122,8 +105,8 @@ export class GiftcardEscalationService {
               escalationTier: u.newTier,
               tierStartedAt: new Date(),
             },
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -140,11 +123,7 @@ export class GiftcardEscalationService {
     if (userRate) {
       buyerBuyRate = Math.floor(userRate.buyRate.toNumber() * 100);
     } else {
-      const defaultRate = await prisma.brandCountryRate.findUnique({
-        where: { brandCountryId },
-        select: { buyRate: true },
-      });
-      buyerBuyRate = defaultRate ? Math.floor(defaultRate.buyRate.toNumber() * 100) : 100;
+      buyerBuyRate = 100;
     }
 
     const availableCards = await prisma.giftcard.findMany({

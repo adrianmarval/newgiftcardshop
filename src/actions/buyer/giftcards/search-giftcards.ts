@@ -49,16 +49,7 @@ async function getBuyerBuyRate(userId: string, brandCountryId: string): Promise<
     return Math.floor(userRate.buyRate.toNumber() * 100);
   }
 
-  const defaultRate = await prisma.brandCountryRate.findUnique({
-    where: { brandCountryId },
-    select: { buyRate: true },
-  });
-
-  if (defaultRate && defaultRate.buyRate.gt(0)) {
-    return Math.floor(defaultRate.buyRate.toNumber() * 100);
-  }
-
-  return 100;
+  throw new Error('No tenés tarifa asignada para esta marca y país.');
 }
 
 export const searchGiftcards = buyerActionClient
@@ -126,7 +117,16 @@ export const searchGiftcards = buyerActionClient
       return { success: true as const, giftcards: [] };
     }
 
-    const buyerBuyRate = await getBuyerBuyRate(session.user.id, brandCountry.id);
+    let buyerBuyRate: number;
+    try {
+      buyerBuyRate = await getBuyerBuyRate(session.user.id, brandCountry.id);
+    } catch (err: any) {
+      return {
+        success: true as const,
+        giftcards: [],
+        error: err.message || 'No tenés tarifa asignada para esta marca y país.',
+      };
+    }
 
     const allGiftcards = await prisma.giftcard.findMany({
       where: {
@@ -190,7 +190,7 @@ export const searchGiftcards = buyerActionClient
         brand: card.brandCountryId,
         amount: Number(card.amount),
         status: 'UNUSED' as const,
-        escalationTier: card.escalationTier ?? 100,
+        escalationTier: card.escalationTier,
         country: card.brandCountry?.country
           ? {
               name: card.brandCountry.country.name,

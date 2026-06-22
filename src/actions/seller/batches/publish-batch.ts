@@ -76,7 +76,6 @@ export const publishBatch = sellerActionClient
     const existingInDb = await prisma.giftcard.findMany({
       where: {
         codeHash: { in: codeHashes },
-        brandCountryId: brandCountry.id,
       },
       select: { codeHash: true },
     });
@@ -138,11 +137,12 @@ export const publishBatch = sellerActionClient
       sellRateSnapshot = rates.sellRate as Prisma.Decimal;
     } catch (error) {
       console.error(error);
-      throw new ActionError('No se han configurado tarifas para esta marca y país.');
+      throw new ActionError('You do not have a rate assigned for this brand and country. Contact the administrator.');
     }
 
     const escalationService = new GiftcardEscalationService();
     const initialTier = await escalationService.getInitialTier(brandCountryId);
+    console.log({ initialTier });
 
     const batch = await prisma.$transaction(async (tx) => {
       const createdBatch = await tx.giftcardBatch.create({
@@ -169,7 +169,7 @@ export const publishBatch = sellerActionClient
             status: 'UNUSED',
             batchId: createdBatch.id,
             brandCountryId,
-            escalationTier: initialTier,
+            ...(initialTier !== null ? { escalationTier: initialTier } : {}),
           },
         });
 

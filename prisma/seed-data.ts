@@ -74,6 +74,27 @@ export const seedData: SeedData = {
         },
       },
     },
+    {
+      name: 'Jesus Marval',
+      email: 'pagosqt@gmail.com',
+      emailVerified: true,
+      isActive: true,
+      role: 'BUYER',
+      paymentMethod: {
+        create: {
+          address: '118s4g684sd68g48s64dg68jjj',
+          coin: 'USDT',
+          network: 'AVAXC',
+        },
+      },
+      accounts: {
+        create: {
+          accountId: 'buyer-account1-provider-id',
+          providerId: 'credential',
+          password: await hashPassword('Adri891.'),
+        },
+      },
+    },
   ],
   countryData: [
     { code: 'US', name: 'United States', currency: 'USD' },

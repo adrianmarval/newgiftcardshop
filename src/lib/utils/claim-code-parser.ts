@@ -20,8 +20,8 @@ import type { ParsedGiftcard, ParseClaimCodesResult } from '@/types/domain/giftc
 // consumed into the candidate match.
 const CANDIDATE_RE = /[A-Z0-9][A-Z0-9-]{12,17}[A-Z0-9]/gi;
 
-// Amount: optional leading $ or currency symbol, decimal number
-const AMOUNT_RE = /\$?\s*(\d+(?:\.\d{1,2})?)/;
+// Amount: optional leading $ or currency symbol, decimal number with . or , as decimal separator
+const AMOUNT_RE = /\$?\s*(\d+(?:[.,]\d{1,2})?)/;
 
 /**
  * Normalises an Amazon claim code string:
@@ -115,7 +115,7 @@ export function parseClaimCodes(raw: string): ParseClaimCodesResult {
     // El primer elemento después del código debería ser el monto
     const amountPart = parts[0];
     const amountMatch = amountPart ? AMOUNT_RE.exec(amountPart) : null;
-    const amount = amountMatch ? amountMatch[1] : undefined;
+    const amount = amountMatch ? amountMatch[1].replace(',', '.') : undefined;
 
     if (!amount) {
       errors.push(`Line ${lineIdx + 1}: Missing or invalid amount — "${trimmedLine.slice(0, 40)}"`);

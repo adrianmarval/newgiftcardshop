@@ -29,7 +29,7 @@ import {
 export const ConfirmUsageStep = () => {
   const { foundGiftcards, setStep, orderId, setAdjustedTotal, resetForm, selectedBrand, selectedCountry } = useBuyFlow();
   const router = useRouter();
-  const [buyRate, setBuyRate] = useState(0.85);
+  const [buyRate, setBuyRate] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 

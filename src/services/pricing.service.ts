@@ -1,9 +1,6 @@
 import prisma from '@/lib/prisma';
 
-export async function getUserRates(
-  userId: string,
-  params: { brandCountryId?: string; brandId?: string; countryId?: string }
-) {
+export async function getUserRates(userId: string, params: { brandCountryId?: string; brandId?: string; countryId?: string }) {
   let brandCountryId = params.brandCountryId;
   let brandId = params.brandId;
   let countryId = params.countryId;
@@ -60,21 +57,5 @@ export async function getUserRates(
     };
   }
 
-  // 2. Buscar tasa global de fallback
-  const globalRate = await prisma.brandCountryRate.findUnique({
-    where: {
-      brandCountryId,
-    },
-  });
-
-  if (globalRate) {
-    return {
-      buyRate: globalRate.buyRate,
-      sellRate: globalRate.sellRate,
-      isCustom: false,
-    };
-  }
-
-  // 3. Error si no está configurada la tasa
-  throw new Error('No se han configurado tarifas para esta marca y país.');
+  throw new Error('You do not have a rate assigned for this brand and country. Contact the administrator.');
 }

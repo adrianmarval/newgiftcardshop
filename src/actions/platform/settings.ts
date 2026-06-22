@@ -117,7 +117,7 @@ const updatePlatformBalanceInputSchema = z.object({ amount: z.instanceof(Decimal
 
 const updatePlatformBalanceOutputSchema = z.object({ success: z.boolean() });
 
-export const updatePlatformBalance = authActionClient
+export const updatePlatformBalance = adminActionClient
   .inputSchema(updatePlatformBalanceInputSchema)
   .outputSchema(updatePlatformBalanceOutputSchema)
   .action(async ({ parsedInput: { amount, type } }) => {
@@ -129,7 +129,7 @@ export const updatePlatformBalance = authActionClient
   });
 
 const getPlatformBalanceOutputSchema = z.object({ balance: z.instanceof(Decimal) });
-export const getPlatformBalance = authActionClient.outputSchema(getPlatformBalanceOutputSchema).action(async () => {
+export const getPlatformBalance = adminActionClient.outputSchema(getPlatformBalanceOutputSchema).action(async () => {
   const platformBalance = await prisma.platformSettings.findFirst({
     where: { key: SETTING_KEYS.PLATFORM_BALANCE },
     select: { balance: true },

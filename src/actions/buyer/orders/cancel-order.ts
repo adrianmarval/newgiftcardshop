@@ -8,12 +8,13 @@ const cancelOrderInputSchema = z.object({ orderId: z.string() });
 
 export const cancelOrder = buyerActionClient
   .inputSchema(cancelOrderInputSchema)
-  .useValidated(async ({ parsedInput: { orderId }, next }) => {
+  .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { giftcards: true },
     });
     if (!order) throw new ActionError('Orden no encontrada en la base de datos');
+    if (order.userId !== ctx.auth.user.id) throw new ActionError('No autorizado');
 
     const hasActiveCards = order.giftcards.some((g) => {
       if (g.status === 'UNUSED' || g.status === 'USED') return true;

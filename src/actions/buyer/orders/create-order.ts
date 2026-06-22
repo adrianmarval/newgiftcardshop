@@ -5,8 +5,12 @@ import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { getUserRates } from '@/services/pricing.service';
+import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard-reservation.service';
 
-const createOrderInputSchema = z.object({ giftcardIds: z.array(z.string()) });
+const createOrderInputSchema = z.object({
+  giftcardIds: z.array(z.string()),
+  idempotencyKey: z.string().uuid().optional(),
+});
 
 function validateTierAccess(cards: { id: string; escalationTier: number | null | undefined }[], buyerBuyRate: number): string | null {
   const blockedCards: string[] = [];
@@ -28,9 +32,12 @@ function validateTierAccess(cards: { id: string; escalationTier: number | null |
 export const createOrder = buyerActionClient
   .inputSchema(createOrderInputSchema)
   .useValidated(async ({ parsedInput: { giftcardIds }, ctx, next }) => {
-    const dbUser = await prisma.user.findUnique({ where: { id: ctx.auth.user.id } });
+    const dbUser = await prisma.user.findUnique({
+      where: { id: ctx.auth.user.id },
+      select: { id: true, creditLimit: true },
+    });
     const giftcards = await prisma.giftcard.findMany({
-      where: { id: { in: giftcardIds } },
+      where: { id: { in: giftcardIds }, inStock: true, status: 'UNUSED', orderId: null },
       select: { id: true, amount: true, brandCountryId: true, escalationTier: true },
     });
 
@@ -44,7 +51,18 @@ export const createOrder = buyerActionClient
       },
     });
   })
-  .action(async ({ parsedInput: { giftcardIds }, ctx }) => {
+  .action(async ({ parsedInput: { giftcardIds, idempotencyKey }, ctx }) => {
+    // Idempotency: si ya existe una orden con este key, retornarla
+    if (idempotencyKey) {
+      const existing = await prisma.order.findUnique({
+        where: { idempotencyKey },
+        select: { id: true },
+      });
+      if (existing) {
+        return { success: true as const, orderId: existing.id };
+      }
+    }
+
     const firstCard = ctx.giftcards[0];
     let buyRate: Prisma.Decimal;
 
@@ -53,7 +71,7 @@ export const createOrder = buyerActionClient
       buyRate = rates.buyRate as Prisma.Decimal;
     } catch (error) {
       console.error(error);
-      throw new ActionError('No se han configurado tarifas para esta marca y país.');
+      throw new ActionError('You do not have a rate assigned for this brand and country. Contact the administrator.');
     }
 
     const buyerBuyRate = Math.floor(buyRate.toNumber() * 100);
@@ -67,27 +85,40 @@ export const createOrder = buyerActionClient
       return sum.plus(card.amount.mul(buyRate));
     }, new Prisma.Decimal(0));
 
-    const order = await prisma.$transaction(async (tx) => {
-      const createdOrder = await tx.order.create({
-        data: {
-          userId: ctx.auth.user.id,
-          brandCountryId: firstCard.brandCountryId,
-          total: total,
-          buyRate: buyRate,
-          status: 'PENDING',
-          giftcards: {
-            connect: giftcardIds.map((id) => ({ id })),
+    let order;
+    try {
+      order = await prisma.$transaction(async (tx) => {
+        // Revalidar credit limit atomically
+        const unpaidOrders = await tx.order.findMany({
+          where: { userId: ctx.auth.user.id, status: { in: ['PENDING', 'AWAITING_PAYMENT'] } },
+          select: { adjustedTotal: true, total: true },
+        });
+        const unpaidTotal = unpaidOrders.reduce((s, o) => s.plus(o.adjustedTotal ?? o.total), new Prisma.Decimal(0));
+        if (unpaidTotal.plus(total).gt(ctx.dbUser.creditLimit)) {
+          throw new ActionError('Límite de crédito insuficiente. Tenés pagos pendientes que bloquean esta compra.');
+        }
+
+        const createdOrder = await tx.order.create({
+          data: {
+            userId: ctx.auth.user.id,
+            brandCountryId: firstCard.brandCountryId,
+            total: total,
+            buyRate: buyRate,
+            status: 'PENDING',
+            idempotencyKey,
           },
-        },
-      });
+        });
 
-      await tx.giftcard.updateMany({
-        where: { id: { in: giftcardIds } },
-        data: { inStock: false },
-      });
+        await reserveGiftcards(tx, giftcardIds, createdOrder.id);
 
-      return createdOrder;
-    });
+        return createdOrder;
+      });
+    } catch (error) {
+      if (error instanceof GiftcardReservationError) {
+        throw new ActionError(error.message);
+      }
+      throw error;
+    }
 
     return { success: true as const, orderId: order.id };
   });

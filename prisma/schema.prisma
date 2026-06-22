@@ -146,7 +146,7 @@ model Giftcard {
   provenanceImageId String?
 
   // Sistema de reserva escalonada
-  escalationTier Int      @default(100)
+  escalationTier Int      @default(85)
   tierStartedAt  DateTime @default(now())
   tierUpdatedAt  DateTime @updatedAt
 
@@ -197,7 +197,6 @@ model BrandCountry {
 
   orders    Order[]
   giftcards Giftcard[]
-  rate      BrandCountryRate?
   userRates UserBrandCountryRate[]
 
   createdAt DateTime @default(now())
@@ -213,6 +212,7 @@ model Order {
   adjustedTotal Decimal?    @db.Decimal(10, 2) // Total recalculado post-redeem (con issues)
   buyRate       Decimal     @db.Decimal(10, 4)
   status        OrderStatus
+  idempotencyKey String?  @unique
 
   userId         String
   brandCountryId String?
@@ -459,23 +459,11 @@ model TelegramOtp {
   email      String
   name       String
   otp        String
+  attempts   Int      @default(0)
   expiresAt  DateTime
   createdAt  DateTime @default(now())
 
   @@map("telegram_otp")
-}
-
-model BrandCountryRate {
-  id             String       @id @default(cuid())
-  brandCountryId String       @unique
-  brandCountry   BrandCountry @relation(fields: [brandCountryId], references: [id], onDelete: Cascade)
-  buyRate        Decimal      @db.Decimal(10, 4)
-  sellRate       Decimal      @db.Decimal(10, 4)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("brand_country_rate")
 }
 
 model UserBrandCountryRate {

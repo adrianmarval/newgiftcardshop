@@ -35,7 +35,8 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
   const { step, resetForm, giftcards, selectedBrandCountry } = useSellFlow();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [duplicates, setDuplicates] = useState<string[]>([]);
-  const [sellRate, setSellRate] = useState(sellRateProp ?? 0.75);
+  const [sellRate, setSellRate] = useState(sellRateProp ?? 0);
+  const [rateError, setRateError] = useState<string | null>(null);
   const router = useRouter();
 
   const selectedBrandCountryData = useMemo(() => {
@@ -62,12 +63,13 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
   });
 
   const fetchRate = (brandId: string, countryId: string) => {
+    setRateError(null);
     getSellerRate({ brandId, countryId }).then((res) => {
       if (res?.data?.success) {
         setSellRate(res.data.rate);
       } else {
-        showAlert.toast.warning(res?.data?.error || 'No hay tarifas configuradas.');
-        setSellRate(0.75);
+        setSellRate(0);
+        setRateError(res?.data?.error || 'No tenés tarifa asignada para vender en esta marca y país. Contactá al administrador.');
       }
     });
   };
@@ -128,7 +130,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <BrandStep brandCountries={brandCountries} onBrandSelect={handleBrandSelect} />
+                <BrandStep brandCountries={brandCountries} onBrandSelect={handleBrandSelect} rateError={rateError} />
               </motion.div>
             )}
 

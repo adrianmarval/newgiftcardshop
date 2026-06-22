@@ -3,7 +3,7 @@ import { InlineKeyboard } from 'grammy';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtGiftcardStatus, fmtDate } from '@/bot/shared/formatters.js';
 import { decrypt } from '@/lib/encryption';
-import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
+import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 
 function strike(text: string) {
   return text
@@ -38,7 +38,6 @@ export async function handleOrders(ctx: BuyerContext) {
   if (orders.length === 0 && page === 1) {
     const kb = new InlineKeyboard().text('🛒 Comprar tarjetas', 'buy_start').row().text('🏠 Volver al Menú', 'start');
     await renderUI(ctx, '📭 No tenés órdenes todavía.', { reply_markup: kb });
-    if (ctx.callbackQuery) return ctx.answerCallbackQuery();
     return;
   }
 
@@ -79,7 +78,6 @@ export async function handleOrders(ctx: BuyerContext) {
   kb.text('🏠 Volver al Menú', 'start');
 
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
-  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 export async function handleOrderDetail(ctx: BuyerContext) {
@@ -127,7 +125,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
       ? `<b>❌ Tarjetas inválidas / reportadas</b>\n` +
         nullifiedCards
           .map((c) => {
-            const claimCode = decrypt(c.claimCode);
+            const claimCode = escapeHTML(decrypt(c.claimCode));
             return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount, currency))} - ${c.status}`;
           })
           .join('\n') +
@@ -139,7 +137,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
       ? `<b>✅ Tarjetas verificadas</b>\n` +
         availableCards
           .map((c) => {
-            const claimCode = decrypt(c.claimCode);
+            const claimCode = escapeHTML(decrypt(c.claimCode));
             const isWrong = c.status === 'WRONG_AMOUNT';
             const amt = c.reportedAmount ?? c.amount;
 
@@ -160,7 +158,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
   let instructions = '';
   if (order.status === 'PENDING') {
     if (totalToPay.isZero()) {
-      instructions = `\n\n<b>⚠️ Total Cero</b>\nEl total de tu orden es $0.00. No se requiere pago. Podés <b>cancelar la orden</b> si ya no la necesitás.`;
+      instructions = `\n\n<b> Total Cero</b>\nEl total de tu orden es $0.00. No se requiere pago. Podés <b>cancelar la orden</b> si ya no la necesitás.`;
     } else if (order.giftcards.every((c) => c.isConfirmed)) {
       instructions = `\n\n<b>🎉 ¡Listo para pagar!</b>\nTodas las tarjetas han sido confirmadas. Presioná <b>"✅ Pagar ahora"</b> para proceder.`;
     } else {
@@ -196,7 +194,6 @@ export async function handleOrderDetail(ctx: BuyerContext) {
   kb.text('🔙 Regresar al historial', `my_orders_${fromPage}`);
 
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
-  return ctx.answerCallbackQuery();
 }
 
 export async function handleCancelOrder(ctx: BuyerContext) {
@@ -238,8 +235,8 @@ export async function handleCancelOrder(ctx: BuyerContext) {
   await renderUI(ctx, '❌ <b>Orden cancelada.</b>\n\nLas tarjetas reportadas han sido guardadas y la orden cerrada.', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
+    callbackText: 'Orden cancelada',
   });
-  return ctx.answerCallbackQuery('Orden cancelada');
 }
 
 export async function handleConfirmUsage(ctx: BuyerContext) {
@@ -262,7 +259,7 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
 
   const reportedCount = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED').length;
   const warningText =
-    reportedCount > 0 ? `\n⚠️ <b>Tenés ${reportedCount} tarjeta(s) reportada(s)</b> - El pago se ajustará automáticamente.\n` : '';
+    reportedCount > 0 ? `\n <b>Tenés ${reportedCount} tarjeta(s) reportada(s)</b> - El pago se ajustará automáticamente.\n` : '';
 
   const firstCard = order.giftcards[0];
   const brandCountry = await prisma.brandCountry.findUnique({
@@ -278,7 +275,7 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
 
   await renderUI(
     ctx,
-    `⚠️ <b>¿Confirmar uso de tarjetas?</b>\n\n` +
+    ` <b>¿Confirmar uso de tarjetas?</b>\n\n` +
       `Esta acción <b>NO se puede revertir</b>.\n\n` +
       `Al confirmar, el sistema procesará el pago al proveedor por <b>${fmt$(totalEffectiveFaceValue, currency)}</b> giftcards.\n${warningText}\n` +
       `📝 <b>Asegurate de que:</b>\n` +
@@ -287,7 +284,6 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
       `• Si hubo problemas que no reportaste, detente ahora y regresa para reportarlos con el botón "🚩 Reportar problema"`,
     { parse_mode: 'HTML', reply_markup: kb },
   );
-  return ctx.answerCallbackQuery();
 }
 
 export async function handleConfirmUsageFinal(ctx: BuyerContext) {
@@ -310,21 +306,29 @@ export async function handleConfirmUsageFinal(ctx: BuyerContext) {
 
   const adjustedTotal = totalEffectiveFaceValue.mul(order.buyRate);
 
-  await prisma.$transaction(async (tx) => {
-    await tx.order.update({
-      where: { id: orderId },
-      data: { status: 'AWAITING_PAYMENT', adjustedTotal },
-    });
-    for (const card of order.giftcards) {
-      await tx.giftcard.update({
-        where: { id: card.id },
-        data: {
-          status: card.status === 'UNUSED' ? 'USED' : card.status,
-          isConfirmed: true,
-        },
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: orderId, status: 'PENDING' },
+        data: { status: 'AWAITING_PAYMENT', adjustedTotal },
       });
+      for (const card of order.giftcards) {
+        await tx.giftcard.update({
+          where: { id: card.id },
+          data: {
+            status: card.status === 'UNUSED' ? 'USED' : card.status,
+            isConfirmed: true,
+          },
+        });
+      }
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      await ctx.answerCallbackQuery('La orden ya fue procesada');
+      return;
     }
-  });
+    throw err;
+  }
 
   const kb = new InlineKeyboard().text('💳 Enviar pago ahora', `make_payment_${orderId}`).row().text('⬅️ Ver mis órdenes', 'my_orders');
 
@@ -332,9 +336,8 @@ export async function handleConfirmUsageFinal(ctx: BuyerContext) {
     ctx,
     `✅ <b>Uso confirmado.</b>\n\nTotal a pagar: <b>${fmt$(adjustedTotal, 'USD')}</b>\n\n` +
       `Enviá el pago en USDT a la dirección del administrador y confirmá con el botón.`,
-    { parse_mode: 'HTML', reply_markup: kb },
+    { parse_mode: 'HTML', reply_markup: kb, callbackText: 'Uso confirmado' },
   );
-  return ctx.answerCallbackQuery('Uso confirmado');
 }
 
 export async function handleMakePayment(ctx: BuyerContext) {
@@ -348,7 +351,6 @@ export async function handleMakePayment(ctx: BuyerContext) {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('⬅️ Volver', `order_detail_${orderId}`),
   });
-  return ctx.answerCallbackQuery();
 }
 
 export async function handlePaymentText(ctx: BuyerContext) {
@@ -373,26 +375,33 @@ export async function handlePaymentText(ctx: BuyerContext) {
   const { Prisma } = await import('@/generated/prisma/client');
   const paymentAmount = order.adjustedTotal ?? order.total;
 
-  await prisma.$transaction(async (tx) => {
-    const updatedSettings = await tx.platformSettings.upsert({
-      where: { key: 'platformBalance' },
-      update: { balance: { increment: paymentAmount } },
-      create: { key: 'platformBalance', value: '', description: 'Balance General', balance: paymentAmount },
-    });
+  try {
+    await prisma.$transaction(async (tx) => {
+      const updatedSettings = await tx.platformSettings.upsert({
+        where: { key: 'platformBalance' },
+        update: { balance: { increment: paymentAmount } },
+        create: { key: 'platformBalance', value: '', description: 'Balance General', balance: paymentAmount },
+      });
 
-    await tx.payment.create({
-      data: {
-        amount: paymentAmount,
-        balanceAfter: updatedSettings.balance,
-        direction: 'CREDIT',
-        category: 'ORDER',
-        orderId: order.id,
-        binanceTxId: txId,
-        relatedUserId: order.userId,
-      },
+      await tx.payment.create({
+        data: {
+          amount: paymentAmount,
+          balanceAfter: updatedSettings.balance,
+          direction: 'CREDIT',
+          category: 'ORDER',
+          orderId: order.id,
+          binanceTxId: txId,
+          relatedUserId: order.userId,
+        },
+      });
+      await tx.order.update({ where: { id: order.id, status: 'AWAITING_PAYMENT' }, data: { status: 'COMPLETED' } });
     });
-    await tx.order.update({ where: { id: order.id }, data: { status: 'COMPLETED' } });
-  });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      return renderUI(ctx, ' Esta orden ya fue procesada.', { reply_markup: new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders') });
+    }
+    throw err;
+  }
 
   ctx.session.wizard.step = 'idle';
   ctx.session.wizard.orderId = undefined;
@@ -401,7 +410,7 @@ export async function handlePaymentText(ctx: BuyerContext) {
 
   return renderUI(
     ctx,
-    `✅ <b>¡Pago registrado!</b>\n\nOrden completada por <b>${fmt$(paymentAmount, 'USD')}</b>.\n\n<i>TxID: ${txId}</i>`,
+    `✅ <b>¡Pago registrado!</b>\n\nOrden completada por <b>${fmt$(paymentAmount, 'USD')}</b>.\n\n<i>TxID: ${escapeHTML(txId)}</i>`,
     {
       parse_mode: 'HTML',
       reply_markup: kb,
@@ -432,7 +441,7 @@ export async function handleReportIssues(ctx: BuyerContext) {
 
   for (const card of order.giftcards) {
     const isReported = card.status !== 'UNUSED' && card.status !== 'USED';
-    const claimCode = decrypt(card.claimCode);
+    const claimCode = escapeHTML(decrypt(card.claimCode));
     const suffix = claimCode.slice(-4);
 
     let icon = '✅';
@@ -441,7 +450,7 @@ export async function handleReportIssues(ctx: BuyerContext) {
 
     if (isReported) {
       if (card.status === 'WRONG_AMOUNT') {
-        icon = '⚠️';
+        icon = '';
         statusTxt = '(WRONG_AMOUNT)';
         amountTxt = `${strike(fmt$(card.amount, currency))} → ${fmt$(card.reportedAmount ?? 0, currency)}`;
       } else {
@@ -459,7 +468,6 @@ export async function handleReportIssues(ctx: BuyerContext) {
   kb.text('⬅️ Volver al detalle', `order_detail_${orderId}`);
 
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
-  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 export async function handleReportCardSelect(ctx: BuyerContext) {
@@ -495,7 +503,7 @@ export async function handleReportCardSelect(ctx: BuyerContext) {
     }
 
     await renderUI(ctx, reportDetail, { parse_mode: 'HTML', reply_markup: kb });
-    return ctx.answerCallbackQuery();
+    return;
   }
 
   return showReportTypes(ctx);
@@ -546,8 +554,8 @@ export async function handleReportDelete(ctx: BuyerContext) {
   await renderUI(ctx, '✅ <b>Reporte eliminado.</b>\n\nLa tarjeta volvió a estar marcada como sin usar.', {
     parse_mode: 'HTML',
     reply_markup: kb,
+    callbackText: 'Reporte eliminado',
   });
-  return ctx.answerCallbackQuery('Reporte eliminado');
 }
 
 export async function handleReportTypeSelect(ctx: BuyerContext) {
@@ -562,7 +570,7 @@ export async function handleReportTypeSelect(ctx: BuyerContext) {
       parse_mode: 'HTML',
       reply_markup: new InlineKeyboard().text('❌ Cancelar', `report_issues_${ctx.session.wizard.orderId}`),
     });
-    return ctx.answerCallbackQuery();
+    return;
   }
 
   return requestProof(ctx);
@@ -594,7 +602,6 @@ async function requestProof(ctx: BuyerContext) {
     '📸 <b>Enviá una captura de pantalla (opcional)</b>\n\nPara agilizar el proceso, podés enviar una imagen que sirva de prueba del error:';
 
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
-  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 export async function handleReportProofPhoto(ctx: BuyerContext) {

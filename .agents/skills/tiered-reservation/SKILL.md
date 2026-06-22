@@ -28,6 +28,7 @@ Tarjeta con tier 85:
 ### ¿Qué significa "escalar"?
 
 El tier **desciende** (baja) con el tiempo:
+
 - Tier 85 → 84 → 83 → 82 → 81 → 80 → 79...
 - Cada X minutos (configurable, ej: 5 min) el tier baja en una cantidad (ej: 1 punto)
 
@@ -156,6 +157,7 @@ async getInitialTier(brandCountryId: string): Promise<number> {
 ```
 
 **Lógica actual:**
+
 - Si existe ALGUNA `UserBrandCountryRate` → usa la máxima de esas
 - Si NO existe ninguna `UserBrandCountryRate` → usa la global
 - Si tampoco hay global → usa 100
@@ -167,18 +169,18 @@ async getInitialTier(brandCountryId: string): Promise<number> {
 export function findGiftcardCombination(
   cards: Giftcard[],
   targetPurchaseAmount: number,
-  buyerBuyRate: number,  // ej: 85
+  buyerBuyRate: number, // ej: 85
   minAmount?: Decimal,
   maxAmount?: Decimal,
 ): GiftcardSelectionWithTierInfo {
   // Filtra solo tarjetas accesibles (tier <= buyerBuyRate)
-  const accessibleCards = cards.filter(card => {
-    const tier = card.escalationTier ?? 100;
-    return tier <= buyerBuyRate;  // 85 <= 85 = true, 86 <= 85 = false
+  const accessibleCards = cards.filter((card) => {
+    const tier = card.escalationTier;
+    return tier <= buyerBuyRate; // 85 <= 85 = true, 86 <= 85 = false
   });
 
-  const inaccessibleCards = cards.filter(card => {
-    const tier = card.escalationTier ?? 100;
+  const inaccessibleCards = cards.filter((card) => {
+    const tier = card.escalationTier;
     return tier > buyerBuyRate;
   });
   // ...continúa con algoritmo de selección
@@ -244,10 +246,10 @@ async processEscalationTiers(): Promise<{ processed: number }> {
 
 ### Tipos de Tasa
 
-| Tipo | Modelo | Descripción |
-|------|--------|-------------|
-| Global | `BrandCountryRate` | Tasa por defecto para todos los buyers en un brand/country |
-| Personalizada | `UserBrandCountryRate` | Tasa específica para un usuario en particular |
+| Tipo          | Modelo                 | Descripción                                                |
+| ------------- | ---------------------- | ---------------------------------------------------------- |
+| Global        | `BrandCountryRate`     | Tasa por defecto para todos los buyers en un brand/country |
+| Personalizada | `UserBrandCountryRate` | Tasa específica para un usuario en particular              |
 
 ### Cómo se Determina la Tasa de un Buyer
 
@@ -271,7 +273,7 @@ export async function getUserRates(userId, params) {
   }
 
   // 3. Error si no hay nada configurado
-  throw new Error('No se han configurado tarifas para esta marca y país.');
+  throw new Error('You do not have a rate assigned for this brand and country. Contact the administrator.');
 }
 ```
 
@@ -281,7 +283,7 @@ export async function getUserRates(userId, params) {
 // update-buy-rate.ts
 const updateBuyRateInputSchema = z.object({
   brandCountryId: z.string(),
-  buyRate: z.number().min(0.8).max(1.0),  // Solo entre 80% y 100%
+  buyRate: z.number().min(0.8).max(1.0), // Solo entre 80% y 100%
 });
 
 // El usuario solo puede ajustar si:
@@ -319,7 +321,7 @@ Las tasas se almacenan como decimals (ej: `0.85`) pero se comparan como enteros 
 ```typescript
 // buyerBuyRate se calcula como:
 const buyRate = rates.buyRate as Decimal;
-const buyerBuyRate = Math.floor(buyRate.toNumber() * 100);  // 0.85 → 85
+const buyerBuyRate = Math.floor(buyRate.toNumber() * 100); // 0.85 → 85
 ```
 
 ---
@@ -447,19 +449,19 @@ lleguen a tier 0, haciéndolas accesibles para cualquier buyer.
 
 ```typescript
 // Keys en platform_settings:
-'escalation_enabled'       // boolean - si el sistema está activo
-'escalation_duration'      // number  - minutos entre cada drop
-'escalation_drop_amount'   // number  - puntos que baja el tier
+'escalation_enabled'; // boolean - si el sistema está activo
+'escalation_duration'; // number  - minutos entre cada drop
+'escalation_drop_amount'; // number  - puntos que baja el tier
 ```
 
 ### Valores por Defecto (Seed)
 
 ```typescript
 // seed-data.ts
-ESCALATION_ENABLED = true
-ESCALATION_DURATION_MINUTES = 5
-ESCALATION_DROP_AMOUNT = 1
-ESCALATION_MIN_TIER_FALLBACK = 80  // Fallback del tier mínimo
+ESCALATION_ENABLED = true;
+ESCALATION_DURATION_MINUTES = 5;
+ESCALATION_DROP_AMOUNT = 1;
+ESCALATION_MIN_TIER_FALLBACK = 80; // Fallback del tier mínimo
 ```
 
 ---
@@ -535,16 +537,16 @@ src/actions/seller/batches/publish-batch.ts
 
 ## Bugs Corregidos
 
-### Bug 1: getTierInfoForBuyer - Falta *100
+### Bug 1: getTierInfoForBuyer - Falta \*100
 
 **Archivo:** `giftcard-escalation.ts:línea 143`
 
 ```typescript
 // ❌ ANTES (incorrecto)
-buyerBuyRate = Math.floor(userRate.buyRate.toNumber());  // 0.85 → 0
+buyerBuyRate = Math.floor(userRate.buyRate.toNumber()); // 0.85 → 0
 
 // ✅ CORREGIDO
-buyerBuyRate = Math.floor(userRate.buyRate.toNumber() * 100);  // 0.85 → 85
+buyerBuyRate = Math.floor(userRate.buyRate.toNumber() * 100); // 0.85 → 85
 ```
 
 ### Bug 2: getMinTierForBrandCountry - Inconsistencia en fallback
@@ -553,8 +555,8 @@ buyerBuyRate = Math.floor(userRate.buyRate.toNumber() * 100);  // 0.85 → 85
 
 ```typescript
 // ❌ ANTES (incorrecto)
-return Math.floor(minUserRate.buyRate.toNumber());  // Sin *100
-return Math.floor(defaultRate.buyRate.toNumber());  // Sin *100
+return Math.floor(minUserRate.buyRate.toNumber()); // Sin *100
+return Math.floor(defaultRate.buyRate.toNumber()); // Sin *100
 
 // ✅ CORREGIDO
 return Math.floor(minUserRate.buyRate.toNumber() * 100);
@@ -568,6 +570,7 @@ return Math.floor(defaultRate.buyRate.toNumber() * 100);
 **Problema:** El fallback del tier mínimo era 70, y la lógica no permitía descender más allá del mínimo de usuarios existentes. Si se publicaban tarjetas con usuarios al 89%, 85%, 83%, el mínimo era 83, y un usuario con 80% no podía comprar nunca esas tarjetas.
 
 **Solución implementada:**
+
 1. Fallback cambiado de 70 a 80
 2. Nueva lógica: si una tarjeta está 3 ciclos en el tier mínimo sin ser comprada, puede descender a 0
 
@@ -610,16 +613,16 @@ return 80;
 
 ## Glosario
 
-| Término | Significado |
-|---------|-------------|
-| `escalationTier` | Entero que representa el % mínimo de buyRate para acceder a una tarjeta |
-| `buyerBuyRate` | Porcentaje que el buyer paga (ej: 0.85 = 85%) |
-| Tier alto | Número alto (ej: 90) = más restrictivo, menos buyers pueden comprar |
-| Tier bajo | Número bajo (ej: 70) = más accesible, más buyers pueden comprar |
-| `getInitialTier()` | Función que determina el tier inicial al crear una tarjeta |
-| `processEscalationTiers()` | Job que baja los tiers de tarjetas viejas |
-| `BrandCountryRate` | Tasa global para un brand/country específico |
-| `UserBrandCountryRate` | Tasa personalizada para un usuario en particular |
+| Término                    | Significado                                                             |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `escalationTier`           | Entero que representa el % mínimo de buyRate para acceder a una tarjeta |
+| `buyerBuyRate`             | Porcentaje que el buyer paga (ej: 0.85 = 85%)                           |
+| Tier alto                  | Número alto (ej: 90) = más restrictivo, menos buyers pueden comprar     |
+| Tier bajo                  | Número bajo (ej: 70) = más accesible, más buyers pueden comprar         |
+| `getInitialTier()`         | Función que determina el tier inicial al crear una tarjeta              |
+| `processEscalationTiers()` | Job que baja los tiers de tarjetas viejas                               |
+| `BrandCountryRate`         | Tasa global para un brand/country específico                            |
+| `UserBrandCountryRate`     | Tasa personalizada para un usuario en particular                        |
 
 ---
 

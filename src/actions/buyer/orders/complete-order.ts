@@ -4,7 +4,6 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { getPlatformBalance, updatePlatformBalance } from '@/actions/platform/settings';
 
 const completeOrderInputSchema = z.object({
   orderId: z.string(),
@@ -28,16 +27,16 @@ export const completeOrder = buyerActionClient
     const { order } = ctx;
     const paymentAmount = order.adjustedTotal ?? order.total;
     await prisma.$transaction(async (tx) => {
-      const platformBalance = await getPlatformBalance();
-
-      const balanceAfter = platformBalance.data?.balance
-        ? platformBalance.data.balance.add(new Prisma.Decimal(paymentAmount))
-        : new Prisma.Decimal(paymentAmount);
+      const updatedSettings = await tx.platformSettings.upsert({
+        where: { key: 'platformBalance' },
+        update: { balance: { increment: paymentAmount } },
+        create: { key: 'platformBalance', value: '', description: 'Balance General', balance: paymentAmount },
+      });
 
       await tx.payment.create({
         data: {
           amount: paymentAmount,
-          balanceAfter: balanceAfter,
+          balanceAfter: updatedSettings.balance,
           direction: 'CREDIT',
           category: 'ORDER',
           orderId: order.id,
@@ -45,14 +44,16 @@ export const completeOrder = buyerActionClient
           relatedUserId: order.userId,
         },
       });
-      await tx.order.update({
-        where: { id: order.id },
-        data: { status: 'COMPLETED' },
-      });
-      // actualizar balance de la plataforma
-      const res = await updatePlatformBalance({ amount: paymentAmount, type: 'add' });
-      if (!res.data?.success) {
-        throw new Error('Error al actualizar el balance de la plataforma');
+      try {
+        await tx.order.update({
+          where: { id: order.id, status: 'AWAITING_PAYMENT' },
+          data: { status: 'COMPLETED' },
+        });
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+          throw new ActionError('La orden ya ha sido procesada por otra solicitud.');
+        }
+        throw err;
       }
     });
     return {

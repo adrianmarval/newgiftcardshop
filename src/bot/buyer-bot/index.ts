@@ -3,7 +3,7 @@ import { PrismaAdapter } from '@grammyjs/storage-prisma';
 import { limit } from '@grammyjs/ratelimiter';
 import type { BuyerContext, BuyerSessionData } from '@/bot/shared/types.js';
 import prisma from '@/lib/prisma';
-import { authenticateBuyer } from '@/bot/shared/middleware.js';
+import { authenticateBuyer, sequentialize } from '@/bot/shared/middleware.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { startBuyer } from './handlers/start.handler.js';
 import {
@@ -51,7 +51,16 @@ export function createBuyerBot() {
 
   // ── Middlewares globales ───────────────────────────────────────────────────
   bot.use(
-    limit(),
+    limit({
+      timeFrame: 3000,
+      limit: 30,
+      onLimitExceeded: (ctx) => {
+        if (ctx.callbackQuery) {
+          ctx.answerCallbackQuery('Calma, estás yendo muy rápido').catch(() => {});
+        }
+      },
+    }),
+    sequentialize((ctx) => (ctx.from ? `buyer:${ctx.from.id}` : undefined)),
     session<BuyerSessionData, BuyerContext>({
       initial: (): BuyerSessionData => ({
         wizard: { step: 'idle' },

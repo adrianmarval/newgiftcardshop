@@ -33,7 +33,7 @@ export const RedeemStep = () => {
   }>({
     activeReportId: null,
     correctedAmount: '',
-    buyRate: 0.85,
+    buyRate: 0,
     loadingIds: new Set<string>(),
     copiedIds: new Set<string>(),
   });
@@ -43,6 +43,9 @@ export const RedeemStep = () => {
       if (data?.success && typeof data.rate === 'number') {
         setRedeemState((prev) => ({ ...prev, buyRate: data.rate }));
       }
+    },
+    onError: ({ error }) => {
+      showAlert.error('Sin tarifa', error.serverError || 'No tenés tarifa asignada para esta marca y país. Contactá al administrador.');
     },
   });
 

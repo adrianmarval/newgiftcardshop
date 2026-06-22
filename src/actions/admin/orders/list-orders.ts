@@ -239,7 +239,7 @@ export const listOrders = adminActionClient
             id: order.user.id,
             name: order.user.name,
             email: order.user.email,
-            buyRate: 0.85,
+            buyRate: order.buyRate.toNumber(),
             orderCount: orderCountMap.get(order.userId) ?? 0,
             createdAt: order.user.createdAt.toISOString(),
             twoFactorEnabled: order.user.twoFactorEnabled,

@@ -27,7 +27,6 @@ export async function main() {
   await prisma.account.deleteMany();
   await prisma.telegramUser.deleteMany();
   await prisma.userBrandCountryRate.deleteMany();
-  await prisma.brandCountryRate.deleteMany();
   await prisma.user.deleteMany();
   await prisma.brandCountry.deleteMany();
   await prisma.country.deleteMany();
@@ -46,22 +45,14 @@ export async function main() {
   });
   console.log('Países creados.');
 
-  // 3. Crear BrandCountries (relaciones marca-país con límites y rates por defecto)
+  // 3. Crear BrandCountries (relaciones marca-país con límites)
   if (brandCountryData && brandCountryData.length > 0) {
     for (const bc of brandCountryData) {
       await prisma.brandCountry.create({
-        data: {
-          ...bc,
-          rate: {
-            create: {
-              buyRate: 0.85,
-              sellRate: 0.75,
-            },
-          },
-        },
+        data: bc,
       });
     }
-    console.log(`BrandCountries con rates creados: ${brandCountryData.length}`);
+    console.log(`BrandCountries creados: ${brandCountryData.length}`);
   }
 
   // 4. Crear usuarios (incluyendo batches y giftcards anidados)

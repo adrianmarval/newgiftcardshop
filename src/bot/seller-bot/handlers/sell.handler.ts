@@ -6,7 +6,7 @@ import type { ParsedGiftcard } from '@/types/domain/giftcard';
 import { Prisma } from '@/generated/prisma/client';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
-import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
+import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { getUserRates } from '@/services/pricing.service';
 import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
 import { MAX_BATCH_SIZE } from '@/lib/constants.js';
@@ -65,7 +65,6 @@ export async function handleBrandSelected(ctx: SellerContext) {
   kb.text('⬅️ Back', 'sell_start').row().text('❌ Cancel', 'sell_cancel');
 
   await renderUI(ctx, `🌍 <b>Country for ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
-  return ctx.answerCallbackQuery();
 }
 
 // ── Step 3: Enter Codes ───────────────────────────────────────────────────────
@@ -85,6 +84,12 @@ export async function handleCountrySelected(ctx: SellerContext) {
   });
   if (!brandCountry) return ctx.answerCallbackQuery('Invalid combination');
 
+  try {
+    await getUserRates(ctx.user.id, { brandCountryId: brandCountry.id });
+  } catch {
+    return ctx.answerCallbackQuery('No tenés tarifa para vender aquí. Contactá al admin.');
+  }
+
   ctx.session.wizard.countryId = country.id;
   ctx.session.wizard.countryName = country.name;
   ctx.session.wizard.countryCurrency = country.currency || 'USD';
@@ -101,13 +106,12 @@ export async function handleCountrySelected(ctx: SellerContext) {
       `Example:\n` +
       `<code>ABCD-123456-7890 25</code>\n` +
       `<code>EFGH-098765-4321 50 1234</code>\n\n` +
-      `⚠️ <i>Maximum ${MAX_BATCH_SIZE} codes per batch.</i>`,
+      ` <i>Maximum ${MAX_BATCH_SIZE} codes per batch.</i>`,
     {
       parse_mode: 'HTML',
       reply_markup: new InlineKeyboard().text('⬅️ Back', `sell_brand_${brandId}`).row().text('❌ Cancel', 'sell_cancel'),
     },
   );
-  return ctx.answerCallbackQuery();
 }
 
 // ── Step 4: Parse and confirm ────────────────────────────────────────────────
@@ -132,7 +136,8 @@ async function renderSummaryMessage(ctx: SellerContext) {
     `💰 Total value: <b>${fmt$(totalFace, currency)}</b>\n\n` +
     validCards
       .map(
-        (c, i) => `${i + 1}. <code>${c.claimCode}</code> — ${fmt$(c.amount || '0', currency)}${c.pinCode ? ` (PIN: <code>${c.pinCode}</code>)` : ''}`,
+        (c, i) =>
+          `${i + 1}. <code>${escapeHTML(c.claimCode)}</code> — ${fmt$(c.amount || '0', currency)}${c.pinCode ? ` (PIN: <code>${escapeHTML(c.pinCode)}</code>)` : ''}`,
       )
       .join('\n') +
     '\n\n';
@@ -141,8 +146,8 @@ async function renderSummaryMessage(ctx: SellerContext) {
     confirmMsg +=
       `🚨 <b>WARNING! ISSUES FOUND (${allErrors.length})</b>\n` +
       `<i>These lines will NOT be published:</i>\n` +
-      `<code>${allErrors.join('\n')}</code>\n\n` +
-      `⚠️ <b>Do you want to continue with only the valid cards?</b>`;
+      `<code>${escapeHTML(allErrors.join('\n'))}</code>\n\n` +
+      ` <b>Do you want to continue with only the valid cards?</b>`;
   } else {
     confirmMsg += `Publish these cards?`;
   }
@@ -188,14 +193,14 @@ export async function handleCodesText(ctx: SellerContext) {
   if (cards.length > 0 && brandCountryId) {
     const hashes = cards.map((c) => hashCode(c.claimCode.toUpperCase()));
     const existing = await prisma.giftcard.findMany({
-      where: { codeHash: { in: hashes }, brandCountryId },
+      where: { codeHash: { in: hashes } },
       select: { codeHash: true },
     });
     const existingSet = new Set(existing.map((e) => e.codeHash));
 
     for (const card of cards) {
       if (existingSet.has(hashCode(card.claimCode.toUpperCase()))) {
-        duplicateInDbLines.push(`Line ${card.line}: <code>${card.claimCode}</code> already exists in database.`);
+        duplicateInDbLines.push(`Line ${card.line}: <code>${escapeHTML(card.claimCode)}</code> already exists in database.`);
       } else {
         validCards.push(card);
       }
@@ -247,7 +252,6 @@ export async function handleUploadPhotosStart(ctx: SellerContext) {
   if (ctx.callbackQuery?.message) {
     ctx.session.wizard.statusMessageId = ctx.callbackQuery.message.message_id;
   }
-  return ctx.answerCallbackQuery();
 }
 
 export async function handleAddMorePhotosStart(ctx: SellerContext) {
@@ -266,7 +270,6 @@ export async function handleAddMorePhotosStart(ctx: SellerContext) {
   if (ctx.callbackQuery?.message) {
     ctx.session.wizard.statusMessageId = ctx.callbackQuery.message.message_id;
   }
-  return ctx.answerCallbackQuery();
 }
 
 export async function handlePhotosDone(ctx: SellerContext) {
@@ -275,16 +278,14 @@ export async function handlePhotosDone(ctx: SellerContext) {
   if (summary) {
     await renderUI(ctx, summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
   }
-  return ctx.answerCallbackQuery();
 }
 
 export async function handleDeletePhotos(ctx: SellerContext) {
   await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
   const summary = await renderSummaryMessage(ctx);
   if (summary) {
-    await renderUI(ctx, summary.text, { parse_mode: 'HTML', reply_markup: summary.kb });
+    await renderUI(ctx, summary.text, { parse_mode: 'HTML', reply_markup: summary.kb, callbackText: '✅ Screenshots deleted' });
   }
-  return ctx.answerCallbackQuery('✅ Screenshots deleted');
 }
 
 export async function handleSellPhotos(ctx: SellerContext) {
@@ -333,25 +334,29 @@ export async function handleSellConfirm(ctx: SellerContext) {
     sellRate = rates.sellRate as Prisma.Decimal;
   } catch (error: any) {
     await ctx.answerCallbackQuery('Error resolving rates');
-    return renderUI(ctx, `❌ ${error.message || 'No se han configurado tarifas para esta marca y país.'}`, {
-      reply_markup: new InlineKeyboard().text('🏠 Home', 'start'),
-    });
+    return renderUI(
+      ctx,
+      `❌ ${error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.'}`,
+      {
+        reply_markup: new InlineKeyboard().text('🏠 Home', 'start'),
+      },
+    );
   }
 
   // Filtro de seguridad final por si hubo una carrera
   const codeHashes = cards.map((c) => hashCode(c.claimCode.toUpperCase()));
   const existing = await prisma.giftcard.findMany({
-    where: { codeHash: { in: codeHashes }, brandCountryId },
+    where: { codeHash: { in: codeHashes } },
     select: { codeHash: true },
   });
   const existingSet = new Set(existing.map((e) => e.codeHash));
   const uniqueCards = cards.filter((c, i) => !existingSet.has(codeHashes[i]));
 
   if (uniqueCards.length === 0) {
-    await renderUI(ctx, '⚠️ All codes already exist in inventory.', {
+    await renderUI(ctx, ' All codes already exist in inventory.', {
       reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start'),
     });
-    return ctx.answerCallbackQuery();
+    return;
   }
 
   const escalationService = new GiftcardEscalationService();
@@ -374,7 +379,7 @@ export async function handleSellConfirm(ctx: SellerContext) {
           status: 'UNUSED',
           batchId: createdBatch.id,
           brandCountryId,
-          escalationTier: initialTier,
+          ...(initialTier !== null ? { escalationTier: initialTier } : {}),
         },
       });
     }
@@ -409,8 +414,7 @@ export async function handleSellConfirm(ctx: SellerContext) {
 
   const kb = new InlineKeyboard().text('📦 View My Batches', 'my_batches').row().text('➕ Publish More', 'sell_start');
 
-  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
-  return ctx.answerCallbackQuery('✅ Published');
+  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb, callbackText: '✅ Published' });
 }
 
 // ── Cancel ──────────────────────────────────────────────────────────────────
@@ -424,5 +428,4 @@ export async function handleSellCancel(ctx: SellerContext) {
   await renderUI(ctx, '❌ Operation cancelled.', {
     reply_markup: new InlineKeyboard().text('🏠 Main Menu', 'start').row().text('➕ Publish Giftcards', 'sell_start'),
   });
-  return ctx.answerCallbackQuery();
 }

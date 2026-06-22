@@ -47,6 +47,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   const [allowBuyRateAdjustment, setAllowBuyRateAdjustment] = useState(false);
   const [prefBuyRate, setPrefBuyRate] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [rateError, setRateError] = useState<string | null>(null);
 
   const selectedBc = useMemo(() => {
     if (!selectedBrand) return null;
@@ -91,6 +92,20 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       setSelectedCurrency('USD');
     }
   }, [selectedBc, setSelectedCurrency]);
+
+  useEffect(() => {
+    if (!selectedBrand) {
+      setRateError(null);
+      return;
+    }
+    const [brandId, countryId] = selectedBrand.split('|');
+    setRateError(null);
+    getUserBuyRate({ brandId, countryId }).then((res) => {
+      if (!res?.data?.success) {
+        setRateError('No tenés tarifa asignada para comprar en esta marca y país. Contactá al administrador.');
+      }
+    });
+  }, [selectedBrand]);
 
   const handleClearPreferences = async () => {
     setPrefMin('');
@@ -229,7 +244,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     setSelectedBrand(`${bc.brandId}|${bc.countryId}`);
   };
 
-  const isValid = selectedBrand && targetAmount && parseFloat(targetAmount) > 0;
+  const isValid = selectedBrand && targetAmount && parseFloat(targetAmount) > 0 && !rateError;
   const showEmptyState = !selectedCountry;
 
   return (
@@ -323,6 +338,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
       {/* CTA - Sticky on mobile */}
       <div className="shrink-0">
+        {rateError && selectedBrand && <p className="text-destructive mb-1 text-center text-xs font-medium md:text-sm">{rateError}</p>}
         <Button
           onClick={handleSearch}
           disabled={!isValid || status === 'executing'}

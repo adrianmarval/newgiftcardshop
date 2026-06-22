@@ -106,12 +106,12 @@ export function findGiftcardCombination(
 
   // Filtrar por tier de escalación
   const accessibleCards = availableCards.filter((card) => {
-    const tier = card.escalationTier ?? 100;
+    const tier = card.escalationTier;
     return tier <= buyerBuyRate;
   });
 
   const inaccessibleCards = availableCards.filter((card) => {
-    const tier = card.escalationTier ?? 100;
+    const tier = card.escalationTier;
     return tier > buyerBuyRate;
   });
 

@@ -122,7 +122,7 @@ export const listBatches = adminActionClient.inputSchema(listBatchesInputSchema)
           id: batch.user.id,
           name: batch.user.name,
           email: batch.user.email,
-          sellRate: 0.75,
+          sellRate: batch.sellRate.toNumber(),
           orderCount: 0,
           createdAt: batch.user.createdAt.toISOString(),
           twoFactorEnabled: batch.user.twoFactorEnabled,

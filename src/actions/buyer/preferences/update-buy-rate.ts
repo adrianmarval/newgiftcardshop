@@ -30,14 +30,21 @@ export const updateBuyRate = authActionClient.inputSchema(updateBuyRateInputSche
       return { error: 'No tienes permiso para ajustar tu tarifa' };
     }
 
-    // Obtener la tarifa global de fallback para saber la sellRate por defecto
-    const globalRate = await prisma.brandCountryRate.findUnique({
-      where: { brandCountryId },
+    // Obtener la tarifa existente del usuario para mantener la sellRate
+    const existingUserRate = await prisma.userBrandCountryRate.findUnique({
+      where: {
+        userId_brandCountryId: {
+          userId: session.user.id,
+          brandCountryId,
+        },
+      },
+      select: { sellRate: true },
     });
 
-    const sellRate = globalRate?.sellRate ?? 0.75;
+    if (!existingUserRate) {
+      return { error: 'No tenés tarifa asignada para este brand-country. Contactá al administrador.' };
+    }
 
-    // Guardar en UserBrandCountryRate
     await prisma.userBrandCountryRate.upsert({
       where: {
         userId_brandCountryId: {
@@ -49,7 +56,7 @@ export const updateBuyRate = authActionClient.inputSchema(updateBuyRateInputSche
         userId: session.user.id,
         brandCountryId,
         buyRate,
-        sellRate,
+        sellRate: existingUserRate.sellRate,
       },
       update: {
         buyRate,

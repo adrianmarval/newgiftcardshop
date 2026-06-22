@@ -50,8 +50,6 @@ interface BrandCountry {
   minAmount: number | null;
   maxAmount: number | null;
   isActive: boolean;
-  buyRate: number | null;
-  sellRate: number | null;
 }
 
 interface BrandWithCountries {
@@ -153,28 +151,29 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   }, [editUser]);
 
   const handleAddRate = async () => {
-    const isSeller = editUser?.role === 'SELLER';
-    const isBuyer = editUser?.role === 'BUYER';
-
-    const buyRequired = !isSeller;
-    const sellRequired = !isBuyer;
-
     if (!editUser || !selectedBrandCountryId) return;
 
-    if (buyRequired && !rateForm.buyRate) {
+    const isSeller = editUser.role === 'SELLER';
+    const isBuyer = editUser.role === 'BUYER';
+
+    if (isBuyer && !rateForm.buyRate) {
       showAlert.toast.error('Complete el campo Buy Rate');
       return;
     }
-    if (sellRequired && !rateForm.sellRate) {
+    if (isSeller && !rateForm.sellRate) {
       showAlert.toast.error('Complete el campo Sell Rate');
       return;
     }
 
-    const buyVal = buyRequired ? parseFloat(rateForm.buyRate) / 100 : 0.85;
-    const sellVal = sellRequired ? parseFloat(rateForm.sellRate) / 100 : 0.75;
+    const buyVal = isBuyer ? parseFloat(rateForm.buyRate) / 100 : 0;
+    const sellVal = isSeller ? parseFloat(rateForm.sellRate) / 100 : 0;
 
-    if ((buyRequired && (isNaN(buyVal) || buyVal < 0 || buyVal > 1)) || (sellRequired && (isNaN(sellVal) || sellVal < 0 || sellVal > 1))) {
-      showAlert.toast.error('Tarifas deben estar entre 0% y 100%');
+    if (isBuyer && (isNaN(buyVal) || buyVal < 0 || buyVal > 1)) {
+      showAlert.toast.error('Buy Rate debe estar entre 0% y 100%');
+      return;
+    }
+    if (isSeller && (isNaN(sellVal) || sellVal < 0 || sellVal > 1)) {
+      showAlert.toast.error('Sell Rate debe estar entre 0% y 100%');
       return;
     }
 

@@ -4,8 +4,9 @@ import { authApi } from '@/lib/auth';
 import type { SellerContext, BuyerContext } from './types.js';
 import { TelegramOtpTemplate } from '@/components/emails';
 import React from 'react';
-import { renderUI, deleteUserInput } from './ui.js';
+import { randomInt } from 'node:crypto';
 import { encryptBuffer } from '@/lib/encryption';
+import { renderUI, deleteUserInput, escapeHTML } from './ui.js';
 
 type BotRole = 'SELLER' | 'BUYER';
 type Lang = 'en' | 'es';
@@ -17,9 +18,9 @@ const i18n = {
     nameShort: '❌ Name too short. Please enter your full name.',
     helloName: '✅ Hello, <b>{name}</b>!\n\n📧 <b>What is your email address?</b>',
     invalidEmail: '❌ Invalid email format.\nExample: <code>user@gmail.com</code>',
-    emailInUse: '⚠️ That email is already registered.\n\nTo link your Telegram account, we will send a verification code to your email.',
-    emailLinkedElsewhere: '⚠️ This email is already linked to another Telegram account. Contact the administrator if you need help.',
-    emailNotFound: '⚠️ No account found with this email. Please register first using /start.',
+    emailInUse: ' That email is already registered.\n\nTo link your Telegram account, we will send a verification code to your email.',
+    emailLinkedElsewhere: ' This email is already linked to another Telegram account. Contact the administrator if you need help.',
+    emailNotFound: ' No account found with this email. Please register first using /start.',
     otpSent:
       "📬 We sent a 6-digit code to <b>{email}</b>.\n\n🔐 <b>Enter the code:</b>\n\n<i>Code expires in 5 minutes. Check your spam folder if it doesn't arrive.</i>",
     otpSubject: '🔐 Your verification code',
@@ -28,7 +29,7 @@ const i18n = {
     otpExpired: '⏰ The code has expired. Please enter your email again to receive a new one.',
     otpIncorrect: '❌ Incorrect code. Please check your email and try again.',
     emailVerified:
-      '✅ <b>Email verified!</b>\n\n🔑 <b>Create your password:</b>\n\nRequirements:\n• Minimum 8 characters\n• At least one uppercase\n• At least one lowercase\n• At least one number\n\n<i>⚠️ Telegram messages are not encrypted. Use a unique password for this account.</i>',
+      '✅ <b>Email verified!</b>\n\n🔑 <b>Create your password:</b>\n\nRequirements:\n• Minimum 8 characters\n• At least one uppercase\n• At least one lowercase\n• At least one number\n\n<i> Telegram messages are not encrypted. Use a unique password for this account.</i>',
     invalidPassword: '❌ Invalid password. It needs at least:\n• 8 characters\n• 1 uppercase\n• 1 lowercase\n• 1 number',
     sessionIncomplete: '❌ Incomplete session. Start over with /start.',
     accountCreated: `🎉 <b>Account created!</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Your account is <b>awaiting activation</b> by the administrator.\n\n👉 <b>Please contact @${process.env.ADMIN_TELEGRAM_USERNAME} to activate it.</b>`,
@@ -44,9 +45,9 @@ const i18n = {
     nameShort: '❌ Nombre muy corto. Ingresá tu nombre completo.',
     helloName: '✅ ¡Hola, <b>{name}</b>!\n\n📧 <b>¿Cuál es tu correo electrónico?</b>',
     invalidEmail: '❌ Email inválido. Ingresá un email con formato correcto.\nEjemplo: <code>usuario@gmail.com</code>',
-    emailInUse: '⚠️ Ese email ya está registrado.\n\nPara vincular tu cuenta de Telegram, te enviamos un código de verificación al correo.',
-    emailLinkedElsewhere: '⚠️ Este email ya está vinculado a otra cuenta de Telegram. Contactá al administrador si necesitás ayuda.',
-    emailNotFound: '⚠️ No se encontró cuenta con este email. Por favor, registrate primero usando /start.',
+    emailInUse: ' Ese email ya está registrado.\n\nPara vincular tu cuenta de Telegram, te enviamos un código de verificación al correo.',
+    emailLinkedElsewhere: ' Este email ya está vinculado a otra cuenta de Telegram. Contactá al administrador si necesitás ayuda.',
+    emailNotFound: ' No se encontró cuenta con este email. Por favor, registrate primero usando /start.',
     otpSent:
       '📬 Te enviamos un código de 6 dígitos a <b>{email}</b>.\n\n🔐 <b>Ingresá el código:</b>\n\n<i>El código expira en 5 minutos. Si no llega, revisá spam.</i>',
     otpSubject: '🔐 Tu código de verificación',
@@ -55,7 +56,7 @@ const i18n = {
     otpExpired: '⏰ El código expiró. Ingresá tu email de nuevo para recibir uno nuevo.',
     otpIncorrect: '❌ Código incorrecto. Revisá el email e intentá de nuevo.',
     emailVerified:
-      '✅ ¡Email verificado!\n\n🔑 Creá tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i>⚠️ Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
+      '✅ ¡Email verificado!\n\n🔑 Creá tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i> Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
     invalidPassword: '❌ Contraseña inválida. Necesita al menos:\n• 8 mayúscula\n• 1 minúscula\n• 1 número',
     sessionIncomplete: '❌ Sesión incompleta. Empezá de nuevo con /start.',
     accountCreated: `🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
@@ -72,7 +73,11 @@ function getLang(role: BotRole): Lang {
   return role === 'SELLER' ? 'en' : 'es';
 }
 
-async function fetchAndEncryptTelegramPhoto(ctx: RegContext, telegramId: string, botToken: string): Promise<{ data: Buffer; mimeType: string } | null> {
+async function fetchAndEncryptTelegramPhoto(
+  ctx: RegContext,
+  telegramId: string,
+  botToken: string,
+): Promise<{ data: Buffer; mimeType: string } | null> {
   try {
     const photos = await ctx.api.getUserProfilePhotos(Number(telegramId), { limit: 1 });
     if (photos.total_count === 0) return null;
@@ -99,7 +104,7 @@ async function fetchAndEncryptTelegramPhoto(ctx: RegContext, telegramId: string,
 }
 
 function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();
 }
 
 async function sendOtpEmail(email: string, name: string, otp: string, lang: Lang): Promise<void> {
@@ -270,7 +275,18 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
     return;
   }
 
+  if (record.attempts >= 5) {
+    await prisma.telegramOtp.delete({ where: { telegramId } });
+    ctx.session.wizard.step = 'awaitingEmail';
+    await renderUI(ctx, i18n[lang].otpIncorrect);
+    return;
+  }
+
   if (inputOtp !== record.otp) {
+    await prisma.telegramOtp.update({
+      where: { telegramId },
+      data: { attempts: { increment: 1 } },
+    });
     await renderUI(ctx, i18n[lang].otpIncorrect);
     return;
   }
@@ -291,27 +307,50 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
 
     await prisma.telegramUser.upsert({
       where: { telegramId },
-      update: { firstName, lastName, username, languageCode, ...(photoResult ? { photoData: new Uint8Array(photoResult.data), photoMimeType: photoResult.mimeType } : {}) },
-      create: { telegramId, firstName, lastName, username, languageCode, photoData: photoResult ? new Uint8Array(photoResult.data) : undefined, photoMimeType: photoResult?.mimeType, userId: existingUser.id },
+      update: {
+        firstName,
+        lastName,
+        username,
+        languageCode,
+        ...(photoResult ? { photoData: new Uint8Array(photoResult.data), photoMimeType: photoResult.mimeType } : {}),
+      },
+      create: {
+        telegramId,
+        firstName,
+        lastName,
+        username,
+        languageCode,
+        photoData: photoResult ? new Uint8Array(photoResult.data) : undefined,
+        photoMimeType: photoResult?.mimeType,
+        userId: existingUser.id,
+      },
     });
 
     await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});
     ctx.session.wizard = { step: 'idle' };
 
     if (existingUser.isActive) {
-      await renderUI(ctx, i18n[lang].accountLinkedActive.replace('{name}', existingUser.name).replace('{email}', record.email), {
-        parse_mode: 'HTML',
-      });
+      await renderUI(
+        ctx,
+        i18n[lang].accountLinkedActive.replace('{name}', escapeHTML(existingUser.name)).replace('{email}', escapeHTML(record.email)),
+        {
+          parse_mode: 'HTML',
+        },
+      );
       if (onFinish) {
         await onFinish();
       }
     } else {
-      await renderUI(ctx, i18n[lang].accountLinked.replace('{name}', existingUser.name).replace('{email}', record.email), {
-        parse_mode: 'HTML',
-        reply_markup: {
-          inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
+      await renderUI(
+        ctx,
+        i18n[lang].accountLinked.replace('{name}', escapeHTML(existingUser.name)).replace('{email}', escapeHTML(record.email)),
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
+          },
         },
-      });
+      );
     }
     return;
   }
@@ -367,13 +406,22 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
     });
 
     await prisma.telegramUser.create({
-      data: { telegramId, firstName, lastName, username, languageCode, photoData: photoResult ? new Uint8Array(photoResult.data) : undefined, photoMimeType: photoResult?.mimeType, userId: result.user.id },
+      data: {
+        telegramId,
+        firstName,
+        lastName,
+        username,
+        languageCode,
+        photoData: photoResult ? new Uint8Array(photoResult.data) : undefined,
+        photoMimeType: photoResult?.mimeType,
+        userId: result.user.id,
+      },
     });
 
     await prisma.telegramOtp.delete({ where: { telegramId } }).catch(() => {});
     ctx.session.wizard = { step: 'idle' };
 
-    await renderUI(ctx, i18n[lang].accountCreated.replace('{name}', name).replace('{email}', email), {
+    await renderUI(ctx, i18n[lang].accountCreated.replace('{name}', escapeHTML(name)).replace('{email}', escapeHTML(email)), {
       parse_mode: 'HTML',
       reply_markup: {
         remove_keyboard: true,

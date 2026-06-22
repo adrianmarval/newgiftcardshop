@@ -3,7 +3,7 @@ import { InlineKeyboard } from 'grammy';
 import { decrypt } from '@/lib/encryption';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtDate, fmtRate } from '@/bot/shared/formatters.js';
-import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
+import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 
 function strike(text: string) {
   return text
@@ -44,7 +44,6 @@ export async function handleBatches(ctx: SellerContext) {
     const kb = new InlineKeyboard().text('➕ Sell Giftcards', 'sell_start').row().text('🏠 Main Menu', 'start');
     const welcomeMsg = "📭 You haven't published any batches yet.";
     await renderUI(ctx, welcomeMsg, { reply_markup: kb });
-    if (ctx.callbackQuery) return ctx.answerCallbackQuery();
     return;
   }
 
@@ -86,7 +85,6 @@ export async function handleBatches(ctx: SellerContext) {
   kb.text('🏠 Back to Menu', 'start');
 
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
-  if (ctx.callbackQuery) return ctx.answerCallbackQuery();
 }
 
 export async function handleViewBatch(ctx: SellerContext) {
@@ -148,7 +146,7 @@ export async function handleViewBatch(ctx: SellerContext) {
 
   // 1. Preparar datos para la tabla
   const cardData = batch.giftcards.map((card) => {
-    const rawCode = decrypt(card.claimCode);
+    const rawCode = escapeHTML(decrypt(card.claimCode));
     const isWrong = card.status === 'WRONG_AMOUNT';
 
     let amountText = fmt$(card.amount, countryCurrency);
@@ -211,7 +209,7 @@ export async function handleViewBatch(ctx: SellerContext) {
 
   const msg = [
     `📦 <b>Batch: ${batch.id}</b>`,
-    `<b>Brand:</b> ${brandIcon} ${brandName} (${countryName})`,
+    `<b>Brand:</b> ${brandIcon} ${escapeHTML(brandName)} (${escapeHTML(countryName)})`,
     `<b>Date:</b> <code>${fmtDate(batch.createdAt, 'en')}</code>`,
     `<b>Total Face Value:</b> <code>${fmt$(faceValueTotal, countryCurrency)}</code>`,
     `<b>Sell Rate:</b> <code>${fmtRate(sellRate)}</code>`,
@@ -223,5 +221,4 @@ export async function handleViewBatch(ctx: SellerContext) {
 
   const kb = new InlineKeyboard().text('⬅️ Back', `my_batches_${fromPage}`);
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
-  return ctx.answerCallbackQuery();
 }

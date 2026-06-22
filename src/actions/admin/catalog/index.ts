@@ -10,4 +10,3 @@ export { updateBrandCountryLimits } from './update-brand-country-limits';
 export { removeCountryFromBrand } from './remove-country-from-brand';
 export { toggleBrandActive } from './toggle-brand-active';
 export { toggleBrandCountryActive } from './toggle-brand-country-active';
-export { updateBrandCountryRate } from './update-brand-country-rate';

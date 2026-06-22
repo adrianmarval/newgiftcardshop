@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 import type { SellerContext } from '@/bot/shared/types.js';
-import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
+import { fmt$ } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
 import { InlineKeyboard } from 'grammy';
 
@@ -8,8 +8,7 @@ export async function handleStats(ctx: SellerContext) {
   await deleteUserInput(ctx);
   const userId = ctx.user.id;
 
-  const [rateData, batchCount, paidBatchCount, cards] = await Promise.all([
-    Promise.resolve({ sellRate: 0.75 }),
+  const [batchCount, paidBatchCount, cards] = await Promise.all([
     prisma.giftcardBatch.count({ where: { userId } }),
     prisma.giftcardBatch.count({ where: { userId, isPaid: true } }),
     prisma.giftcard.findMany({

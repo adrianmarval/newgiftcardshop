@@ -23,8 +23,6 @@ const getBrandsOutputSchema = z.object({
           minAmount: z.number().nullable(),
           maxAmount: z.number().nullable(),
           isActive: z.boolean(),
-          buyRate: z.number().nullable(),
-          sellRate: z.number().nullable(),
         }),
       ),
     })
@@ -38,7 +36,6 @@ export const listBrands = adminActionClient.outputSchema(getBrandsOutputSchema).
       countries: {
         include: {
           country: true,
-          rate: true,
         },
       },
     },
@@ -61,8 +58,6 @@ export const listBrands = adminActionClient.outputSchema(getBrandsOutputSchema).
         minAmount: bc.minAmount ? Number(bc.minAmount) : null,
         maxAmount: bc.maxAmount ? Number(bc.maxAmount) : null,
         isActive: bc.isActive,
-        buyRate: bc.rate ? Number(bc.rate.buyRate) : null,
-        sellRate: bc.rate ? Number(bc.rate.sellRate) : null,
       })),
     })),
   };
