@@ -560,6 +560,31 @@ model NotificationLog {
   @@map("notification_log")
 }
 
+// --------------------------------------
+// WhatsApp Baileys (Auth State + Session)
+// --------------------------------------
+
+model WhatsappAuthState {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  data      String   // JSON serializado (creds, pre-keys, etc.)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("whatsapp_auth_state")
+}
+
+model WhatsappSession {
+  id          String   @id @default(cuid())
+  status      String   @default("disconnected") // "connecting" | "open" | "disconnected"
+  phoneNumber String?
+  qrCode      String?  // Base64 del QR actual (null cuando está conectado)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("whatsapp_session")
+}
+
 enum NotificationType {
   STOCK_AVAILABLE
   TIER_DROP_ACCESS

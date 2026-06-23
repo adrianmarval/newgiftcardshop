@@ -3,6 +3,7 @@ import { notificationDispatcher } from './dispatcher';
 import type { NotificationMessage } from './types';
 import type { NotificationType } from '@/generated/prisma/client';
 import { getAccessibleStockSummary } from '@/lib/services/tier-estimation.service';
+import { getCountryFlag } from '@/lib/utils/country-flags';
 
 interface TierDropEvent {
   giftcardId: string;
@@ -14,6 +15,7 @@ interface TierDropEvent {
 interface BrandCountryInfo {
   brandName: string;
   countryName: string;
+  countryCode: string;
 }
 
 async function getBrandCountryInfo(brandCountryId: string): Promise<BrandCountryInfo | null> {
@@ -21,13 +23,14 @@ async function getBrandCountryInfo(brandCountryId: string): Promise<BrandCountry
     where: { id: brandCountryId },
     select: {
       brand: { select: { name: true } },
-      country: { select: { name: true } },
+      country: { select: { name: true, code: true } },
     },
   });
   if (!bc) return null;
   return {
     brandName: bc.brand.name,
     countryName: bc.country.name,
+    countryCode: bc.country.code,
   };
 }
 
@@ -103,19 +106,21 @@ export class NotificationService {
 
       const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
       const summary = await getAccessibleStockSummary(brandCountryId, buyerBuyRate);
+      const flag = getCountryFlag(info.countryCode);
       const stockText =
         summary.cardCount > 0
-          ? `Hay $${summary.totalAmount.toFixed(2)} disponibles para tu tasa del ${buyerBuyRate}%`
-          : `Nuevo stock publicado (tier inicial: ${effectiveTier}%)`;
+          ? `${summary.cardCount} tarjetas por $${summary.totalAmount.toFixed(2)} disponibles`
+          : `Tier inicial: ${effectiveTier}%`;
 
       const message: NotificationMessage = {
         type: 'STOCK_AVAILABLE',
-        title: `${info.brandName} ${info.countryName} disponible`,
+        title: `${flag} ${info.brandName} \u2022 ${info.countryName}`,
         description: stockText,
         actionUrl: '/store/dashboard/browse-cards',
         metadata: {
           brandName: info.brandName,
           countryName: info.countryName,
+          countryCode: info.countryCode,
           initialTier: effectiveTier,
           batchId,
           accessibleAmount: summary.totalAmount.toString(),
@@ -190,19 +195,21 @@ export class NotificationService {
 
           const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
           const summary = await getAccessibleStockSummary(brandCountryId, buyerBuyRate);
+          const flag = getCountryFlag(info.countryCode);
           const stockText =
             summary.cardCount > 0
-              ? `Hay $${summary.totalAmount.toFixed(2)} disponibles en ${info.brandName} ${info.countryName} para tu tasa del ${buyerBuyRate}%.`
-              : `El tier bajó de ${event.oldTier}% a ${event.newTier}%. Nueva tarjeta disponible para tu tasa.`;
+              ? `${summary.cardCount} tarjetas por $${summary.totalAmount.toFixed(2)} disponibles`
+              : `Tier baj\u00F3 de ${event.oldTier}% a ${event.newTier}%`;
 
           const message: NotificationMessage = {
             type: 'TIER_DROP_ACCESS',
-            title: `${info.brandName} ${info.countryName} disponible`,
+            title: `${flag} ${info.brandName} \u2022 ${info.countryName}`,
             description: stockText,
             actionUrl: '/store/dashboard/browse-cards',
             metadata: {
               brandName: info.brandName,
               countryName: info.countryName,
+              countryCode: info.countryCode,
               oldTier: event.oldTier,
               newTier: event.newTier,
               giftcardId: event.giftcardId,

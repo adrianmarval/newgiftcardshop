@@ -6,8 +6,7 @@ import prisma from '@/lib/prisma';
 function buildTelegramText(message: NotificationMessage): string {
   const title = escapeHTML(message.title);
   const description = escapeHTML(message.description);
-  const text = `<b>${title}</b>\n\n${description}`;
-  return truncateForTelegram(text);
+  return truncateForTelegram(`<b>${title}</b>\n\n${description}`);
 }
 
 export const TelegramChannel: NotificationChannel = {

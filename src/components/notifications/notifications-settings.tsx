@@ -27,6 +27,7 @@ export interface NotificationsSettingsProps {
 
 export const NotificationsSettings = ({ portal, telegramLinked, initialPreferences, brandCountries }: NotificationsSettingsProps) => {
   const [telegramEnabled, setTelegramEnabled] = useState(initialPreferences?.telegramEnabled ?? true);
+  const [telegramTouched, setTelegramTouched] = useState(false);
   const [whatsappEnabled, setWhatsappEnabled] = useState(initialPreferences?.whatsappEnabled ?? false);
   const [whatsappPhone, setWhatsappPhone] = useState(initialPreferences?.whatsappPhone ?? '');
 
@@ -53,7 +54,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
   const handleSave = () => {
     setAlert(null);
     execute({
-      telegramEnabled,
+      ...(telegramTouched ? { telegramEnabled } : {}),
       whatsappEnabled,
       whatsappPhone: whatsappPhone || null,
       ...(brandCountries ? { subscribedBrandCountryIds: [...subscribedIds] } : {}),
@@ -104,7 +105,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
             <Checkbox
               checked={telegramEnabled && telegramLinked}
               disabled={!telegramLinked}
-              onCheckedChange={(v) => setTelegramEnabled(v === true)}
+              onCheckedChange={(v) => { setTelegramEnabled(v === true); setTelegramTouched(true); }}
               className="h-5 w-5"
             />
             <MessageCircle className="h-5 w-5 shrink-0 text-blue-400" />
@@ -135,7 +136,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">WhatsApp</p>
-              <p className="text-muted-foreground text-xs">Próximamente vía Baylis</p>
+              <p className="text-muted-foreground text-xs">Mensajes directos a tu número</p>
             </div>
           </label>
 

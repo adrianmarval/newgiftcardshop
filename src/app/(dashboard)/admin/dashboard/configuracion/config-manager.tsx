@@ -11,21 +11,38 @@ import { IconEdit } from '@tabler/icons-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { SETTING_KEYS, SETTING_DEFINITIONS, type SettingKey } from '@/lib/settings/schemas';
+import { WhatsAppModal } from '@/components/admin/whatsapp-modal';
+import { MessageSquare, Loader2, Power, PowerOff } from 'lucide-react';
+import { disconnectWhatsApp } from '@/actions/admin/whatsapp';
+import { useAction as useActionHook } from 'next-safe-action/hooks';
 
 const AUDIT_ONLY_KEYS: SettingKey[] = [SETTING_KEYS.PLATFORM_BALANCE];
 
-interface ConfigManagerProps {
-  initialSettings: PlatformSetting[];
+interface WhatsAppStatus {
+  status: string;
+  phoneNumber: string | null;
 }
 
-export function ConfigManager({ initialSettings }: ConfigManagerProps) {
+interface ConfigManagerProps {
+  initialSettings: PlatformSetting[];
+  initialWhatsAppStatus: WhatsAppStatus;
+}
+
+export function ConfigManager({ initialSettings, initialWhatsAppStatus }: ConfigManagerProps) {
   const settingsMap = new Map(initialSettings.map((s) => [s.key, s]));
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+  const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatus>(initialWhatsAppStatus);
   const [editingKey, setEditingKey] = useState<SettingKey | null>(null);
   const [formData, setFormData] = useState({ value: '', description: '' });
   const [formError, setFormError] = useState<string | null>(null);
 
   const { executeAsync: executeSetSetting, status: setStatus } = useAction(setPlatformSetting);
+  const { execute: executeDisconnect, status: disconnectStatus } = useActionHook(disconnectWhatsApp, {
+    onSuccess: () => {
+      setWhatsappStatus({ status: 'disconnected', phoneNumber: null });
+    },
+  });
 
   const getDefinition = (key: SettingKey) => SETTING_DEFINITIONS[key];
   const isAuditOnly = (key: SettingKey) => AUDIT_ONLY_KEYS.includes(key);
@@ -106,6 +123,7 @@ export function ConfigManager({ initialSettings }: ConfigManagerProps) {
   };
 
   const settingKeys = Object.values(SETTING_KEYS);
+  const isWhatsAppConnected = whatsappStatus.status === 'open';
 
   return (
     <div className="w-full space-y-1">
@@ -170,6 +188,59 @@ export function ConfigManager({ initialSettings }: ConfigManagerProps) {
           </div>
         )}
       </div>
+
+      {/* ── WhatsApp Channel ── */}
+      <div className="mt-6">
+        <div className="overflow-hidden rounded-md border">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <MessageSquare className={`h-5 w-5 ${isWhatsAppConnected ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <div>
+                <p className="font-medium">Canal WhatsApp</p>
+                <p className="text-muted-foreground text-sm">
+                  {isWhatsAppConnected
+                    ? `Conectado · ${whatsappStatus.phoneNumber}`
+                    : 'No configurado'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isWhatsAppConnected ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => executeDisconnect()}
+                  disabled={disconnectStatus === 'executing'}
+                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                  title="Desconectar"
+                >
+                  {disconnectStatus === 'executing' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <PowerOff className="h-4 w-4" />
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsWhatsAppOpen(true)}
+                  className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                  title="Vincular"
+                >
+                  <Power className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <WhatsAppModal
+        open={isWhatsAppOpen}
+        onOpenChange={setIsWhatsAppOpen}
+        onStatusChange={setWhatsappStatus}
+      />
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>

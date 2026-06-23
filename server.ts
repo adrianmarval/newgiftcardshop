@@ -84,6 +84,15 @@ try {
   console.warn('[BotRegistry] No se pudo registrar bots (Notificaciones por Telegram deshabilitadas):', err.message);
 }
 
+// ── WhatsApp Socket (Baileys) ─────────────────────────────────────────────────
+try {
+  const { initWhatsAppSocket } = await import('./src/lib/whatsapp/index.js');
+  await initWhatsAppSocket();
+  console.log('[WhatsApp] Socket inicializado ✓');
+} catch (err: any) {
+  console.warn('[WhatsApp] No se pudo inicializar (notificaciones por WhatsApp deshabilitadas):', err.message);
+}
+
 // ── HTTP Server ────────────────────────────────────────────────────────────────
 const httpServer = createServer(async (req, res) => {
   try {
@@ -157,9 +166,16 @@ for (const entry of [sellerEntry, buyerEntry]) {
 }
 
 // ── Graceful shutdown ──────────────────────────────────────────────────────────
-const shutdown = () => {
+const shutdown = async () => {
   sellerEntry?.bot.stop();
   buyerEntry?.bot.stop();
+
+  try {
+    const { getWhatsAppSocket } = await import('./src/lib/whatsapp/index.js');
+    getWhatsAppSocket()?.end(undefined);
+  } catch {
+    // ignored
+  }
 };
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);
