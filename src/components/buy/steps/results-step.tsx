@@ -118,7 +118,7 @@ export const ResultsStep = () => {
       }
     },
     onError: ({ error }) => {
-      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || 'Error al crear la orden');
+      showAlert.toast.error('Error', error.serverError || error.validationErrors?._errors?.[0] || 'Error al crear la orden');
       setResultsState((prev) => ({ ...prev, isConfirming: false }));
     },
   });

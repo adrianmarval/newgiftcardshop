@@ -42,7 +42,8 @@ export const createOrder = buyerActionClient
     });
 
     if (!dbUser) throw new ActionError('Usuario no encontrado en la base de datos');
-    if (giftcards.length === 0) throw new ActionError('No se especificaron tarjetas de regalo válidas');
+    if (giftcards.length === 0)
+      throw new ActionError('Una o mas tarjetas de la orden ya no estan disponibles. Por favor regresa y busca tarjetas nuevamente');
 
     return next({
       ctx: {
