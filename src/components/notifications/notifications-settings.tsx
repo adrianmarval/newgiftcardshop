@@ -10,6 +10,7 @@ import { InlineAlert } from '@/components/ui/inline-alert';
 import { Spinner } from '@/components/ui/spinner';
 import { Send, MessageCircle, Link2, Package, Check, Globe } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { updateNotificationPreferences } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import type { SubscribedBrandCountry } from '@/lib/notifications/get-subscribed-brand-countries';
@@ -17,6 +18,7 @@ import type { SubscribedBrandCountry } from '@/lib/notifications/get-subscribed-
 export interface NotificationsSettingsProps {
   portal: 'buyer' | 'seller' | 'admin';
   telegramLinked: boolean;
+  telegramProfileUrl?: string;
   initialPreferences?: {
     telegramEnabled: boolean;
     whatsappEnabled: boolean;
@@ -25,7 +27,7 @@ export interface NotificationsSettingsProps {
   brandCountries?: SubscribedBrandCountry[];
 }
 
-export const NotificationsSettings = ({ portal, telegramLinked, initialPreferences, brandCountries }: NotificationsSettingsProps) => {
+export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileUrl, initialPreferences, brandCountries }: NotificationsSettingsProps) => {
   const [telegramEnabled, setTelegramEnabled] = useState(initialPreferences?.telegramEnabled ?? true);
   const [telegramTouched, setTelegramTouched] = useState(false);
   const [whatsappEnabled, setWhatsappEnabled] = useState(initialPreferences?.whatsappEnabled ?? false);
@@ -115,11 +117,14 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
             </div>
           </label>
 
-          {!telegramLinked && (
-            <div className="flex items-center gap-1.5 pl-10">
+          {!telegramLinked && telegramProfileUrl && (
+            <Link
+              href={telegramProfileUrl}
+              className="flex items-center gap-1.5 pl-10 text-xs text-amber-300 hover:text-amber-200 hover:underline"
+            >
               <Link2 className="h-3 w-3 shrink-0 text-amber-400" />
-              <p className="text-xs text-amber-300">Vinculá Telegram desde tu perfil primero</p>
-            </div>
+              Vinculá Telegram desde tu perfil
+            </Link>
           )}
 
           {/* WhatsApp */}

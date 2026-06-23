@@ -43,9 +43,9 @@ export const MoreDropDownMenu = ({ items }: MoreMenuProps) => {
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-20 left-1/2 z-50 w-48 -translate-x-1/2">
+        <div className="fixed bottom-20 left-1/2 z-50 w-[90vw] max-w-sm -translate-x-1/2">
           <div className="bg-background rounded-xl border shadow-lg backdrop-blur-xl">
-            <nav className="flex gap-1 p-2">
+            <nav className="grid grid-cols-3 gap-1 p-2">
               {items.map((item) => (
                 <SidebarItem key={item.url} item={item} />
               ))}
