@@ -8,13 +8,14 @@ const updateNotificationPreferencesInputSchema = z.object({
   telegramEnabled: z.boolean().optional(),
   whatsappEnabled: z.boolean().optional(),
   whatsappPhone: z.string().optional().nullable(),
+  subscribedBrandCountryIds: z.array(z.string()).optional(),
 });
 
 export const updateNotificationPreferences = authActionClient
   .inputSchema(updateNotificationPreferencesInputSchema)
   .action(async ({ ctx, parsedInput }) => {
     const userId = ctx.auth.user.id;
-    const { telegramEnabled, whatsappEnabled, whatsappPhone } = parsedInput;
+    const { telegramEnabled, whatsappEnabled, whatsappPhone, subscribedBrandCountryIds } = parsedInput;
 
     if (telegramEnabled === true) {
       const telegramUser = await prisma.telegramUser.findUnique({
@@ -56,7 +57,34 @@ export const updateNotificationPreferences = authActionClient
         whatsappEnabled: whatsappEnabled ?? false,
         whatsappPhone: whatsappPhone?.trim() || null,
       },
+      include: { subscriptions: { select: { brandCountryId: true } } },
     });
+
+    if (subscribedBrandCountryIds !== undefined) {
+      const currentIds = new Set(preference.subscriptions.map((s) => s.brandCountryId));
+      const newIds = new Set(subscribedBrandCountryIds);
+
+      const toDelete = [...currentIds].filter((id) => !newIds.has(id));
+      const toCreate = [...newIds].filter((id) => !currentIds.has(id));
+
+      if (toDelete.length > 0) {
+        await prisma.brandCountrySubscription.deleteMany({
+          where: {
+            preferenceId: preference.id,
+            brandCountryId: { in: toDelete },
+          },
+        });
+      }
+
+      if (toCreate.length > 0) {
+        await prisma.brandCountrySubscription.createMany({
+          data: toCreate.map((brandCountryId) => ({
+            preferenceId: preference.id,
+            brandCountryId,
+          })),
+        });
+      }
+    }
 
     return {
       success: true as const,

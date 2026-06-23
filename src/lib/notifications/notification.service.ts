@@ -77,7 +77,9 @@ export class NotificationService {
         user: {
           select: {
             id: true,
-            notificationPreference: { select: { subscriptions: true } },
+            notificationPreference: {
+              select: { subscriptions: { select: { brandCountryId: true } } },
+            },
           },
         },
       },
@@ -93,6 +95,11 @@ export class NotificationService {
     for (const rate of buyersToNotify) {
       const alreadyNotified = await hasBeenNotified(rate.user.id, 'STOCK_AVAILABLE', 'BATCH', batchId.toString());
       if (alreadyNotified) continue;
+
+      if (rate.user.notificationPreference) {
+        const subs = rate.user.notificationPreference.subscriptions;
+        if (subs.length > 0 && !subs.some((s) => s.brandCountryId === brandCountryId)) continue;
+      }
 
       const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
       const summary = await getAccessibleStockSummary(brandCountryId, buyerBuyRate);
@@ -150,7 +157,16 @@ export class NotificationService {
             isActive: true,
           },
         },
-        select: { userId: true, buyRate: true },
+        include: {
+          user: {
+            select: {
+              id: true,
+              notificationPreference: {
+                select: { subscriptions: { select: { brandCountryId: true } } },
+              },
+            },
+          },
+        },
       });
 
       const notifiedBuyers = new Set<string>();
@@ -166,6 +182,11 @@ export class NotificationService {
 
           const alreadyNotified = await hasBeenNotified(rate.userId, 'TIER_DROP_ACCESS', 'GIFTCARD', event.giftcardId);
           if (alreadyNotified) continue;
+
+          if (rate.user.notificationPreference) {
+            const subs = rate.user.notificationPreference.subscriptions;
+            if (subs.length > 0 && !subs.some((s) => s.brandCountryId === brandCountryId)) continue;
+          }
 
           const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
           const summary = await getAccessibleStockSummary(brandCountryId, buyerBuyRate);

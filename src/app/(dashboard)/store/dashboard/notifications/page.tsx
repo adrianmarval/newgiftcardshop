@@ -1,7 +1,9 @@
-import { NotificationsView, NotificationItemType } from '@/components/notifications/notifications-view';
+import { NotificationsPageClient } from '@/components/notifications/notifications-page-client';
+import type { NotificationItem } from '@/components/notifications/notifications-view';
 import { Metadata } from 'next';
 import { getSession } from '@/lib/authorization';
 import prisma from '@/lib/prisma';
+import { getSubscribedBrandCountries } from '@/lib/notifications/get-subscribed-brand-countries';
 
 export const metadata: Metadata = {
   title: 'Centro de Alertas | Portal Compras',
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
 export default async function BuyerNotificationsPage() {
   const session = await getSession();
 
-  const [notifications, unreadCount] = await Promise.all([
+  const [notifications, unreadCount, preference, brandCountries] = await Promise.all([
     prisma.notification.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
@@ -20,6 +22,11 @@ export default async function BuyerNotificationsPage() {
     prisma.notification.count({
       where: { userId: session.user.id, read: false },
     }),
+    prisma.notificationPreference.findUnique({
+      where: { userId: session.user.id },
+      select: { telegramEnabled: true, whatsappEnabled: true, whatsappPhone: true },
+    }),
+    getSubscribedBrandCountries(session.user.id),
   ]);
 
   return (
@@ -29,7 +36,7 @@ export default async function BuyerNotificationsPage() {
         <p className="text-muted-foreground text-sm">Seguí el estado de tus compras y alertas de marcas disponibles en tiempo real.</p>
       </div>
       <div className="mt-4">
-        <NotificationsView
+        <NotificationsPageClient
           portal="buyer"
           initialNotifications={notifications.map((n) => ({
             id: n.id,
@@ -37,11 +44,23 @@ export default async function BuyerNotificationsPage() {
             description: n.description,
             createdAt: n.createdAt,
             read: n.read,
-            type: n.type as NotificationItemType,
+            type: n.type as NotificationItem['type'],
             actionUrl: n.actionUrl,
             metadata: n.metadata as Record<string, unknown> | null,
           }))}
           initialUnreadCount={unreadCount}
+          settingsProps={{
+            portal: 'buyer',
+            telegramLinked: !!session.user.telegramUser,
+            initialPreferences: preference
+              ? {
+                  telegramEnabled: preference.telegramEnabled,
+                  whatsappEnabled: preference.whatsappEnabled,
+                  whatsappPhone: preference.whatsappPhone,
+                }
+              : undefined,
+            brandCountries,
+          }}
         />
       </div>
     </div>

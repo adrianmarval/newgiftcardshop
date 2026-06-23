@@ -1,4 +1,5 @@
-import { NotificationsView, NotificationItemType } from '@/components/notifications/notifications-view';
+import { NotificationsPageClient } from '@/components/notifications/notifications-page-client';
+import type { NotificationItem } from '@/components/notifications/notifications-view';
 import { Metadata } from 'next';
 import { getSession } from '@/lib/authorization';
 import prisma from '@/lib/prisma';
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export default async function SellerNotificationsPage() {
   const session = await getSession();
 
-  const [notifications, unreadCount] = await Promise.all([
+  const [notifications, unreadCount, preference] = await Promise.all([
     prisma.notification.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
@@ -19,6 +20,10 @@ export default async function SellerNotificationsPage() {
     }),
     prisma.notification.count({
       where: { userId: session.user.id, read: false },
+    }),
+    prisma.notificationPreference.findUnique({
+      where: { userId: session.user.id },
+      select: { telegramEnabled: true, whatsappEnabled: true, whatsappPhone: true },
     }),
   ]);
 
@@ -29,7 +34,7 @@ export default async function SellerNotificationsPage() {
         <p className="text-muted-foreground text-sm">Seguí tus liquidaciones de pagos y el estado de auditoría de tus lotes.</p>
       </div>
       <div className="mt-4">
-        <NotificationsView
+        <NotificationsPageClient
           portal="seller"
           initialNotifications={notifications.map((n) => ({
             id: n.id,
@@ -37,11 +42,22 @@ export default async function SellerNotificationsPage() {
             description: n.description,
             createdAt: n.createdAt,
             read: n.read,
-            type: n.type as NotificationItemType,
+            type: n.type as NotificationItem['type'],
             actionUrl: n.actionUrl,
             metadata: n.metadata as Record<string, unknown> | null,
           }))}
           initialUnreadCount={unreadCount}
+          settingsProps={{
+            portal: 'seller',
+            telegramLinked: !!session.user.telegramUser,
+            initialPreferences: preference
+              ? {
+                  telegramEnabled: preference.telegramEnabled,
+                  whatsappEnabled: preference.whatsappEnabled,
+                  whatsappPhone: preference.whatsappPhone,
+                }
+              : undefined,
+          }}
         />
       </div>
     </div>
