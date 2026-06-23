@@ -2,8 +2,31 @@
 
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { NotificationsView, type NotificationItem } from './notifications-view';
+import { NotificationsList } from './notifications-list';
 import { NotificationsSettings, type NotificationsSettingsProps } from './notifications-settings';
+
+export type NotificationItemType =
+  | 'STOCK_AVAILABLE'
+  | 'TIER_DROP_ACCESS'
+  | 'PAYMENT_PENDING'
+  | 'ORDER_COMPLETED'
+  | 'BATCH_PAID'
+  | 'BATCH_STATUS'
+  | 'BATCH_UNDER_REVIEW'
+  | 'RATE_UPDATE';
+
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: Date;
+  read: boolean;
+  type: NotificationItemType;
+  actionUrl?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
 
 export interface NotificationsPageClientProps {
   portal: 'buyer' | 'seller' | 'admin';
@@ -22,7 +45,7 @@ export const NotificationsPageClient = ({
 
   return (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'notifications' | 'settings')}>
-      <TabsList className="bg-muted/50 border-border mb-3 grid h-10 w-full grid-cols-2 rounded-xl border p-1">
+      <TabsList className="border-border bg-muted/50 mb-3 grid h-10 w-full grid-cols-2 rounded-xl border p-1">
         <TabsTrigger
           value="notifications"
           className="data-[state=active]:bg-background data-[state=active]:text-foreground rounded-lg text-xs font-semibold data-[state=active]:shadow-sm"
@@ -38,11 +61,7 @@ export const NotificationsPageClient = ({
       </TabsList>
 
       <TabsContent value="notifications" className="mt-0">
-        <NotificationsView
-          portal={portal}
-          initialNotifications={initialNotifications}
-          initialUnreadCount={initialUnreadCount}
-        />
+        <NotificationsList portal={portal} initialNotifications={initialNotifications} initialUnreadCount={initialUnreadCount} />
       </TabsContent>
 
       <TabsContent value="settings" className="mt-0">

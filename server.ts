@@ -74,14 +74,14 @@ const [sellerEntry, buyerEntry] = await Promise.all([
   tryInitBot('BuyerBot', 'BUYER_BOT_TOKEN', './src/bot/buyer-bot/index.js', 'createBuyerBot'),
 ]);
 
-// ── Registrar bots en BotRegistry para notificaciones ─────────────────────────
+// ── Registrar bots en BotRegistry para Notificaciones ─────────────────────────
 try {
   const { BotRegistry } = await import('./src/lib/notifications/bot-registry');
   if (buyerEntry) BotRegistry.registerBuyerBot(buyerEntry.bot);
   if (sellerEntry) BotRegistry.registerSellerBot(sellerEntry.bot);
-  console.log('[BotRegistry] Bots registrados para notificaciones ✓');
+  console.log('[BotRegistry] Bots registrados para Notificaciones ✓');
 } catch (err: any) {
-  console.warn('[BotRegistry] No se pudo registrar bots (notificaciones por Telegram deshabilitadas):', err.message);
+  console.warn('[BotRegistry] No se pudo registrar bots (Notificaciones por Telegram deshabilitadas):', err.message);
 }
 
 // ── HTTP Server ────────────────────────────────────────────────────────────────

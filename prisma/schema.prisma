@@ -204,7 +204,7 @@ model BrandCountry {
   giftcards Giftcard[]
   userRates UserBrandCountryRate[]
 
-  // Suscripciones de notificaciones de stock (buyers)
+  // Suscripciones de Notificaciones de stock (buyers)
   subscriptions BrandCountrySubscription[]
 
   createdAt DateTime @default(now())
@@ -504,7 +504,7 @@ model NotificationPreference {
   whatsappEnabled Boolean  @default(false)
   whatsappPhone   String?  // E.164 (+1234567890)
 
-  // Suscripciones explícitas a brand-countries (buyers que quieren alertas de stock nuevo)
+  // Suscripciones explícitas a brand-countries (buyers que quieren Notificaciones de stock nuevo)
   subscriptions BrandCountrySubscription[]
 
   createdAt DateTime @default(now())

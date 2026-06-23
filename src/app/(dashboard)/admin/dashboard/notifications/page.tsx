@@ -1,11 +1,11 @@
 import { NotificationsPageClient } from '@/components/notifications/notifications-page-client';
-import type { NotificationItem } from '@/components/notifications/notifications-view';
+import type { NotificationItem } from '@/components/notifications/notifications-page-client';
 import { Metadata } from 'next';
 import { getSession } from '@/lib/authorization';
 import prisma from '@/lib/prisma';
 
 export const metadata: Metadata = {
-  title: 'Consola de Alertas | Panel Administrador',
+  title: 'Consola de Notificaciones | Panel Administrador',
   description: 'Auditoría de nuevos lotes, confirmaciones de pago pendientes y control de inventario.',
 };
 
