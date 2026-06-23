@@ -22,6 +22,8 @@ export interface TierInfo {
   totalCards: number;
   accessibleCardCount: number;
   inaccessibleCardCount: number;
+  nextCardTier?: number;
+  estimatedMinutes?: number;
 }
 
 export interface BuyFlowState {

@@ -208,7 +208,7 @@ export const publishBatch = sellerActionClient
     });
 
     notificationService
-      .notifyBuyersStockAvailable(brandCountryId, initialTier)
+      .notifyBuyersStockAvailable(brandCountryId, initialTier, batch.id)
       .catch((err) => console.error('[publish-batch] Error al notificar buyers (non-blocking):', err));
 
     return {

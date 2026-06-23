@@ -7,6 +7,7 @@ import { buyerActionClient } from '@/lib/safe-action';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { Decimal } from '@/generated/prisma/internal/prismaNamespace';
+import { estimateTimeToAccess, getEscalationConfig } from '@/lib/services/tier-estimation.service';
 
 const searchGiftcardsInputSchema = z.object({
   brandId: z.string(),
@@ -35,6 +36,8 @@ const searchGiftcardsOutputSchema = z.object({
       totalCards: z.number(),
       accessibleCardCount: z.number(),
       inaccessibleCardCount: z.number(),
+      nextCardTier: z.number().optional(),
+      estimatedMinutes: z.number().optional(),
     })
     .optional(),
 });
@@ -157,10 +160,32 @@ export const searchGiftcards = buyerActionClient
       const accessibleCards = result.tierInfo.accessibleCards;
 
       if (totalInaccessible > 0 && totalAccessible === 0) {
+        const escalationConfig = await getEscalationConfig();
+        const estimation = estimateTimeToAccess(
+          result.tierInfo.inaccessibleCards as (typeof allGiftcards)[number][],
+          buyerBuyRate,
+          escalationConfig,
+        );
+
+        const estimationPart = estimation
+          ? ` La próxima estará disponible en ~${estimation.minMinutes} min (tier ${estimation.nextCardTier}% → ${buyerBuyRate}%).`
+          : '';
+
         return {
           success: true as const,
           giftcards: [],
-          error: `No hay tarjetas disponibles para tu tasa del ${buyerBuyRate}% (actualmente hay $${totalInaccessible.toFixed(2)} en stock no accesibles a tu tarifa).`,
+          error: `No hay tarjetas disponibles para tu tasa del ${buyerBuyRate}%. Hay $${totalInaccessible.toFixed(2)} en ${result.tierInfo.inaccessibleCards.length} tarjetas con tier superior.${estimationPart}`,
+          tierInfo: {
+            buyerBuyRate,
+            accessibleAmount: result.tierInfo.accessibleAmount.toString(),
+            inaccessibleAmount: result.tierInfo.inaccessibleAmount.toString(),
+            totalCards: allGiftcards.length,
+            accessibleCardCount: result.tierInfo.accessibleCards.length,
+            inaccessibleCardCount: result.tierInfo.inaccessibleCards.length,
+            ...(estimation
+              ? { nextCardTier: estimation.nextCardTier, estimatedMinutes: estimation.minMinutes }
+              : {}),
+          },
         };
       }
 

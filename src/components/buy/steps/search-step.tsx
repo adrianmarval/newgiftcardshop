@@ -6,13 +6,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Check, Globe, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useBuyFlow, type TierInfo } from '@/hooks/use-buy-flow';
 import { searchGiftcards } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/buyer/preferences';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
-import { showAlert } from '@/lib/swal';
+import { showAlert, showSwal } from '@/lib/swal';
+import Swal from 'sweetalert2';
 import { BrandCountry } from '@/types';
 import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
 import { CompactSearchBar } from '@/components/buy/steps/compact-search-bar';
@@ -200,11 +201,35 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         }
         setStep(2);
       } else if (error) {
-        if (tierInfo) {
-          setTierInfo(tierInfo);
+        const tierInfoData = tierInfo as TierInfo | undefined;
+        if (tierInfoData) {
+          setTierInfo(tierInfoData);
         }
         if (error.includes('No hay tarjetas disponibles para tu tasa')) {
-          showAlert.info('Disponibilidad', error);
+          if (tierInfoData && tierInfoData.estimatedMinutes != null && tierInfoData.nextCardTier != null) {
+            showSwal.fire({
+              icon: 'info',
+              title: 'Sin stock para tu tasa',
+              html: `
+                <div style="text-align: left; font-size: 14px; line-height: 1.6;">
+                  <p>Tu tasa: <strong>${tierInfoData.buyerBuyRate}%</strong></p>
+                  <p>Stock disponible (no para tu tasa): <strong>$${Number(tierInfoData.inaccessibleAmount).toFixed(2)}</strong> en ${tierInfoData.inaccessibleCardCount} tarjetas</p>
+                  <hr style="border-color: #333; margin: 12px 0;">
+                  <p>⏱️ La próxima tarjeta estará disponible en <strong>~${tierInfoData.estimatedMinutes} min</strong></p>
+                  <p style="font-size: 12px; color: #888;">(Tier ${tierInfoData.nextCardTier}% → ${tierInfoData.buyerBuyRate}%)</p>
+                </div>
+              `,
+              confirmButtonText: 'Entendido',
+              showCancelButton: true,
+              cancelButtonText: 'Reintentar ahora',
+            }).then((result) => {
+              if (result.dismiss === Swal.DismissReason.cancel) {
+                handleSearch();
+              }
+            });
+          } else {
+            showAlert.info('Disponibilidad', error);
+          }
         } else if (error.includes('límite de crédito') || error.includes('excedería')) {
           showAlert.warning('Límite de crédito', error);
         } else if (error.includes('tarjeta más chica') || error.includes('combinación exacta')) {

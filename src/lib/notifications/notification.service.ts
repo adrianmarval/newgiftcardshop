@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import { notificationDispatcher } from './dispatcher';
 import type { NotificationMessage } from './types';
 import type { NotificationType } from '@/generated/prisma/client';
+import { getAccessibleStockSummary } from '@/lib/services/tier-estimation.service';
 
 interface TierDropEvent {
   giftcardId: string;
@@ -30,12 +31,7 @@ async function getBrandCountryInfo(brandCountryId: string): Promise<BrandCountry
   };
 }
 
-async function hasBeenNotified(
-  userId: string,
-  type: NotificationType,
-  referenceType: string,
-  referenceId: string,
-): Promise<boolean> {
+async function hasBeenNotified(userId: string, type: NotificationType, referenceType: string, referenceId: string): Promise<boolean> {
   const existing = await prisma.notificationLog.findUnique({
     where: {
       userId_type_referenceType_referenceId: {
@@ -50,12 +46,7 @@ async function hasBeenNotified(
   return existing !== null;
 }
 
-async function recordNotificationLog(
-  userId: string,
-  type: NotificationType,
-  referenceType: string,
-  referenceId: string,
-): Promise<void> {
+async function recordNotificationLog(userId: string, type: NotificationType, referenceType: string, referenceId: string): Promise<void> {
   try {
     await prisma.notificationLog.create({
       data: { userId, type, referenceType, referenceId },
@@ -68,7 +59,7 @@ async function recordNotificationLog(
 }
 
 export class NotificationService {
-  async notifyBuyersStockAvailable(brandCountryId: string, initialTier: number | null): Promise<void> {
+  async notifyBuyersStockAvailable(brandCountryId: string, initialTier: number | null, batchId: number): Promise<void> {
     const info = await getBrandCountryInfo(brandCountryId);
     if (!info) return;
 
@@ -99,48 +90,61 @@ export class NotificationService {
 
     if (buyersToNotify.length === 0) return;
 
-    const message: NotificationMessage = {
-      type: 'STOCK_AVAILABLE',
-      title: `${info.brandName} ${info.countryName} disponible`,
-      description: `Nuevo stock disponible para compra. Tier inicial: ${effectiveTier}%`,
-      actionUrl: '/store/dashboard/browse-cards',
-      metadata: { brandName: info.brandName, countryName: info.countryName, initialTier: effectiveTier },
-    };
-
-    const userIds: string[] = [];
     for (const rate of buyersToNotify) {
-      const alreadyNotified = await hasBeenNotified(rate.user.id, 'STOCK_AVAILABLE', 'BRAND_COUNTRY', brandCountryId);
+      const alreadyNotified = await hasBeenNotified(rate.user.id, 'STOCK_AVAILABLE', 'BATCH', batchId.toString());
       if (alreadyNotified) continue;
-      userIds.push(rate.user.id);
-      await recordNotificationLog(rate.user.id, 'STOCK_AVAILABLE', 'BRAND_COUNTRY', brandCountryId).catch(() => {});
+
+      const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
+      const summary = await getAccessibleStockSummary(brandCountryId, buyerBuyRate);
+      const stockText =
+        summary.cardCount > 0
+          ? `Hay $${summary.totalAmount.toFixed(2)} disponibles para tu tasa del ${buyerBuyRate}%`
+          : `Nuevo stock publicado (tier inicial: ${effectiveTier}%)`;
+
+      const message: NotificationMessage = {
+        type: 'STOCK_AVAILABLE',
+        title: `${info.brandName} ${info.countryName} disponible`,
+        description: stockText,
+        actionUrl: '/store/dashboard/browse-cards',
+        metadata: {
+          brandName: info.brandName,
+          countryName: info.countryName,
+          initialTier: effectiveTier,
+          batchId,
+          accessibleAmount: summary.totalAmount.toString(),
+          accessibleCardCount: summary.cardCount,
+        },
+      };
+
+      await recordNotificationLog(rate.user.id, 'STOCK_AVAILABLE', 'BATCH', batchId.toString()).catch(() => {});
+      await notificationDispatcher.dispatch(rate.user.id, message);
     }
-
-    if (userIds.length === 0) return;
-
-    await notificationDispatcher.dispatchMany(userIds, message);
   }
 
   async notifyBuyersTierDrop(events: TierDropEvent[]): Promise<void> {
     if (events.length === 0) return;
 
+    const eventsByBrandCountry = new Map<string, TierDropEvent[]>();
+    for (const event of events) {
+      if (event.newTier >= event.oldTier) continue;
+      const group = eventsByBrandCountry.get(event.brandCountryId) ?? [];
+      group.push(event);
+      eventsByBrandCountry.set(event.brandCountryId, group);
+    }
+
     const brandCountryInfoCache = new Map<string, BrandCountryInfo | null>();
 
-    for (const event of events) {
-      const oldTier = event.oldTier;
-      const newTier = event.newTier;
-
-      if (newTier >= oldTier) continue;
-
-      let info = brandCountryInfoCache.get(event.brandCountryId);
+    for (const [brandCountryId, groupEvents] of eventsByBrandCountry) {
+      let info = brandCountryInfoCache.get(brandCountryId);
       if (info === undefined) {
-        info = await getBrandCountryInfo(event.brandCountryId);
-        brandCountryInfoCache.set(event.brandCountryId, info);
+        info = await getBrandCountryInfo(brandCountryId);
+        brandCountryInfoCache.set(brandCountryId, info);
       }
       if (!info) continue;
 
       const eligibleRates = await prisma.userBrandCountryRate.findMany({
         where: {
-          brandCountryId: event.brandCountryId,
+          brandCountryId,
           user: {
             role: 'BUYER',
             isActive: true,
@@ -149,38 +153,55 @@ export class NotificationService {
         select: { userId: true, buyRate: true },
       });
 
-      const buyersInCrossover = eligibleRates.filter((rate) => {
-        const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
-        return buyerBuyRate >= newTier && buyerBuyRate < oldTier;
-      });
+      const notifiedBuyers = new Set<string>();
 
-      if (buyersInCrossover.length === 0) continue;
+      for (const event of groupEvents) {
+        const buyersInCrossover = eligibleRates.filter((rate) => {
+          const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
+          return buyerBuyRate >= event.newTier && buyerBuyRate < event.oldTier;
+        });
 
-      const message: NotificationMessage = {
-        type: 'TIER_DROP_ACCESS',
-        title: `${info.brandName} ${info.countryName} accesible`,
-        description: `El tier bajó de ${oldTier}% a ${newTier}%. Ya podés acceder a esta tarjeta.`,
-        actionUrl: '/store/dashboard/browse-cards',
-        metadata: {
-          brandName: info.brandName,
-          countryName: info.countryName,
-          oldTier,
-          newTier,
-          giftcardId: event.giftcardId,
-        },
-      };
+        for (const rate of buyersInCrossover) {
+          if (notifiedBuyers.has(rate.userId)) continue;
 
-      const userIds: string[] = [];
-      for (const rate of buyersInCrossover) {
-        const alreadyNotified = await hasBeenNotified(rate.userId, 'TIER_DROP_ACCESS', 'GIFTCARD', event.giftcardId);
-        if (alreadyNotified) continue;
-        userIds.push(rate.userId);
-        await recordNotificationLog(rate.userId, 'TIER_DROP_ACCESS', 'GIFTCARD', event.giftcardId).catch(() => {});
+          const alreadyNotified = await hasBeenNotified(rate.userId, 'TIER_DROP_ACCESS', 'GIFTCARD', event.giftcardId);
+          if (alreadyNotified) continue;
+
+          const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
+          const summary = await getAccessibleStockSummary(brandCountryId, buyerBuyRate);
+          const stockText =
+            summary.cardCount > 0
+              ? `Hay $${summary.totalAmount.toFixed(2)} disponibles en ${info.brandName} ${info.countryName} para tu tasa del ${buyerBuyRate}%.`
+              : `El tier bajó de ${event.oldTier}% a ${event.newTier}%. Nueva tarjeta disponible para tu tasa.`;
+
+          const message: NotificationMessage = {
+            type: 'TIER_DROP_ACCESS',
+            title: `${info.brandName} ${info.countryName} disponible`,
+            description: stockText,
+            actionUrl: '/store/dashboard/browse-cards',
+            metadata: {
+              brandName: info.brandName,
+              countryName: info.countryName,
+              oldTier: event.oldTier,
+              newTier: event.newTier,
+              giftcardId: event.giftcardId,
+              accessibleAmount: summary.totalAmount.toString(),
+              accessibleCardCount: summary.cardCount,
+            },
+          };
+
+          notifiedBuyers.add(rate.userId);
+
+          for (const ev of groupEvents) {
+            const buyerRate = Math.floor(rate.buyRate.toNumber() * 100);
+            if (buyerRate >= ev.newTier && buyerRate < ev.oldTier) {
+              await recordNotificationLog(rate.userId, 'TIER_DROP_ACCESS', 'GIFTCARD', ev.giftcardId).catch(() => {});
+            }
+          }
+
+          await notificationDispatcher.dispatch(rate.userId, message);
+        }
       }
-
-      if (userIds.length === 0) continue;
-
-      await notificationDispatcher.dispatchMany(userIds, message);
     }
   }
 

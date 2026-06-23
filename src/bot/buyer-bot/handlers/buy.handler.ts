@@ -10,6 +10,7 @@ import { Prisma } from '@/generated/prisma/client';
 import { getUserRates } from '@/services/pricing.service';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
+import { estimateTimeToAccess, getEscalationConfig } from '@/lib/services/tier-estimation.service';
 import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard-reservation.service';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
@@ -245,14 +246,41 @@ export async function handleAmountText(ctx: BuyerContext) {
     const accessibleAmount = result.tierInfo.accessibleAmount;
     const inaccessibleAmount = result.tierInfo.inaccessibleAmount;
     const accessibleCards = result.tierInfo.accessibleCards.length;
+    const inaccessibleCardsCount = result.tierInfo.inaccessibleCards.length;
 
     let msg = '';
 
     const currency = ctx.session.wizard.countryCurrency || 'USD';
     if (inaccessibleAmount.gt(0) && accessibleAmount.eq(0)) {
-      msg = `😔 No hay tarjetas disponibles para tu tasa del ${buyerRatePercent}% (actualmente hay <b>${fmt$(Number(inaccessibleAmount), currency)}</b> en stock no accesibles a tu tarifa).`;
+      const escalationConfig = await getEscalationConfig();
+      const estimation = estimateTimeToAccess(
+        result.tierInfo.inaccessibleCards as typeof allCards,
+        buyerRatePercent,
+        escalationConfig,
+      );
+
+      const estimationPart = estimation
+        ? `\n⏱️ La próxima estará disponible en <b>~${estimation.minMinutes} min</b> (tier ${estimation.nextCardTier}% → ${buyerRatePercent}%).`
+        : '';
+
+      msg = `😔 No hay tarjetas para tu tasa del <b>${buyerRatePercent}%</b>.\n\n` +
+        `📦 Stock con tier superior: <b>${fmt$(Number(inaccessibleAmount), currency)}</b> en ${inaccessibleCardsCount} tarjetas.${estimationPart}`;
+    } else if (inaccessibleAmount.gt(0) && accessibleAmount.gt(0)) {
+      const escalationConfig = await getEscalationConfig();
+      const estimation = estimateTimeToAccess(
+        result.tierInfo.inaccessibleCards as typeof allCards,
+        buyerRatePercent,
+        escalationConfig,
+      );
+
+      const estimationPart = estimation
+        ? `\n⏱️ Más tarjetas en ~${estimation.minMinutes} min (tier ${estimation.nextCardTier}% → ${buyerRatePercent}%).`
+        : '';
+
+      msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}), pero no alcanza los ${fmt$(amount, currency)} buscados.\n\n` +
+        `📦 Stock no accesible: <b>${fmt$(Number(inaccessibleAmount), currency)}</b> en ${inaccessibleCardsCount} tarjetas.${estimationPart}`;
     } else {
-      msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}).\n\nEl total no alcanza lo que buscás.`;
+      msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}).\n\nEl total no alcanza lo que buscás. Probá con un monto menor.`;
     }
 
     const kb = new InlineKeyboard()
