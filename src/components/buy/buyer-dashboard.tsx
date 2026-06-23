@@ -86,7 +86,7 @@ export function BuyerDashboard({ stats }: BuyerDashboardProps) {
           <Card size="sm">
             <CardHeader className="flex flex-row items-center gap-1">
               <IconShoppingBag className="h-6 w-6 text-blue-500" />
-              <CardTitle className="text-base">Comerciado Hoy</CardTitle>
+              <CardTitle className="text-base">Total Vendido HOY</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">
@@ -105,7 +105,7 @@ export function BuyerDashboard({ stats }: BuyerDashboardProps) {
           <IconClock className="text-muted-foreground h-5 w-5" />
           <h2 className="text-xl font-semibold">Libro de Órdenes</h2>
         </div>
-        <p className="text-muted-foreground mb-2 text-sm">Órdenes creadas hoy</p>
+        <p className="text-muted-foreground mb-2 text-sm">Órdenes Recientes</p>
 
         {orderBook.entries.length > 0 ? (
           <div className="space-y-1">
