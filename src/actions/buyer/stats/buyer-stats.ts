@@ -1,50 +1,56 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { Prisma } from '@/generated/prisma/client';
 import { buyerActionClient } from '@/lib/safe-action';
+import { startOfDay } from 'date-fns';
+import { maskEmail } from '@/lib/utils/mask-email';
 
-export const buyerStats = buyerActionClient.action(async ({ ctx }) => {
-  const userId = ctx.auth.user.id;
+const ORDER_BOOK_LIMIT = 10;
 
-  const availableCards = await prisma.giftcard.count({
-    where: { status: 'UNUSED', inStock: true },
-  });
-  const myOrders = await prisma.order.count({
-    where: { userId },
-  });
-  const activeOrdersResult = await prisma.order.count({
-    where: {
-      userId,
-      status: { in: ['PENDING', 'AWAITING_PAYMENT'] },
-    },
-  });
+export const buyerStats = buyerActionClient.action(async () => {
+  const now = new Date();
+  const todayStart = startOfDay(now);
 
-  const completedOrders = await prisma.order.findMany({
-    where: { userId, status: 'COMPLETED' },
-    include: { giftcards: true },
-  });
+  const [available, todayOrders] = await Promise.all([
+    prisma.giftcard.aggregate({
+      where: { status: 'UNUSED', inStock: true },
+      _count: true,
+      _sum: { amount: true },
+    }),
+    prisma.order.findMany({
+      where: { createdAt: { gte: todayStart } },
+      select: {
+        id: true,
+        total: true,
+        status: true,
+        createdAt: true,
+        user: { select: { email: true } },
+        giftcards: { select: { amount: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: ORDER_BOOK_LIMIT,
+    }),
+  ]);
 
-  const totalSaved = completedOrders.reduce((sum, order) => {
-    const faceValueTotal = order.giftcards.reduce((faceSum, card) => {
-      if (card.status === 'UNUSED' || card.status === 'USED') {
-        return faceSum.plus(card.amount);
-      }
-      if (card.status === 'WRONG_AMOUNT') {
-        return faceSum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
-      }
-      return faceSum;
-    }, new Prisma.Decimal(0));
-    const effectiveTotal = faceValueTotal.mul(order.buyRate);
-    return sum.plus(faceValueTotal.sub(effectiveTotal));
-  }, new Prisma.Decimal(0));
-
-  const activeOrders = activeOrdersResult;
+  const totalTradedToday = todayOrders.reduce(
+    (sum, order) => sum + order.giftcards.reduce((s, gc) => s + gc.amount.toNumber(), 0),
+    0,
+  );
 
   return {
-    availableCards,
-    myOrders,
-    activeOrders,
-    totalSaved: totalSaved.toNumber(),
+    availableCards: available._count,
+    availableAmount: available._sum.amount?.toNumber() ?? 0,
+    orderBook: {
+      totalOrdersToday: todayOrders.length,
+      totalTradedToday,
+      entries: todayOrders.map((order) => ({
+        orderId: order.id,
+        buyerEmail: maskEmail(order.user.email),
+        cardCount: order.giftcards.length,
+        total: order.total.toNumber(),
+        status: order.status,
+        createdAt: order.createdAt.toISOString(),
+      })),
+    },
   };
 });
