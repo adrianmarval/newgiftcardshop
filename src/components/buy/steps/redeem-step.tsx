@@ -45,7 +45,7 @@ export const RedeemStep = () => {
       }
     },
     onError: ({ error }) => {
-      showAlert.error('Sin tarifa', error.serverError || 'No tenés tarifa asignada para esta marca y país. Contactá al administrador.');
+      showAlert.error('Sin tarifa', error.serverError || 'No tienes tarifa asignada para esta marca y país. Contactá al administrador.');
     },
   });
 

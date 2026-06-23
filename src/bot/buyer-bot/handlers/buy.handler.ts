@@ -107,7 +107,7 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
   try {
     await getUserRates(ctx.user.id, { brandId, countryId });
   } catch {
-    return ctx.answerCallbackQuery('No tenés tarifa para comprar aquí. Contactá al admin.');
+    return ctx.answerCallbackQuery('No tienes tarifa para comprar aquí. Contactá al admin.');
   }
 
   ctx.session.wizard.countryId = country.id;
@@ -253,31 +253,25 @@ export async function handleAmountText(ctx: BuyerContext) {
     const currency = ctx.session.wizard.countryCurrency || 'USD';
     if (inaccessibleAmount.gt(0) && accessibleAmount.eq(0)) {
       const escalationConfig = await getEscalationConfig();
-      const estimation = estimateTimeToAccess(
-        result.tierInfo.inaccessibleCards as typeof allCards,
-        buyerRatePercent,
-        escalationConfig,
-      );
+      const estimation = estimateTimeToAccess(result.tierInfo.inaccessibleCards as typeof allCards, buyerRatePercent, escalationConfig);
 
       const estimationPart = estimation
         ? `\n⏱️ La próxima estará disponible en <b>~${estimation.minMinutes} min</b> (tier ${estimation.nextCardTier}% → ${buyerRatePercent}%).`
         : '';
 
-      msg = `😔 No hay tarjetas para tu tasa del <b>${buyerRatePercent}%</b>.\n\n` +
+      msg =
+        `😔 No hay tarjetas para tu tasa del <b>${buyerRatePercent}%</b>.\n\n` +
         `📦 Stock con tier superior: <b>${fmt$(Number(inaccessibleAmount), currency)}</b> en ${inaccessibleCardsCount} tarjetas.${estimationPart}`;
     } else if (inaccessibleAmount.gt(0) && accessibleAmount.gt(0)) {
       const escalationConfig = await getEscalationConfig();
-      const estimation = estimateTimeToAccess(
-        result.tierInfo.inaccessibleCards as typeof allCards,
-        buyerRatePercent,
-        escalationConfig,
-      );
+      const estimation = estimateTimeToAccess(result.tierInfo.inaccessibleCards as typeof allCards, buyerRatePercent, escalationConfig);
 
       const estimationPart = estimation
         ? `\n⏱️ Más tarjetas en ~${estimation.minMinutes} min (tier ${estimation.nextCardTier}% → ${buyerRatePercent}%).`
         : '';
 
-      msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}), pero no alcanza los ${fmt$(amount, currency)} buscados.\n\n` +
+      msg =
+        `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}), pero no alcanza los ${fmt$(amount, currency)} buscados.\n\n` +
         `📦 Stock no accesible: <b>${fmt$(Number(inaccessibleAmount), currency)}</b> en ${inaccessibleCardsCount} tarjetas.${estimationPart}`;
     } else {
       msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}).\n\nEl total no alcanza lo que buscás. Probá con un monto menor.`;

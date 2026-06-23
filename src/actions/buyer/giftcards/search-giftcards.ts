@@ -52,7 +52,7 @@ async function getBuyerBuyRate(userId: string, brandCountryId: string): Promise<
     return Math.floor(userRate.buyRate.toNumber() * 100);
   }
 
-  throw new Error('No tenés tarifa asignada para esta marca y país.');
+  throw new Error('No tienes tarifa asignada para esta marca y país.');
 }
 
 export const searchGiftcards = buyerActionClient
@@ -127,7 +127,7 @@ export const searchGiftcards = buyerActionClient
       return {
         success: true as const,
         giftcards: [],
-        error: err.message || 'No tenés tarifa asignada para esta marca y país.',
+        error: err.message || 'No tienes tarifa asignada para esta marca y país.',
       };
     }
 
@@ -182,9 +182,7 @@ export const searchGiftcards = buyerActionClient
             totalCards: allGiftcards.length,
             accessibleCardCount: result.tierInfo.accessibleCards.length,
             inaccessibleCardCount: result.tierInfo.inaccessibleCards.length,
-            ...(estimation
-              ? { nextCardTier: estimation.nextCardTier, estimatedMinutes: estimation.minMinutes }
-              : {}),
+            ...(estimation ? { nextCardTier: estimation.nextCardTier, estimatedMinutes: estimation.minMinutes } : {}),
           },
         };
       }

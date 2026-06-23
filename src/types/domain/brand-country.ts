@@ -38,4 +38,6 @@ export interface BrandCountry {
   isActive: boolean;
   minAmount: number | null;
   maxAmount: number | null;
+  stockCount: number;
+  stockAmount: number;
 }

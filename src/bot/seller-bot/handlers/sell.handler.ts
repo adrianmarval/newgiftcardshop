@@ -87,7 +87,7 @@ export async function handleCountrySelected(ctx: SellerContext) {
   try {
     await getUserRates(ctx.user.id, { brandCountryId: brandCountry.id });
   } catch {
-    return ctx.answerCallbackQuery('No tenés tarifa para vender aquí. Contactá al admin.');
+    return ctx.answerCallbackQuery('No tienes tarifa para vender aquí. Contactá al admin.');
   }
 
   ctx.session.wizard.countryId = country.id;

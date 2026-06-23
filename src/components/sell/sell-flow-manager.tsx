@@ -69,7 +69,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
         setSellRate(res.data.rate);
       } else {
         setSellRate(0);
-        setRateError(res?.data?.error || 'No tenés tarifa asignada para vender en esta marca y país. Contactá al administrador.');
+        setRateError(res?.data?.error || 'No tienes tarifa asignada para vender en esta marca y país. Contactá al administrador.');
       }
     });
   };

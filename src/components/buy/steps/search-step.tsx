@@ -103,7 +103,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     setRateError(null);
     getUserBuyRate({ brandId, countryId }).then((res) => {
       if (!res?.data?.success) {
-        setRateError('No tenés tarifa asignada para comprar en esta marca y país. Contactá al administrador.');
+        setRateError('No tienes tarifa asignada para comprar en esta marca y país. Contactá al administrador.');
       }
     });
   }, [selectedBrand]);
@@ -207,10 +207,11 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         }
         if (error.includes('No hay tarjetas disponibles para tu tasa')) {
           if (tierInfoData && tierInfoData.estimatedMinutes != null && tierInfoData.nextCardTier != null) {
-            showSwal.fire({
-              icon: 'info',
-              title: 'Sin stock para tu tasa',
-              html: `
+            showSwal
+              .fire({
+                icon: 'info',
+                title: 'Sin stock para tu tasa',
+                html: `
                 <div style="text-align: left; font-size: 14px; line-height: 1.6;">
                   <p>Tu tasa: <strong>${tierInfoData.buyerBuyRate}%</strong></p>
                   <p>Stock disponible (no para tu tasa): <strong>$${Number(tierInfoData.inaccessibleAmount).toFixed(2)}</strong> en ${tierInfoData.inaccessibleCardCount} tarjetas</p>
@@ -219,14 +220,15 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
                   <p style="font-size: 12px; color: #888;">(Tier ${tierInfoData.nextCardTier}% → ${tierInfoData.buyerBuyRate}%)</p>
                 </div>
               `,
-              confirmButtonText: 'Entendido',
-              showCancelButton: true,
-              cancelButtonText: 'Reintentar ahora',
-            }).then((result) => {
-              if (result.dismiss === Swal.DismissReason.cancel) {
-                handleSearch();
-              }
-            });
+                confirmButtonText: 'Entendido',
+                showCancelButton: true,
+                cancelButtonText: 'Reintentar ahora',
+              })
+              .then((result) => {
+                if (result.dismiss === Swal.DismissReason.cancel) {
+                  handleSearch();
+                }
+              });
           } else {
             showAlert.info('Disponibilidad', error);
           }
@@ -341,6 +343,12 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
                     {bc.brandName}
                   </div>
 
+                  {bc.isActive && bc.stockCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-green-600 md:text-xs dark:text-green-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500" />${bc.stockAmount.toLocaleString()} disponible
+                    </span>
+                  )}
+
                   {!bc.isActive && (
                     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden">
                       <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-1 text-center text-[8px] font-black tracking-[0.2em] whitespace-nowrap uppercase shadow-2xl backdrop-blur-md md:py-2 md:text-[12px] md:tracking-[0.4em]">
@@ -363,7 +371,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
       {/* CTA - Sticky on mobile */}
       <div className="shrink-0">
-        {rateError && selectedBrand && <p className="text-destructive mb-1 text-center text-xs font-medium md:text-sm">{rateError}</p>}
+        {rateError && selectedBrand && <p className="animate-pulse text-destructive mb-1 text-center text-lg font-medium">{rateError}</p>}
         <Button
           onClick={handleSearch}
           disabled={!isValid || status === 'executing'}

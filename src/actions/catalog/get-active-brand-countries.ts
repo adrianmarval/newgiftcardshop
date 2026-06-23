@@ -18,6 +18,8 @@ const brandCountrySchema = z.object({
   isActive: z.boolean(),
   minAmount: z.number().nullable(),
   maxAmount: z.number().nullable(),
+  stockCount: z.number(),
+  stockAmount: z.number(),
 });
 
 const outputSchema = z.object({
@@ -28,7 +30,14 @@ const outputSchema = z.object({
 export const getActiveBrandCountries = authActionClient.outputSchema(outputSchema).action(async () => {
   const brandCountries = await prisma.brandCountry.findMany({
     where: {},
-    include: { brand: true, country: true },
+    include: {
+      brand: true,
+      country: true,
+      giftcards: {
+        where: { inStock: true, status: 'UNUSED' },
+        select: { amount: true },
+      },
+    },
     orderBy: [{ country: { name: 'asc' } }, { brand: { name: 'asc' } }],
   });
 
@@ -48,6 +57,8 @@ export const getActiveBrandCountries = authActionClient.outputSchema(outputSchem
       isActive: bc.isActive,
       minAmount: bc.minAmount ? Number(bc.minAmount) : null,
       maxAmount: bc.maxAmount ? Number(bc.maxAmount) : null,
+      stockCount: bc.giftcards.length,
+      stockAmount: bc.giftcards.reduce((sum, gc) => sum + gc.amount.toNumber(), 0),
     })),
   };
 });

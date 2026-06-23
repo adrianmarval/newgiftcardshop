@@ -42,7 +42,7 @@ export const updateBuyRate = authActionClient.inputSchema(updateBuyRateInputSche
     });
 
     if (!existingUserRate) {
-      return { error: 'No tenés tarifa asignada para este brand-country. Contactá al administrador.' };
+      return { error: 'No tienes tarifa asignada para este brand-country. Contactá al administrador.' };
     }
 
     await prisma.userBrandCountryRate.upsert({
