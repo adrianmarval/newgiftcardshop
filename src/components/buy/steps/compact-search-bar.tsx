@@ -49,16 +49,16 @@ export function CompactSearchBar({
   })();
 
   return (
-    <div className={cn('bg-card/50 flex items-center gap-1 rounded-xl border p-1 backdrop-blur-sm md:gap-1 md:p-3', className)}>
-      {/* Country Selector - Globe hidden on mobile to save space */}
-      <div className="flex items-center">
+    <div className={cn('bg-card/50 flex flex-col items-center gap-1 rounded-xl border p-1 backdrop-blur-sm md:gap-1 md:p-3', className)}>
+      {/* Row 1: Country (takes most space) + Amount (small) */}
+      <div className="flex w-full items-center gap-1">
         <Select value={selectedCountry} onValueChange={onCountryChange}>
-          <SelectTrigger className="h-8 w-[75px] border-0 bg-transparent p-1 text-xs font-medium focus:ring-0 md:w-[90px] md:text-sm [&>span]:line-clamp-1">
-            <SelectValue placeholder="País">
+          <SelectTrigger className="h-8 min-w-0 grow border-0 bg-transparent p-1 text-xs font-medium focus:ring-0 md:h-9 md:text-sm [&>span]:line-clamp-1">
+            <SelectValue placeholder="Selecciona un país">
               {selectedCountry &&
                 (() => {
                   const country = countries.find((c) => c.id === selectedCountry);
-                  return country ? `${COUNTRY_FLAGS[country.code] || ''} ${country.code}` : null;
+                  return country ? `${COUNTRY_FLAGS[country.code] || ''} ${country.name}` : null;
                 })()}
             </SelectValue>
           </SelectTrigger>
@@ -70,41 +70,32 @@ export function CompactSearchBar({
             ))}
           </SelectContent>
         </Select>
+
+        <div className="relative flex items-center">
+          <DollarSign className="text-muted-foreground/50 absolute left-2 h-3 w-3 shrink-0 md:h-3.5 md:w-3.5" />
+          <Input
+            type="number"
+            placeholder="Monto"
+            value={targetAmount}
+            onChange={(e) => onAmountChange(e.target.value)}
+            className="bg-muted/40 placeholder:text-muted-foreground/50 h-8 w-20 shrink-0 border-0 pl-6 text-xs font-medium focus:ring-0 md:h-9 md:w-24 md:pl-8 md:text-sm"
+          />
+        </div>
       </div>
 
-      {/* Divider */}
-      <div className="bg-border hidden h-5 w-px md:block md:h-6" />
-
-      {/* Amount Input */}
-      <div className="relative flex items-center">
-        <DollarSign className="text-muted-foreground/50 absolute left-2 h-3 w-3 shrink-0 md:h-3.5 md:w-3.5" />
-        <Input
-          type="number"
-          placeholder="Monto"
-          value={targetAmount}
-          onChange={(e) => onAmountChange(e.target.value)}
-          className="bg-muted/40 placeholder:text-muted-foreground/50 h-8 w-[80px] border-0 pl-6 text-xs font-medium focus:ring-0 md:h-9 md:w-[100px] md:pl-8 md:text-sm"
-        />
-      </div>
-
-      {/* Divider */}
-      <div className="bg-border hidden h-5 w-px md:block md:h-6" />
-
-      {/* Search + Settings ( grouped together to stay on same line ) */}
-      <div className="flex flex-1 items-center gap-1.5">
-        {/* Brand Search */}
-        <div className="relative flex min-w-0 flex-1 items-center">
+      {/* Row 2: Search (takes most space) + Settings (small) */}
+      <div className="flex w-full items-center gap-1">
+        <div className="relative flex min-w-0 grow items-center">
           <Search className="text-muted-foreground/50 absolute left-2 h-3 w-3 shrink-0 md:h-3.5 md:w-3.5" />
           <Input
-            placeholder={selectedCountry ? 'Buscar marca...' : 'Selecciona país'}
+            placeholder={selectedCountry ? 'Buscar marca...' : 'Primero selecciona un país para buscar marcas'}
             value={searchBrand}
             onChange={(e) => onSearchChange(e.target.value)}
             disabled={!selectedCountry}
-            className="bg-muted/40 placeholder:text-muted-foreground/50 h-8 border-0 pl-6 text-xs focus:ring-0 md:h-9 md:pl-8 md:text-sm"
+            className="bg-muted/40 placeholder:text-muted-foreground/50 h-8 min-w-0 border-0 pl-6 text-xs focus:ring-0 md:h-9 md:pl-8 md:text-sm"
           />
         </div>
 
-        {/* Advanced Settings Button - inline with search */}
         {showAdvancedButton && (
           <Button
             variant="ghost"
