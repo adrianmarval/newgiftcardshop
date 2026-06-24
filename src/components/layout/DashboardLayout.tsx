@@ -63,9 +63,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
               notificationHref={`${dashboardMap[portal]}/notifications`}
               notificationBadgeKey={PORTAL_BADGE_KEY[portal]}
             />
-            <div className="custom-scrollbar h-full overflow-x-hidden overflow-y-auto p-1">
-              {children}
-            </div>
+            <div className="custom-scrollbar h-full overflow-x-hidden overflow-y-auto p-1">{children}</div>
           </Card>
 
           {/*sidebar*/}

@@ -44,7 +44,7 @@ export function AppTopBar({ portal, userName, telegramPhotoDataUrl, profileUrl, 
   const { handleLogout, isLoggingOut } = useLogout(portal);
 
   return (
-    <div className="bg-background flex items-center justify-between px-2 py-1 hover:text-gray-400 md:px-0 md:py-2">
+    <div className="bg-background md:bg-card flex items-center justify-between px-2 py-1 hover:text-gray-400 md:rounded-4xl">
       <Link href={profileUrl} className="flex items-center gap-2">
         {telegramPhotoDataUrl ? (
           <img src={telegramPhotoDataUrl} alt={userName} className="h-7 w-7 rounded-full object-cover" />
