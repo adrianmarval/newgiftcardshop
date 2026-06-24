@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut } from 'lucide-react';
+import { LogOut, Power } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { NotificationDropdown } from '@/components/layout/notification-dropdown';
@@ -74,7 +74,7 @@ export function AppTopBar({ portal, userName, telegramPhotoDataUrl, profileUrl, 
             isLoggingOut && 'opacity-50',
           )}
         >
-          <LogOut className="h-5 w-5" />
+          <Power className="h-5 w-5 text-red-800 hover:scale-105 hover:text-red-700" />
         </button>
       </div>
     </div>
