@@ -4,8 +4,8 @@
 
 import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
-import type { Giftcard, GiftcardStatus } from '@/types/domain/giftcard';
-import type { Payment, PaymentDirection, PaymentCategory } from '@/types/domain/payment';
+import type { Giftcard, GiftcardStatus } from '@/types';
+import type { Payment, PaymentDirection, PaymentCategory } from '@/types';
 import { GiftcardStatus as GiftcardStatusEnum } from '@/generated/prisma/enums';
 
 /**

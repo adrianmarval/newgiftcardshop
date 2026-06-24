@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatCurrency } from '@/lib/currency-formatter';
 import Image from 'next/image';
-import type { Giftcard } from '@/types/domain/giftcard';
+import type { Giftcard } from '@/types';
 
 interface GiftcardItemProps {
   card: Giftcard;

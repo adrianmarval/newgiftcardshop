@@ -3,7 +3,7 @@
 import { PaginationMeta, SellerBatch } from '@/types';
 import { BatchesFilters } from './batches-filters';
 import { BatchesList } from './batches-list';
-import { StatusLeyend } from '@/components/ui/status-leyend';
+import { StatusLegend } from '@/components/ui/status-legend';
 
 export interface SellerBatchesViewProps {
   batches: SellerBatch[];
@@ -13,7 +13,7 @@ export interface SellerBatchesViewProps {
 export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProps) {
   return (
     <div className="space-y-1">
-      <StatusLeyend language="en" />
+      <StatusLegend language="en" />
       <BatchesFilters />
       <BatchesList batches={batches} totalPages={pagination?.totalPages} />
     </div>

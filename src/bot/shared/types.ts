@@ -1,5 +1,5 @@
 import type { Context, SessionFlavor } from 'grammy';
-import type { User } from '@/generated/prisma/client';
+import type { User, GiftcardIssueType } from '@/generated/prisma/client';
 
 // ── Wizard steps ─────────────────────────────────────────────────────────────
 
@@ -68,7 +68,7 @@ export interface BuyerSessionData {
     countryCurrency?: string;
     orderId?: string;
     reportCardId?: string;
-    reportIssueType?: 'INVALID' | 'ALREADY_USED' | 'DEACTIVATED' | 'WRONG_AMOUNT';
+    reportIssueType?: GiftcardIssueType;
     reportAmount?: number;
     reportProofUrl?: string;
     selectedGiftcardIds?: string[];

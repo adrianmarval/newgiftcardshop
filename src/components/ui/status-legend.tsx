@@ -1,4 +1,4 @@
-export function StatusLeyend({ language = 'es' }: { language?: 'en' | 'es' }) {
+export function StatusLegend({ language = 'es' }: { language?: 'en' | 'es' }) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 p-2">
       <div className="text-muted-foreground/80 flex items-center gap-1 text-[10px] font-black tracking-widest uppercase">

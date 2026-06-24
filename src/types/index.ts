@@ -8,4 +8,4 @@ export * from './application';
 export type { Session, SessionUser, TelegramUserSessionData } from './auth/session';
 
 // ── Binance ────────────────────────────────────────────────────────────────────
-export * from './binance.types';
+export * from './binance-types';

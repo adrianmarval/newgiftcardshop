@@ -5,7 +5,7 @@ import type { BuyerContext, BuyerSessionData } from '@/bot/shared/types.js';
 import prisma from '@/lib/prisma';
 import { authenticateBuyer, sequentialize } from '@/bot/shared/middleware.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
-import { startBuyer } from './handlers/start.handler.js';
+import { startBuyer } from './handlers/start-handler.js';
 import {
   handleOrders,
   handleOrderDetail,
@@ -22,7 +22,7 @@ import {
   handleReportAmountText,
   handleReportProofPhoto,
   handleReportProofSkip,
-} from './handlers/orders.handler.js';
+} from './handlers/orders-handler.js';
 import {
   startBuyWizard,
   handleBuyBrandSelected,
@@ -30,7 +30,7 @@ import {
   handleAmountText,
   handleBuyConfirm,
   handleBuyCancel,
-} from './handlers/buy.handler.js';
+} from './handlers/buy-handler.js';
 import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
 
 export function createBuyerBot() {

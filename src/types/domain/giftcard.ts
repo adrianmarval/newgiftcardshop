@@ -54,10 +54,3 @@ export interface ParseClaimCodesResult {
   duplicateCount: number;
   duplicates: string[];
 }
-
-export function normalizeClaimCode(input: string): string | null {
-  const stripped = input.toUpperCase().replace(/[ -]/g, '');
-  if (!/^[A-Z0-9]+$/.test(stripped)) return null;
-  if (stripped.length !== 12 && stripped.length !== 14 && stripped.length !== 15) return null;
-  return stripped;
-}

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { authApi } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { appSectionMap, roleMap } from '@/types/';
+import { appSectionMap, roleMap } from '@/types';
 
 const registerInputSchema = z
   .object({

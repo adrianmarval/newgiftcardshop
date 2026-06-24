@@ -5,17 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NotificationsList } from './notifications-list';
 import { NotificationsSettings, type NotificationsSettingsProps } from './notifications-settings';
-
-export type NotificationItemType =
-  | 'STOCK_AVAILABLE'
-  | 'TIER_DROP_ACCESS'
-  | 'PAYMENT_PENDING'
-  | 'ORDER_COMPLETED'
-  | 'BATCH_PAID'
-  | 'BATCH_STATUS'
-  | 'BATCH_UNDER_REVIEW'
-  | 'RATE_UPDATE';
-
+import type { NotificationType } from '@/generated/prisma/enums';
 
 export interface NotificationItem {
   id: string;
@@ -23,7 +13,7 @@ export interface NotificationItem {
   description: string;
   createdAt: Date;
   read: boolean;
-  type: NotificationItemType;
+  type: NotificationType;
   actionUrl?: string | null;
   metadata?: Record<string, unknown> | null;
 }

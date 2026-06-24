@@ -2,7 +2,7 @@ import { Decimal } from '@prisma/client/runtime/client';
 import type { Giftcard } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { settingsService } from '@/lib/settings/settings.service';
-import type { EscalationConfig } from '@/lib/services/giftcard-escalation';
+import type { EscalationConfig } from '@/types';
 
 export interface TierEstimationResult {
   minMinutes: number;

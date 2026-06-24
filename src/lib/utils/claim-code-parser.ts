@@ -11,7 +11,7 @@
 //   6. Dedup keys always use the normalized unformatted string.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { ParsedGiftcard, ParseClaimCodesResult } from '@/types/domain/giftcard';
+import type { ParsedGiftcard, ParseClaimCodesResult } from '@/types';
 
 // Matches a sequence of alphanumeric chars + hyphens totalling 14 or 15
 // alphanumeric chars after stripping the separators.

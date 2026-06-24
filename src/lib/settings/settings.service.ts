@@ -8,7 +8,7 @@ import {
   validateSettingValue,
   serializeSettingValue,
 } from './schemas';
-import { EscalationConfig } from '@/lib/services/giftcard-escalation';
+import type { EscalationConfig } from '@/types';
 
 export class SettingsService {
   async get<T>(key: SettingKey): Promise<T> {

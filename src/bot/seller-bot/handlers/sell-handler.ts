@@ -2,12 +2,12 @@ import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
 import { encrypt, hashCode } from '@/lib/encryption';
 import { parseClaimCodes } from '@/lib/utils/claim-code-parser';
-import type { ParsedGiftcard } from '@/types/domain/giftcard';
+import type { ParsedGiftcard } from '@/types';
 import { Prisma } from '@/generated/prisma/client';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
-import { getUserRates } from '@/services/pricing.service';
+import { getUserRates } from '@/lib/services/pricing.service';
 import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
 import { MAX_BATCH_SIZE } from '@/lib/constants.js';
 

@@ -15,7 +15,7 @@ export interface BuyFlowCard {
   country?: { name: string; code: string; currency: string | null } | null;
 }
 
-export interface TierInfo {
+export interface BuyFlowTierInfo {
   buyerBuyRate: number;
   accessibleAmount: string;
   inaccessibleAmount: string;
@@ -35,7 +35,7 @@ export interface BuyFlowState {
   foundGiftcards: BuyFlowCard[];
   orderId: string | null;
   adjustedTotal: number | null;
-  tierInfo: TierInfo | null;
+  tierInfo: BuyFlowTierInfo | null;
   setStep: (step: number) => void;
   setSelectedBrand: (brand: string) => void;
   setSelectedCountry: (country: string) => void;
@@ -44,7 +44,7 @@ export interface BuyFlowState {
   setFoundGiftcards: (cards: BuyFlowCard[]) => void;
   setOrderId: (id: string | null) => void;
   setAdjustedTotal: (total: number | null) => void;
-  setTierInfo: (info: TierInfo | null) => void;
+  setTierInfo: (info: BuyFlowTierInfo | null) => void;
   removeGiftcard: (id: string) => void;
   reportIssue: (id: string, status: BuyFlowCard['status'], correctedAmount?: number) => void;
   resetForm: () => void;

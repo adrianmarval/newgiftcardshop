@@ -16,7 +16,7 @@ import type {
   QuoteResponse,
   GetPayTradeHistoryResponse,
   CoinInfoResponse,
-} from '@/types/';
+} from '@/types';
 import { Decimal } from '@/generated/prisma/internal/prismaNamespace';
 
 /* ----------------------------- ENV VALIDATION ----------------------------- */

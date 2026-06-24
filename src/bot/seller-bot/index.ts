@@ -5,9 +5,9 @@ import type { SellerContext, SellerSessionData } from '@/bot/shared/types.js';
 import prisma from '@/lib/prisma';
 import { authenticateSeller, sequentialize } from '@/bot/shared/middleware.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
-import { startSeller } from './handlers/start.handler.js';
-import { handleStats } from './handlers/stats.handler.js';
-import { handleBatches, handleViewBatch } from './handlers/batches.handler.js';
+import { startSeller } from './handlers/start-handler.js';
+import { handleStats } from './handlers/stats-handler.js';
+import { handleBatches, handleViewBatch } from './handlers/batches-handler.js';
 import {
   startSellWizard,
   handleBrandSelected,
@@ -20,7 +20,7 @@ import {
   handleSellPhotos,
   handleSellConfirm,
   handleSellCancel,
-} from './handlers/sell.handler.js';
+} from './handlers/sell-handler.js';
 import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
 
 export function createSellerBot() {

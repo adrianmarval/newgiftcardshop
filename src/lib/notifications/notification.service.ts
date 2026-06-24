@@ -4,13 +4,7 @@ import type { NotificationMessage } from './types';
 import type { NotificationType } from '@/generated/prisma/client';
 import { getAccessibleStockSummary } from '@/lib/services/tier-estimation.service';
 import { getCountryFlag } from '@/lib/utils/country-flags';
-
-interface TierDropEvent {
-  giftcardId: string;
-  brandCountryId: string;
-  oldTier: number;
-  newTier: number;
-}
+import type { TierDropEvent } from '@/types';
 
 interface BrandCountryInfo {
   brandName: string;

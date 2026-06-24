@@ -2,7 +2,7 @@
 
 import { OrdersFilters } from '@/components/buy/giftcard-orders/orders-filters';
 import { OrdersList } from '@/components/buy/giftcard-orders/orders-list';
-import { StatusLeyend } from '@/components/ui/status-leyend';
+import { StatusLegend } from '@/components/ui/status-legend';
 import { BuyerOrder, PaginationMeta } from '@/types';
 
 export interface BuyerOrdersViewProps {
@@ -13,7 +13,7 @@ export interface BuyerOrdersViewProps {
 export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) => {
   return (
     <div className="space-y-1">
-      <StatusLeyend />
+      <StatusLegend />
       <OrdersFilters />
       <OrdersList orders={orders} totalPages={pagination.totalPages} />
     </div>

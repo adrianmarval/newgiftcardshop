@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { getSellerStats } from '@/actions/seller/stats';
 import { recentBatches } from '@/actions/seller/batches';
 import { SellerDashboardClient } from '@/components/sell/seller-dashboard-client';
-import type { SellerStats as SellerStatsType } from '@/types/domain/batch';
-import type { RecentBatch } from '@/types/domain/batch';
+import type { SellerStats as SellerStatsType } from '@/types';
+import type { RecentBatch } from '@/types';
 
 export const metadata: Metadata = {
   title: `Seller Dashboard | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
@@ -12,8 +12,6 @@ export const metadata: Metadata = {
 };
 
 export default async function SellerDashboardPage() {
-  const session = await getSession();
-
   const [statsResult, batchesResult] = await Promise.all([getSellerStats(), recentBatches()]);
 
   if (!statsResult.data) {

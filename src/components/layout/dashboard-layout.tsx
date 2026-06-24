@@ -4,7 +4,7 @@ import { authorizeByRequiredRole } from '@/lib/authorization';
 import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';
 import { NotificationProvider } from '@/contexts/notification-context';
 import { AppSection } from '@/types';
-import { dashboardMap } from '@/types/application';
+import { dashboardMap } from '@/types';
 import { Role } from '@/generated/prisma/enums';
 import { Card } from '../ui/card';
 import prisma from '@/lib/prisma';

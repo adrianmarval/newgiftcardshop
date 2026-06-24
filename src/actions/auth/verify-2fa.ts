@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { actionClient } from '@/lib/safe-action';
 import { authApi } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { dashboardMap, portalSchema } from '@/types/';
+import { dashboardMap, portalSchema } from '@/types';
 
 const verify2FAInputSchema = z.object({
   code: z.string().min(1, 'Code is required'),

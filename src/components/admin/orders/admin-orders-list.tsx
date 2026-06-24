@@ -7,7 +7,7 @@ import { AdminOrderCard } from '@/components/admin/orders/admin-order-card';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { AdminOrder } from '@/types';
-import type { Giftcard } from '@/types/domain/giftcard';
+import type { Giftcard } from '@/types';
 
 interface AdminOrdersListProps {
   orders: AdminOrder[];

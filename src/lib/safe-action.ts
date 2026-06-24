@@ -3,7 +3,7 @@ import { auth } from './auth';
 import { betterAuth } from '@next-safe-action/adapter-better-auth';
 import { Role } from '@/generated/prisma/enums';
 import { unauthorized } from 'next/navigation';
-import type { Session } from '@/types/auth/session';
+import type { Session } from '@/types';
 
 export class ActionError extends Error {
   constructor(message: string) {

@@ -2,26 +2,7 @@ import prisma from '@/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/client';
 import { settingsService } from '@/lib/settings/settings.service';
 import { notificationService } from '@/lib/notifications/notification.service';
-
-export interface EscalationConfig {
-  enabled: boolean;
-  durationMinutes: number;
-  dropAmount: number;
-}
-
-export interface TierInfo {
-  buyerBuyRate: number;
-  accessibleAmount: string;
-  totalAvailableAmount: string;
-  tiers: { tier: number; amount: string }[];
-}
-
-interface TierDropEvent {
-  giftcardId: string;
-  brandCountryId: string;
-  oldTier: number;
-  newTier: number;
-}
+import type { EscalationConfig, TierInfo, TierDropEvent } from '@/types';
 
 export class GiftcardEscalationService {
   async getConfig(): Promise<EscalationConfig> {
@@ -36,7 +17,6 @@ export class GiftcardEscalationService {
     });
 
     if (maxUserRate && maxUserRate.buyRate.gt(0)) {
-      console.log('me ejecute');
       return Math.floor(maxUserRate.buyRate.toNumber() * 100);
     }
 

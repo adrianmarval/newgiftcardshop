@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Check, Globe, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useBuyFlow, type TierInfo } from '@/hooks/use-buy-flow';
+import { useBuyFlow, type BuyFlowTierInfo } from '@/hooks/use-buy-flow';
 import { searchGiftcards } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
@@ -201,7 +201,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         }
         setStep(2);
       } else if (error) {
-        const tierInfoData = tierInfo as TierInfo | undefined;
+        const tierInfoData = tierInfo as BuyFlowTierInfo | undefined;
         if (tierInfoData) {
           setTierInfo(tierInfoData);
         }

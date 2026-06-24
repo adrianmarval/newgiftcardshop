@@ -7,7 +7,7 @@ import { fmt$ } from '@/bot/shared/formatters.js';
 import { findGiftcardCombination } from '@/lib/browse-giftcards';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
-import { getUserRates } from '@/services/pricing.service';
+import { getUserRates } from '@/lib/services/pricing.service';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
 import { estimateTimeToAccess, getEscalationConfig } from '@/lib/services/tier-estimation.service';

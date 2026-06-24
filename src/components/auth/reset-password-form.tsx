@@ -12,7 +12,7 @@ import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { resetPassword } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import { AppSection, appSectionMap } from '@/types';
-import { PasswordCheckItem } from './ui/PasswordCheckItem';
+import { PasswordCheckItem } from './ui/password-check-item';
 
 interface ResetPasswordFormProps {
   portal?: AppSection;

@@ -1,6 +1,6 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/hooks/use-theme';
 import { NavItem } from './types';
 import { useNotifications } from '@/contexts/notification-context';
 import { cn } from '@/lib/utils';

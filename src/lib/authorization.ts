@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { redirect, unauthorized } from 'next/navigation';
 import type { Role } from '@/generated/prisma/enums';
-import type { Session } from '@/types/auth/session';
+import type { Session } from '@/types';
 
 export async function getSession(): Promise<Session> {
   const session = await auth.api.getSession({ headers: await headers() });

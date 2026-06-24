@@ -1,7 +1,7 @@
 'use server';
 
 import { adminActionClient } from '@/lib/safe-action';
-import binance from '@/services/binance.service';
+import binance from '@/lib/services/binance.service';
 import { Asset, Network } from '@/types';
 import z from 'zod';
 import prisma from '@/lib/prisma';

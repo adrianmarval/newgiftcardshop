@@ -6,8 +6,8 @@ import { AdminOrdersFilters } from '@/components/admin/orders/admin-orders-filte
 import { AdminOrdersList } from '@/components/admin/orders/admin-orders-list';
 import { AdminReportDialog } from '@/components/admin/orders/admin-report-dialog';
 import { AdminBuyerDialog } from '@/components/admin/orders/admin-buyer-dialog';
-import { StatusLeyend } from '@/components/ui/status-leyend';
-import type { Giftcard } from '@/types/domain/giftcard';
+import { StatusLegend } from '@/components/ui/status-legend';
+import type { Giftcard } from '@/types';
 import type { AdminOrder, PaginationMeta } from '@/types';
 
 interface AdminOrdersViewProps {
@@ -59,7 +59,7 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
 
   return (
     <div className="space-y-1">
-      <StatusLeyend />
+      <StatusLegend />
       <AdminOrdersFilters buyers={buyers} />
       <AdminOrdersList
         orders={orders}

@@ -7,9 +7,9 @@ import { AdminBatchesFilters } from './admin-batches-filters';
 import { AdminBatchesList } from './admin-batches-list';
 import { AdminPayDialog } from './admin-pay-dialog';
 import { AdminSellerDialog } from './admin-seller-dialog';
-import type { AdminBatch, PaginationMeta } from '@/types/';
+import type { AdminBatch, PaginationMeta } from '@/types';
 import { IconCurrencyDollar } from '@tabler/icons-react';
-import { StatusLeyend } from '@/components/ui/status-leyend';
+import { StatusLegend } from '@/components/ui/status-legend';
 
 interface AdminBatchesClientProps {
   batches: AdminBatch[];
@@ -69,7 +69,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
 
   return (
     <div className="space-y-1">
-      <StatusLeyend />
+      <StatusLegend />
 
       <AdminBatchesFilters sellers={sellers} />
 

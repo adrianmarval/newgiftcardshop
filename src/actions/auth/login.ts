@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { dashboardMap, portalSchema, roleMap } from '@/types/';
+import { dashboardMap, portalSchema, roleMap } from '@/types';
 
 const loginInputSchema = z.object({
   email: z.email('Invalid email address'),

@@ -4,7 +4,7 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { CardFooter } from '@/components/ui/card';
 import { GiftcardItem } from '@/components/ui/giftcard-item';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import type { Giftcard } from '@/types/domain/giftcard';
+import type { Giftcard } from '@/types';
 import type { AdminOrder } from '@/types';
 
 interface GiftcardWithSeller extends Giftcard {

@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { buyerActionClient } from '@/lib/safe-action';
-import { getUserRates } from '@/services/pricing.service';
+import { getUserRates } from '@/lib/services/pricing.service';
 
 const getUserBuyRateInputSchema = z.object({
   brandCountryId: z.string().optional(),

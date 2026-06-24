@@ -1,17 +1,23 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Domain — Barrel export
-// Only cross-feature domain types live here.
-// Note: Enums are imported directly from '@/generated/prisma/enums'
+// Escalation — Tier escalation config types
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Core entities
-export * from './giftcard';
-export * from './payment';
-export * from './order';
-export * from './brand-country';
+export interface EscalationConfig {
+  enabled: boolean;
+  durationMinutes: number;
+  dropAmount: number;
+}
 
-// Entity collections
-export * from './batch';
+export interface TierInfo {
+  buyerBuyRate: number;
+  accessibleAmount: string;
+  totalAvailableAmount: string;
+  tiers: { tier: number; amount: string }[];
+}
 
-// Escalation
-export * from './escalation';
+export interface TierDropEvent {
+  giftcardId: string;
+  brandCountryId: string;
+  oldTier: number;
+  newTier: number;
+}

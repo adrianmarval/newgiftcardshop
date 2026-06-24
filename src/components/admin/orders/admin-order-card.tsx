@@ -14,7 +14,7 @@ import { AdminOrderDetails } from '@/components/admin/orders/admin-order-details
 import { cancelOrder } from '@/actions/admin/orders';
 import { Spinner } from '@/components/ui/spinner';
 import { orderStatusConfig } from '@/lib/ui-config';
-import type { Giftcard } from '@/types/domain/giftcard';
+import type { Giftcard } from '@/types';
 import Image from 'next/image';
 import { AdminOrder } from '@/types';
 

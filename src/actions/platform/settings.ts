@@ -2,7 +2,7 @@
 
 import { Decimal } from '@/generated/prisma/internal/prismaNamespace';
 import prisma from '@/lib/prisma';
-import { adminActionClient, authActionClient } from '@/lib/safe-action';
+import { ActionError, adminActionClient, authActionClient } from '@/lib/safe-action';
 import { SETTING_KEYS, SETTING_DEFINITIONS, validateSettingValue, serializeSettingValue, type SettingKey } from '@/lib/settings/schemas';
 import z from 'zod';
 
@@ -65,16 +65,16 @@ export const setPlatformSetting = adminActionClient
     const definition = SETTING_DEFINITIONS[settingKey];
 
     if (!definition) {
-      throw new Error(`Setting "${key}" is not a defined configuration`);
+      throw new ActionError(`Setting "${key}" is not a defined configuration`);
     }
 
     if (definition.auditOnly) {
-      throw new Error(`Setting "${key}" is audit-only and cannot be edited`);
+      throw new ActionError(`Setting "${key}" is audit-only and cannot be edited`);
     }
 
     const validation = validateSettingValue(settingKey, value);
     if (!validation.valid) {
-      throw new Error(`Invalid value for ${key}: ${validation.error}`);
+      throw new ActionError(`Invalid value for ${key}: ${validation.error}`);
     }
 
     const serialized = serializeSettingValue(settingKey, value);
@@ -100,11 +100,11 @@ export const deletePlatformSetting = adminActionClient
     const definition = SETTING_DEFINITIONS[settingKey];
 
     if (!definition) {
-      throw new Error(`Setting "${key}" is not a defined configuration`);
+      throw new ActionError(`Setting "${key}" is not a defined configuration`);
     }
 
     if (definition.auditOnly) {
-      throw new Error(`Setting "${key}" is audit-only and cannot be deleted`);
+      throw new ActionError(`Setting "${key}" is audit-only and cannot be deleted`);
     }
 
     await prisma.platformSettings.delete({

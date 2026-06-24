@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { IconSearch, IconShoppingBag, IconClock } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import type { BuyerStats, OrderBookEntry } from '@/types/domain/order';
+import type { BuyerStats, OrderBookEntry } from '@/types';
 
 interface BuyerDashboardProps {
   stats: BuyerStats;

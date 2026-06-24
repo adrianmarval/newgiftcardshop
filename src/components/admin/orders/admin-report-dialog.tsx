@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { manageReport } from '@/actions/admin/orders';
 import { Spinner } from '@/components/ui/spinner';
 import { InlineAlert, type InlineAlertVariant } from '@/components/ui/inline-alert';
-import type { Giftcard } from '@/types/domain/giftcard';
+import type { Giftcard } from '@/types';
 
 interface AdminReportDialogProps {
   card: Giftcard | null;

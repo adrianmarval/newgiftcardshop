@@ -1,7 +1,7 @@
 import { NavItem } from './types';
 import { SidebarItem } from './sidebar-item';
 import { MoreDropDownMenu } from './more-dropdown-menu';
-export type AppSection = 'buy' | 'sell' | 'admin';
+import type { AppSection } from '@/types';
 
 const NAV_ITEMS: Record<AppSection, NavItem[]> = {
   buy: [

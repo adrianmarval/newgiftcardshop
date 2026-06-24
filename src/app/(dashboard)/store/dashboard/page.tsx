@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { buyerStats } from '@/actions/buyer/stats/buyer-stats';
 import { BuyerDashboard } from '@/components/buy/buyer-dashboard';
-import type { BuyerStats as BuyerStatsType } from '@/types/domain/order';
+import type { BuyerStats as BuyerStatsType } from '@/types';
 
 export const metadata: Metadata = {
   title: `Dashboard de Comprador | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,

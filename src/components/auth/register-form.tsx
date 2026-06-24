@@ -11,7 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { register } from '@/actions';
 import { useAction } from 'next-safe-action/hooks';
 import { AppSection } from '@/types';
-import { PasswordCheckItem } from './ui/PasswordCheckItem';
+import { PasswordCheckItem } from './ui/password-check-item';
 
 export interface RegisterFormProps {
   portal: AppSection;
