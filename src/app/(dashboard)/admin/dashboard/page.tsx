@@ -33,8 +33,6 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="w-full space-y-4">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">PANEL DE ADMINISTRACIÓN</h1>
-
       <div className="grid auto-rows-min gap-1 md:grid-cols-3">
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>
