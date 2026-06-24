@@ -1,12 +1,14 @@
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar';
+import { AppTopBar } from '@/components/layout/app-top-bar';
 import { authorizeByRequiredRole } from '@/lib/authorization';
 import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';
 import { NotificationProvider } from '@/contexts/notification-context';
 import { AppSection } from '@/types';
+import { dashboardMap } from '@/types/application';
 import { Role } from '@/generated/prisma/enums';
 import { Card } from '../ui/card';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/authorization';
+import { decryptBuffer } from '@/lib/encryption';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -24,12 +26,25 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
   const session = await authorizeByRequiredRole(requiredRoles);
 
   let initialUnreadCounts: Record<string, number> | undefined;
+  let telegramPhotoDataUrl: string | null = null;
   try {
     const unreadCount = await prisma.notification.count({
       where: { userId: session.user.id, read: false },
     });
     const badgeKey = PORTAL_BADGE_KEY[portal];
     initialUnreadCounts = { buyer: 0, seller: 0, admin: 0, [badgeKey]: unreadCount };
+
+    if (session.user.telegramUser?.hasPhoto) {
+      const tu = await prisma.telegramUser.findUnique({
+        where: { userId: session.user.id },
+        select: { photoData: true, photoMimeType: true },
+      });
+      if (tu?.photoData) {
+        const decrypted = decryptBuffer(Buffer.from(tu.photoData));
+        const mimeType = tu.photoMimeType || 'image/jpeg';
+        telegramPhotoDataUrl = `data:${mimeType};base64,${decrypted.toString('base64')}`;
+      }
+    }
   } catch (err) {
     console.error('[DashboardLayout] Error fetching unread count:', err);
   }
@@ -40,7 +55,17 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
         <div className="flex h-svh flex-col pb-2 ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}
           <Card className="order-1 flex-10 overflow-hidden rounded-none py-0 shadow-2xl md:rounded-t-4xl md:p-4 lg:order-2">
-            <div className="custom-scrollbar h-full overflow-x-hidden overflow-y-auto p-1">{children}</div>
+            <AppTopBar
+              portal={portal}
+              userName={session.user.name}
+              telegramPhotoDataUrl={telegramPhotoDataUrl}
+              profileUrl={`${dashboardMap[portal]}/profile`}
+              notificationHref={`${dashboardMap[portal]}/notifications`}
+              notificationBadgeKey={PORTAL_BADGE_KEY[portal]}
+            />
+            <div className="custom-scrollbar h-full overflow-x-hidden overflow-y-auto p-1">
+              {children}
+            </div>
           </Card>
 
           {/*sidebar*/}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NotificationsList } from './notifications-list';
 import { NotificationsSettings, type NotificationsSettingsProps } from './notifications-settings';
@@ -41,7 +42,9 @@ export const NotificationsPageClient = ({
   initialUnreadCount,
   settingsProps,
 }: NotificationsPageClientProps) => {
-  const [activeTab, setActiveTab] = useState<'notifications' | 'settings'>('notifications');
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'settings' ? 'settings' : 'notifications';
+  const [activeTab, setActiveTab] = useState<'notifications' | 'settings'>(initialTab);
 
   return (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'notifications' | 'settings')}>

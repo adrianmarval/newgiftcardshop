@@ -9,16 +9,12 @@ const NAV_ITEMS: Record<AppSection, NavItem[]> = {
     { title: 'Historial', url: '/store/dashboard/orders', icon: 'history' },
     { title: 'Comprar', url: '/store/dashboard/browse-cards', icon: 'cart' },
     { title: 'Perfil', url: '/store/dashboard/profile', icon: 'user' },
-    { title: 'Notificaciones', url: '/store/dashboard/notifications', icon: 'bell', badgeKey: 'buyer' },
-    { title: 'Tema', url: '/theme', icon: 'theme' },
   ],
   sell: [
     { title: 'Home', url: '/sell/dashboard', icon: 'home' },
     { title: 'History', url: '/sell/dashboard/cards', icon: 'cards' },
     { title: 'Sell', url: '/sell/dashboard/sell-cards', icon: 'cash' },
     { title: 'Profile', url: '/sell/dashboard/profile', icon: 'user' },
-    { title: 'notifications', url: '/sell/dashboard/notifications', icon: 'bell', badgeKey: 'seller' },
-    { title: 'Tema', url: '/theme', icon: 'theme' },
   ],
   admin: [
     { title: 'Home', url: '/admin/dashboard', icon: 'home' },
@@ -29,8 +25,6 @@ const NAV_ITEMS: Record<AppSection, NavItem[]> = {
     { title: 'Brands', url: '/admin/dashboard/brands', icon: 'tag' },
     { title: 'Config', url: '/admin/dashboard/configuracion', icon: 'settings' },
     { title: 'Perfil', url: '/admin/dashboard/profile', icon: 'user' },
-    { title: 'Notificaciones', url: '/admin/dashboard/notifications', icon: 'bell', badgeKey: 'admin' },
-    { title: 'Tema', url: '/theme', icon: 'theme' },
   ],
 };
 

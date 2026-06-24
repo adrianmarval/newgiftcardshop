@@ -196,11 +196,9 @@ export function ConfigManager({ initialSettings, initialWhatsAppStatus }: Config
             <div className="flex items-center gap-3">
               <MessageSquare className={`h-5 w-5 ${isWhatsAppConnected ? 'text-green-500' : 'text-muted-foreground'}`} />
               <div>
-                <p className="font-medium">Canal WhatsApp</p>
+                <p className="font-medium">Canal de Notificaciones WhatsApp</p>
                 <p className="text-muted-foreground text-sm">
-                  {isWhatsAppConnected
-                    ? `Conectado · ${whatsappStatus.phoneNumber}`
-                    : 'No configurado'}
+                  {isWhatsAppConnected ? `Conectado · ${whatsappStatus.phoneNumber}` : 'No configurado'}
                 </p>
               </div>
             </div>
@@ -211,21 +209,17 @@ export function ConfigManager({ initialSettings, initialWhatsAppStatus }: Config
                   size="icon"
                   onClick={() => executeDisconnect()}
                   disabled={disconnectStatus === 'executing'}
-                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                  className="h-8 w-8 text-red-500 hover:bg-red-500/10 hover:text-red-600"
                   title="Desconectar"
                 >
-                  {disconnectStatus === 'executing' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <PowerOff className="h-4 w-4" />
-                  )}
+                  {disconnectStatus === 'executing' ? <Loader2 className="h-4 w-4 animate-spin" /> : <PowerOff className="h-4 w-4" />}
                 </Button>
               ) : (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsWhatsAppOpen(true)}
-                  className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                  className="h-8 w-8 text-green-500 hover:bg-green-500/10 hover:text-green-600"
                   title="Vincular"
                 >
                   <Power className="h-4 w-4" />
@@ -236,11 +230,7 @@ export function ConfigManager({ initialSettings, initialWhatsAppStatus }: Config
         </div>
       </div>
 
-      <WhatsAppModal
-        open={isWhatsAppOpen}
-        onOpenChange={setIsWhatsAppOpen}
-        onStatusChange={setWhatsappStatus}
-      />
+      <WhatsAppModal open={isWhatsAppOpen} onOpenChange={setIsWhatsAppOpen} onStatusChange={setWhatsappStatus} />
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
