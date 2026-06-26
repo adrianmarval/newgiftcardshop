@@ -5,8 +5,8 @@ import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Payment } from '@/types/domain';
-import { showAlert } from '@/lib/swal';
-import { paymentCategoryConfig, paymentDirectionConfig } from '@/lib/ui-config';
+import { showAlert } from '@/lib/ui';
+import { paymentCategoryConfig, paymentDirectionConfig } from '@/lib/config/ui-config';
 
 interface AdminPaymentsListProps {
   payments: Payment[];

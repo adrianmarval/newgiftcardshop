@@ -4,13 +4,19 @@ import type { BuyerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtGiftcardStatus, fmtDate } from '@/bot/shared/formatters.js';
 import { decrypt } from '@/lib/encryption';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
-
-function strike(text: string) {
-  return text
-    .split('')
-    .map((char) => char + '\u0336')
-    .join('');
-}
+import {
+  findOrderForUser,
+  canCancelOrder,
+  cancelOrder,
+  confirmOrderUsage,
+  completeOrderPayment,
+  reportGiftcardIssue,
+  deleteGiftcardIssue,
+  OrderAlreadyProcessedError,
+} from '@/lib/services/order';
+import { computeEffectiveTotalDecimal } from '@/lib/services/pricing/pricing';
+import { Prisma } from '@/generated/prisma/client';
+import { strike } from '@/bot/shared/formatters';
 
 const PAGE_SIZE = 5;
 
@@ -48,23 +54,17 @@ export async function handleOrders(ctx: BuyerContext) {
   msg += '👇 Selecciona una orden para ver sus detalles:';
 
   for (const order of orders) {
-    let icon = '🟡'; // PENDING
-    if (order.status === 'COMPLETED') {
-      icon = '🟢';
-    } else if (order.status === 'AWAITING_PAYMENT') {
-      icon = '🔵';
-    } else if (order.status === 'CANCELLED') {
-      icon = '🔴';
-    }
+    let icon = '🟡';
+    if (order.status === 'COMPLETED') icon = '🟢';
+    else if (order.status === 'AWAITING_PAYMENT') icon = '🔵';
+    else if (order.status === 'CANCELLED') icon = '🔴';
 
     const shortId = order.id.slice(-8).toUpperCase();
     const dateStr = fmtDate(order.createdAt);
     const label = `${icon} Orden #${shortId} · ${dateStr}`;
-
     kb.text(label, `order_detail_${order.id}_${page}`).row();
   }
 
-  // Pagination buttons
   const hasNext = skip + PAGE_SIZE < totalCount;
   const hasPrev = page > 1;
 
@@ -76,7 +76,6 @@ export async function handleOrders(ctx: BuyerContext) {
   }
 
   kb.text('🏠 Volver al Menú', 'start');
-
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
 }
 
@@ -89,7 +88,14 @@ export async function handleOrderDetail(ctx: BuyerContext) {
 
   ctx.session.wizard.orderId = orderId;
 
-  const order = await prisma.order.findUnique({
+  let order;
+  try {
+    order = await findOrderForUser(orderId, ctx.user.id);
+  } catch {
+    return ctx.answerCallbackQuery('Orden no encontrada');
+  }
+
+  const orderWithBrand = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
       giftcards: {
@@ -99,11 +105,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
     },
   });
 
-  if (!order || order.userId !== ctx.user.id) {
-    return ctx.answerCallbackQuery('Orden no encontrada');
-  }
-
-  const { Prisma } = await import('@/generated/prisma/client');
+  if (!orderWithBrand) return ctx.answerCallbackQuery('Orden no encontrada');
 
   const nullifiedCards = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED' && c.status !== 'WRONG_AMOUNT');
   const availableCards = order.giftcards.filter((c) => c.status === 'UNUSED' || c.status === 'USED' || c.status === 'WRONG_AMOUNT');
@@ -116,7 +118,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
 
   const totalToPay = order.status === 'PENDING' ? totalGiftcardAmount.mul(order.buyRate) : (order.adjustedTotal ?? order.total);
 
-  const currency = order.giftcards[0]?.brandCountry?.country?.currency || 'USD';
+  const currency = orderWithBrand.giftcards[0]?.brandCountry?.country?.currency || 'USD';
   const discountPercent = (1 - order.buyRate.toNumber()) * 100;
   const discountAmount = totalGiftcardAmount.mul(new Prisma.Decimal(1).minus(order.buyRate));
 
@@ -140,10 +142,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
             const claimCode = escapeHTML(decrypt(c.claimCode));
             const isWrong = c.status === 'WRONG_AMOUNT';
             const amt = c.reportedAmount ?? c.amount;
-
-            if (isWrong) {
-              return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount, currency))} → ${fmt$(amt, currency)}`;
-            }
+            if (isWrong) return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount, currency))} → ${fmt$(amt, currency)}`;
             return `• <code>${claimCode}</code> - ${fmt$(amt, currency)}`;
           })
           .join('\n') +
@@ -200,37 +199,21 @@ export async function handleCancelOrder(ctx: BuyerContext) {
   const orderId = ctx.callbackQuery?.data?.replace('cancel_order_', '');
   if (!orderId) return ctx.answerCallbackQuery();
 
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { giftcards: true },
-  });
+  let order;
+  try {
+    order = await findOrderForUser(orderId, ctx.user.id);
+  } catch {
+    return ctx.answerCallbackQuery('Orden no encontrada');
+  }
 
-  if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery('Orden no encontrada');
   if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Solo se pueden cancelar órdenes pendientes');
 
-  const hasActiveCards = order.giftcards.some((g) => {
-    if (g.status === 'UNUSED' || g.status === 'USED') return true;
-    if (g.status === 'WRONG_AMOUNT' && g.reportedAmount && g.reportedAmount.toNumber() > 0) return true;
-    return false;
-  });
-
-  if (hasActiveCards) {
+  if (!canCancelOrder(order.giftcards)) {
     await ctx.answerCallbackQuery('Error: No se puede cancelar porque contiene tarjetas con saldo activo.');
     return;
   }
 
-  await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      status: 'CANCELLED',
-      giftcards: {
-        updateMany: {
-          where: { id: { in: order.giftcards.map((c) => c.id) } },
-          data: { isConfirmed: true },
-        },
-      },
-    },
-  });
+  await cancelOrder(orderId);
 
   await renderUI(ctx, '❌ <b>Orden cancelada.</b>\n\nLas tarjetas reportadas han sido guardadas y la orden cerrada.', {
     parse_mode: 'HTML',
@@ -243,15 +226,15 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
   const orderId = ctx.callbackQuery?.data?.replace('confirm_usage_', '');
   if (!orderId) return ctx.answerCallbackQuery();
 
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { giftcards: true },
-  });
+  let order;
+  try {
+    order = await findOrderForUser(orderId, ctx.user.id);
+  } catch {
+    return ctx.answerCallbackQuery('Orden no encontrada');
+  }
 
-  if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery('Orden no encontrada');
   if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Estado inválido');
 
-  const { Prisma } = await import('@/generated/prisma/client');
   const totalEffectiveFaceValue = order.giftcards.reduce((sum, c) => {
     if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)) return sum;
     return sum.plus(c.reportedAmount ?? c.amount);
@@ -290,54 +273,33 @@ export async function handleConfirmUsageFinal(ctx: BuyerContext) {
   const orderId = ctx.callbackQuery?.data?.replace('confirm_usage_final_', '');
   if (!orderId) return ctx.answerCallbackQuery();
 
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { giftcards: true },
-  });
+  let order;
+  try {
+    order = await findOrderForUser(orderId, ctx.user.id);
+  } catch {
+    return ctx.answerCallbackQuery('Orden no encontrada');
+  }
 
-  if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery('Orden no encontrada');
   if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Estado inválido');
 
-  const { Prisma } = await import('@/generated/prisma/client');
-  const totalEffectiveFaceValue = order.giftcards.reduce((sum, c) => {
-    if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)) return sum;
-    return sum.plus(c.reportedAmount ?? c.amount);
-  }, new Prisma.Decimal(0));
-
-  const adjustedTotal = totalEffectiveFaceValue.mul(order.buyRate);
-
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id: orderId, status: 'PENDING' },
-        data: { status: 'AWAITING_PAYMENT', adjustedTotal },
-      });
-      for (const card of order.giftcards) {
-        await tx.giftcard.update({
-          where: { id: card.id },
-          data: {
-            status: card.status === 'UNUSED' ? 'USED' : card.status,
-            isConfirmed: true,
-          },
-        });
-      }
-    });
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+    const { adjustedTotal } = await confirmOrderUsage(orderId, order.giftcards, order.buyRate);
+
+    const kb = new InlineKeyboard().text('💳 Enviar pago ahora', `make_payment_${orderId}`).row().text('⬅️ Ver mis órdenes', 'my_orders');
+
+    await renderUI(
+      ctx,
+      `✅ <b>Uso confirmado.</b>\n\nTotal a pagar: <b>${fmt$(adjustedTotal, 'USD')}</b>\n\n` +
+        `Enviá el pago en USDT a la dirección del administrador y confirmá con el botón.`,
+      { parse_mode: 'HTML', reply_markup: kb, callbackText: 'Uso confirmado' },
+    );
+  } catch (err: any) {
+    if (err?.code === 'P2025') {
       await ctx.answerCallbackQuery('La orden ya fue procesada');
       return;
     }
     throw err;
   }
-
-  const kb = new InlineKeyboard().text('💳 Enviar pago ahora', `make_payment_${orderId}`).row().text('⬅️ Ver mis órdenes', 'my_orders');
-
-  await renderUI(
-    ctx,
-    `✅ <b>Uso confirmado.</b>\n\nTotal a pagar: <b>${fmt$(adjustedTotal, 'USD')}</b>\n\n` +
-      `Enviá el pago en USDT a la dirección del administrador y confirmá con el botón.`,
-    { parse_mode: 'HTML', reply_markup: kb, callbackText: 'Uso confirmado' },
-  );
 }
 
 export async function handleMakePayment(ctx: BuyerContext) {
@@ -367,55 +329,34 @@ export async function handlePaymentText(ctx: BuyerContext) {
       reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start'),
     });
 
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || order.userId !== ctx.user.id || order.status !== 'AWAITING_PAYMENT') {
-    return renderUI(ctx, '❌ Orden no encontrada o en estado inválido.', { reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start') });
+  try {
+    await findOrderForUser(orderId, ctx.user.id);
+  } catch {
+    return renderUI(ctx, '❌ Orden no encontrada o en estado inválido.', {
+      reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start'),
+    });
   }
 
-  const { Prisma } = await import('@/generated/prisma/client');
-  const paymentAmount = order.adjustedTotal ?? order.total;
-
   try {
-    await prisma.$transaction(async (tx) => {
-      const updatedSettings = await tx.platformSettings.upsert({
-        where: { key: 'platformBalance' },
-        update: { balance: { increment: paymentAmount } },
-        create: { key: 'platformBalance', value: '', description: 'Balance General', balance: paymentAmount },
-      });
+    const { paymentAmount } = await completeOrderPayment(orderId, txId);
 
-      await tx.payment.create({
-        data: {
-          amount: paymentAmount,
-          balanceAfter: updatedSettings.balance,
-          direction: 'CREDIT',
-          category: 'ORDER',
-          orderId: order.id,
-          binanceTxId: txId,
-          relatedUserId: order.userId,
-        },
-      });
-      await tx.order.update({ where: { id: order.id, status: 'AWAITING_PAYMENT' }, data: { status: 'COMPLETED' } });
-    });
+    ctx.session.wizard.step = 'idle';
+    ctx.session.wizard.orderId = undefined;
+
+    const kb = new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders');
+    return renderUI(
+      ctx,
+      `✅ <b>¡Pago registrado!</b>\n\nOrden completada por <b>${fmt$(paymentAmount, 'USD')}</b>.\n\n<i>TxID: ${escapeHTML(txId)}</i>`,
+      { parse_mode: 'HTML', reply_markup: kb },
+    );
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      return renderUI(ctx, ' Esta orden ya fue procesada.', { reply_markup: new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders') });
+    if (err instanceof OrderAlreadyProcessedError) {
+      return renderUI(ctx, ' Esta orden ya fue procesada.', {
+        reply_markup: new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders'),
+      });
     }
     throw err;
   }
-
-  ctx.session.wizard.step = 'idle';
-  ctx.session.wizard.orderId = undefined;
-
-  const kb = new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders');
-
-  return renderUI(
-    ctx,
-    `✅ <b>¡Pago registrado!</b>\n\nOrden completada por <b>${fmt$(paymentAmount, 'USD')}</b>.\n\n<i>TxID: ${escapeHTML(txId)}</i>`,
-    {
-      parse_mode: 'HTML',
-      reply_markup: kb,
-    },
-  );
 }
 
 // ── Problem Reporting ────────────────────────────────────────────────────────
@@ -427,17 +368,35 @@ export async function handleReportIssues(ctx: BuyerContext) {
     ctx.session.wizard.orderId;
   if (!orderId) return ctx.answerCallbackQuery?.('Error en la sesión');
 
-  const order = await prisma.order.findUnique({
+  let order;
+  try {
+    order = await findOrderForUser(orderId, ctx.user.id);
+  } catch {
+    return ctx.answerCallbackQuery?.('Orden no encontrada');
+  }
+
+  const orderWithBrand = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { giftcards: { orderBy: { id: 'asc' }, include: { brandCountry: { include: { brand: true, country: true } } } } },
+    include: {
+      giftcards: {
+        orderBy: { id: 'asc' },
+        include: { brandCountry: { include: { brand: true, country: true } } },
+      },
+    },
   });
 
-  if (!order || order.userId !== ctx.user.id) return ctx.answerCallbackQuery?.('Orden no encontrada');
+  if (!orderWithBrand) return ctx.answerCallbackQuery?.('Orden no encontrada');
+
+  if (order.status !== 'PENDING') {
+    return renderUI(ctx, '⚠️ No se pueden reportar problemas en una orden que ya fue confirmada.', {
+      reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
+    });
+  }
 
   const kb = new InlineKeyboard();
   let msg = '🚩 <b>¿Con qué tarjeta tenés problemas?</b>\n\nSeleccioná una tarjeta para reportar o gestionar un reporte existente:';
 
-  const currency = order.giftcards[0]?.brandCountry?.country?.currency || 'USD';
+  const currency = orderWithBrand.giftcards[0]?.brandCountry?.country?.currency || 'USD';
 
   for (const card of order.giftcards) {
     const isReported = card.status !== 'UNUSED' && card.status !== 'USED';
@@ -466,7 +425,6 @@ export async function handleReportIssues(ctx: BuyerContext) {
   }
 
   kb.text('⬅️ Volver al detalle', `order_detail_${orderId}`);
-
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
 }
 
@@ -536,19 +494,13 @@ export async function handleReportDelete(ctx: BuyerContext) {
   const { reportCardId, orderId } = ctx.session.wizard;
   if (!reportCardId || !orderId) return ctx.answerCallbackQuery('Error en la sesión');
 
-  await prisma.$transaction(async (tx) => {
-    await tx.giftcardIssue.deleteMany({
-      where: { giftcardId: reportCardId, orderId, reportedById: ctx.user.id },
+  try {
+    await deleteGiftcardIssue(reportCardId, orderId, ctx.user.id);
+  } catch (err) {
+    return renderUI(ctx, `❌ ${(err as Error).message}`, {
+      reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
     });
-
-    const remaining = await tx.giftcardIssue.findFirst({ where: { giftcardId: reportCardId } });
-    if (!remaining) {
-      await tx.giftcard.update({
-        where: { id: reportCardId },
-        data: { status: 'UNUSED', reportedAmount: null },
-      });
-    }
-  });
+  }
 
   const kb = new InlineKeyboard().text('⬅️ Volver a la lista', `report_issues_${orderId}`);
   await renderUI(ctx, '✅ <b>Reporte eliminado.</b>\n\nLa tarjeta volvió a estar marcada como sin usar.', {
@@ -568,7 +520,7 @@ export async function handleReportTypeSelect(ctx: BuyerContext) {
     ctx.session.wizard.step = 'awaitingReportAmount';
     await renderUI(ctx, '📉 <b>¿Cuál es el monto real que tiene la tarjeta?</b>\n\nIngresá solo el número (ejemplo: 50):', {
       parse_mode: 'HTML',
-      reply_markup: new InlineKeyboard().text('❌ Cancelar', `report_issues_${ctx.session.wizard.orderId}`),
+      reply_markup: new InlineKeyboard().text('❌ Cancelar', `report_type_WRONG_AMOUNT`),
     });
     return;
   }
@@ -612,7 +564,6 @@ export async function handleReportProofPhoto(ctx: BuyerContext) {
 
   await deleteUserInput(ctx);
 
-  // En un sistema real, subiríamos a S3/R2. Por ahora guardamos el file_id de Telegram
   ctx.session.wizard.reportProofUrl = photo.file_id;
   return submitReport(ctx);
 }
@@ -630,38 +581,14 @@ async function submitReport(ctx: BuyerContext) {
     });
   }
 
-  const { Prisma } = await import('@/generated/prisma/client');
-
   try {
-    const card = await prisma.giftcard.findUnique({
-      where: { id: reportCardId },
-      select: { ownerId: true },
-    });
-
-    await prisma.$transaction(async (tx) => {
-      await tx.giftcardIssue.deleteMany({
-        where: { giftcardId: reportCardId, orderId, reportedById: ctx.user.id },
-      });
-
-      await tx.giftcardIssue.create({
-        data: {
-          issueType: reportIssueType,
-          reportedAmount: reportAmount ? new Prisma.Decimal(reportAmount) : undefined,
-          giftcardId: reportCardId,
-          orderId: orderId,
-          reportedById: ctx.user.id,
-          sellerId: card?.ownerId ?? undefined,
-          proofImageUrl: reportProofUrl,
-        },
-      });
-
-      await tx.giftcard.update({
-        where: { id: reportCardId },
-        data: {
-          status: reportIssueType,
-          reportedAmount: reportAmount ? new Prisma.Decimal(reportAmount) : undefined,
-        },
-      });
+    await reportGiftcardIssue({
+      giftcardId: reportCardId,
+      orderId,
+      userId: ctx.user.id,
+      issueType: reportIssueType,
+      reportedAmount: reportAmount,
+      proofImageUrl: reportProofUrl,
     });
 
     ctx.session.wizard.step = 'idle';

@@ -1,10 +1,12 @@
+'use client';
+
 import { CardFooter } from '@/components/ui/card';
-import { showAlert } from '@/lib/swal';
-import { GiftcardItem } from '@/components/ui/giftcard-item';
+import { showAlert } from '@/lib/ui';
+import { GiftcardItem } from '@/components/common/giftcard-item';
 import { deleteCard } from '@/actions/admin/batches';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { AdminBatchGallery } from './admin-batch-gallery';
-import { AdminBatch } from '@/types';
+import type { AdminBatch } from '@/types';
 
 interface AdminBatchDetailsProps {
   batch: AdminBatch;

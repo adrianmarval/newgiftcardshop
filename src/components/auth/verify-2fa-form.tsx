@@ -2,16 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { ShieldCheck, KeyRound, Laptop } from 'lucide-react';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth/auth-client';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { AppSection } from '@/types';
+import type { AppSection } from '@/types';
 import { dashboardMap } from '@/types';
 
 export interface Verify2FAFormProps {

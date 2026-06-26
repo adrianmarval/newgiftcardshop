@@ -3,9 +3,11 @@
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
-import { decrypt, hashCode } from '@/lib/encryption';
+import { hashCode } from '@/lib/encryption';
 import { adminActionClient } from '@/lib/safe-action';
 import { PaymentDirection, PaymentCategory } from '@/generated/prisma/enums';
+import { computeFaceValueTotal } from '@/lib/services/pricing/pricing';
+import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
 
 const listBatchesInputSchema = z.object({
   sellerId: z.string().nullable().optional(),
@@ -20,7 +22,13 @@ const listBatchesInputSchema = z.object({
   limit: z.number().int().positive().max(100).optional().default(10),
 });
 
-export const listBatches = adminActionClient.inputSchema(listBatchesInputSchema).action(async ({ parsedInput }) => {
+const listBatchesOutputSchema = z.object({
+  success: z.literal(true),
+  items: z.array(z.any()),
+  pagination: z.object({ currentPage: z.number(), totalPages: z.number(), totalCount: z.number() }),
+});
+
+export const listBatches = adminActionClient.inputSchema(listBatchesInputSchema).outputSchema(listBatchesOutputSchema).action(async ({ parsedInput }) => {
   const { page, limit, search, sort, sellerId, status, dateFrom, dateTo, amountMin, amountMax } = parsedInput;
   const skip = (page - 1) * limit;
 
@@ -109,12 +117,7 @@ export const listBatches = adminActionClient.inputSchema(listBatchesInputSchema)
     const paidCount = batch.giftcards.filter((g) => g.status === 'USED').length;
     const hasIssues = batch.giftcards.some((g) => g.issues.length > 0);
 
-    const effectiveTotalDecimal = batch.giftcards.reduce((sum, card) => {
-      if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) return sum;
-      if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
-      if (card.status === 'USED' || card.status === 'UNUSED') return sum.plus(card.amount);
-      return sum;
-    }, new Prisma.Decimal(0));
+    const effectiveTotalDecimal = computeFaceValueTotal(batch.giftcards);
     const effectiveTotal = effectiveTotalDecimal.toNumber();
 
     const seller = batch.user
@@ -130,20 +133,7 @@ export const listBatches = adminActionClient.inputSchema(listBatchesInputSchema)
       : { id: '', name: 'Unknown', email: '', sellRate: 0, orderCount: 0, createdAt: '', twoFactorEnabled: false };
 
     const giftcards = batch.giftcards.map((card) => {
-      let claimCode = card.claimCode;
-      let pinCode = card.pinCode ?? null;
-      try {
-        claimCode = decrypt(card.claimCode);
-      } catch {
-        /* legacy unencrypted */
-      }
-      if (card.pinCode) {
-        try {
-          pinCode = decrypt(card.pinCode);
-        } catch {
-          pinCode = card.pinCode;
-        }
-      }
+      const { claimCode, pinCode } = decryptGiftcardCodes(card);
 
       let buyer: { id: string; name: string; email: string } | null = null;
       if (card.order?.userId) {

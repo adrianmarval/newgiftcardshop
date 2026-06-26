@@ -2,15 +2,28 @@
 
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { decrypt } from '@/lib/encryption';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { computeOrderGiftcardTotals } from '@/lib/utils/action-helpers';
+import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { computeOrderGiftcardTotals } from '@/lib/services/pricing/pricing';
 import { GiftcardStatus, OrderStatus } from '@/generated/prisma/enums';
 
 const getOrderByIdInputSchema = z.object({ orderId: z.string() });
 
+const getOrderByIdOutputSchema = z.object({
+  success: z.literal(true),
+  order: z.object({
+    id: z.string(), status: z.string(), total: z.number(), adjustedTotal: z.number().nullable(),
+    buyRate: z.number(), effectiveTotal: z.number(), faceValueTotal: z.number(),
+    createdAt: z.string(), updatedAt: z.string(),
+    giftcards: z.array(z.any()),
+    payments: z.array(z.any()),
+    brandCountryId: z.string().optional(),
+  }),
+});
+
 export const getOrderById = buyerActionClient
   .inputSchema(getOrderByIdInputSchema)
+  .outputSchema(getOrderByIdOutputSchema)
   .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -29,20 +42,7 @@ export const getOrderById = buyerActionClient
     const { order } = ctx;
 
     const giftcards = order.giftcards.map((card) => {
-      let claimCode = card.claimCode;
-      let pinCode = card.pinCode ?? null;
-      try {
-        claimCode = decrypt(card.claimCode);
-      } catch {
-        /* legacy unencrypted */
-      }
-      if (card.pinCode) {
-        try {
-          pinCode = decrypt(card.pinCode);
-        } catch {
-          pinCode = card.pinCode;
-        }
-      }
+      const { claimCode, pinCode } = decryptGiftcardCodes(card);
       return {
         id: card.id,
         claimCode,

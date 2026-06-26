@@ -23,6 +23,9 @@ function stringifyWithBuffers(obj: unknown): string {
     if (Buffer.isBuffer(value)) {
       return { type: 'Buffer', data: Array.from(value) };
     }
+    if (value instanceof Uint8Array) {
+      return { type: 'Buffer', data: Array.from(value) };
+    }
     return value;
   });
 }

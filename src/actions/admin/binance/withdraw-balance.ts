@@ -1,22 +1,27 @@
 'use server';
 
-import { adminActionClient } from '@/lib/safe-action';
-import binance from '@/lib/services/binance.service';
-import { Asset, Network } from '@/types';
-import z from 'zod';
+import { ActionError, adminActionClient } from '@/lib/safe-action';
+import binance from '@/lib/services/payment/binance.service';
+import type { Asset, Network } from '@/types';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { Decimal } from '@/generated/prisma/internal/prismaNamespaceBrowser';
+import { Decimal } from '@prisma/client/runtime/client';
 import { PaymentDirection, PaymentCategory, PaymentReferenceType, PaymentStatus } from '@/generated/prisma/client';
 
-const withdrawBalanceInpuSchema = z.object({ amount: z.number() });
+const withdrawBalanceInputSchema = z.object({ amount: z.number() });
 
-export const withdrawBalance = adminActionClient.inputSchema(withdrawBalanceInpuSchema).action(async ({ parsedInput }) => {
+const withdrawBalanceOutputSchema = z.object({
+  id: z.string().optional(),
+  status: z.string().optional(),
+});
+
+export const withdrawBalance = adminActionClient.inputSchema(withdrawBalanceInputSchema).outputSchema(withdrawBalanceOutputSchema).action(async ({ parsedInput }) => {
   const WITHDRAW_WALLET = process.env.WITHDRAW_WALLET;
   const WITHDRAW_COIN = process.env.WITHDRAW_COIN as Asset;
   const WITHDRAW_NETWORK = process.env.WITHDRAW_NETWORK as Network;
 
   if (!WITHDRAW_WALLET || !WITHDRAW_COIN || !WITHDRAW_NETWORK) {
-    throw new Error('WITHDRAW_WALLET or WITHDRAW_COIN or WITHDRAW_NETWORK is not defined');
+    throw new ActionError('WITHDRAW_WALLET or WITHDRAW_COIN or WITHDRAW_NETWORK is not defined');
   }
 
   const { amount } = parsedInput;
@@ -32,7 +37,7 @@ export const withdrawBalance = adminActionClient.inputSchema(withdrawBalanceInpu
   });
 
   if (existingPending) {
-    throw new Error(
+    throw new ActionError(
       'Ya existe un retiro de Binance pendiente de sincronización. Por favor, usá el botón de "Sincronizar" antes de intentar uno nuevo para evitar duplicados.',
     );
   }
@@ -61,7 +66,7 @@ export const withdrawBalance = adminActionClient.inputSchema(withdrawBalanceInpu
     });
   } catch (error) {
     console.error(error);
-    throw new Error('No se pudo inicializar la transacción en la base de datos local.');
+    throw new ActionError('No se pudo inicializar la transacción en la base de datos local.');
   }
 
   // Fase 2: Llamada idempotente a Binance
@@ -78,7 +83,7 @@ export const withdrawBalance = adminActionClient.inputSchema(withdrawBalanceInpu
   // Fase 3: Resolución de Estado
   if (!response.success) {
     if (response.isNetworkError) {
-      throw new Error(
+      throw new ActionError(
         `El retiro fue enviado pero hubo un problema de red. La transacción (Ref: ${withdrawOrderId}) quedará pendiente y se verificará automáticamente.`,
       );
     } else {
@@ -86,7 +91,7 @@ export const withdrawBalance = adminActionClient.inputSchema(withdrawBalanceInpu
         where: { id: paymentRecord.id },
         data: { status: PaymentStatus.FAILED, notes: `Rechazado por Binance: ${response.error}` },
       });
-      throw new Error(`Error en el retiro de Binance: ${response.error}`);
+      throw new ActionError(`Error en el retiro de Binance: ${response.error}`);
     }
   }
 
@@ -115,7 +120,7 @@ export const withdrawBalance = adminActionClient.inputSchema(withdrawBalanceInpu
       `[CRITICAL] Binance withdrawal succeeded but DB completion failed. TxID: ${binanceTxId}. Payment ID: ${paymentRecord.id}`,
       error,
     );
-    throw new Error(
+    throw new ActionError(
       `El retiro en Binance fue exitoso (TxID: ${binanceTxId}) pero falló la sincronización local. Se resolverá en la próxima verificación automática.`,
     );
   }

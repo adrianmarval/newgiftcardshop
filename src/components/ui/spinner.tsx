@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 import { Loader2Icon } from 'lucide-react';
 
 export interface SpinnerProps extends React.ComponentProps<'svg'> {

@@ -2,8 +2,8 @@
 
 import { OrdersFilters } from '@/components/buy/giftcard-orders/orders-filters';
 import { OrdersList } from '@/components/buy/giftcard-orders/orders-list';
-import { StatusLegend } from '@/components/ui/status-legend';
-import { BuyerOrder, PaginationMeta } from '@/types';
+import { StatusLegend } from '@/components/common/status-legend';
+import type { BuyerOrder, PaginationMeta } from '@/types';
 
 export interface BuyerOrdersViewProps {
   orders: BuyerOrder[];

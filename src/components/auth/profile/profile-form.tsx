@@ -3,7 +3,7 @@
 import { ProfileInfoSection } from '@/components/auth/profile/profile-info-section';
 import { SecuritySection } from '@/components/auth/profile/security-section';
 import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
-import { AppSection } from '@/types';
+import type { AppSection } from '@/types';
 
 interface ProfileFormProps {
   user: {

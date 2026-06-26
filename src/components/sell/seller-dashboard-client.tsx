@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { IconPlus, IconGift, IconCreditCard, IconPackage, IconCircleCheck, IconClock } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { SellerStats, RecentBatch } from '@/types';
-import { StatCard } from '@/components/ui/stat-card';
+import { StatCard } from '@/components/common/stat-card';
 import { formatCurrency } from '@/lib/currency-formatter';
 
 interface SellerDashboardClientProps {

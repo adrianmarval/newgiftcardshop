@@ -1,0 +1,126 @@
+import prisma from '@/lib/prisma';
+import { ActionError } from '@/lib/safe-action';
+import { Prisma } from '@/generated/prisma/client';
+import { GiftcardStatus as GiftcardStatusEnum } from '@/generated/prisma/enums';
+
+type GiftcardLike = { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null };
+
+function sumFaceValue(giftcards: GiftcardLike[]): Prisma.Decimal {
+  return giftcards.reduce((sum, card) => {
+    if (card.status === GiftcardStatusEnum.UNUSED || card.status === GiftcardStatusEnum.USED) {
+      return sum.plus(card.amount);
+    }
+    if (card.status === GiftcardStatusEnum.WRONG_AMOUNT) {
+      return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
+    }
+    return sum;
+  }, new Prisma.Decimal(0));
+}
+
+/**
+ * Computes the face value total from a list of giftcards (no rate applied).
+ * - UNUSED/USED cards contribute their nominal amount
+ * - WRONG_AMOUNT cards contribute their reportedAmount (if available)
+ * - Other statuses (ALREADY_USED, INVALID, DEACTIVATED) contribute 0
+ */
+export function computeFaceValueTotal(giftcards: GiftcardLike[]): Prisma.Decimal {
+  return sumFaceValue(giftcards);
+}
+
+/**
+ * Computes face value and effective totals from a list of giftcards.
+ * Returns both the face value total and effective total (faceValue * rate).
+ */
+export function computeOrderGiftcardTotals(giftcards: GiftcardLike[], rate: Prisma.Decimal) {
+  const faceValueTotal = sumFaceValue(giftcards);
+  return {
+    faceValueTotal: faceValueTotal.toNumber(),
+    effectiveTotal: faceValueTotal.mul(rate).toNumber(),
+  };
+}
+
+/**
+ * Computes the effective total (face value * rate) from a list of giftcards.
+ * Returns effectiveTotal as Decimal (for database operations).
+ */
+export function computeEffectiveTotalDecimal(giftcards: GiftcardLike[], rate: Prisma.Decimal): Prisma.Decimal {
+  return sumFaceValue(giftcards).mul(rate);
+}
+
+export async function getUserRates(userId: string, params: { brandCountryId?: string; brandId?: string; countryId?: string }) {
+  let brandCountryId = params.brandCountryId;
+  let brandId = params.brandId;
+  let countryId = params.countryId;
+
+  // Si brandId viene en formato compuesto (ej. "brandId|countryId"), lo separamos de forma robusta
+  if (brandId && brandId.includes('|')) {
+    const parts = brandId.split('|');
+    brandId = parts[0];
+    if (!countryId) {
+      countryId = parts[1];
+    }
+  }
+
+  if (!brandCountryId && brandId && countryId) {
+    const bc = await prisma.brandCountry.findUnique({
+      where: {
+        brandId_countryId: {
+          brandId,
+          countryId,
+        },
+      },
+      select: { id: true },
+    });
+    brandCountryId = bc?.id;
+  }
+
+  if (!brandCountryId && brandId && !countryId) {
+    const bc = await prisma.brandCountry.findUnique({
+      where: { id: brandId },
+      select: { id: true },
+    });
+    brandCountryId = bc?.id;
+  }
+
+  if (!brandCountryId) {
+    throw new Error('Combinación de marca y país no válida.');
+  }
+
+  // 1. Buscar tasa personalizada del usuario
+  const userRate = await prisma.userBrandCountryRate.findUnique({
+    where: {
+      userId_brandCountryId: {
+        userId,
+        brandCountryId,
+      },
+    },
+  });
+
+  if (userRate) {
+    return {
+      buyRate: userRate.buyRate,
+      sellRate: userRate.sellRate,
+      isCustom: true,
+    };
+  }
+
+  throw new Error('You do not have a rate assigned for this brand and country. Contact the administrator.');
+}
+
+/**
+ * Gets the buyer's buy rate for a specific brand-country.
+ * Returns the rate as a percentage (e.g., 95 for 0.95).
+ * Throws ActionError if no rate is assigned.
+ */
+export async function getBuyerBuyRate(userId: string, brandCountryId: string): Promise<number> {
+  const userRate = await prisma.userBrandCountryRate.findFirst({
+    where: { userId, brandCountryId },
+    select: { buyRate: true },
+  });
+
+  if (userRate && userRate.buyRate.gt(0)) {
+    return Math.floor(userRate.buyRate.toNumber() * 100);
+  }
+
+  throw new ActionError('No tienes tarifa asignada para esta marca y país.');
+}

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { listBatches } from '@/actions/admin/batches';
 import { getSellers } from '@/actions/admin/users/get-sellers';
 import { AdminBatchesView } from '@/components/admin/batches/admin-batches-view';
-import { adminBatchesSearchParamsCache } from '@/lib/search-params-cache';
+import { adminBatchesSearchParamsCache } from '@/lib/search-params';
 
 export const metadata: Metadata = {
   title: `Admin Batches | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,

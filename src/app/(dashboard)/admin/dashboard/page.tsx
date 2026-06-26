@@ -1,13 +1,13 @@
 import { IconCurrencyDollar, IconChartBar, IconCalendarEvent, IconCreditCard } from '@tabler/icons-react';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { Metadata } from 'next';
-import { getBinanceBalancesAction } from '@/actions/admin/binance';
-import { getPlatformBalance } from '@/actions/platform/settings';
-import { getInventoryStatsAction, getProfitStatsAction } from '@/actions/admin/stats';
+import { getBinanceBalances } from '@/actions/admin/binance';
+import { getPlatformBalance } from '@/actions/platform';
+import { getInventoryStats, getProfitStats } from '@/actions/admin/stats';
 import { InventoryChart, ProfitChart } from '@/components/admin/charts';
 
 import { Bitcoin, CircleDollarSignIcon, Equal, TrendingDown, TrendingUp } from 'lucide-react';
-import { Decimal } from '@/generated/prisma/internal/prismaNamespaceBrowser';
+import { Decimal } from '@prisma/client/runtime/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
@@ -17,10 +17,10 @@ export const metadata: Metadata = {
 
 export default async function AdminDashboardPage() {
   const [binanceRes, platformBalanceResponse, inventoryRes, profitRes] = await Promise.all([
-    getBinanceBalancesAction(),
+    getBinanceBalances(),
     getPlatformBalance(),
-    getInventoryStatsAction(),
-    getProfitStatsAction(),
+    getInventoryStats(),
+    getProfitStats(),
   ]);
 
   const { data: binanceBalance, serverError } = binanceRes;

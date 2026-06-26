@@ -11,9 +11,11 @@ const updateBrandCountryLimitsInputSchema = z.object({
   maxAmount: z.number().nullable().optional(),
   isActive: z.boolean().optional(),
 });
+const updateBrandCountryLimitsOutputSchema = z.object({ success: z.literal(true) });
 
 export const updateBrandCountryLimits = adminActionClient
   .inputSchema(updateBrandCountryLimitsInputSchema)
+  .outputSchema(updateBrandCountryLimitsOutputSchema)
   .action(async ({ parsedInput }) => {
     const { brandId, countryId, minAmount, maxAmount, isActive } = parsedInput;
 

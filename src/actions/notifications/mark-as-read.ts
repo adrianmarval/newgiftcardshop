@@ -8,9 +8,11 @@ const markAsReadInputSchema = z.object({
   notificationId: z.string().optional(),
   all: z.boolean().optional(),
 });
+const markAsReadOutputSchema = z.union([z.object({ success: z.literal(true), updated: z.number() }), z.object({ success: z.literal(false), error: z.string() })]);
 
 export const markAsRead = authActionClient
   .inputSchema(markAsReadInputSchema)
+  .outputSchema(markAsReadOutputSchema)
   .action(async ({ ctx, parsedInput }) => {
     const { notificationId, all } = parsedInput;
     const userId = ctx.auth.user.id;

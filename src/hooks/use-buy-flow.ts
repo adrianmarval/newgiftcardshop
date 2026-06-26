@@ -1,30 +1,10 @@
 'use client';
 
-import { GiftcardStatus } from '@/types';
 import { create } from 'zustand';
+import { type BuyFlowCard, type BuyFlowTierInfo } from '@/types';
 
-export interface BuyFlowCard {
-  id: string;
-  brand: string;
-  amount: number;
-  claimCode?: string;
-  pinCode?: string;
-  status: GiftcardStatus;
-  reportedAmount?: number;
-  sellerId?: string;
-  country?: { name: string; code: string; currency: string | null } | null;
-}
-
-export interface BuyFlowTierInfo {
-  buyerBuyRate: number;
-  accessibleAmount: string;
-  inaccessibleAmount: string;
-  totalCards: number;
-  accessibleCardCount: number;
-  inaccessibleCardCount: number;
-  nextCardTier?: number;
-  estimatedMinutes?: number;
-}
+// ── Re-export types (consumers import from here) ─────────────────────────────
+export { type BuyFlowCard, type BuyFlowTierInfo } from '@/types';
 
 export interface BuyFlowState {
   step: number;
@@ -34,6 +14,7 @@ export interface BuyFlowState {
   targetAmount: string;
   foundGiftcards: BuyFlowCard[];
   orderId: string | null;
+  orderStatus: string | null;
   adjustedTotal: number | null;
   tierInfo: BuyFlowTierInfo | null;
   setStep: (step: number) => void;
@@ -43,6 +24,7 @@ export interface BuyFlowState {
   setTargetAmount: (amount: string) => void;
   setFoundGiftcards: (cards: BuyFlowCard[]) => void;
   setOrderId: (id: string | null) => void;
+  setOrderStatus: (status: string | null) => void;
   setAdjustedTotal: (total: number | null) => void;
   setTierInfo: (info: BuyFlowTierInfo | null) => void;
   removeGiftcard: (id: string) => void;
@@ -58,6 +40,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   targetAmount: '',
   foundGiftcards: [],
   orderId: null,
+  orderStatus: null,
   adjustedTotal: null,
   tierInfo: null,
 
@@ -68,6 +51,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   setTargetAmount: (amount) => set({ targetAmount: amount }),
   setFoundGiftcards: (cards) => set({ foundGiftcards: cards }),
   setOrderId: (id) => set({ orderId: id }),
+  setOrderStatus: (status) => set({ orderStatus: status }),
   setAdjustedTotal: (total) => set({ adjustedTotal: total }),
   setTierInfo: (info) => set({ tierInfo: info }),
 
@@ -98,6 +82,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
       targetAmount: '',
       foundGiftcards: [],
       orderId: null,
+      orderStatus: null,
       adjustedTotal: null,
       tierInfo: null,
     }),

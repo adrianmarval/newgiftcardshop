@@ -1,6 +1,6 @@
 import type { NotificationChannel, NotificationChannelResult, NotificationContext, NotificationMessage } from '../types';
 import { BotRegistry } from '../bot-registry';
-import { escapeHTML, truncateForTelegram } from '@/bot/shared/ui';
+import { escapeHTML, truncateForTelegram } from '@/lib/utils/html';
 import prisma from '@/lib/prisma';
 
 function buildTelegramText(message: NotificationMessage): string {

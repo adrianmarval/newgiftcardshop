@@ -7,11 +7,11 @@ import { AdminPaymentsList } from '@/components/admin/payments/admin-payments-li
 import { AdminDepositDialog } from '@/components/admin/payments/admin-deposit-dialog';
 import { AdminRefundDialog } from '@/components/admin/payments/admin-refund-dialog';
 import { Button } from '@/components/ui/button';
-import { syncPendingWithdrawalsAction } from '@/actions/admin/binance';
+import { syncPendingWithdrawals } from '@/actions/admin/binance';
 import { useAction } from 'next-safe-action/hooks';
 import Swal from 'sweetalert2';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { Payment, PaginationMeta } from '@/types';
+import type { Payment, PaginationMeta } from '@/types';
 
 interface AdminPaymentsViewProps {
   payments: Payment[];
@@ -32,7 +32,7 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
     setRefundOpen(false);
   };
 
-  const { execute: syncWithdrawals, isExecuting: isSyncing } = useAction(syncPendingWithdrawalsAction, {
+  const { execute: syncWithdrawals, isExecuting: isSyncing } = useAction(syncPendingWithdrawals, {
     onSuccess: ({ data }) => {
       if (data?.total === 0) {
         Swal.fire({

@@ -1,6 +1,6 @@
 import { listBatches } from '@/actions/seller/batches';
 import { SellerBatchesView } from '@/components/sell/giftcard-batches';
-import { sellerBatchesSearchParamsCache } from '@/lib/search-params-cache';
+import { sellerBatchesSearchParamsCache } from '@/lib/search-params';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {

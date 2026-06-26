@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
+import { reportGiftcardIssue, deleteGiftcardIssue } from '@/lib/services/order';
 import { GiftcardIssueType } from '@/generated/prisma/enums';
 
 const manageReportInputSchema = z.object({
@@ -13,9 +14,11 @@ const manageReportInputSchema = z.object({
   issueType: z.enum(GiftcardIssueType).optional(),
   reportedAmount: z.number().optional(),
 });
+const manageReportOutputSchema = z.object({ success: z.literal(true) });
 
 export const manageReport = adminActionClient
   .inputSchema(manageReportInputSchema)
+  .outputSchema(manageReportOutputSchema)
   .useValidated(async ({ parsedInput: { action, giftcardId, orderId, issueType, reportedAmount }, next }) => {
     if (action === 'ADD') {
       if (!issueType) throw new ActionError('El tipo de issue es requerido para agregar');
@@ -41,25 +44,13 @@ export const manageReport = adminActionClient
   })
   .action(async ({ parsedInput: { action, giftcardId, orderId, issueType, reportedAmount }, ctx }) => {
     if (action === 'ADD') {
-      await prisma.$transaction([
-        prisma.giftcardIssue.create({
-          data: {
-            issueType: issueType!,
-            reportedAmount: issueType === 'WRONG_AMOUNT' && reportedAmount != null ? new Prisma.Decimal(reportedAmount) : undefined,
-            giftcardId,
-            orderId,
-            reportedById: ctx.order.userId,
-            sellerId: ctx.giftcard.ownerId ?? undefined,
-          },
-        }),
-        prisma.giftcard.update({
-          where: { id: giftcardId },
-          data: {
-            status: issueType!,
-            reportedAmount: issueType === 'WRONG_AMOUNT' && reportedAmount != null ? new Prisma.Decimal(reportedAmount) : undefined,
-          },
-        }),
-      ]);
+      await reportGiftcardIssue({
+        giftcardId,
+        orderId,
+        userId: ctx.order.userId,
+        issueType: issueType!,
+        reportedAmount,
+      });
       return { success: true as const };
     }
 
@@ -72,10 +63,7 @@ export const manageReport = adminActionClient
     }
 
     if (action === 'DELETE') {
-      await prisma.$transaction([
-        prisma.giftcardIssue.deleteMany({ where: { giftcardId, orderId } }),
-        prisma.giftcard.update({ where: { id: giftcardId }, data: { status: 'USED', reportedAmount: null } }),
-      ]);
+      await deleteGiftcardIssue(giftcardId, orderId, ctx.order.userId);
       return { success: true as const };
     }
 

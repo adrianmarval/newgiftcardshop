@@ -1,20 +1,20 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useSession } from '@/lib/auth-client';
+import { useSession } from '@/lib/auth/auth-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Check, Globe, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useBuyFlow, type BuyFlowTierInfo } from '@/hooks/use-buy-flow';
-import { searchGiftcards } from '@/actions';
+import { searchGiftcards } from '@/actions/buyer/giftcards/search-giftcards';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/buyer/preferences';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
-import { showAlert, showSwal } from '@/lib/swal';
+import { showAlert, showSwal } from '@/lib/ui';
 import Swal from 'sweetalert2';
-import { BrandCountry } from '@/types';
+import type { BrandCountry } from '@/types';
 import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
 import { CompactSearchBar } from '@/components/buy/steps/compact-search-bar';
 import { AdvancedSettingsSheet } from '@/components/buy/steps/advanced-settings-sheet';
@@ -50,6 +50,21 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [rateError, setRateError] = useState<string | null>(null);
 
+  const { execute: executeGetPrefs } = useAction(getUserSearchPreferences, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        const minStr = data.minAmount?.toString() || '';
+        const maxStr = data.maxAmount?.toString() || '';
+        setPrefMin(minStr);
+        setPrefMax(maxStr);
+        setSavedMin(minStr);
+        setSavedMax(maxStr);
+        setAllowSearchPreferences(data.allowSearchPreferences || false);
+        setAllowBuyRateAdjustment(data.allowBuyRateAdjustment || false);
+      }
+    },
+  });
+
   const selectedBc = useMemo(() => {
     if (!selectedBrand) return null;
     const [bId, cId] = selectedBrand.split('|');
@@ -58,18 +73,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
   useEffect(() => {
     if (session?.user?.id) {
-      getUserSearchPreferences(session.user.id).then((prefs) => {
-        if (prefs) {
-          const minStr = prefs.minAmount?.toString() || '';
-          const maxStr = prefs.maxAmount?.toString() || '';
-          setPrefMin(minStr);
-          setPrefMax(maxStr);
-          setSavedMin(minStr);
-          setSavedMax(maxStr);
-          setAllowSearchPreferences(prefs.allowSearchPreferences || false);
-          setAllowBuyRateAdjustment(prefs.allowBuyRateAdjustment || false);
-        }
-      });
+      executeGetPrefs();
     }
   }, [session?.user?.id]);
 
@@ -160,10 +164,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
           return;
         }
         const brResult = await updateBuyRate({ brandCountryId: selectedBc.id, buyRate: brVal });
-        if (brResult?.data?.error) {
-          showAlert.toast.error(brResult.data.error);
-          brUpdated = false;
-        } else if (brResult?.serverError) {
+        if (brResult?.serverError) {
           showAlert.toast.error('Error al actualizar tarifa');
           brUpdated = false;
         }

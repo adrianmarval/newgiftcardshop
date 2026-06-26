@@ -1,7 +1,10 @@
 import { Metadata } from 'next';
-import { listPayments, getSellers, getBuyers, getAdmins } from '@/actions';
+import { listPayments } from '@/actions/admin/payments/list-payments';
+import { getSellers } from '@/actions/admin/users/get-sellers';
+import { getBuyers } from '@/actions/admin/users/get-buyers';
+import { getAdmins } from '@/actions/admin/users/get-admins';
 import { AdminPaymentsView } from '@/components/admin/payments/admin-payments-view';
-import { adminPaymentsSearchParamsCache } from '@/lib/search-params-cache';
+import { adminPaymentsSearchParamsCache } from '@/lib/search-params';
 
 export const metadata: Metadata = {
   title: `Admin Payments | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,

@@ -29,7 +29,7 @@ export const getBrandById = authActionClient
       where: { id },
     });
     if (!brand) {
-      return { success: true, brand: null };
+      return { success: true as const, brand: null };
     }
     return {
       success: true as const,

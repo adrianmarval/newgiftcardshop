@@ -7,12 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, ShieldCheck, Copy, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth/auth-client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { QRCodeSVG } from 'qrcode.react';
 import { usePathname } from 'next/navigation';
-import { copyToClipboard } from '@/lib/clipboard';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 
 export interface TwoFactorSectionProps {
   initialEnabled: boolean;

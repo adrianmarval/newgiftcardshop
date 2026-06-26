@@ -1,6 +1,6 @@
 import type { NotificationType } from '@/generated/prisma/client';
-
-export type UserRole = 'BUYER' | 'SELLER' | 'ADMIN';
+import { Role as UserRole } from '@/generated/prisma/enums';
+export { UserRole };
 
 export interface NotificationMessage {
   type: NotificationType;

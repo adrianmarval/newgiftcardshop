@@ -7,16 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { SellFlowImage, useSellFlow } from '@/hooks/use-sell-flow';
+import { SellFlowImage } from '@/types';
+import { useSellFlow } from '@/hooks/use-sell-flow';
 import { useAction } from 'next-safe-action/hooks';
-import { uploadImage } from '@/actions/buyer/giftcards/ocr/upload-image';
-import { extractDraft } from '@/actions/buyer/giftcards/ocr/extract-draft';
+import { uploadImage } from '@/actions/seller/ocr/upload-image';
+import { extractDraft } from '@/actions/seller/ocr/extract-draft';
 import { checkCodes } from '@/actions/seller/batches';
 import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
 
-import { showAlert } from '@/lib/swal';
-import { cn } from '@/lib/utils';
-import { ProcessingStage, STAGE_LABELS, STAGE_PROGRESS } from '@/lib/ui-config';
+import { showAlert } from '@/lib/ui';
+import { cn } from '@/lib/ui';
+import { ProcessingStage, STAGE_LABELS, STAGE_PROGRESS } from '@/types';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
 import { SellStepsProgress } from './sell-steps-progress';
 
@@ -133,7 +134,7 @@ export function DataEntryStep() {
 
   const { execute: runExtraction } = useAction(extractDraft, {
     onSuccess: ({ data }) => {
-      if (data?.success) {
+      if (data?.cards) {
         setStage('ingesting');
 
         //Deduplicar: si hay mismo claimCode, preferir el que tiene monto
@@ -154,11 +155,6 @@ export function DataEntryStep() {
         }
 
         const deduped = Array.from(seen.values());
-        console.log(`[AI-OCR-BATCH] Extraction: ${deduped.length} cards (after dedup)`);
-
-        if (deduped.length > 0) {
-          console.table(deduped.map((c) => ({ code: c.claimCode, amount: c.amount, confidence: c.ocrConfidence })));
-        }
 
         const unmatchedImageIds: string[] = [];
 
@@ -186,9 +182,7 @@ export function DataEntryStep() {
           showAlert.toast.success(`${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`);
         }
 
-        // Phase 3.5: Check DB for existing codes (text codes only, not OCR)
         const textCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
-        console.log('[DB-CHECK] Checking text codes after OCR:', { textCodes, brandId, countryId });
         if (textCodes.length > 0) {
           pendingDbCheckRef.current = () => {
             setStage('done');
@@ -205,10 +199,6 @@ export function DataEntryStep() {
 
         setStage('done');
         setTimeout(() => setStep(3), 600);
-      } else if (data?.error) {
-        console.error(`[AI-OCR-BATCH] Extraction logic error:`, data.error);
-        showAlert.error('Extraction error', data.error);
-        setStage('idle');
       }
     },
     onError: ({ error }) => {
@@ -237,10 +227,9 @@ export function DataEntryStep() {
           let uploaded = 0;
 
           for (const localImg of filesToUpload) {
-            try {
-              console.log(`[UPLOAD] Uploading image ${localImg.file.name}...`);
+              try {
               const result = await uploadImage({ file: localImg.file });
-              if (result.data?.success && result.data.compressedData) {
+              if (result.data?.compressedData) {
                 const imageId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
                 const newImage: SellFlowImage = {
                   id: imageId,
@@ -249,13 +238,10 @@ export function DataEntryStep() {
                 };
                 addImage(newImage);
                 uploaded++;
-                console.log(`[UPLOAD] Success for ${localImg.file.name} (ID: ${imageId})`);
               } else {
-                console.error(`[UPLOAD] Failed for ${localImg.file.name}:`, result.data?.error);
-                showAlert.error(`Error with ${localImg.file.name}`, result.data?.error || 'Upload failed');
+                  showAlert.error(`Error with ${localImg.file.name}`, result.serverError || 'Upload failed');
               }
             } catch (error) {
-              console.error(`[UPLOAD] Fatal error for ${localImg.file.name}:`, error);
               showAlert.error(`Error with ${localImg.file.name}`, 'Critical upload error');
             }
           }
@@ -385,7 +371,6 @@ export function DataEntryStep() {
 
       // Phase 1.5: Check DB for existing codes BEFORE processing images
       const allCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
-      console.log('[DB-CHECK] Initiating check', { allCodes, brandId: brandId, countryId: countryId });
       if (allCodes.length > 0) {
         pendingDbCheckRef.current = () => proceedToImageUpload(filesToUpload, parsedCount);
         pendingCodeToLineMapRef.current = codeToLineMap;

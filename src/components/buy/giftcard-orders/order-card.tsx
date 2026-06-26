@@ -2,18 +2,18 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, MouseEvent } from 'react';
-import { RegistryCard } from '@/components/ui/registry-card';
+import { RegistryCard } from '@/components/common/registry-card';
 import { formatDateTime } from '@/lib/date-formatter';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { OrderDetails } from '@/components/buy/giftcard-orders/order-details';
 import { cancelOrder } from '@/actions/buyer/orders/cancel-order';
 import { Spinner } from '@/components/ui/spinner';
-import { orderStatusConfig } from '@/lib/ui-config';
+import { orderStatusConfig } from '@/lib/config/ui-config';
 import Image from 'next/image';
-import { BuyerOrder } from '@/types';
+import type { BuyerOrder } from '@/types';
 
 export interface OrderCardProps {
   order: BuyerOrder;

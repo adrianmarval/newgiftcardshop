@@ -8,7 +8,7 @@ import { History } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
 import { AdminBatchCard } from './admin-batch-card';
-import { AdminBatch } from '@/types';
+import type { AdminBatch } from '@/types';
 
 interface AdminBatchesListProps {
   batches: AdminBatch[];

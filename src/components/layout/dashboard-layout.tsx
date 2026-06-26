@@ -1,9 +1,9 @@
-import { DashboardSidebar } from '@/components/layout/dashboard-sidebar';
-import { AppTopBar } from '@/components/layout/app-top-bar';
-import { authorizeByRequiredRole } from '@/lib/authorization';
+import { DashboardSidebar } from '@/components/layout';
+import { AppTopBar } from '@/components/layout';
+import { authorizeByRequiredRole } from '@/lib/auth/authorization';
 import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';
-import { NotificationProvider } from '@/contexts/notification-context';
-import { AppSection } from '@/types';
+import { NotificationProvider } from '@/providers/notification-provider';
+import type { AppSection } from '@/types';
 import { dashboardMap } from '@/types';
 import { Role } from '@/generated/prisma/enums';
 import { Card } from '../ui/card';

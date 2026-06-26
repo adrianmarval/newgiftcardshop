@@ -1,7 +1,7 @@
 'use client';
 
-import { GiftcardItem } from '@/components/ui/giftcard-item';
-import { BuyerOrder } from '@/types';
+import { GiftcardItem } from '@/components/common/giftcard-item';
+import type { BuyerOrder } from '@/types';
 
 export interface OrderDetailsProps {
   order: BuyerOrder;

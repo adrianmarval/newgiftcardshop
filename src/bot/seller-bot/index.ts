@@ -18,9 +18,9 @@ import {
   handlePhotosDone,
   handleDeletePhotos,
   handleSellPhotos,
-  handleSellConfirm,
   handleSellCancel,
 } from './handlers/sell-handler.js';
+import { handleSellConfirm } from './handlers/sell-confirm-handler.js';
 import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
 
 export function createSellerBot() {

@@ -2,13 +2,7 @@ import prisma from '@/lib/prisma';
 import type { NotificationChannelResult, NotificationContext, NotificationMessage } from './types';
 import { TelegramChannel } from './channels/telegram.channel';
 import { WhatsAppChannel } from './channels/whatsapp.channel';
-import { WebChannel } from './channels/web.channel';
-import type { Role } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
-
-function roleToUserRole(role: Role): 'BUYER' | 'SELLER' | 'ADMIN' {
-  return role as 'BUYER' | 'SELLER' | 'ADMIN';
-}
 
 export class NotificationDispatcher {
   async dispatch(userId: string, message: NotificationMessage): Promise<void> {
@@ -31,7 +25,7 @@ export class NotificationDispatcher {
 
     const ctx: NotificationContext = {
       userId,
-      userRole: roleToUserRole(user.role),
+      userRole: user.role,
     };
 
     try {
@@ -48,10 +42,6 @@ export class NotificationDispatcher {
     } catch (err) {
       console.error(`[Notifications] Error persistiendo Notification (web):`, err);
     }
-
-    WebChannel.send(ctx, message).catch((err) => {
-      console.error(`[Notifications] Web channel error (inesperado):`, err);
-    });
 
     if (preference.telegramEnabled) {
       const result = await TelegramChannel.send(ctx, message).catch((err): NotificationChannelResult => ({

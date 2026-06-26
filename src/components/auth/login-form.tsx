@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { showSwal } from '@/lib/swal';
+import { showSwal } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { login, resendVerification } from '@/actions';
+import { login } from '@/actions/auth/login';
+import { resendVerification } from '@/actions/auth/resend-verification';
 import { useAction } from 'next-safe-action/hooks';
-import { AppSection } from '@/types';
+import type { AppSection } from '@/types';
 
 export interface LoginFormProps {
   portal: AppSection;

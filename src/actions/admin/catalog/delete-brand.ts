@@ -1,12 +1,13 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { adminActionClient } from '@/lib/safe-action';
+import { ActionError, adminActionClient } from '@/lib/safe-action';
 import { z } from 'zod';
 
 const deleteBrandInputSchema = z.object({ id: z.string() });
+const deleteBrandOutputSchema = z.object({ success: z.literal(true) });
 
-export const deleteBrand = adminActionClient.inputSchema(deleteBrandInputSchema).action(async ({ parsedInput }) => {
+export const deleteBrand = adminActionClient.inputSchema(deleteBrandInputSchema).outputSchema(deleteBrandOutputSchema).action(async ({ parsedInput }) => {
   const { id } = parsedInput;
 
   // Check if brand has giftcards
@@ -15,7 +16,7 @@ export const deleteBrand = adminActionClient.inputSchema(deleteBrandInputSchema)
   });
 
   if (giftcardCount > 0) {
-    throw new Error('Cannot delete brand with existing giftcards');
+    throw new ActionError('Cannot delete brand with existing giftcards');
   }
 
   // Delete brand countries first

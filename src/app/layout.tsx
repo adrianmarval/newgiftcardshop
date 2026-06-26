@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Aldrich, Lora, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
-import { getServerTheme } from '@/lib/theme-utils';
+import { getServerTheme } from '@/lib/ui/theme-utils';
 
 const fontSans = Aldrich({
   subsets: ['latin'],

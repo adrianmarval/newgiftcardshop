@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Check, ArrowLeft, XCircle, Ban, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
+import { getOrderCards } from '@/actions/buyer/giftcards/get-order-cards';
 import { confirmUsage } from '@/actions/buyer/orders/confirm-usage';
 import { cancelOrder } from '@/actions/buyer/orders/cancel-order';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export const ConfirmUsageStep = () => {
-  const { foundGiftcards, setStep, orderId, setAdjustedTotal, resetForm, selectedBrand, selectedCountry } = useBuyFlow();
+  const { foundGiftcards, setFoundGiftcards, setStep, orderId, setOrderStatus, setAdjustedTotal, resetForm, selectedBrand, selectedCountry } = useBuyFlow();
   const router = useRouter();
   const [buyRate, setBuyRate] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -53,13 +54,23 @@ export const ConfirmUsageStep = () => {
     }
   }, [executeGetUserBuyRate, selectedBrand, selectedCountry]);
 
-  const rawTotal = foundGiftcards.reduce((sum, card) => {
+  // Refetch cards from server on mount to stay in sync with external mutations
+  useEffect(() => {
+    if (!orderId) return;
+    getOrderCards({ orderId }).then((result) => {
+      if (result?.data?.success && result.data.giftcards) {
+        setFoundGiftcards(result.data.giftcards);
+      }
+    });
+  }, [orderId]);
+
+  const rawTotal = useMemo(() => foundGiftcards.reduce((sum, card) => {
     if (card.status === 'UNUSED') return sum + card.amount;
     if (card.status === 'WRONG_AMOUNT') return sum + (card.reportedAmount ?? 0);
     return sum;
-  }, 0);
+  }, 0), [foundGiftcards]);
 
-  const totalAmount = rawTotal * buyRate;
+  const totalAmount = useMemo(() => rawTotal * buyRate, [rawTotal, buyRate]);
 
   const { execute: confirmExecute, status: confirmStatus } = useAction(confirmUsage, {
     onSuccess: ({ data }) => {
@@ -67,6 +78,7 @@ export const ConfirmUsageStep = () => {
         if (typeof data.adjustedTotal === 'number') {
           setAdjustedTotal(data.adjustedTotal);
         }
+        setOrderStatus('AWAITING_PAYMENT');
         setStep(5);
       }
     },

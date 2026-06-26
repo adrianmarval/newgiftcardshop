@@ -9,16 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import { isBlockingEvidenceState, type ValidationState, SellFlowImage } from '@/hooks/use-sell-flow';
+import { isBlockingEvidenceState, type ValidationState, type SellFlowImage } from '@/types';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
-import { uploadImage } from '@/actions/buyer/giftcards/ocr/upload-image';
-import { extractDraft } from '@/actions/buyer/giftcards/ocr/extract-draft';
-import { showAlert } from '@/lib/swal';
+import { uploadImage } from '@/actions/seller/ocr/upload-image';
+import { extractDraft } from '@/actions/seller/ocr/extract-draft';
+import { showAlert } from '@/lib/ui';
 import { normalizeClaimCode } from '@/lib/utils/claim-code-parser';
-import { validationStatusConfig } from '@/lib/ui-config';
-import { BrandCountry } from '@/types';
+import { validationStatusConfig } from '@/lib/config/ui-config';
+import type { BrandCountry } from '@/types';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
 import Image from 'next/image';
 import { SellStepsProgress } from './sell-steps-progress';
@@ -32,7 +32,7 @@ export interface ReviewStepProps {
 }
 
 export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, backStep }: ReviewStepProps) {
-  const { giftcards, images, setStep, resolveAmountMismatch, addImageToCard } = useSellFlow();
+  const { giftcards, images, setStep, resolveAmountMismatch } = useSellFlow();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [processingCardId, setProcessingCardId] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
     onSuccess: ({ data }) => {
       if (!processingCardId) return;
 
-      if (data?.success && data.cards.length > 0) {
+      if (data?.cards && data.cards.length > 0) {
         const extracted = data.cards[0];
         const card = giftcards.find((c) => c.id === processingCardId);
         if (!card) return;
@@ -68,13 +68,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         const previewUrl = extractionContext.current?.previewUrl;
 
         if (imgId && compressedData && previewUrl) {
-          addImageToCard(
-            processingCardId,
-            { imageId: imgId, compressedData, previewUrl },
-            extracted.rawExtractedCode ?? extracted.claimCode ?? null,
-            extracted.rawExtractedAmount ?? extracted.amount ?? null,
-          );
-          showAlert.toast.success('Evidence linked');
+          showAlert.toast.success('OCR extraction completed');
         }
       } else {
         showAlert.toast.error('Could not read code: Try a clearer screenshot.');
@@ -94,7 +88,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
     setProcessingCardId(cardId);
 
     const uploadRes = await uploadImage({ file });
-    if (uploadRes.data?.success && uploadRes.data.compressedData) {
+    if (uploadRes.data?.compressedData) {
       const imageId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const previewUrl = URL.createObjectURL(file);
 

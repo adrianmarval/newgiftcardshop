@@ -5,19 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NotificationsList } from './notifications-list';
 import { NotificationsSettings, type NotificationsSettingsProps } from './notifications-settings';
-import type { NotificationType } from '@/generated/prisma/enums';
-
-export interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  createdAt: Date;
-  read: boolean;
-  type: NotificationType;
-  actionUrl?: string | null;
-  metadata?: Record<string, unknown> | null;
-}
-
+import type { NotificationItem } from '@/types';
 
 export interface NotificationsPageClientProps {
   portal: 'buyer' | 'seller' | 'admin';

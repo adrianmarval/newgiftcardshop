@@ -3,8 +3,19 @@
 import { adminActionClient } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
 import { startOfDay, startOfWeek, startOfMonth, subDays, format } from 'date-fns';
+import { z } from 'zod';
 
-export const getProfitStatsAction = adminActionClient.action(async () => {
+const getProfitStatsOutputSchema = z.object({
+  summary: z.object({
+    today: z.number(),
+    week: z.number(),
+    month: z.number(),
+    todayVolume: z.number(),
+  }),
+  chartData: z.array(z.object({ date: z.string(), profit: z.number() })),
+});
+
+export const getProfitStats = adminActionClient.outputSchema(getProfitStatsOutputSchema).action(async () => {
   const now = new Date();
   const todayStart = startOfDay(now);
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });

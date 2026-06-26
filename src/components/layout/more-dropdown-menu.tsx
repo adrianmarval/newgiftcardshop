@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { NavItem } from './types';
 import { SidebarItem } from './sidebar-item';
 import { FaEllipsisH } from 'react-icons/fa';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 
 interface MoreMenuProps {
   items: NavItem[];

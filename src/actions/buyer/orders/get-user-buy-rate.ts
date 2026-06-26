@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { buyerActionClient } from '@/lib/safe-action';
-import { getUserRates } from '@/lib/services/pricing.service';
+import { getUserRates } from '@/lib/services/pricing/pricing';
 
 const getUserBuyRateInputSchema = z.object({
   brandCountryId: z.string().optional(),
@@ -10,7 +10,15 @@ const getUserBuyRateInputSchema = z.object({
   countryId: z.string().optional(),
 });
 
-export const getUserBuyRate = buyerActionClient.inputSchema(getUserBuyRateInputSchema).action(async ({ parsedInput, ctx }) => {
+const getUserBuyRateOutputSchema = z.object({
+  success: z.literal(true),
+  rate: z.number(),
+});
+
+export const getUserBuyRate = buyerActionClient
+  .inputSchema(getUserBuyRateInputSchema)
+  .outputSchema(getUserBuyRateOutputSchema)
+  .action(async ({ parsedInput, ctx }) => {
   const { brandCountryId, brandId, countryId } = parsedInput;
   const rates = await getUserRates(ctx.auth.user.id, { brandCountryId, brandId, countryId });
   return {

@@ -1,1 +1,1 @@
-export { buyerStats } from './buyer-stats';
+export { getBuyerStats } from './get-buyer-stats';

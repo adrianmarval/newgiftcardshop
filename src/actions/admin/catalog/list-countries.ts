@@ -11,6 +11,7 @@ const getCountriesOutputSchema = z.object({
       id: z.string(),
       name: z.string(),
       code: z.string(),
+      currency: z.string().nullable(),
     })
     .array(),
 });
@@ -27,6 +28,7 @@ export const listCountries = adminActionClient.outputSchema(getCountriesOutputSc
       id: c.id,
       name: c.name,
       code: c.code,
+      currency: c.currency,
     })),
   };
 });

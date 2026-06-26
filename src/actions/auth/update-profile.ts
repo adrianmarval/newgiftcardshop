@@ -7,16 +7,17 @@ import { headers } from 'next/headers';
 import { authActionClient } from '@/lib/safe-action';
 
 const updateProfileInputSchema = z.object({
-  name: z.string().min(2).optional().catch(undefined),
-  currentPassword: z.string().optional(),
+  name: z.string().trim().min(2).optional().catch(undefined),
+  currentPassword: z.string().trim().optional(),
   newPassword: z
     .string()
+    .trim()
     .optional()
     .refine((val) => {
       if (!val || val.length === 0) return true;
       return val.length >= 8;
     }, 'New password must be at least 8 characters'),
-  confirmPassword: z.string().optional(),
+  confirmPassword: z.string().trim().optional(),
 });
 
 const updateProfileOutputSchema = z.union([

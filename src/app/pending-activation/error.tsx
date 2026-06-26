@@ -1,0 +1,23 @@
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
+
+export default function PendingActivationError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    console.error('Pending activation error:', error);
+  }, [error]);
+
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-1">
+      <h2 className="text-2xl font-bold">Algo salió mal</h2>
+      <p className="text-muted-foreground max-w-md text-center">{error.message}</p>
+      <Button
+        onClick={reset}
+        className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-6 py-2.5 font-medium transition-colors"
+      >
+        Reintentar
+      </Button>
+    </div>
+  );
+}

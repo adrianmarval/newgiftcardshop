@@ -1,7 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { adminActionClient } from '@/lib/safe-action';
+import { ActionError, adminActionClient } from '@/lib/safe-action';
 import { z } from 'zod';
 
 const updateUserInputSchema = z.object({
@@ -15,7 +15,15 @@ const updateUserInputSchema = z.object({
   allowBuyRateAdjustment: z.boolean().optional(),
 });
 
-export const updateUser = adminActionClient.inputSchema(updateUserInputSchema).action(async function ({ parsedInput }) {
+const updateUserOutputSchema = z.object({
+  success: z.literal(true),
+  userId: z.string(),
+});
+
+export const updateUser = adminActionClient
+  .inputSchema(updateUserInputSchema)
+  .outputSchema(updateUserOutputSchema)
+  .action(async function ({ parsedInput }) {
   try {
     const {
       userId,
@@ -42,9 +50,9 @@ export const updateUser = adminActionClient.inputSchema(updateUserInputSchema).a
       select: { id: true },
     });
 
-    return { success: true, userId: updated.id };
+    return { success: true as const, userId: updated.id };
   } catch (error) {
     console.error('Update user error:', error);
-    return { error: 'Failed to update user' };
+    throw new ActionError('Failed to update user');
   }
 });

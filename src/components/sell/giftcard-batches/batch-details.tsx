@@ -1,7 +1,7 @@
 import { formatCurrency } from '@/lib/currency-formatter';
-import { GiftcardItem } from '@/components/ui/giftcard-item';
+import { GiftcardItem } from '@/components/common/giftcard-item';
 import { CheckCircle2 } from 'lucide-react';
-import { SellerBatch } from '@/types';
+import type { SellerBatch } from '@/types';
 
 /**
  * Props for the BatchDetails component.

@@ -8,7 +8,7 @@ import { dashboardMap, portalSchema, roleMap } from '@/types';
 
 const loginInputSchema = z.object({
   email: z.email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().trim().min(1, 'Password is required'),
   portal: portalSchema,
 });
 

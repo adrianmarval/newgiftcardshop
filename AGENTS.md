@@ -16,29 +16,68 @@
 src/
 ├── app/(dashboard)/     # Páginas por rol: sell/, store/, admin/
 ├── actions/             # Server actions (next-safe-action)
-│   ├── buyer/           # orders, giftcards, issues, preferences
-│   ├── seller/          # batches (publish, list, check-codes)
-│   ├── admin/           # payments, orders, batches, binance, users
+│   ├── buyer/           # orders, giftcards, issues, preferences, stats
+│   ├── seller/          # batches (publish, list, check-codes), ocr, rates, stats
+│   ├── admin/           # payments, orders, batches, binance, users, catalog, whatsapp, stats
+│   ├── auth/            # login, register, logout, forgot/reset password, verify email
+│   ├── catalog/         # brands, countries (público, read-only)
+│   ├── notifications/   # notification CRUD
 │   ├── platform/        # settings (balance, binance pay id)
-│   └── catalog/         # brands, countries (público)
+│   └── user/            # telegram profile photo
 ├── bot/
 │   ├── seller-bot/      # Bot de venta (grammy)
 │   ├── buyer-bot/       # Bot de compra (grammy)
 │   └── shared/          # middleware, ui, registration, formatters, types
 ├── components/
-│   ├── buy/             # Wizard de compra web (5 steps)
-│   ├── sell/            # Wizard de venta web (3 steps)
-│   ├── admin/           # Dashboard admin
-│   └── ui/              # shadcn/ui components
+│   ├── admin/           # Dashboard admin (batches, orders, payments, brands, users, config, charts, whatsapp)
+│   ├── auth/            # Cross-cutting auth (login, register, profile, 2FA)
+│   ├── buy/             # Wizard de compra web (5 steps) + giftcard-orders
+│   ├── common/          # Shared presentational components (stat-card, giftcard-item, etc.)
+│   ├── emails/          # Resend email templates
+│   ├── layout/          # Dashboard layout, sidebar, topbar
+│   ├── notifications/   # Cross-portal notifications
+│   ├── sell/            # Wizard de venta web (3 steps) + giftcard-batches
+│   └── ui/              # shadcn/ui primitives
 ├── hooks/               # use-sell-flow, use-buy-flow (Zustand)
+├── providers/           # React context providers (notifications, auto-refresh)
 ├── lib/
-│   ├── services/        # giftcard-escalation, giftcard-reservation, pricing
+│   ├── auth/            # Server auth (better-auth), client auth, authorization helpers
+│   ├── config/          # UI config (status colors, labels for domain enums)
+│   ├── notifications/   # Notification subsystem (dispatcher, channels)
+│   ├── search-params/   # URL search param parsers (nuqs)
+│   ├── services/        # Business logic shared between web, bot, and actions
 │   ├── settings/        # settings.service (PlatformSettings)
-│   ├── utils/           # claim-code-parser, action-helpers, encryption
-│   └── encryption.ts    # AES-256-GCM (claimCode, pinCode, provenance images)
-├── types/               # domain types (giftcard, sell validation)
+│   ├── ui/              # Tailwind utils (cn), SweetAlert, theme utils
+│   ├── utils/           # Pure utility functions (claim-code-parser, clipboard, etc.)
+│   ├── whatsapp/        # WhatsApp Baileys integration
+│   ├── constants.ts     # Domain constants (MAX_BATCH_SIZE, AVAILABLE_GIFTCARD_WHERE)
+│   ├── encryption.ts    # AES-256-GCM (claimCode, pinCode, provenance images)
+│   ├── image-utils.ts   # Image processing
+│   ├── prisma.ts        # Prisma client instance
+│   ├── resend.ts        # Resend email client
+│   ├── safe-action.ts   # Action clients (auth, buyer, seller, admin)
+│   ├── ai-providers.ts  # AI/OCR provider config
+├── types/               # Centralized domain + application types
+│   ├── domain/          # Entity types (giftcard, order, batch, brand-country, payment, escalation)
+│   ├── application/     # Pagination, AppSection, WhatsAppStatus
+│   ├── auth/            # Session types
+│   ├── sell-flow.ts     # Sell wizard types
+│   ├── buy-flow.ts      # Buy wizard types
+│   ├── services.ts      # Service interface contracts
+│   ├── notifications.ts # Notification types
+│   └── binance.ts       # Binance API types
 └── generated/prisma/    # Prisma client generado
 ```
+
+### Convenciones de organización
+
+- **Actions**: organizadas por rol (`buyer/`, `seller/`, `admin/`), con subdominios por entidad. Barrel `index.ts` en cada subdirectorio.
+- **Components**: organizados por feature/portal. `ui/` solo para primitives shadcn.
+- **Types**: centralizados en `@/types`. Tipos co-located en componentes solo para Props locales.
+- **Lib**: infraestructura compartida. `auth/` para auth server/client/authorization, `services/` para lógica de negocio, `ui/` para utilidades de presentación (cn, Swal), `utils/` para funciones puras.
+- **Barrel imports**: TODO se importa via barrel (`@/lib/ui`, `@/lib/settings`, `@/lib/notifications`, `@/lib/search-params`, `@/types`, `@/components/layout`). NUNCA se importa directamente de archivos individuales dentro de un subdirectorio con barrel.
+- **Barrels NO re-exportan server-only**: Los barrels NO deben re-exportar módulos que dependan de `next/headers`, `next/navigation`, Prisma, u otras APIs server-only. Si un Client Component importa del barrel, webpack intentará empaquetar todo incluyendo código server. Los exports server-only (`getSession`, `authorizeByRequiredRole`, `settingsService`, `getServerTheme`) se importan directamente del archivo específico.
+- **File naming**: kebab-case universal para archivos. PascalCase para componentes y interfaces.
 
 ## Flujos principales
 
@@ -60,7 +99,7 @@ Wizard de 5 pasos: **Search** (brand+country+monto) → **Results** (tarjetas en
 
 - Hook principal: `src/hooks/use-buy-flow.ts` (Zustand, sin persist)
 - Orchestrator: `src/components/buy/buy-flow-manager.tsx`
-- Búsqueda: `src/actions/buyer/giftcards/search-giftcards.ts` (subset-sum DP en `src/lib/browse-giftcards.ts`)
+- Búsqueda: `src/actions/buyer/giftcards/search-giftcards.ts` (subset-sum DP en `src/lib/services/browse-giftcards.service.ts`)
 - Creación de orden: `src/actions/buyer/orders/create-order.ts` (con idempotencyKey + credit limit check en tx)
 - Reservación: `src/lib/services/giftcard-reservation.service.ts` (compartido con bot)
 - Pago: `src/actions/buyer/orders/complete-order.ts` (buyer reporta TxID, sin verificación automática aún)
@@ -70,7 +109,7 @@ Wizard de 5 pasos: **Search** (brand+country+monto) → **Results** (tarjetas en
 ### Sell Flow (Telegram Seller Bot)
 
 - Bot: `src/bot/seller-bot/index.ts` (grammy, sequentialize per-user, rate limit 30/3s)
-- Handler principal: `src/bot/seller-bot/handlers/sell.handler.ts`
+- Handler principal: `src/bot/seller-bot/handlers/sell-handler.ts`
 - Flujo: brand → country → codes (texto) → photos (opcional) → confirm → publish
 - Fotos: guarda `telegramFileId` (NO descarga ni cifra — deuda técnica)
 - NO usa `publish-batch.ts` — re-implementa la publicación inline (deuda: divergencia con web)
@@ -79,8 +118,8 @@ Wizard de 5 pasos: **Search** (brand+country+monto) → **Results** (tarjetas en
 ### Buy Flow (Telegram Buyer Bot)
 
 - Bot: `src/bot/buyer-bot/index.ts` (grammy, sequentialize per-user, rate limit 30/3s)
-- Handler principal: `src/bot/bot/buyer-bot/handlers/buy.handler.ts`
-- Handlers de órdenes: `src/bot/buyer-bot/handlers/orders.handler.ts`
+- Handler principal: `src/bot/buyer-bot/handlers/buy-handler.ts`
+- Handlers de órdenes: `src/bot/buyer-bot/handlers/orders-handler.ts`
 - Flujo: brand → country → monto → confirm → receive codes → confirm usage → payment
 - Reservación: usa `reserveGiftcards` servicio compartido con web
 - Status guards: `order.update` con `where: { status: 'EXPECTED' }` + catch P2025 en complete y confirmUsage
@@ -138,7 +177,7 @@ TelegramOtp {
 
 - `src/lib/services/giftcard-reservation.service.ts` — `reserveGiftcards(tx, ids, orderId)` con `updateMany` guardado por `inStock/status/orderId` + verificación de `count`. Usado por web y bot.
 - `src/lib/services/pricing.service.ts` — `getUserRates(userId, { brandCountryId? | brandId+countryId })` retorna `{ buyRate, sellRate }`
-- `src/lib/services/giftcard-escalation.ts` — cron que baja `escalationTier` de cards inactivas
+- `src/lib/services/giftcard-escalation.service.ts` — cron que baja `escalationTier` de cards inactivas
 - `src/lib/settings/settings.service.ts` — `SettingsService` con `getPlatformBalance()`, `updatePlatformBalance()`, escalation config
 
 ## Deuda técnica conocida (P2 — no urgente)
@@ -149,7 +188,6 @@ TelegramOtp {
 - Web sell sin persist (refresh = pérdida total)
 - Seller bot duplica lógica de publish-batch en vez de invocar el action
 - Seller bot fotos sin cifrar ni descargar
-- `console.table` con claim codes en `data-entry-step.tsx` (secreto expuesto en consola)
 - `sendOtpEmail` swallowa errores (dead catch blocks)
 - Locks en memoria (`sequentialize`) inútiles en serverless multi-instancia
 - Refactor pendiente: extraer `OrderService`, `PaymentService` compartidos bot+web

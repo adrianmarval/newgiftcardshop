@@ -9,10 +9,9 @@ let escalationInterval: NodeJS.Timeout | null = null;
 
 async function initEscalationService() {
   try {
-    const { GiftcardEscalationService } = await import('./src/lib/services/giftcard-escalation');
-    const escalationService = new GiftcardEscalationService();
+    const { getConfig, processEscalationTiers } = await import('./src/lib/services/giftcard/escalation');
 
-    const config = await escalationService.getConfig();
+    const config = await getConfig();
 
     if (!config.enabled) {
       console.log('[Escalation] Sistema deshabilitado via PlatformSettings');
@@ -24,7 +23,7 @@ async function initEscalationService() {
 
     escalationInterval = setInterval(async () => {
       try {
-        const result = await escalationService.processEscalationTiers();
+        const result = await processEscalationTiers();
         if (result.processed > 0) {
           console.log(`[Escalation] Procesadas ${result.processed} tarjetas`);
         }

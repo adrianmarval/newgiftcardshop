@@ -5,8 +5,9 @@ import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 
 const deleteCardInputSchema = z.object({ cardId: z.string() });
+const deleteCardOutputSchema = z.union([z.object({ success: z.literal(true) }), z.object({ success: z.literal(false), error: z.string() })]);
 
-export const deleteCard = adminActionClient.inputSchema(deleteCardInputSchema).action(async ({ parsedInput }) => {
+export const deleteCard = adminActionClient.inputSchema(deleteCardInputSchema).outputSchema(deleteCardOutputSchema).action(async ({ parsedInput }) => {
   const { cardId } = parsedInput;
 
   const card = await prisma.giftcard.findUnique({

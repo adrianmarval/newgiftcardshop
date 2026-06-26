@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { sellerActionClient } from '@/lib/safe-action';
+import { computeFaceValueTotal } from '@/lib/services/pricing/pricing';
 
 const recentBatchesOutputSchema = z
   .object({
@@ -51,10 +52,7 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutput
       };
     });
 
-    const effectiveTotal = batch.giftcards.reduce((sum, card) => {
-      if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
-      return sum.plus(card.amount);
-    }, new Prisma.Decimal(0));
+    const effectiveTotal = computeFaceValueTotal(batch.giftcards);
 
     return {
       id: batch.id,

@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/authorization';
+import { getSession } from '@/lib/auth/authorization';
 import { Metadata } from 'next';
 import { getSellerStats } from '@/actions/seller/stats';
 import { recentBatches } from '@/actions/seller/batches';

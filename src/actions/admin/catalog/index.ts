@@ -1,7 +1,7 @@
 // ── Catalog Admin Actions ──────────────────────────────────────────────────────
 
-export { listBrands, listBrands as getAllBrands } from './list-brands';
-export { listCountries, listCountries as getAllCountries } from './list-countries';
+export { listBrands } from './list-brands';
+export { listCountries } from './list-countries';
 export { createBrand } from './create-brand';
 export { updateBrand } from './update-brand';
 export { deleteBrand } from './delete-brand';

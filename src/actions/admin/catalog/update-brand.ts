@@ -6,8 +6,8 @@ import { z } from 'zod';
 
 const updateBrandInputSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, 'Name is required'),
-  slug: z.string().min(1, 'Slug is required'),
+  name: z.string().trim().min(1, 'Name is required'),
+  slug: z.string().trim().min(1, 'Slug is required'),
   icon: z.string().default('📦'),
   image: z.string().nullable().optional(),
 });

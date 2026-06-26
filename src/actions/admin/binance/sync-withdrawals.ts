@@ -1,11 +1,20 @@
 'use server';
 
 import { adminActionClient } from '@/lib/safe-action';
-import binance from '@/lib/services/binance.service';
+import binance from '@/lib/services/payment/binance.service';
 import prisma from '@/lib/prisma';
 import { PaymentDirection, PaymentCategory, PaymentStatus } from '@/generated/prisma/client';
+import { z } from 'zod';
 
-export const syncPendingWithdrawals = adminActionClient.action(async () => {
+const syncWithdrawalsOutputSchema = z.object({
+  total: z.number(),
+  resolved: z.number(),
+  failed: z.number(),
+  stillPending: z.number(),
+  errors: z.array(z.string()),
+});
+
+export const syncPendingWithdrawals = adminActionClient.outputSchema(syncWithdrawalsOutputSchema).action(async () => {
   const pendingPayments = await prisma.payment.findMany({
     where: {
       status: PaymentStatus.PENDING,

@@ -1,15 +1,13 @@
 import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
-import { encrypt, hashCode } from '@/lib/encryption';
+import { hashCode } from '@/lib/encryption';
 import { parseClaimCodes } from '@/lib/utils/claim-code-parser';
 import type { ParsedGiftcard } from '@/types';
-import { Prisma } from '@/generated/prisma/client';
 import type { SellerContext } from '@/bot/shared/types.js';
-import { fmt$, fmtRate } from '@/bot/shared/formatters.js';
+import { fmt$ } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
-import { getUserRates } from '@/lib/services/pricing.service';
-import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
-import { MAX_BATCH_SIZE } from '@/lib/constants.js';
+import { getUserRates } from '@/lib/services/pricing/pricing';
+import { MAX_BATCH_SIZE } from '@/lib/constants';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -313,108 +311,6 @@ export async function handleSellPhotos(ctx: SellerContext) {
   const msgText = `📸 <b>Photo received!</b> (Total saved: ${total})\n\nSend more, or click the button below when finished.`;
 
   await renderUI(ctx, msgText, { parse_mode: 'HTML', reply_markup: kb });
-}
-
-// ── Step 5: Publish ──────────────────────────────────────────────────────────
-
-export async function handleSellConfirm(ctx: SellerContext) {
-  const pendingCardsRaw = (ctx.session as any)._pendingCards as string | undefined;
-  const { brandCountryId } = ctx.session.wizard;
-
-  if (!pendingCardsRaw || !brandCountryId) {
-    await ctx.answerCallbackQuery('Session expired, start over with /sell');
-    return;
-  }
-
-  const cards: ParsedGiftcard[] = JSON.parse(pendingCardsRaw);
-
-  let sellRate: Prisma.Decimal;
-  try {
-    const rates = await getUserRates(ctx.user.id, { brandCountryId });
-    sellRate = rates.sellRate as Prisma.Decimal;
-  } catch (error: any) {
-    await ctx.answerCallbackQuery('Error resolving rates');
-    return renderUI(
-      ctx,
-      `❌ ${error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.'}`,
-      {
-        reply_markup: new InlineKeyboard().text('🏠 Home', 'start'),
-      },
-    );
-  }
-
-  // Filtro de seguridad final por si hubo una carrera
-  const codeHashes = cards.map((c) => hashCode(c.claimCode.toUpperCase()));
-  const existing = await prisma.giftcard.findMany({
-    where: { codeHash: { in: codeHashes } },
-    select: { codeHash: true },
-  });
-  const existingSet = new Set(existing.map((e) => e.codeHash));
-  const uniqueCards = cards.filter((c, i) => !existingSet.has(codeHashes[i]));
-
-  if (uniqueCards.length === 0) {
-    await renderUI(ctx, ' All codes already exist in inventory.', {
-      reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start'),
-    });
-    return;
-  }
-
-  const escalationService = new GiftcardEscalationService();
-  const initialTier = await escalationService.getInitialTier(brandCountryId);
-
-  const batch = await prisma.$transaction(async (tx) => {
-    const createdBatch = await tx.giftcardBatch.create({
-      data: { userId: ctx.user.id, sellRate: sellRate, isPaid: false },
-    });
-
-    for (const card of uniqueCards) {
-      await tx.giftcard.create({
-        data: {
-          claimCode: encrypt(card.claimCode),
-          codeHash: hashCode(card.claimCode),
-          pinCode: card.pinCode ? encrypt(card.pinCode) : null,
-          amount: new Prisma.Decimal(parseFloat(card.amount || '0')),
-          ownerId: ctx.user.id,
-          inStock: true,
-          status: 'UNUSED',
-          batchId: createdBatch.id,
-          brandCountryId,
-          ...(initialTier !== null ? { escalationTier: initialTier } : {}),
-        },
-      });
-    }
-
-    const pendingImagesCount = await tx.provenanceImage.count({
-      where: { batchId: `temp_${ctx.from?.id}` },
-    });
-
-    if (pendingImagesCount > 0) {
-      await tx.provenanceImage.updateMany({
-        where: { batchId: `temp_${ctx.from?.id}` },
-        data: { batchId: createdBatch.id.toString() },
-      });
-    }
-
-    return createdBatch;
-  });
-
-  ctx.session.wizard.step = 'idle';
-  (ctx.session as any)._pendingCards = undefined;
-  (ctx.session as any)._pendingErrors = undefined;
-  ctx.session.storedMessageIds = [];
-
-  const totalFace = uniqueCards.reduce((s, c) => s + parseFloat(c.amount || '0'), 0);
-  const payout = totalFace * Number(sellRate);
-  const currency = ctx.session.wizard.countryCurrency || 'USD';
-
-  let msg =
-    `🎉 <b>Batch #${batch.id} published</b>\n\n` +
-    `📦 ${uniqueCards.length} card(s) · ${fmt$(totalFace, currency)} face value\n` +
-    `💸 You earn: <b>${fmt$(payout, 'USD')}</b> (rate ${fmtRate(sellRate)})\n`;
-
-  const kb = new InlineKeyboard().text('📦 View My Batches', 'my_batches').row().text('➕ Publish More', 'sell_start');
-
-  await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb, callbackText: '✅ Published' });
 }
 
 // ── Cancel ──────────────────────────────────────────────────────────────────

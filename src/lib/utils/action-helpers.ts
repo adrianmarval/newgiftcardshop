@@ -6,57 +6,30 @@ import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import type { Giftcard, GiftcardStatus } from '@/types';
 import type { Payment, PaymentDirection, PaymentCategory } from '@/types';
-import { GiftcardStatus as GiftcardStatusEnum } from '@/generated/prisma/enums';
 
 /**
- * Computes face value and effective totals from a list of giftcards.
- * - UNUSED/USED cards contribute their nominal amount
- * - WRONG_AMOUNT cards contribute their reportedAmount (if available)
- * - Other statuses (ALREADY_USED, INVALID, DEACTIVATED) contribute 0
- * Returns both the face value total and effective total (faceValue * rate).
+ * Decrypts claimCode and pinCode from a giftcard record.
+ * Handles legacy unencrypted data gracefully (returns raw value on decrypt failure).
  */
-export function computeOrderGiftcardTotals(
-  giftcards: { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null }[],
-  rate: Prisma.Decimal,
-) {
-  const faceValueTotal = giftcards.reduce((sum, card) => {
-    if (card.status === GiftcardStatusEnum.UNUSED || card.status === GiftcardStatusEnum.USED) {
-      return sum.plus(card.amount);
+export function decryptGiftcardCodes(card: {
+  claimCode: string;
+  pinCode: string | null;
+}): { claimCode: string; pinCode: string | null } {
+  let claimCode = card.claimCode;
+  let pinCode = card.pinCode ?? null;
+  try {
+    claimCode = decrypt(card.claimCode);
+  } catch {
+    /* legacy unencrypted */
+  }
+  if (card.pinCode) {
+    try {
+      pinCode = decrypt(card.pinCode);
+    } catch {
+      pinCode = card.pinCode;
     }
-    if (card.status === GiftcardStatusEnum.WRONG_AMOUNT) {
-      return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
-    }
-    return sum;
-  }, new Prisma.Decimal(0));
-
-  return {
-    faceValueTotal: faceValueTotal.toNumber(),
-    effectiveTotal: faceValueTotal.mul(rate).toNumber(),
-  };
-}
-
-/**
- * Computes the effective total (face value * rate) from a list of giftcards.
- * - UNUSED cards contribute their nominal amount
- * - WRONG_AMOUNT cards contribute their reportedAmount (if available)
- * - Other statuses contribute 0
- * Returns effectiveTotal as Decimal (for database operations).
- */
-export function computeEffectiveTotalDecimal(
-  giftcards: { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null }[],
-  rate: Prisma.Decimal,
-): Prisma.Decimal {
-  const faceValueTotal = giftcards.reduce((sum, card) => {
-    if (card.status === GiftcardStatusEnum.UNUSED) {
-      return sum.plus(card.amount);
-    }
-    if (card.status === GiftcardStatusEnum.WRONG_AMOUNT) {
-      return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
-    }
-    return sum;
-  }, new Prisma.Decimal(0));
-
-  return faceValueTotal.mul(rate);
+  }
+  return { claimCode, pinCode };
 }
 
 /**

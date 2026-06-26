@@ -2,8 +2,8 @@
 
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { decrypt } from '@/lib/encryption';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
+import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
 import { GiftcardStatus } from '@/generated/prisma/enums';
 
 const getOrderCardsInputSchema = z.object({ orderId: z.string() });
@@ -48,26 +48,13 @@ export const getOrderCards = buyerActionClient
     return {
       success: true as const,
       giftcards: order.giftcards.map((card) => {
-        let claimCode: string;
-        try {
-          claimCode = decrypt(card.claimCode);
-        } catch {
-          claimCode = card.claimCode;
-        }
-        let pinCode: string | undefined;
-        if (card.pinCode) {
-          try {
-            pinCode = decrypt(card.pinCode);
-          } catch {
-            pinCode = card.pinCode;
-          }
-        }
+        const { claimCode, pinCode } = decryptGiftcardCodes(card);
         return {
           id: card.id,
           brand: card.brandCountry.brand.id,
           amount: card.amount.toNumber(),
           claimCode,
-          pinCode,
+          pinCode: pinCode ?? undefined,
           status: (card.status as GiftcardStatus) ?? 'UNUSED',
           reportedAmount: card.reportedAmount ? card.reportedAmount.toNumber() : undefined,
           country: card.brandCountry.country

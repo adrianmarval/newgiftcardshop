@@ -3,9 +3,11 @@
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
-import { decrypt, hashCode } from '@/lib/encryption';
+import { hashCode } from '@/lib/encryption';
 import { sellerActionClient } from '@/lib/safe-action';
 import { GiftcardStatus, PaymentDirection, PaymentCategory } from '@/generated/prisma/enums';
+import { computeFaceValueTotal } from '@/lib/services/pricing/pricing';
+import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
 
 const getSellerBatchesInputSchema = z.object({
   page: z.number().int().positive().optional().default(1),
@@ -136,20 +138,7 @@ export const listBatches = sellerActionClient
       const hasIssues = batch.giftcards.some((g) => g.issues.length > 0);
 
       const giftcards = batch.giftcards.map((card) => {
-        let claimCode = card.claimCode;
-        let pinCode = card.pinCode ?? null;
-        try {
-          claimCode = decrypt(card.claimCode);
-        } catch {
-          // Legacy unencrypted data — return raw value
-        }
-        if (card.pinCode) {
-          try {
-            pinCode = decrypt(card.pinCode);
-          } catch {
-            pinCode = card.pinCode;
-          }
-        }
+        const { claimCode, pinCode } = decryptGiftcardCodes(card);
 
         // Flag if this card matches the search
         let isSearchMatch = false;
@@ -184,11 +173,7 @@ export const listBatches = sellerActionClient
           isSearchMatch,
         };
       });
-      const effectiveTotalDecimal = batch.giftcards.reduce((sum, card) => {
-        if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) return sum;
-        if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
-        return sum.plus(card.amount);
-      }, new Prisma.Decimal(0));
+      const effectiveTotalDecimal = computeFaceValueTotal(batch.giftcards);
       const effectiveTotal = effectiveTotalDecimal.toNumber();
       const estimatedPayout = effectiveTotalDecimal.mul(batch.sellRate).toNumber();
       return {

@@ -2,8 +2,11 @@
 
 import { adminActionClient } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
+import { z } from 'zod';
 
-export const getInventoryStatsAction = adminActionClient.action(async () => {
+const getInventoryStatsOutputSchema = z.array(z.object({ range: z.string(), count: z.number(), total: z.number() }));
+
+export const getInventoryStats = adminActionClient.outputSchema(getInventoryStatsOutputSchema).action(async () => {
   const giftcards = await prisma.giftcard.findMany({
     where: { inStock: true },
     select: { amount: true },

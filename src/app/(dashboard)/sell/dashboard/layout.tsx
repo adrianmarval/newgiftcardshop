@@ -1,6 +1,6 @@
-import { DashboardLayout } from '@/components/layout';
+import { DashboardLayout } from '@/components/layout/dashboard-layout';
 
-export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function SellerDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <DashboardLayout portal="sell" requiredRoles={['SELLER', 'ADMIN']}>
       {children}

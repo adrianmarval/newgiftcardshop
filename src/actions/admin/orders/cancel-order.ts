@@ -3,11 +3,14 @@
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
+import { canCancelOrder, cancelOrder as cancelOrderService } from '@/lib/services/order';
 
 const cancelOrderInputSchema = z.object({ orderId: z.string() });
+const cancelOrderOutputSchema = z.object({ success: z.literal(true), message: z.string() });
 
 export const cancelOrder = adminActionClient
   .inputSchema(cancelOrderInputSchema)
+  .outputSchema(cancelOrderOutputSchema)
   .useValidated(async ({ parsedInput: { orderId }, next }) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -15,22 +18,13 @@ export const cancelOrder = adminActionClient
     });
     if (!order) throw new ActionError('Orden no encontrada en la base de datos');
 
-    const hasActiveCards = order.giftcards.some((g) => {
-      if (g.status === 'UNUSED' || g.status === 'USED') return true;
-      if (g.status === 'WRONG_AMOUNT' && g.reportedAmount && g.reportedAmount.toNumber() > 0) return true;
-      return false;
-    });
-
-    if (hasActiveCards) {
+    if (!canCancelOrder(order.giftcards)) {
       throw new ActionError('No se puede cancelar: la orden contiene tarjetas activas con valor. Espera a que se complete o contacta al soporte.');
     }
 
     return next({ ctx: { order } });
   })
   .action(async ({ ctx }) => {
-    await prisma.order.update({
-      where: { id: ctx.order.id },
-      data: { status: 'CANCELLED', giftcards: { updateMany: { where: { id: { in: ctx.order.giftcards.map((g) => g.id) } }, data: { isConfirmed: true } } } },
-    });
+    await cancelOrderService(ctx.order.id);
     return { success: true as const, message: '¡Orden cancelada con éxito!' };
   });

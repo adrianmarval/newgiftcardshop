@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 
 export type InlineAlertVariant = 'success' | 'error' | 'warning' | 'info';
 

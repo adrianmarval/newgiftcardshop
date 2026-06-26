@@ -1,15 +1,19 @@
 'use server';
 
 import { z } from 'zod';
-import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
-import { SETTING_KEYS } from '@/lib/settings/schemas';
-import { notificationService } from '@/lib/notifications/notification.service';
+import { notifySellerBatchPaid } from '@/lib/notifications';
+import { computeFaceValueTotal } from '@/lib/services/pricing/pricing';
 
 const payBatchInputSchema = z.object({ batchIds: z.array(z.number().int().positive()) });
 
-export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).action(async ({ parsedInput }) => {
+const payBatchOutputSchema = z.object({
+  success: z.literal(true),
+  results: z.array(z.object({ batchId: z.number(), paymentId: z.string(), amount: z.number() })),
+});
+
+export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).outputSchema(payBatchOutputSchema).action(async ({ parsedInput }) => {
   const { batchIds } = parsedInput;
 
   const results: { batchId: number; paymentId: string; amount: number }[] = [];
@@ -29,11 +33,7 @@ export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).actio
 
     if (!isPayable) continue;
 
-    const effectiveTotal = batch.giftcards.reduce((sum, card) => {
-      if (card.status === 'WRONG_AMOUNT') return sum.plus(card.reportedAmount ?? new Prisma.Decimal(0));
-      if (card.status === 'USED') return sum.plus(card.amount);
-      return sum;
-    }, new Prisma.Decimal(0));
+    const effectiveTotal = computeFaceValueTotal(batch.giftcards);
 
     const paymentAmount = effectiveTotal.mul(batch.sellRate);
 
@@ -70,8 +70,7 @@ export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).actio
     // ── Hook de notificación al seller ───────────────────────────────────────
     // Cuando la tx se desconmente y results se popule, este bloque ya funcionará sin cambios.
     if (batch.user?.id) {
-      notificationService
-        .notifySellerBatchPaid(batch.user.id, batchId, Number(paymentAmount))
+      notifySellerBatchPaid(batch.user.id, batchId, Number(paymentAmount))
         .catch((err) => console.error('[pay-batch] Error al notificar seller (non-blocking):', err));
     }
   }

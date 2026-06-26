@@ -19,10 +19,10 @@ import { getSellerRate } from '@/actions/seller/rates';
 import { BrandStep } from '@/components/sell/steps/brand-step';
 import { DataEntryStep } from '@/components/sell/steps/data-entry-step';
 import { ReviewStep } from '@/components/sell/steps/review-step';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
-import { BrandCountry } from '@/types';
+import type { BrandCountry } from '@/types';
 
 export const STEP_LABELS = ['Config', 'Load', 'Review'];
 
@@ -46,7 +46,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
 
   const { execute: runPublishBatch, status: publishStatus } = useAction(publishBatch, {
     onSuccess: ({ data }) => {
-      if (data?.success) {
+      if (data?.batchId) {
         if (data.duplicates && data.duplicates.length > 0) {
           setDuplicates(data.duplicates);
           showAlert.toast.info(

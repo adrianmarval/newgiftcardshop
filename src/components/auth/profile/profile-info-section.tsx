@@ -1,18 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TelegramAvatar } from '@/components/ui/telegram-avatar';
+import { TelegramAvatar } from '@/components/common/telegram-avatar';
 import { CheckCircle, User, MessageCircle, Link2 } from 'lucide-react';
-import { updateProfile } from '@/actions';
+import { updateProfile } from '@/actions/auth/update-profile';
 import { useAction } from 'next-safe-action/hooks';
 import { usePathname } from 'next/navigation';
-import { AppSection } from '@/types';
+import type { AppSection } from '@/types';
 import Link from 'next/link';
 
 export interface ProfileInfoSectionProps {
@@ -50,6 +50,9 @@ export const ProfileInfoSection = ({
       if (data?.success) {
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
+      } else if (data?.error) {
+        const defaultError = isSpanish ? 'Error al actualizar' : 'Failed to update';
+        showAlert.error('Error', data.error || defaultError);
       }
     },
     onError: ({ error }) => {

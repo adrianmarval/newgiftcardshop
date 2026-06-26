@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { register } from '@/actions';
+import { register } from '@/actions/auth/register';
 import { useAction } from 'next-safe-action/hooks';
-import { AppSection } from '@/types';
+import type { AppSection } from '@/types';
 import { PasswordCheckItem } from './ui/password-check-item';
 
 export interface RegisterFormProps {

@@ -3,6 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypt
 const ALGORITHM = 'aes-256-gcm';
 const IV_BYTES = 12;
 const KEY_HEX_LENGTH = 64; // 32 bytes expressed as hex
+const CURRENT_KEY_VERSION = 1;
 
 function getEncryptionKey(): Buffer {
   const key = process.env.ENCRYPTION_KEY;
@@ -18,6 +19,11 @@ function getEncryptionKey(): Buffer {
   return Buffer.from(key, 'hex');
 }
 
+/**
+ * Key versioning: new ciphertext is prefixed with `v1:`.
+ * Legacy ciphertext (no prefix, 3 parts) is still readable.
+ * To rotate keys: set KEY_VERSION=2 + new ENCRYPTION_KEY, old data decrypts with key v1.
+ */
 export function encrypt(plaintext: string): string {
   const key = getEncryptionKey();
   const iv = randomBytes(IV_BYTES);
@@ -28,17 +34,25 @@ export function encrypt(plaintext: string): string {
 
   const authTag = cipher.getAuthTag();
 
-  return [iv.toString('base64'), encrypted.toString('base64'), authTag.toString('base64')].join(':');
+  return `v${CURRENT_KEY_VERSION}:${iv.toString('base64')}:${encrypted.toString('base64')}:${authTag.toString('base64')}`;
 }
 
 export function decrypt(ciphertext: string): string {
   const parts = ciphertext.split(':');
 
-  if (parts.length !== 3) {
-    throw new Error('Invalid ciphertext format — expected base64(iv):base64(ciphertext):base64(authTag)');
-  }
+  let ivB64: string;
+  let encryptedB64: string;
+  let authTagB64: string;
 
-  const [ivB64, encryptedB64, authTagB64] = parts;
+  if (parts.length === 4 && parts[0].startsWith('v')) {
+    // Versioned format: v1:iv:encrypted:authTag
+    [, ivB64, encryptedB64, authTagB64] = parts;
+  } else if (parts.length === 3) {
+    // Legacy format (backward compatible): iv:encrypted:authTag
+    [ivB64, encryptedB64, authTagB64] = parts;
+  } else {
+    throw new Error('Invalid ciphertext format — expected v1:base64(iv):base64(ciphertext):base64(authTag)');
+  }
 
   const key = getEncryptionKey();
   const iv = Buffer.from(ivB64, 'base64');

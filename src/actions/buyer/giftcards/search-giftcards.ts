@@ -1,13 +1,14 @@
 'use server';
 
 import { z } from 'zod';
-import { findGiftcardCombination } from '@/lib/browse-giftcards';
+import { findGiftcardCombination } from '@/lib/services/browse/card-combinator';
 import prisma from '@/lib/prisma';
 import { buyerActionClient } from '@/lib/safe-action';
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth';
-import { Decimal } from '@/generated/prisma/internal/prismaNamespace';
-import { estimateTimeToAccess, getEscalationConfig } from '@/lib/services/tier-estimation.service';
+import { Decimal } from '@prisma/client/runtime/client';
+import { estimateTimeToAccess } from '@/lib/services/pricing/tier-estimation';
+import { getEscalationConfig } from '@/lib/settings/settings.service';
+import { getBuyerBuyRate } from '@/lib/services/pricing/pricing';
+import { checkCreditLimit } from '@/lib/services/payment/credit';
 
 const searchGiftcardsInputSchema = z.object({
   brandId: z.string(),
@@ -42,34 +43,15 @@ const searchGiftcardsOutputSchema = z.object({
     .optional(),
 });
 
-async function getBuyerBuyRate(userId: string, brandCountryId: string): Promise<number> {
-  const userRate = await prisma.userBrandCountryRate.findFirst({
-    where: { userId, brandCountryId },
-    select: { buyRate: true },
-  });
-
-  if (userRate && userRate.buyRate.gt(0)) {
-    return Math.floor(userRate.buyRate.toNumber() * 100);
-  }
-
-  throw new Error('No tienes tarifa asignada para esta marca y país.');
-}
-
 export const searchGiftcards = buyerActionClient
   .inputSchema(searchGiftcardsInputSchema)
   .outputSchema(searchGiftcardsOutputSchema)
-  .action(async ({ parsedInput: { brandId, countryId, amount } }) => {
-    const headersList = await headers();
-    const session = await auth.api.getSession({ headers: headersList });
-
-    if (!session?.user?.id) {
-      return { success: true as const, giftcards: [], error: 'Unauthorized' };
-    }
+  .action(async ({ parsedInput: { brandId, countryId, amount }, ctx }) => {
+    const userId = ctx.auth.user.id;
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: {
-        creditLimit: true,
         role: true,
         minAmountPreference: true,
         maxAmountPreference: true,
@@ -77,37 +59,17 @@ export const searchGiftcards = buyerActionClient
     });
 
     if (user?.role === 'BUYER') {
-      const unpaidOrders = await prisma.order.findMany({
-        where: {
-          userId: session.user.id,
-          status: { in: ['PENDING', 'AWAITING_PAYMENT'] },
-        },
-        select: { adjustedTotal: true, total: true, status: true },
-      });
-
-      let unpaidTotal = new Decimal(0);
-      for (const o of unpaidOrders) {
-        unpaidTotal = unpaidTotal.plus(o.adjustedTotal ?? o.total);
-      }
-
-      const creditLimit = user.creditLimit;
-
-      if (unpaidTotal.gte(creditLimit)) {
-        return {
-          success: true as const,
-          giftcards: [],
-          error: 'Has alcanzado tu límite de crédito. Debes completar los pagos pendientes antes de comprar más.',
-        };
-      }
-
       const amountDecimal = new Decimal(amount);
-      if (unpaidTotal.plus(amountDecimal).gt(creditLimit)) {
-        const availableCredit = creditLimit.minus(unpaidTotal);
-        const pendingText = unpaidTotal.gt(0) ? `Tienes $${unpaidTotal.toFixed(2)} en pagos pendientes. ` : '';
+      const credit = await checkCreditLimit(userId, amountDecimal);
+
+      if (!credit.allowed) {
+        const pendingText = credit.unpaidTotal.gt(0) ? `Tienes $${credit.unpaidTotal.toFixed(2)} en pagos pendientes. ` : '';
         return {
           success: true as const,
           giftcards: [],
-          error: `Esta compra excedería tu límite de crédito. ${pendingText}Crédito disponible: $${availableCredit.toFixed(2)}. Intentá con un monto menor.`,
+          error: credit.availableCredit.lte(0)
+            ? 'Has alcanzado tu límite de crédito. Debes completar los pagos pendientes antes de comprar más.'
+            : `Esta compra excedería tu límite de crédito. ${pendingText}Crédito disponible: $${credit.availableCredit.toFixed(2)}. Intentá con un monto menor.`,
         };
       }
     }
@@ -122,7 +84,7 @@ export const searchGiftcards = buyerActionClient
 
     let buyerBuyRate: number;
     try {
-      buyerBuyRate = await getBuyerBuyRate(session.user.id, brandCountry.id);
+      buyerBuyRate = await getBuyerBuyRate(userId, brandCountry.id);
     } catch (err: any) {
       return {
         success: true as const,

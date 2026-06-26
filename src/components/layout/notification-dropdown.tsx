@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Bell, Check, Settings, ExternalLink } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import { useNotifications } from '@/contexts/notification-context';
-import { listNotifications, markAsRead } from '@/actions';
+import { useNotifications } from '@/providers/notification-provider';
+import { listNotifications, markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
-import type { NotificationItem } from '@/components/notifications/notifications-page-client';
+import type { NotificationItem } from '@/types';
 import type { AppSection } from '@/types';
 
 interface NotificationDropdownProps {
@@ -79,7 +79,11 @@ export function NotificationDropdown({ portal, badgeKey, href, className }: Noti
 
   const { execute: executeMarkAsRead } = useAction(markAsRead, {
     onSuccess: () => {
-      setUnreadCount(portal, 0);
+      setNotifications((prev) => {
+        const unread = prev.filter((n) => !n.read).length;
+        setUnreadCount(portal, unread);
+        return prev;
+      });
     },
   });
 
@@ -107,9 +111,6 @@ export function NotificationDropdown({ portal, badgeKey, href, className }: Noti
       setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
       executeMarkAsRead({ notificationId: item.id });
       setUnreadCount(portal, Math.max(0, count - 1));
-    }
-    if (item.actionUrl) {
-      window.location.href = item.actionUrl;
     }
   };
 

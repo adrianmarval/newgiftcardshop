@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { listUsers } from '@/actions/admin/users/';
-import { UsersManager } from './users-manager';
-import { adminUsersSearchParamsCache } from '@/lib/search-params-cache';
+import { UsersManager } from '@/components/admin/users/users-manager';
+import { adminUsersSearchParamsCache } from '@/lib/search-params';
 
 export const metadata: Metadata = {
   title: 'Usuarios | Panel de Administración',

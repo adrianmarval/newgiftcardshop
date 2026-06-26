@@ -3,19 +3,28 @@
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
-import { adminActionClient } from '@/lib/safe-action';
+import { ActionError, adminActionClient } from '@/lib/safe-action';
 import { PaymentReferenceType } from '@/generated/prisma/enums';
 
 const createRefundInputSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
   refundType: z.enum(['BUYER', 'SELLER']),
-  relatedUserId: z.string().min(1, 'User is required'),
+  relatedUserId: z.string().trim().min(1, 'User is required'),
   referenceType: z.enum(PaymentReferenceType),
-  referenceId: z.string().min(1, 'Reference ID is required'),
-  notes: z.string().optional(),
+  referenceId: z.string().trim().min(1, 'Reference ID is required'),
+  notes: z.string().trim().optional(),
 });
 
-export const createRefund = adminActionClient.inputSchema(createRefundInputSchema).action(async ({ parsedInput }) => {
+const createRefundOutputSchema = z.object({
+  success: z.literal(true),
+  paymentId: z.string(),
+  message: z.string(),
+});
+
+export const createRefund = adminActionClient
+  .inputSchema(createRefundInputSchema)
+  .outputSchema(createRefundOutputSchema)
+  .action(async ({ parsedInput }) => {
   const { amount, refundType, relatedUserId, referenceType, referenceId, notes } = parsedInput;
 
   const user = await prisma.user.findUnique({
@@ -24,7 +33,7 @@ export const createRefund = adminActionClient.inputSchema(createRefundInputSchem
   });
 
   if (!user) {
-    throw new Error('Usuario no encontrado');
+    throw new ActionError('Usuario no encontrado');
   }
 
   const category = refundType === 'BUYER' ? 'REFUND_BUYER' : 'REFUND_SELLER';
@@ -38,7 +47,7 @@ export const createRefund = adminActionClient.inputSchema(createRefundInputSchem
       select: { id: true, userId: true },
     });
     if (!order) {
-      throw new Error('Orden no encontrada');
+      throw new ActionError('Orden no encontrada');
     }
     orderId = referenceId;
   } else if (referenceType === 'BATCH') {
@@ -47,7 +56,7 @@ export const createRefund = adminActionClient.inputSchema(createRefundInputSchem
       select: { id: true, userId: true },
     });
     if (!batch) {
-      throw new Error('Batch no encontrado');
+      throw new ActionError('Batch no encontrado');
     }
     batchId = batch.id;
   }

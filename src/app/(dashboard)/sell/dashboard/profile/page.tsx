@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/authorization';
+import { getSession } from '@/lib/auth/authorization';
 import { ProfileForm } from '@/components/auth/profile/profile-form';
 import { Metadata } from 'next';
 import { decryptBuffer } from '@/lib/encryption';

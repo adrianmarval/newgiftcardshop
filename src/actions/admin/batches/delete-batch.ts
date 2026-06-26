@@ -5,8 +5,9 @@ import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 
 const deleteBatchInputSchema = z.object({ batchId: z.number().int().positive() });
+const deleteBatchOutputSchema = z.union([z.object({ success: z.literal(true) }), z.object({ success: z.literal(false), error: z.string() })]);
 
-export const deleteBatch = adminActionClient.inputSchema(deleteBatchInputSchema).action(async ({ parsedInput }) => {
+export const deleteBatch = adminActionClient.inputSchema(deleteBatchInputSchema).outputSchema(deleteBatchOutputSchema).action(async ({ parsedInput }) => {
   const { batchId } = parsedInput;
 
   const cardsWithOrders = await prisma.giftcard.findMany({

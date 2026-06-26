@@ -1,5 +1,5 @@
-import { getAllBrands, getAllCountries } from '@/actions/admin/catalog';
-import { BrandsManager } from './brands-manager';
+import { listBrands, listCountries } from '@/actions/admin/catalog';
+import { BrandsManager } from '@/components/admin/brands/brands-manager';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BrandsPage() {
-  const [brandsResult, countriesResult] = await Promise.all([getAllBrands(), getAllCountries()]);
+  const [brandsResult, countriesResult] = await Promise.all([listBrands(), listCountries()]);
 
   if (!brandsResult.data?.success) throw new Error('Failed to load brands');
   if (!countriesResult.data?.success) throw new Error('Failed to load countries');

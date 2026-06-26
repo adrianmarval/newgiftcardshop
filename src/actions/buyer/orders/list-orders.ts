@@ -3,9 +3,10 @@
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
-import { decrypt, hashCode } from '@/lib/encryption';
+import { hashCode } from '@/lib/encryption';
 import { buyerActionClient } from '@/lib/safe-action';
-import { computeOrderGiftcardTotals } from '@/lib/utils/action-helpers';
+import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { computeOrderGiftcardTotals } from '@/lib/services/pricing/pricing';
 import { GiftcardStatus, OrderStatus } from '@/generated/prisma/enums';
 
 const listOrdersInputSchema = z.object({
@@ -16,7 +17,19 @@ const listOrdersInputSchema = z.object({
   sort: z.enum(['newest', 'oldest']).optional().default('newest'),
 });
 
-export const listOrders = buyerActionClient.inputSchema(listOrdersInputSchema).action(async ({ ctx, parsedInput }) => {
+const listOrdersOutputSchema = z.object({
+  success: z.literal(true),
+  items: z.array(z.object({
+    id: z.string(), status: z.string(), total: z.number(), adjustedTotal: z.number().nullable(),
+    buyRate: z.number(), effectiveTotal: z.number(), faceValueTotal: z.number(),
+    createdAt: z.string(), updatedAt: z.string(),
+    giftcards: z.array(z.any()),
+    payments: z.array(z.any()),
+  })),
+  pagination: z.object({ currentPage: z.number(), totalPages: z.number(), totalCount: z.number() }),
+});
+
+export const listOrders = buyerActionClient.inputSchema(listOrdersInputSchema).outputSchema(listOrdersOutputSchema).action(async ({ ctx, parsedInput }) => {
   const { page, limit, status, search, sort } = parsedInput;
   const skip = (page - 1) * limit;
   const orderBy = sort === 'newest' ? { createdAt: 'desc' as const } : { createdAt: 'asc' as const };
@@ -68,20 +81,7 @@ export const listOrders = buyerActionClient.inputSchema(listOrdersInputSchema).a
     items: orders.map((order) => {
       const totals = computeOrderGiftcardTotals(order.giftcards, order.buyRate);
       const giftcards = order.giftcards.map((card) => {
-        let claimCode = card.claimCode;
-        let pinCode = card.pinCode ?? null;
-        try {
-          claimCode = decrypt(card.claimCode);
-        } catch {
-          /* legacy unencrypted */
-        }
-        if (card.pinCode) {
-          try {
-            pinCode = decrypt(card.pinCode);
-          } catch {
-            pinCode = card.pinCode;
-          }
-        }
+        const { claimCode, pinCode } = decryptGiftcardCodes(card);
         // Flag if this card matches the search
         let isSearchMatch = false;
         if (search) {

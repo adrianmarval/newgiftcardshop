@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { BatchCard } from './batch-card';
-import { SellerBatch } from '@/types';
+import type { SellerBatch } from '@/types';
 
 export interface BatchesListProps {
   batches: SellerBatch[];

@@ -1,9 +1,9 @@
 'use client';
 
-import { PaginationMeta, SellerBatch } from '@/types';
+import type { PaginationMeta, SellerBatch } from '@/types';
 import { BatchesFilters } from './batches-filters';
 import { BatchesList } from './batches-list';
-import { StatusLegend } from '@/components/ui/status-legend';
+import { StatusLegend } from '@/components/common/status-legend';
 
 export interface SellerBatchesViewProps {
   batches: SellerBatch[];

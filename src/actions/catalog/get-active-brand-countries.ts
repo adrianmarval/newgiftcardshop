@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
 import { z } from 'zod';
+import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
 
 const brandCountrySchema = z.object({
   id: z.string(),
@@ -34,7 +35,7 @@ export const getActiveBrandCountries = authActionClient.outputSchema(outputSchem
       brand: true,
       country: true,
       giftcards: {
-        where: { inStock: true, status: 'UNUSED' },
+        where: AVAILABLE_GIFTCARD_WHERE,
         select: { amount: true },
       },
     },
@@ -42,7 +43,7 @@ export const getActiveBrandCountries = authActionClient.outputSchema(outputSchem
   });
 
   return {
-    success: true,
+    success: true as const,
     brandCountries: brandCountries.map((bc) => ({
       id: bc.id,
       brandId: bc.brandId,

@@ -4,12 +4,18 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { getUserRates } from '@/lib/services/pricing.service';
-import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard-reservation.service';
+import { getUserRates } from '@/lib/services/pricing/pricing';
+import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
+import { checkCreditLimit } from '@/lib/services/payment/credit';
 
 const createOrderInputSchema = z.object({
   giftcardIds: z.array(z.string()),
   idempotencyKey: z.string().uuid().optional(),
+});
+
+const createOrderOutputSchema = z.object({
+  success: z.literal(true),
+  orderId: z.string(),
 });
 
 function validateTierAccess(cards: { id: string; escalationTier: number | null | undefined }[], buyerBuyRate: number): string | null {
@@ -31,6 +37,7 @@ function validateTierAccess(cards: { id: string; escalationTier: number | null |
 
 export const createOrder = buyerActionClient
   .inputSchema(createOrderInputSchema)
+  .outputSchema(createOrderOutputSchema)
   .useValidated(async ({ parsedInput: { giftcardIds }, ctx, next }) => {
     const dbUser = await prisma.user.findUnique({
       where: { id: ctx.auth.user.id },
@@ -89,13 +96,9 @@ export const createOrder = buyerActionClient
     let order;
     try {
       order = await prisma.$transaction(async (tx) => {
-        // Revalidar credit limit atomically
-        const unpaidOrders = await tx.order.findMany({
-          where: { userId: ctx.auth.user.id, status: { in: ['PENDING', 'AWAITING_PAYMENT'] } },
-          select: { adjustedTotal: true, total: true },
-        });
-        const unpaidTotal = unpaidOrders.reduce((s, o) => s.plus(o.adjustedTotal ?? o.total), new Prisma.Decimal(0));
-        if (unpaidTotal.plus(total).gt(ctx.dbUser.creditLimit)) {
+        // Revalidar credit limit atómicamente dentro de la tx
+        const creditCheck = await checkCreditLimit(ctx.auth.user.id, total, tx);
+        if (!creditCheck.allowed) {
           throw new ActionError('Límite de crédito insuficiente. Tenés pagos pendientes que bloquean esta compra.');
         }
 

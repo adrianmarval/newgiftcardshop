@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clipboard, ClipboardCheck, ChevronRight, X, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,18 +11,20 @@ import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
+import { getOrderCards } from '@/actions/buyer/giftcards/get-order-cards';
 import { reportIssue as reportIssueAction } from '@/actions/buyer/giftcards/issues/report-issue';
 import { undoIssue as undoIssueAction } from '@/actions/buyer/giftcards/issues/undo-issue';
 import { GiftcardIssueType, GiftcardStatus } from '@/generated/prisma/enums';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
 import { useAction } from 'next-safe-action/hooks';
 import { formatCurrency } from '@/lib/currency-formatter';
-import { copyToClipboard } from '@/lib/clipboard';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
 
 export const RedeemStep = () => {
-  const { foundGiftcards, reportIssue, setStep, orderId, selectedBrand, selectedCountry, selectedCurrency } = useBuyFlow();
+  const { foundGiftcards, setFoundGiftcards, orderStatus, reportIssue, setStep, orderId, selectedBrand, selectedCountry, selectedCurrency } = useBuyFlow();
+  const isPending = orderStatus === 'PENDING' || !orderStatus;
 
   const [redeemState, setRedeemState] = useState<{
     activeReportId: string | null;
@@ -57,6 +59,16 @@ export const RedeemStep = () => {
       executeGetUserBuyRate({ brandCountryId: selectedBrand });
     }
   }, [executeGetUserBuyRate, selectedBrand, selectedCountry]);
+
+  // Refetch cards from server on mount to stay in sync with external mutations (e.g., Telegram bot)
+  useEffect(() => {
+    if (!orderId) return;
+    getOrderCards({ orderId }).then((result) => {
+      if (result?.data?.success && result.data.giftcards) {
+        setFoundGiftcards(result.data.giftcards);
+      }
+    });
+  }, [orderId]);
 
   const setLoading = (id: string, loading: boolean) => {
     setRedeemState((prev) => {
@@ -157,13 +169,13 @@ export const RedeemStep = () => {
   };
 
   // Calculate totals based on status and apply buyRate
-  const rawTotal = foundGiftcards.reduce((sum, card) => {
+  const rawTotal = useMemo(() => foundGiftcards.reduce((sum, card) => {
     if (card.status === 'UNUSED') return sum + card.amount;
     if (card.status === 'WRONG_AMOUNT') return sum + (card.reportedAmount ?? 0);
     return sum; // INVALID, ALREADY_USED, DEACTIVATED = 0
-  }, 0);
+  }, 0), [foundGiftcards]);
 
-  const totalAmount = rawTotal * redeemState.buyRate;
+  const totalAmount = useMemo(() => rawTotal * redeemState.buyRate, [rawTotal, redeemState.buyRate]);
 
   // Clipboard progress tracking
   const copiedCount = redeemState.copiedIds.size;
@@ -303,6 +315,7 @@ export const RedeemStep = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                disabled={!isPending}
                                 className="border-destructive/30 text-destructive/80 hover:bg-destructive/10 h-6 px-1.5 text-[9px] md:h-7 md:px-2 md:text-[10px]"
                               >
                                 Reportar
@@ -336,6 +349,7 @@ export const RedeemStep = () => {
                           <Button
                             variant="ghost"
                             size="sm"
+                            disabled={!isPending}
                             className="text-muted-foreground hover:bg-muted h-6 px-1.5 text-[9px] md:h-7 md:px-2 md:text-[10px]"
                             onClick={() => handleUndoReport(card.id, card.status)}
                           >

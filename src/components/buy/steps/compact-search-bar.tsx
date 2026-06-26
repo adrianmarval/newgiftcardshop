@@ -1,11 +1,12 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Search, Settings, DollarSign } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { BrandCountry } from '@/types';
+import { cn } from '@/lib/ui';
+import type { BrandCountry } from '@/types';
 
 interface CompactSearchBarProps {
   brandCountries: BrandCountry[];
@@ -38,7 +39,7 @@ export function CompactSearchBar({
   showAdvancedButton,
   className,
 }: CompactSearchBarProps) {
-  const countries = (() => {
+  const countries = useMemo(() => {
     const unique = new Map<string, { id: string; name: string; code: string }>();
     for (const bc of brandCountries) {
       if (!unique.has(bc.countryId)) {
@@ -46,7 +47,7 @@ export function CompactSearchBar({
       }
     }
     return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name));
-  })();
+  }, [brandCountries]);
 
   return (
     <div className={cn('bg-card/50 flex flex-col items-center gap-1 rounded-xl border p-1 backdrop-blur-sm md:gap-1 md:p-3', className)}>

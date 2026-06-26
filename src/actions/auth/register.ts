@@ -8,7 +8,7 @@ import { appSectionMap, roleMap } from '@/types';
 
 const registerInputSchema = z
   .object({
-    fullName: z.string().min(1, 'Full name is required'),
+    fullName: z.string().trim().min(1, 'Full name is required'),
     email: z.email('Invalid email address'),
     password: z
       .string()
@@ -17,7 +17,7 @@ const registerInputSchema = z
       .regex(/[a-z]/, 'Password must contain a lowercase letter')
       .regex(/[0-9]/, 'Password must contain a number')
       .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain a special character'),
-    confirmPassword: z.string(),
+    confirmPassword: z.string().trim(),
     portal: z.enum(['sell', 'buy', 'admin']),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -33,7 +33,6 @@ export const register = actionClient
   .action(async function ({ parsedInput: { fullName, email, password, portal } }) {
     const callbackURL = `${appSectionMap[portal]}/auth/login`;
     const role = roleMap[portal];
-    console.log({ callbackURL });
 
     try {
       await authApi.signUpEmail({
@@ -46,7 +45,7 @@ export const register = actionClient
         },
         headers: await headers(),
       });
-      return { success: true, redirectTo: callbackURL };
+      return { success: true as const, redirectTo: callbackURL };
     } catch (error) {
       console.error('Registration error:', error);
       return {

@@ -3,15 +3,16 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { resetPassword } from '@/actions';
+import { resetPassword } from '@/actions/auth/reset-password';
 import { useAction } from 'next-safe-action/hooks';
-import { AppSection, appSectionMap } from '@/types';
+import type { AppSection } from '@/types';
+import { appSectionMap } from '@/types';
 import { PasswordCheckItem } from './ui/password-check-item';
 
 interface ResetPasswordFormProps {
@@ -58,6 +59,9 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
     onSuccess: ({ data }) => {
       if (data?.success && data.redirectTo) {
         router.push(data.redirectTo);
+      } else if (data?.error) {
+        const defaultError = isSpanish ? 'Error al restablecer' : 'Failed to reset';
+        showAlert.error('Error', data.error || defaultError);
       }
     },
     onError: ({ error }) => {

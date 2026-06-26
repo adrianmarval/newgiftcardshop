@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { Bell, Check, ChevronRight } from 'lucide-react';
-import { useNotifications } from '@/contexts/notification-context';
-import { markAsRead } from '@/actions';
+import { Bell, Check } from 'lucide-react';
+import { useNotifications } from '@/providers/notification-provider';
+import { markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
-import type { NotificationItem } from './notifications-page-client';
+import type { NotificationItem } from '@/types';
 
 export interface NotificationsListProps {
   portal: 'buyer' | 'seller' | 'admin';
@@ -45,6 +45,11 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const { setUnreadCount } = useNotifications();
 
+  // Sync with server props when parent re-renders (auto-refresh)
+  useEffect(() => {
+    setNotifications(initialNotifications);
+  }, [initialNotifications]);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const { execute: executeMarkAsRead } = useAction(markAsRead, {
@@ -57,9 +62,6 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
     if (!item.read) {
       setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
       executeMarkAsRead({ notificationId: item.id });
-    }
-    if (item.actionUrl) {
-      window.location.href = item.actionUrl;
     }
   };
 
@@ -113,9 +115,6 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
             </div>
 
             {!item.read && <span className="bg-primary mt-1 h-2 w-2 shrink-0 rounded-full" />}
-            {item.read && item.actionUrl && (
-              <ChevronRight className="text-muted-foreground/40 h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
-            )}
           </button>
         ))}
       </CardContent>

@@ -11,7 +11,7 @@ const logoutInputSchema = z.object({
 });
 
 const logoutOutputSchema = z.object({
-  success: z.boolean(),
+  success: z.literal(true),
   redirectTo: z.string(),
 });
 
@@ -19,8 +19,7 @@ export const logout = actionClient
   .inputSchema(logoutInputSchema)
   .outputSchema(logoutOutputSchema)
   .action(async function ({ parsedInput: { portal } }) {
-    console.log(portal);
     const appSection = appSectionMap[portal];
     await auth.api.signOut({ headers: await headers() });
-    return { success: true, redirectTo: `${appSection}/auth/login` };
+    return { success: true as const, redirectTo: `${appSection}/auth/login` };
   });

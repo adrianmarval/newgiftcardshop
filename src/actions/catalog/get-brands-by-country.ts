@@ -39,7 +39,7 @@ export const getBrandsByCountry = authActionClient
     });
 
     return {
-      success: true,
+      success: true as const,
       brandCountries: brandCountries.map((bc) => ({
         id: bc.id,
         brandId: bc.brandId,

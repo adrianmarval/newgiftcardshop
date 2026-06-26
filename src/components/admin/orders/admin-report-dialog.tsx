@@ -10,6 +10,7 @@ import { manageReport } from '@/actions/admin/orders';
 import { Spinner } from '@/components/ui/spinner';
 import { InlineAlert, type InlineAlertVariant } from '@/components/ui/inline-alert';
 import type { Giftcard } from '@/types';
+import type { AlertState } from '@/components/admin/types';
 
 interface AdminReportDialogProps {
   card: Giftcard | null;
@@ -18,12 +19,6 @@ interface AdminReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-}
-
-interface AlertState {
-  variant: InlineAlertVariant;
-  title: string;
-  description?: string;
 }
 
 export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onSuccess }: AdminReportDialogProps) {

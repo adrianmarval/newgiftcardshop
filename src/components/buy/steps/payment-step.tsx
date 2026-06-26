@@ -9,11 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { completeOrder } from '@/actions/buyer/orders/complete-order';
-import { getBinancePayPaymentId } from '@/actions/platform/settings';
+import { getBinancePayPaymentId } from '@/actions/platform';
 import { useAction } from 'next-safe-action/hooks';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
-import { copyToClipboard } from '@/lib/clipboard';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
 
 export const PaymentStep = () => {
@@ -26,7 +26,6 @@ export const PaymentStep = () => {
 
   const { execute: executeGetPlatformSetting } = useAction(getBinancePayPaymentId, {
     onSuccess: ({ data }) => {
-      console.log({ data });
       if (data?.success) {
         const binancePayIdSetting = data.binancePayId;
         if (!binancePayIdSetting) {
@@ -95,29 +94,29 @@ export const PaymentStep = () => {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-1">
+    <div className="flex h-full min-h-0 flex-col">
       <BuyStepsProgress />
 
-      <Card className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 border p-3 text-center backdrop-blur-sm md:gap-6 md:p-6">
-        <div className="max-w-md space-y-1 md:max-w-xl md:space-y-3">
+      <Card className="flex min-h-0 flex-1 flex-col items-center gap-1 border p-3 text-center backdrop-blur-sm md:gap-4 md:p-6">
+        <div className="max-w-md space-y-0.5 md:max-w-xl md:space-y-1">
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-primary/10 mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full md:mb-3 md:h-14 md:w-14"
+            className="bg-primary/10 mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full md:mb-2 md:h-10 md:w-10"
           >
-            <Wallet className="text-primary h-5 w-5 md:h-7 md:w-7" />
+            <Wallet className="text-primary h-4 w-4 md:h-5 md:w-5" />
           </motion.div>
-          <h2 className="text-xl font-black tracking-tight uppercase italic md:text-2xl">Binance Pay</h2>
-          <p className="text-muted-foreground text-xs md:text-base">Envía el monto exacto al ID a continuación.</p>
+          <h2 className="text-lg font-black tracking-tight uppercase italic md:text-xl">Binance Pay</h2>
+          <p className="text-muted-foreground text-[10px] md:text-xs">Envía el monto exacto al ID a continuación.</p>
         </div>
 
-        <div className="group border-border bg-muted/50 relative w-full max-w-xs space-y-3 overflow-hidden rounded-2xl border p-3 md:max-w-sm md:p-5">
+        <div className="group border-border bg-muted/50 relative w-full max-w-xs space-y-2 rounded-2xl border p-2 md:max-w-sm md:space-y-3 md:p-4">
           <div className="relative z-10 space-y-0.5">
             <div className="text-muted-foreground text-[9px] font-black tracking-widest uppercase md:text-[10px]">Total a Pagar</div>
-            <div className="text-primary text-2xl font-black md:text-4xl">${adjustedTotal != null ? adjustedTotal.toFixed(2) : '—'}</div>
+            <div className="text-primary text-xl font-black md:text-3xl">${adjustedTotal != null ? adjustedTotal.toFixed(2) : '—'}</div>
           </div>
 
-          <div className="relative z-10 space-y-1.5">
+          <div className="relative z-10 space-y-1">
             <Label className="text-muted-foreground text-[9px] font-black uppercase md:text-[10px]">ID de Binance Pay</Label>
             <div className="border-border bg-card flex items-center justify-center gap-1 rounded-lg border p-1.5 font-mono text-sm font-bold md:p-2 md:text-base">
               {binancePayId}
@@ -140,8 +139,8 @@ export const PaymentStep = () => {
           </div>
         </div>
 
-        <div className="w-full max-w-xs space-y-1 md:max-w-sm md:space-y-3">
-          <div className="space-y-1 text-left">
+        <div className="w-full max-w-xs space-y-1 md:max-w-sm md:space-y-2">
+          <div className="space-y-0.5 text-left">
             <Label className="text-muted-foreground ml-1 text-[9px] font-black tracking-tight uppercase md:text-[10px]">
               ID de Transacción
             </Label>
@@ -149,15 +148,15 @@ export const PaymentStep = () => {
               placeholder="ID de transacción"
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
-              className="border-border text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 h-9 text-center font-mono text-base md:h-10 md:text-lg"
+              className="border-border text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 h-8 text-center font-mono text-sm md:h-9 md:text-base"
             />
           </div>
 
           {errorMessage && <p className="text-destructive text-center text-xs font-medium">{errorMessage}</p>}
 
-          <div className="border-primary/20 bg-primary/5 flex w-full max-w-xs gap-1 rounded-xl border p-2 text-left md:max-w-sm md:p-3">
-            <Info className="text-primary mt-0.5 h-3.5 w-3.5 md:h-4 md:w-4" />
-            <p className="text-muted-foreground text-xs leading-relaxed italic md:text-sm">La verificación es instantanea.</p>
+          <div className="border-primary/20 bg-primary/5 flex w-full max-w-xs gap-1 rounded-xl border p-1.5 text-left md:max-w-sm md:p-2">
+            <Info className="text-primary mt-0.5 h-3 w-3 md:h-3.5 md:w-3.5" />
+            <p className="text-muted-foreground text-[10px] leading-relaxed italic md:text-xs">La verificación es instantanea.</p>
           </div>
         </div>
       </Card>

@@ -3,9 +3,9 @@
 import { Button } from '@/components/ui/button';
 import { IconLogout } from '@tabler/icons-react';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 import { useLogout } from '@/hooks/use-logout';
-import { AppSection } from '@/types';
+import type { AppSection } from '@/types';
 
 interface LogoutButtonProps {
   portal: AppSection;

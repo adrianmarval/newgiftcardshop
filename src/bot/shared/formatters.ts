@@ -67,3 +67,15 @@ export function fmtGiftcardStatus(status: string, lang: Lang = 'es'): string {
   };
   return labels[lang][status] ?? status;
 }
+
+// ── Text Formatting ──────────────────────────────────────────────────────────
+
+/**
+ * Applies Unicode strikethrough to each character in the text.
+ */
+export function strike(text: string): string {
+  return text
+    .split('')
+    .map((char) => char + '\u0336')
+    .join('');
+}

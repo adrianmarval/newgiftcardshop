@@ -1,64 +1,40 @@
 'use server';
 
-import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
+import { findOrderForUser, completeOrderPayment, OrderAlreadyProcessedError } from '@/lib/services/order';
 
 const completeOrderInputSchema = z.object({
+  orderId: z.string().min(1),
+  _transactionId: z.string().trim().min(1, 'Transaction ID is required'),
+});
+
+const completeOrderOutputSchema = z.object({
+  success: z.literal(true),
   orderId: z.string(),
-  _transactionId: z.string(),
+  message: z.string(),
 });
 
 export const completeOrder = buyerActionClient
   .inputSchema(completeOrderInputSchema)
+  .outputSchema(completeOrderOutputSchema)
   .useValidated(async ({ parsedInput: { orderId }, ctx, next }) => {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { giftcards: true },
-    });
-    if (!order) throw new ActionError('Orden no encontrada');
-    if (order.userId !== ctx.auth.user.id) throw new ActionError('No estás autorizado para completar esta orden');
+    const order = await findOrderForUser(orderId, ctx.auth.user.id);
+
     if (order.status === 'COMPLETED') throw new ActionError('La orden ya ha sido completada');
     if (order.status !== 'AWAITING_PAYMENT') throw new ActionError('La orden debe ser confirmada antes de enviar el pago');
+
     return next({ ctx: { order } });
   })
   .action(async ({ parsedInput: { _transactionId }, ctx }) => {
-    const { order } = ctx;
-    const paymentAmount = order.adjustedTotal ?? order.total;
-    await prisma.$transaction(async (tx) => {
-      const updatedSettings = await tx.platformSettings.upsert({
-        where: { key: 'platformBalance' },
-        update: { balance: { increment: paymentAmount } },
-        create: { key: 'platformBalance', value: '', description: 'Balance General', balance: paymentAmount },
-      });
-
-      await tx.payment.create({
-        data: {
-          amount: paymentAmount,
-          balanceAfter: updatedSettings.balance,
-          direction: 'CREDIT',
-          category: 'ORDER',
-          orderId: order.id,
-          binanceTxId: _transactionId,
-          relatedUserId: order.userId,
-        },
-      });
-      try {
-        await tx.order.update({
-          where: { id: order.id, status: 'AWAITING_PAYMENT' },
-          data: { status: 'COMPLETED' },
-        });
-      } catch (err) {
-        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-          throw new ActionError('La orden ya ha sido procesada por otra solicitud.');
-        }
-        throw err;
+    try {
+      const result = await completeOrderPayment(ctx.order.id, _transactionId);
+      return { success: true as const, orderId: result.orderId, message: 'Orden completada con éxito' };
+    } catch (err) {
+      if (err instanceof OrderAlreadyProcessedError) {
+        throw new ActionError(err.message);
       }
-    });
-    return {
-      success: true as const,
-      orderId: order.id,
-      message: 'Orden completada con éxito',
-    };
+      throw err;
+    }
   });

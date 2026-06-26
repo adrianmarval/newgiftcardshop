@@ -3,10 +3,10 @@
 import { LogOut, Power } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { NotificationDropdown } from '@/components/layout/notification-dropdown';
+import { NotificationDropdown } from '@/components/layout';
 import { useLogout } from '@/hooks/use-logout';
-import { AppSection } from '@/types';
-import { cn } from '@/lib/utils';
+import type { AppSection } from '@/types';
+import { cn } from '@/lib/ui';
 
 interface AppTopBarProps {
   portal: AppSection;

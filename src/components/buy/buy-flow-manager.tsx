@@ -4,9 +4,9 @@ import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { BuyFlowCard, useBuyFlow } from '@/hooks/use-buy-flow';
-import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep } from '@/components/buy/steps';
-import { PaymentStep } from '@/components/buy/steps/payment-step';
-import { BrandCountry, BuyerOrder, GiftcardStatus } from '@/types';
+import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep, PaymentStep } from '@/components/buy/steps';
+import type { BrandCountry, BuyerOrder } from '@/types';
+import { GiftcardStatus } from '@/types';
 
 export const STEP_LABELS = ['Buscar', 'Seleccionar', 'Redimir', 'Uso', 'Pagar'];
 
@@ -47,6 +47,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
       useBuyFlow.setState({
         step: resumeStep,
         orderId: resumeOrder.id,
+        orderStatus: resumeOrder.status,
         adjustedTotal: resumeOrder.adjustedTotal,
         foundGiftcards: giftcards,
         selectedBrand: resumeBrandCountryId,
@@ -86,7 +87,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
             )}
             {step === 2 && (
               <motion.div
-                key="step-1"
+                key="step-2"
                 className="h-full"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -98,7 +99,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
             )}
             {step === 3 && (
               <motion.div
-                key="step-1"
+                key="step-3"
                 className="h-full"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -110,7 +111,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
             )}
             {step === 4 && (
               <motion.div
-                key="step-1"
+                key="step-4"
                 className="h-full"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -122,7 +123,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
             )}
             {step === 5 && (
               <motion.div
-                key="step-1"
+                key="step-5"
                 className="h-full"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}

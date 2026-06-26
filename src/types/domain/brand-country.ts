@@ -41,3 +41,27 @@ export interface BrandCountry {
   stockCount: number;
   stockAmount: number;
 }
+
+// ── BrandCountry Summary (admin catalog views — without brand fields) ────────
+
+export interface BrandCountrySummary {
+  id: string;
+  countryId: string;
+  countryName: string;
+  countryCode: string;
+  minAmount: number | null;
+  maxAmount: number | null;
+  isActive: boolean;
+}
+
+// ── Brand with nested countries (admin catalog list) ─────────────────────────
+
+export interface BrandWithCountries {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  image: string | null;
+  isActive: boolean;
+  countries: BrandCountrySummary[];
+}

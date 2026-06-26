@@ -1,10 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
-import { logout } from '@/actions';
-import { AppSection } from '@/types';
+import { logout } from '@/actions/auth/logout';
+import type { AppSection } from '@/types';
 
 export const useLogout = (portal: AppSection) => {
   const router = useRouter();

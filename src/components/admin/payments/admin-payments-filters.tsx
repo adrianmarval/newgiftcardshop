@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
 import { adminPaymentsSearchParamsParsers } from '@/lib/search-params';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 
 interface AdminPaymentsFiltersProps {
   sellers: Array<{ id: string; name: string; email: string }>;

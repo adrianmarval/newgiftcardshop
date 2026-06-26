@@ -9,7 +9,7 @@ import { AdminPayDialog } from './admin-pay-dialog';
 import { AdminSellerDialog } from './admin-seller-dialog';
 import type { AdminBatch, PaginationMeta } from '@/types';
 import { IconCurrencyDollar } from '@tabler/icons-react';
-import { StatusLegend } from '@/components/ui/status-legend';
+import { StatusLegend } from '@/components/common/status-legend';
 
 interface AdminBatchesClientProps {
   batches: AdminBatch[];

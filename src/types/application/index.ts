@@ -60,3 +60,14 @@ export function paginatedOutputSchema<T>(itemsSchema: z.ZodSchema<T>) {
     }),
   });
 }
+
+// ── WhatsApp ─────────────────────────────────────────────────────────────────
+
+export interface WhatsAppStatus {
+  status: string;
+  phoneNumber: string | null;
+}
+
+export interface WhatsAppFullStatus extends WhatsAppStatus {
+  qr: string | null;
+}

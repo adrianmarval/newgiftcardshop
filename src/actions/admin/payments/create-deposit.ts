@@ -3,15 +3,24 @@
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
-import { adminActionClient } from '@/lib/safe-action';
+import { ActionError, adminActionClient } from '@/lib/safe-action';
 
 const createDepositInputSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
-  binanceTxId: z.string().optional(),
-  notes: z.string().optional(),
+  binanceTxId: z.string().trim().optional(),
+  notes: z.string().trim().optional(),
 });
 
-export const createDeposit = adminActionClient.inputSchema(createDepositInputSchema).action(async ({ parsedInput, ctx }) => {
+const createDepositOutputSchema = z.object({
+  success: z.literal(true),
+  paymentId: z.string(),
+  message: z.string(),
+});
+
+export const createDeposit = adminActionClient
+  .inputSchema(createDepositInputSchema)
+  .outputSchema(createDepositOutputSchema)
+  .action(async ({ parsedInput, ctx }) => {
   const { amount, binanceTxId, notes } = parsedInput;
   const relatedUserId = ctx.auth.user.id;
 
@@ -21,11 +30,11 @@ export const createDeposit = adminActionClient.inputSchema(createDepositInputSch
   });
 
   if (!user) {
-    throw new Error('Usuario no encontrado');
+    throw new ActionError('Usuario no encontrado');
   }
 
   if (user.role !== 'ADMIN') {
-    throw new Error('El depósito debe estar asociado a un administrador');
+    throw new ActionError('El depósito debe estar asociado a un administrador');
   }
 
   const payment = await prisma.$transaction(async (tx) => {

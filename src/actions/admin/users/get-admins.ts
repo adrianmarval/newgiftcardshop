@@ -1,9 +1,15 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { z } from 'zod';
 import { adminActionClient } from '@/lib/safe-action';
 
-export const getAdmins = adminActionClient.action(async () => {
+const getAdminsOutputSchema = z.object({
+  success: z.literal(true),
+  admins: z.array(z.object({ id: z.string(), name: z.string(), email: z.string() })),
+});
+
+export const getAdmins = adminActionClient.outputSchema(getAdminsOutputSchema).action(async () => {
   const admins = await prisma.user.findMany({
     where: { role: 'ADMIN' },
     select: { id: true, name: true, email: true },

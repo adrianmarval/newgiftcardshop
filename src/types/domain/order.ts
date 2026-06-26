@@ -3,8 +3,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { OrderStatus } from '@/generated/prisma/enums';
-import { Giftcard } from '@/types/domain/giftcard';
-import { Payment } from '@/types/domain/payment';
+import type { Giftcard } from '@/types/domain/giftcard';
+import type { Payment } from '@/types/domain/payment';
 
 export { OrderStatus };
 

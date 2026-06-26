@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
-import { forgotPassword } from '@/actions';
+import { forgotPassword } from '@/actions/auth/forgot-password';
 import { useAction } from 'next-safe-action/hooks';
-import { AppSection, appSectionMap } from '@/types';
+import type { AppSection } from '@/types';
+import { appSectionMap } from '@/types';
 
 interface ForgotPasswordFormProps {
   portal?: AppSection;
@@ -28,6 +29,8 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: ForgotPasswordFormProps) 
     onSuccess: ({ data }) => {
       if (data?.success) {
         setSuccess(true);
+      } else if (data?.error) {
+        showAlert.error('Error', data.error);
       }
     },
     onError: ({ error }) => {

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import Image from 'next/image';
-import { BrandCountry } from '@/types';
+import type { BrandCountry } from '@/types';
 import { SellStepsProgress } from './sell-steps-progress';
 
 export interface BrandStepProps {

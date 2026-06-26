@@ -7,7 +7,7 @@ import { Image as ImageIcon, Download, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getBatchImages } from '@/actions/admin/batches';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 
 interface AdminBatchGalleryProps {
   batchId: string;

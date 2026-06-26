@@ -6,7 +6,7 @@ import { History } from 'lucide-react';
 import { OrderCard } from '@/components/buy/giftcard-orders/order-card';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
-import { BuyerOrder } from '@/types';
+import type { BuyerOrder } from '@/types';
 
 export interface OrdersListProps {
   orders: BuyerOrder[];

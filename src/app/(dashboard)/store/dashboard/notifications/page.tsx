@@ -1,9 +1,8 @@
 import { NotificationsPageClient } from '@/components/notifications/notifications-page-client';
-import type { NotificationItem } from '@/components/notifications/notifications-page-client';
 import { Metadata } from 'next';
-import { getSession } from '@/lib/authorization';
-import prisma from '@/lib/prisma';
-import { getSubscribedBrandCountries } from '@/lib/notifications/get-subscribed-brand-countries';
+import { getSession } from '@/lib/auth/authorization';
+import { getNotificationPageData } from '@/lib/services/notification/page-queries';
+import { getSubscribedBrandCountries } from '@/lib/notifications';
 
 export const metadata: Metadata = {
   title: 'Centro de Notificaciones | Portal Compras',
@@ -12,20 +11,8 @@ export const metadata: Metadata = {
 
 export default async function BuyerNotificationsPage() {
   const session = await getSession();
-
-  const [notifications, unreadCount, preference, brandCountries] = await Promise.all([
-    prisma.notification.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    }),
-    prisma.notification.count({
-      where: { userId: session.user.id, read: false },
-    }),
-    prisma.notificationPreference.findUnique({
-      where: { userId: session.user.id },
-      select: { telegramEnabled: true, whatsappEnabled: true, whatsappPhone: true },
-    }),
+  const [{ notifications, unreadCount, preference }, brandCountries] = await Promise.all([
+    getNotificationPageData(session.user.id),
     getSubscribedBrandCountries(session.user.id),
   ]);
 
@@ -40,16 +27,7 @@ export default async function BuyerNotificationsPage() {
       <div className="mt-4">
         <NotificationsPageClient
           portal="buyer"
-          initialNotifications={notifications.map((n) => ({
-            id: n.id,
-            title: n.title,
-            description: n.description,
-            createdAt: n.createdAt,
-            read: n.read,
-            type: n.type as NotificationItem['type'],
-            actionUrl: n.actionUrl,
-            metadata: n.metadata as Record<string, unknown> | null,
-          }))}
+          initialNotifications={notifications}
           initialUnreadCount={unreadCount}
           settingsProps={{
             portal: 'buyer',

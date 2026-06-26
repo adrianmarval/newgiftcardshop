@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -25,7 +25,7 @@ import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { Brand } from '@/types';
 import { formatCurrency } from '@/lib/currency-formatter';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
 
 export const ResultsStep = () => {
@@ -129,8 +129,8 @@ export const ResultsStep = () => {
     createOrderExecute({ giftcardIds: cardIds, idempotencyKey: idempotencyKeyRef.current });
   };
 
-  const rawTotal = foundGiftcards.reduce((sum, card) => sum + card.amount, 0);
-  const discountedTotal = rawTotal * resultsState.buyRate;
+  const rawTotal = useMemo(() => foundGiftcards.reduce((sum, card) => sum + card.amount, 0), [foundGiftcards]);
+  const discountedTotal = useMemo(() => rawTotal * resultsState.buyRate, [rawTotal, resultsState.buyRate]);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">

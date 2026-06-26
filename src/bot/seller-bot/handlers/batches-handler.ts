@@ -4,13 +4,7 @@ import { decrypt } from '@/lib/encryption';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtDate, fmtRate } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
-
-function strike(text: string) {
-  return text
-    .split('')
-    .map((char) => char + '\u0336')
-    .join('');
-}
+import { strike } from '@/bot/shared/formatters';
 
 const PAGE_SIZE = 5;
 

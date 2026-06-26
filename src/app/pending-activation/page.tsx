@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getSession } from '@/lib/authorization';
+import { getSession } from '@/lib/auth/authorization';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { LogoutButton } from '@/components/auth/logout-button';

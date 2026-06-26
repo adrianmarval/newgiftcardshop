@@ -5,18 +5,18 @@ import { useState, MouseEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Copy } from 'lucide-react';
 import { useLongPress } from '@/hooks/use-long-press';
-import { RegistryCard } from '@/components/ui/registry-card';
+import { RegistryCard } from '@/components/common/registry-card';
 import { formatDateTime } from '@/lib/date-formatter';
 import { formatCurrency } from '@/lib/currency-formatter';
 import { Button } from '@/components/ui/button';
-import { showAlert } from '@/lib/swal';
+import { showAlert } from '@/lib/ui';
 import { AdminOrderDetails } from '@/components/admin/orders/admin-order-details';
 import { cancelOrder } from '@/actions/admin/orders';
 import { Spinner } from '@/components/ui/spinner';
-import { orderStatusConfig } from '@/lib/ui-config';
+import { orderStatusConfig } from '@/lib/config/ui-config';
 import type { Giftcard } from '@/types';
 import Image from 'next/image';
-import { AdminOrder } from '@/types';
+import type { AdminOrder } from '@/types';
 
 interface AdminOrderCardProps {
   order: AdminOrder;

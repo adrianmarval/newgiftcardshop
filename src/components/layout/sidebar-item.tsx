@@ -2,8 +2,8 @@
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/hooks/use-theme';
 import { NavItem } from './types';
-import { useNotifications } from '@/contexts/notification-context';
-import { cn } from '@/lib/utils';
+import { useNotifications } from '@/providers/notification-provider';
+import { cn } from '@/lib/ui';
 
 import {
   FaHome,

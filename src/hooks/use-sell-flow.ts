@@ -7,72 +7,16 @@
 import { create } from 'zustand';
 import { z } from 'zod';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
-
-// ── Validation States ─────────────────────────────────────────────────────────
-
-export const validationStateEnum = z.enum([
-  'verified',
-  'amount_mismatch',
-  'amount_required',
-  'no_capture',
-  'code_new_detected',
-  'capture_mismatch',
-  'processing_error',
-  'skipped',
-  'amount_not_found',
-  'error',
-]);
-
-export type ValidationState = z.infer<typeof validationStateEnum>;
-
-export const BLOCKING_EVIDENCE_STATES = ['amount_mismatch', 'amount_required'] as const satisfies ReadonlyArray<
-  z.infer<typeof validationStateEnum>
->;
-
-export type BlockingEvidenceState = (typeof BLOCKING_EVIDENCE_STATES)[number];
-
-export function isBlockingEvidenceState(state: ValidationState | undefined): boolean {
-  if (!state) return false;
-  return (BLOCKING_EVIDENCE_STATES as ReadonlyArray<string>).includes(state);
-}
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-export interface SellFlowCardEvidence {
-  status: ValidationState;
-  matchedImageId?: string;
-  extractedCode?: string;
-  extractedAmount?: string;
-  amountDecision?: 'accept-extracted' | 'keep-declared';
-}
-
-export interface SellFlowCard {
-  id: string;
-  amount: string;
-  claimCode: string;
-  pinCode?: string;
-  source?: 'manual' | 'bulk' | 'ocr';
-  evidence: SellFlowCardEvidence;
-}
-
-export interface SellFlowUnmatchedImage {
-  imageId: string;
-}
-
-export interface SellFlowImage {
-  id: string;
-  compressedData: string;
-  previewUrl: string;
-}
-
-export interface OCRDraftCard {
-  claimCode?: string;
-  amount?: string;
-  imageId?: string;
-  ocrConfidence: 'high' | 'manual';
-  rawExtractedCode?: string;
-  rawExtractedAmount?: string;
-}
+import {
+  type ValidationState,
+  type BlockingEvidenceState,
+  isBlockingEvidenceState,
+  type SellFlowCard,
+  type SellFlowCardEvidence,
+  type SellFlowImage,
+  type SellFlowUnmatchedImage,
+  type OCRDraftCard,
+} from '@/types';
 
 export interface SellFlowState {
   step: number;
@@ -95,12 +39,6 @@ export interface SellFlowState {
   removeImage: (id: string) => void;
   clearImages: () => void;
   setUnmatchedImages: (images: SellFlowUnmatchedImage[]) => void;
-  addImageToCard: (
-    cardId: string,
-    imageData: { imageId: string; compressedData: string; previewUrl: string },
-    extractedClaimCode: string | null,
-    extractedAmount: string | null,
-  ) => void;
   resetForm: () => void;
 }
 
@@ -332,8 +270,6 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
   clearImages: () => set({ images: [] }),
 
   setUnmatchedImages: (images: SellFlowUnmatchedImage[]) => set({ unmatchedImages: images }),
-
-  addImageToCard: () => {},
 
   resetForm: () =>
     set({

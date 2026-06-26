@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { buyerStats } from '@/actions/buyer/stats/buyer-stats';
+import { getBuyerStats } from '@/actions/buyer/stats';
 import { BuyerDashboard } from '@/components/buy/buyer-dashboard';
 import type { BuyerStats as BuyerStatsType } from '@/types';
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BuyerDashboardPage() {
-  const statsResult = await buyerStats();
+  const statsResult = await getBuyerStats();
 
   if (!statsResult.data) {
     throw new Error('Failed to load buyer stats');

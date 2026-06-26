@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { listOrders } from '@/actions/admin/orders';
 import { getBuyers } from '@/actions/admin/users/get-buyers';
 import { AdminOrdersView } from '@/components/admin/orders';
-import { adminOrdersSearchParamsCache } from '@/lib/search-params-cache';
+import { adminOrdersSearchParamsCache } from '@/lib/search-params';
 
 export const metadata: Metadata = {
   title: `Admin Orders | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,

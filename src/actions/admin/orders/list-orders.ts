@@ -3,9 +3,10 @@
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
-import { decrypt, hashCode } from '@/lib/encryption';
+import { hashCode } from '@/lib/encryption';
 import { adminActionClient } from '@/lib/safe-action';
-import { computeOrderGiftcardTotals } from '@/lib/utils/action-helpers';
+import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { computeOrderGiftcardTotals } from '@/lib/services/pricing/pricing';
 import { OrderStatus, GiftcardStatus, PaymentDirection, PaymentCategory, PaymentReferenceType } from '@/generated/prisma/enums';
 import { paginatedOutputSchema } from '@/types';
 
@@ -161,20 +162,7 @@ export const listOrders = adminActionClient
       items: orders.map((order) => {
         const totals = computeOrderGiftcardTotals(order.giftcards, order.buyRate);
         const giftcards = order.giftcards.map((card) => {
-          let claimCode = card.claimCode;
-          let pinCode = card.pinCode ?? null;
-          try {
-            claimCode = decrypt(card.claimCode);
-          } catch {
-            /* legacy unencrypted */
-          }
-          if (card.pinCode) {
-            try {
-              pinCode = decrypt(card.pinCode);
-            } catch {
-              pinCode = card.pinCode;
-            }
-          }
+          const { claimCode, pinCode } = decryptGiftcardCodes(card);
 
           let isSearchMatch = false;
           if (search) {

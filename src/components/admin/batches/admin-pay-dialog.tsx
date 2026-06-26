@@ -6,19 +6,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Spinner } from '@/components/ui/spinner';
 import { InlineAlert, type InlineAlertVariant } from '@/components/ui/inline-alert';
 import { payBatch } from '@/actions/admin/batches';
-import { AdminBatch } from '@/types';
+import type { AdminBatch } from '@/types';
+import type { AlertState } from '@/components/admin/types';
 
 interface AdminPayDialogProps {
   batches: AdminBatch[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPaid: () => void;
-}
-
-interface AlertState {
-  variant: InlineAlertVariant;
-  title: string;
-  description?: string;
 }
 
 export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPayDialogProps) {

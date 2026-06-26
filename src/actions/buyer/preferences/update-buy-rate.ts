@@ -1,40 +1,33 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { authActionClient } from '@/lib/safe-action';
-import { headers } from 'next/headers';
-import z from 'zod';
+import { ActionError, buyerActionClient } from '@/lib/safe-action';
+import { z } from 'zod';
 
 const updateBuyRateInputSchema = z.object({
   brandCountryId: z.string().min(1, 'Debe seleccionar una marca y país'),
   buyRate: z.number().min(0.8, 'La tarifa no puede ser inferior a 0.80 (80%)').max(1.0, 'La tarifa no puede ser superior a 1.00 (100%)'),
 });
+const updateBuyRateOutputSchema = z.object({ success: z.literal(true) });
 
-export const updateBuyRate = authActionClient.inputSchema(updateBuyRateInputSchema).action(async function ({
+export const updateBuyRate = buyerActionClient.inputSchema(updateBuyRateInputSchema).outputSchema(updateBuyRateOutputSchema).action(async function ({
   parsedInput: { brandCountryId, buyRate },
+  ctx,
 }) {
   try {
-    const headersList = await headers();
-    const session = await import('@/lib/auth').then((m) => m.auth.api.getSession({ headers: headersList }));
-
-    if (!session?.user?.id) {
-      return { error: 'Unauthorized' };
-    }
-
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: ctx.auth.user.id },
       select: { allowBuyRateAdjustment: true },
     });
 
     if (!user?.allowBuyRateAdjustment) {
-      return { error: 'No tienes permiso para ajustar tu tarifa' };
+      throw new ActionError('No tienes permiso para ajustar tu tarifa');
     }
 
-    // Obtener la tarifa existente del usuario para mantener la sellRate
     const existingUserRate = await prisma.userBrandCountryRate.findUnique({
       where: {
         userId_brandCountryId: {
-          userId: session.user.id,
+          userId: ctx.auth.user.id,
           brandCountryId,
         },
       },
@@ -42,18 +35,18 @@ export const updateBuyRate = authActionClient.inputSchema(updateBuyRateInputSche
     });
 
     if (!existingUserRate) {
-      return { error: 'No tienes tarifa asignada para este brand-country. Contactá al administrador.' };
+      throw new ActionError('No tienes tarifa asignada para este brand-country. Contactá al administrador.');
     }
 
     await prisma.userBrandCountryRate.upsert({
       where: {
         userId_brandCountryId: {
-          userId: session.user.id,
+          userId: ctx.auth.user.id,
           brandCountryId,
         },
       },
       create: {
-        userId: session.user.id,
+        userId: ctx.auth.user.id,
         brandCountryId,
         buyRate,
         sellRate: existingUserRate.sellRate,
@@ -63,9 +56,10 @@ export const updateBuyRate = authActionClient.inputSchema(updateBuyRateInputSche
       },
     });
 
-    return { success: true };
+    return { success: true as const };
   } catch (error) {
+    if (error instanceof ActionError) throw error;
     console.error('Update buy rate error:', error);
-    return { error: 'Failed to update buy rate' };
+    throw new ActionError('Failed to update buy rate');
   }
 });

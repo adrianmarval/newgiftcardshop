@@ -76,7 +76,7 @@ export const listUsers = adminActionClient
     }));
 
     return {
-      success: true,
+      success: true as const,
       items: mappedItems,
       pagination: {
         currentPage: page,

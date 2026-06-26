@@ -2,7 +2,7 @@
 
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { CardFooter } from '@/components/ui/card';
-import { GiftcardItem } from '@/components/ui/giftcard-item';
+import { GiftcardItem } from '@/components/common/giftcard-item';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import type { Giftcard } from '@/types';
 import type { AdminOrder } from '@/types';

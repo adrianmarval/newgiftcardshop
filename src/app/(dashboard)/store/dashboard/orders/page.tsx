@@ -1,6 +1,6 @@
 import { listOrders } from '@/actions/buyer/orders/list-orders';
 import { BuyerOrdersView } from '@/components/buy/giftcard-orders';
-import { orderSearchParamsCache } from '@/lib/search-params-cache';
+import { orderSearchParamsCache } from '@/lib/search-params';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

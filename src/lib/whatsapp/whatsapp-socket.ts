@@ -78,8 +78,8 @@ export async function initWhatsAppSocket(): Promise<WASocket | undefined> {
 
     if (connection === 'close') {
       const statusCode = (lastDisconnect?.error as { output?: { statusCode?: number } })?.output?.statusCode;
-      const reason = lastDisconnect?.error?.message;
-      console.log('[WhatsApp] Conexión cerrada', { statusCode, reason });
+      const errorMsg = lastDisconnect?.error?.message ?? '';
+      console.log('[WhatsApp] Conexión cerrada', { statusCode, reason: errorMsg });
 
       clearSocket();
 
@@ -88,6 +88,14 @@ export async function initWhatsAppSocket(): Promise<WASocket | undefined> {
         await prisma.whatsappAuthState.deleteMany();
         await updateSessionStatus({ status: 'disconnected', phoneNumber: null, qrCode: null });
         return;
+      }
+
+      // Handle corrupted signal sessions (Bad MAC = key material mismatch)
+      if (errorMsg.includes('Bad MAC') || errorMsg.includes('decrypt')) {
+        console.log('[WhatsApp] Decryption failure — limpiando session keys (manteniendo creds)');
+        await prisma.whatsappAuthState.deleteMany({
+          where: { key: { not: 'creds' } },
+        });
       }
 
       console.log('[WhatsApp] Reintentando en 5s...');
@@ -102,6 +110,9 @@ export async function initWhatsAppSocket(): Promise<WASocket | undefined> {
   });
 
   sock.ev.on('creds.update', saveCreds);
+
+  // No-op handler: prevents unhandled protocol message errors from propagating
+  sock.ev.on('messages.upsert', () => {});
 
   return sock;
 }

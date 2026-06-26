@@ -11,9 +11,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { Send, MessageCircle, Link2, Package, Check, Globe } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { updateNotificationPreferences } from '@/actions';
+import { updateNotificationPreferences } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
-import type { SubscribedBrandCountry } from '@/lib/notifications/get-subscribed-brand-countries';
+import type { SubscribedBrandCountry } from '@/lib/notifications';
 
 export interface NotificationsSettingsProps {
   portal: 'buyer' | 'seller' | 'admin';

@@ -3,7 +3,7 @@
 import { useTheme } from '@/hooks/use-theme';
 import { FaMoon, FaSun } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 
 interface ThemeToggleProps {
   className?: string;

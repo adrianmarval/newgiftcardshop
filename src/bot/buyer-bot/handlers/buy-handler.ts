@@ -4,34 +4,23 @@ import { Decimal } from '@prisma/client/runtime/client';
 import { decrypt } from '@/lib/encryption';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
-import { findGiftcardCombination } from '@/lib/browse-giftcards';
+import { findGiftcardCombination } from '@/lib/services/browse/card-combinator';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
-import { getUserRates } from '@/lib/services/pricing.service';
+import { getUserRates } from '@/lib/services/pricing/pricing';
 import { formatCurrency } from '@/lib/currency-formatter';
-import { GiftcardEscalationService } from '@/lib/services/giftcard-escalation';
-import { estimateTimeToAccess, getEscalationConfig } from '@/lib/services/tier-estimation.service';
-import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard-reservation.service';
+import { estimateTimeToAccess } from '@/lib/services/pricing/tier-estimation';
+import { getEscalationConfig } from '@/lib/settings/settings.service';
+import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
+import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
+import { checkCreditLimit } from '@/lib/services/payment/credit';
+import { getBrandsWithStock, getBrandWithCountries, getCountryById } from '@/lib/services/catalog/catalog';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
 export async function startBuyWizard(ctx: BuyerContext) {
   await deleteUserInput(ctx);
-  const brands = await prisma.brand.findMany({
-    where: { isActive: true },
-    include: {
-      countries: {
-        where: { isActive: true },
-        include: {
-          giftcards: { where: { inStock: true, status: 'UNUSED' }, select: { id: true } },
-        },
-      },
-    },
-    orderBy: { name: 'asc' },
-  });
-
-  // Solo marcas con stock
-  const brandsWithStock = brands.filter((b) => b.countries.some((c) => c.giftcards.length > 0));
+  const brandsWithStock = await getBrandsWithStock();
 
   if (brandsWithStock.length === 0) {
     return renderUI(ctx, '😔 No hay tarjetas disponibles en este momento. Intentá más tarde.', {
@@ -57,18 +46,7 @@ export async function handleBuyBrandSelected(ctx: BuyerContext) {
   const brandId = ctx.callbackQuery?.data?.replace('buy_brand_', '');
   if (!brandId) return ctx.answerCallbackQuery();
 
-  const brand = await prisma.brand.findUnique({
-    where: { id: brandId },
-    include: {
-      countries: {
-        where: { isActive: true },
-        include: {
-          country: true,
-          giftcards: { where: { inStock: true, status: 'UNUSED' }, select: { amount: true } },
-        },
-      },
-    },
-  });
+  const brand = await getBrandWithCountries(brandId);
 
   if (!brand) return ctx.answerCallbackQuery('Marca no encontrada');
 
@@ -98,7 +76,7 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
   const countryId = ctx.callbackQuery?.data?.replace('buy_country_', '');
   if (!countryId) return ctx.answerCallbackQuery();
 
-  const country = await prisma.country.findUnique({ where: { id: countryId } });
+  const country = await getCountryById(countryId);
   if (!country) return ctx.answerCallbackQuery('País no encontrado');
 
   const { brandId } = ctx.session.wizard;
@@ -229,7 +207,7 @@ export async function handleAmountText(ctx: BuyerContext) {
     });
 
   const allCards = await prisma.giftcard.findMany({
-    where: { brandCountryId: brandCountry.id, inStock: true, status: 'UNUSED' },
+    where: { brandCountryId: brandCountry.id, ...AVAILABLE_GIFTCARD_WHERE },
     include: { brandCountry: { include: { country: true } } },
   });
 
@@ -338,7 +316,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
   }
 
   const giftcards = await prisma.giftcard.findMany({
-    where: { id: { in: selectedGiftcardIds }, inStock: true, status: 'UNUSED' },
+    where: { id: { in: selectedGiftcardIds }, ...AVAILABLE_GIFTCARD_WHERE },
     select: { id: true, amount: true, brandCountryId: true, escalationTier: true, claimCode: true, pinCode: true },
   });
 
@@ -363,6 +341,13 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
   let order;
   try {
     order = await prisma.$transaction(async (tx) => {
+      // Revalidar crédito atómicamente dentro de la tx (race condition safe)
+      const creditCheck = await checkCreditLimit(ctx.user.id, total, tx);
+      if (!creditCheck.allowed) {
+        throw new Error('CREDIT_LIMIT_EXCEEDED');
+      }
+
+      const idempotencyKey = crypto.randomUUID();
       const created = await tx.order.create({
         data: {
           userId: ctx.user.id,
@@ -370,6 +355,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
           total,
           buyRate: buyRate,
           status: 'PENDING',
+          idempotencyKey,
         },
       });
       await reserveGiftcards(
@@ -384,6 +370,12 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
       await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
       return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.', {
         reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
+      });
+    }
+    if (error instanceof Error && error.message === 'CREDIT_LIMIT_EXCEEDED') {
+      await ctx.answerCallbackQuery('Crédito insuficiente');
+      return renderUI(ctx, '❌ Límite de crédito insuficiente. Completá tus pagos pendientes primero.', {
+        reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
       });
     }
     throw error;
