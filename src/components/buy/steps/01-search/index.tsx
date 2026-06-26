@@ -293,7 +293,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
 
       {/* CTA - Sticky on mobile */}
       <div className="shrink-0">
-        {rateError && selectedBrand && <p className="animate-pulse text-destructive mb-1 text-center text-lg font-medium">{rateError}</p>}
+        {rateError && selectedBrand && <p className="text-destructive mb-1 animate-pulse text-center text-lg font-medium">{rateError}</p>}
         <Button
           onClick={handleSearch}
           disabled={!isValid || status === 'executing'}
