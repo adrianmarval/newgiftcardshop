@@ -8,6 +8,34 @@ import { buyerActionClient, ActionError } from '@/lib/safe-action';
 import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
 import { computeOrderGiftcardTotals } from '@/lib/services/pricing';
 import { GiftcardStatus, OrderStatus } from '@/generated/prisma/enums';
+import { brandSchema, countrySchema, paymentListItemSchema, paginatedOutputSchema } from '@/types';
+
+const orderListItemSchema = z.object({
+  id: z.string(),
+  status: z.enum(OrderStatus),
+  total: z.number(),
+  adjustedTotal: z.number().nullable(),
+  buyRate: z.number(),
+  effectiveTotal: z.number(),
+  faceValueTotal: z.number(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  giftcards: z.array(z.object({
+    id: z.string(),
+    claimCode: z.string(),
+    pinCode: z.string().nullable(),
+    amount: z.number(),
+    status: z.enum(GiftcardStatus),
+    isConfirmed: z.boolean(),
+    reportedAmount: z.number().nullable(),
+    orderId: z.string().nullable(),
+    batchId: z.number().nullable().optional(),
+    brand: brandSchema,
+    country: countrySchema,
+    isSearchMatch: z.boolean().optional(),
+  })),
+  payments: z.array(paymentListItemSchema),
+});
 
 const listOrdersInputSchema = z.object({
   page: z.number().int().positive().optional().default(1),
@@ -17,28 +45,7 @@ const listOrdersInputSchema = z.object({
   sort: z.enum(['newest', 'oldest']).optional().default('newest'),
 });
 
-const listOrdersOutputSchema = z.object({
-  success: z.literal(true),
-  items: z.array(z.object({
-    id: z.string(), status: z.string(), total: z.number(), adjustedTotal: z.number().nullable(),
-    buyRate: z.number(), effectiveTotal: z.number(), faceValueTotal: z.number(),
-    createdAt: z.string(), updatedAt: z.string(),
-    giftcards: z.array(z.object({
-      id: z.string(), claimCode: z.string(), pinCode: z.string().nullable(),
-      amount: z.number(), status: z.string(), isConfirmed: z.boolean(),
-      reportedAmount: z.number().nullable(), orderId: z.string().nullable(),
-      batchId: z.number().optional(),
-      brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
-      country: z.object({ name: z.string(), code: z.string(), currency: z.string().nullable() }),
-      isSearchMatch: z.boolean().optional(),
-    })),
-    payments: z.array(z.object({
-      id: z.string(), amount: z.number(), balanceAfter: z.number(),
-      direction: z.string(), category: z.string(), createdAt: z.string(),
-    })),
-  })),
-  pagination: z.object({ currentPage: z.number(), totalPages: z.number(), totalCount: z.number() }),
-});
+const listOrdersOutputSchema = paginatedOutputSchema(z.array(orderListItemSchema));
 
 export const listOrders = buyerActionClient.inputSchema(listOrdersInputSchema).outputSchema(listOrdersOutputSchema).action(async ({ ctx, parsedInput }) => {
   try {

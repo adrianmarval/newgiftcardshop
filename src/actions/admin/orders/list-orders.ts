@@ -8,7 +8,23 @@ import { adminActionClient, ActionError } from '@/lib/safe-action';
 import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
 import { computeOrderGiftcardTotals } from '@/lib/services/pricing';
 import { OrderStatus, GiftcardStatus, PaymentDirection, PaymentCategory, PaymentReferenceType } from '@/generated/prisma/enums';
-import { paginatedOutputSchema } from '@/types';
+import { brandSchema, countrySchema, paymentDetailListItemSchema, paginatedOutputSchema } from '@/types';
+
+const adminGiftcardListItemSchema = z.object({
+  id: z.string(),
+  claimCode: z.string(),
+  pinCode: z.string().nullable(),
+  amount: z.number(),
+  status: z.enum(GiftcardStatus),
+  isConfirmed: z.boolean(),
+  reportedAmount: z.number().nullable(),
+  orderId: z.string().nullable(),
+  batchId: z.number().nullable().optional(),
+  brand: brandSchema,
+  country: countrySchema,
+  isSearchMatch: z.boolean().optional(),
+  seller: z.object({ id: z.string(), name: z.string(), email: z.string() }).nullable(),
+});
 
 const getAdminOrdersInputSchema = z.object({
   buyerId: z.string().nullable().optional(),
@@ -35,38 +51,8 @@ const getAdminOrdersOutputSchema = paginatedOutputSchema(
       faceValueTotal: z.number(),
       createdAt: z.string(),
       updatedAt: z.string(),
-      giftcards: z.array(
-        z.object({
-          id: z.string(),
-          claimCode: z.string(),
-          pinCode: z.string().nullable(),
-          amount: z.number(),
-          status: z.enum(GiftcardStatus),
-          isConfirmed: z.boolean(),
-          reportedAmount: z.number().nullable(),
-          orderId: z.string().nullable(),
-          batchId: z.number().nullable().optional(),
-          brand: z.object({ name: z.string(), icon: z.string().nullable(), image: z.string().nullable() }),
-          country: z.object({ name: z.string(), code: z.string(), currency: z.string().nullable() }),
-          isSearchMatch: z.boolean().optional(),
-          seller: z.object({ id: z.string(), name: z.string(), email: z.string() }).nullable(),
-        }),
-      ),
-      payments: z.array(
-        z.object({
-          id: z.string(),
-          amount: z.number(),
-          balanceAfter: z.number(),
-          direction: z.enum(PaymentDirection),
-          category: z.enum(PaymentCategory),
-          binanceTxId: z.string().optional(),
-          relatedUserId: z.string().optional(),
-          notes: z.string().optional(),
-          referenceType: z.enum(PaymentReferenceType).optional(),
-          referenceId: z.string().optional(),
-          createdAt: z.string(),
-        }),
-      ),
+      giftcards: z.array(adminGiftcardListItemSchema),
+      payments: z.array(paymentDetailListItemSchema),
       buyer: z.object({
         id: z.string(),
         name: z.string(),

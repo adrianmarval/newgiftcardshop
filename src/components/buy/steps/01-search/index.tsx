@@ -2,14 +2,12 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useSession } from '@/lib/auth/auth-client';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Check, Globe, Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useBuyFlow, type BuyFlowTierInfo } from '@/hooks/use-buy-flow';
 import { searchGiftcards } from '@/actions/buyer/giftcards/search-giftcards';
 import { useAction } from 'next-safe-action/hooks';
-import Image from 'next/image';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/buyer/preferences';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
 import { showAlert, showSwal } from '@/lib/ui';
@@ -18,6 +16,7 @@ import type { BrandCountry } from '@/types';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
 import { CompactSearchBar } from './compact-search-bar';
 import { AdvancedSettingsSheet } from './advanced-settings-sheet';
+import { BrandCountryGrid } from '@/components/common';
 
 export interface SearchStepProps {
   brandCountries: BrandCountry[];
@@ -179,17 +178,6 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     }
   };
 
-  const filteredBrandCountries = useMemo(() => {
-    if (!selectedCountry) return [];
-    return brandCountries
-      .filter((bc) => bc.countryId === selectedCountry)
-      .filter((bc) => {
-        if (!searchBrand) return true;
-        const search = searchBrand.toLowerCase();
-        return bc.brandName.toLowerCase().includes(search) || bc.brandSlug.toLowerCase().includes(search);
-      });
-  }, [brandCountries, selectedCountry, searchBrand]);
-
   const { execute, status } = useAction(searchGiftcards, {
     onSuccess: (result) => {
       const data = result;
@@ -273,13 +261,11 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   };
 
   const isValid = selectedBrand && targetAmount && parseFloat(targetAmount) > 0 && !rateError;
-  const showEmptyState = !selectedCountry;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <BuyStepsProgress />
 
-      {/* Compact Search Bar */}
       <CompactSearchBar
         brandCountries={brandCountries}
         selectedCountry={selectedCountry}
@@ -292,81 +278,16 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         showAdvancedButton={allowSearchPreferences || allowBuyRateAdjustment}
       />
 
-      {/* Brand Grid */}
       <Card className="flex min-h-0 flex-1 flex-col border py-0 backdrop-blur-sm md:col-span-8 md:row-span-11 md:h-full">
         <CardContent className="custom-scrollbar grid flex-1 auto-rows-max grid-cols-3 gap-1.5 overflow-y-auto p-1.5 sm:grid-cols-3 md:gap-1 md:p-2">
-          {showEmptyState ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-8 text-center">
-              <Globe className="text-muted-foreground/30 mb-3 h-12 w-12 md:h-16 md:w-16" />
-              <h3 className="text-foreground mb-1.5 text-base font-semibold md:text-lg">Selecciona un país primero</h3>
-              <p className="text-muted-foreground max-w-xs text-xs md:text-sm">
-                Elige un país del dropdown para ver las marcas disponibles en esa región.
-              </p>
-            </div>
-          ) : filteredBrandCountries.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-8 text-center">
-              <h3 className="text-foreground mb-1.5 text-base font-semibold">Sin resultados</h3>
-              <p className="text-muted-foreground max-w-xs text-xs">No hay marcas que coincidan con &ldquo;{searchBrand}&rdquo;</p>
-            </div>
-          ) : (
-            <AnimatePresence mode="popLayout">
-              {filteredBrandCountries.map((bc) => (
-                <motion.button
-                  key={`${bc.brandId}_${bc.countryId}`}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  disabled={!bc.isActive}
-                  onClick={() => handleBrandSelect({ brandId: bc.brandId, countryId: bc.countryId })}
-                  className={`group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl p-1 transition-all md:aspect-auto md:h-32 md:pb-1 ${
-                    !bc.isActive
-                      ? 'border-border bg-muted/10 cursor-not-allowed opacity-80'
-                      : selectedBrand === `${bc.brandId}|${bc.countryId}`
-                        ? 'border-primary bg-primary/10 shadow-primary/20 cursor-pointer shadow-lg'
-                        : 'border-border bg-muted/20 hover:border-muted-foreground/30 hover:bg-muted/40 cursor-pointer'
-                  } `}
-                  whileHover={bc.isActive ? { scale: 1.02, y: -2 } : {}}
-                  whileTap={bc.isActive ? { scale: 0.98 } : {}}
-                >
-                  <div
-                    className={`relative mb-0.5 flex h-full w-full items-center justify-center transition-transform duration-300 ${bc.isActive ? 'group-hover:scale-110' : 'opacity-40 grayscale'} dark:bg-white`}
-                  >
-                    {bc.brandImage ? (
-                      <Image src={bc.brandImage} alt={bc.brandName} fill className="rounded-lg object-contain" loading="eager" />
-                    ) : (
-                      <span className="text-xl md:text-5xl">{bc.brandIcon}</span>
-                    )}
-                  </div>
-                  <div
-                    className={`w-full truncate px-1 text-center text-[10px] font-bold tracking-tight md:px-2 md:text-base ${!bc.isActive ? 'text-muted-foreground' : ''}`}
-                  >
-                    {bc.brandName}
-                  </div>
-
-                  {bc.isActive && bc.stockCount > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-green-600 md:text-xs dark:text-green-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-500" />${bc.stockAmount.toLocaleString()} disponible
-                    </span>
-                  )}
-
-                  {!bc.isActive && (
-                    <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden">
-                      <div className="w-[300%] -rotate-45 border-y border-white/10 bg-black/60 py-1 text-center text-[8px] font-black tracking-[0.2em] whitespace-nowrap uppercase shadow-2xl backdrop-blur-md md:py-2 md:text-[12px] md:tracking-[0.4em]">
-                        Coming Soon
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedBrand === `${bc.brandId}|${bc.countryId}` && bc.isActive && (
-                    <div className="bg-primary absolute top-1 right-1 rounded-full p-0.5 shadow-lg md:top-2 md:right-2 md:p-1">
-                      <Check className="text-primary-foreground h-2 w-2 md:h-3 md:w-3" />
-                    </div>
-                  )}
-                </motion.button>
-              ))}
-            </AnimatePresence>
-          )}
+          <BrandCountryGrid
+            brandCountries={brandCountries}
+            selectedCountryId={selectedCountry}
+            selectedBrandKey={selectedBrand}
+            searchBrand={searchBrand}
+            onSelect={(brandId, countryId) => handleBrandSelect({ brandId, countryId })}
+            showStock
+          />
         </CardContent>
       </Card>
 

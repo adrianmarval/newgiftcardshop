@@ -1,5 +1,8 @@
 export { ClaimCodeField } from './claim-code-field';
 export { GiftcardItem } from './giftcard-item';
+export { BrandCountryGrid } from './brand-country-grid';
+export type { BrandCountryGridProps } from './brand-country-grid';
+export { NotificationIcon } from './notification-icon';
 export { RegistryCard } from './registry-card';
 export type { RegistryCardProps } from './registry-card';
 export { StatCard } from './stat-card';

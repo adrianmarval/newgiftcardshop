@@ -6,27 +6,40 @@ import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
 import { computeOrderGiftcardTotals } from '@/lib/services/pricing';
 import { GiftcardStatus, OrderStatus } from '@/generated/prisma/enums';
+import { brandSchema, countrySchema, paymentListItemSchema } from '@/types';
+
+const orderListItemSchema = z.object({
+  id: z.string(),
+  status: z.enum(OrderStatus),
+  total: z.number(),
+  adjustedTotal: z.number().nullable(),
+  buyRate: z.number(),
+  effectiveTotal: z.number(),
+  faceValueTotal: z.number(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  giftcards: z.array(z.object({
+    id: z.string(),
+    claimCode: z.string(),
+    pinCode: z.string().nullable(),
+    amount: z.number(),
+    status: z.enum(GiftcardStatus),
+    isConfirmed: z.boolean(),
+    reportedAmount: z.number().nullable(),
+    orderId: z.string().nullable(),
+    batchId: z.number().nullable().optional(),
+    brand: brandSchema,
+    country: countrySchema,
+    isSearchMatch: z.boolean().optional(),
+  })),
+  payments: z.array(paymentListItemSchema),
+});
 
 const getOrderByIdInputSchema = z.object({ orderId: z.string() });
 
 const getOrderByIdOutputSchema = z.object({
   success: z.literal(true),
-  order: z.object({
-    id: z.string(), status: z.string(), total: z.number(), adjustedTotal: z.number().nullable(),
-    buyRate: z.number(), effectiveTotal: z.number(), faceValueTotal: z.number(),
-    createdAt: z.string(), updatedAt: z.string(),
-    giftcards: z.array(z.object({
-      id: z.string(), claimCode: z.string(), pinCode: z.string().nullable(),
-      amount: z.number(), status: z.string(), isConfirmed: z.boolean(),
-      reportedAmount: z.number().nullable(), orderId: z.string().nullable(),
-      batchId: z.number().optional(), brandCountryId: z.string().optional(),
-      brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
-      country: z.object({ name: z.string(), code: z.string(), currency: z.string().nullable() }),
-    })),
-    payments: z.array(z.object({
-      id: z.string(), amount: z.number(), balanceAfter: z.number(),
-      direction: z.string(), category: z.string(), createdAt: z.string(),
-    })),
+  order: orderListItemSchema.extend({
     brandCountryId: z.string().optional(),
   }),
 });

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AdminOrdersFilters } from '@/components/admin/orders/admin-orders-filters';
-import { AdminOrdersList } from '@/components/admin/orders/admin-orders-list';
-import { AdminReportDialog } from '@/components/admin/orders/admin-report-dialog';
-import { AdminBuyerDialog } from '@/components/admin/orders/admin-buyer-dialog';
+import { AdminOrdersFilters } from './admin-orders-filters';
+import { AdminOrdersList } from './admin-orders-list';
+import { AdminReportDialog } from './admin-report-dialog';
+import { AdminBuyerDialog } from './admin-buyer-dialog';
 import { StatusLegend } from '@/components/common';
 import type { Giftcard } from '@/types';
 import type { AdminOrder, PaginationMeta } from '@/types';

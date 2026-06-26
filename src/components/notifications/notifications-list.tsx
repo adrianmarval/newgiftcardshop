@@ -9,7 +9,8 @@ import { Bell } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
 import { markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
-import { getNotificationIcon, formatTimeAgo } from '@/lib/utils/notification-helpers';
+import { NotificationIcon } from '@/components/common';
+import { timeAgo } from '@/lib/utils';
 import type { NotificationItem } from '@/types';
 
 export interface NotificationsListProps {
@@ -81,12 +82,12 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
               item.read ? 'border-transparent opacity-50' : 'border-border bg-muted/30 hover:bg-muted/50'
             }`}
           >
-            <div className="mt-0.5 shrink-0">{getNotificationIcon(item.type)}</div>
+            <div className="mt-0.5 shrink-0"><NotificationIcon type={item.type} /></div>
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <span className={`truncate text-sm ${item.read ? 'text-muted-foreground font-normal' : 'font-medium'}`}>{item.title}</span>
-                <span className="text-muted-foreground shrink-0 text-[10px]">{formatTimeAgo(item.createdAt)}</span>
+                <span className="text-muted-foreground shrink-0 text-[10px]">{timeAgo(item.createdAt)}</span>
               </div>
               <p className="text-muted-foreground truncate text-xs">{item.description}</p>
             </div>

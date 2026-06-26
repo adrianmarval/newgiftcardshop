@@ -4,31 +4,30 @@ import { useQueryState } from 'nuqs';
 import { parseAsInteger } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { usePathname } from 'next/navigation';
 
 const pageParser = parseAsInteger.withDefault(1);
 
+const LABELS = {
+  es: { previous: 'Anterior', next: 'Siguiente', page: 'Página', of: 'de' },
+  en: { previous: 'Previous', next: 'Next', page: 'Page', of: 'of' },
+} as const;
+
 interface UrlPaginationProps {
   totalPages: number;
+  locale?: 'es' | 'en';
 }
 
-export const UrlPagination = ({ totalPages }: UrlPaginationProps) => {
-  const pathname = usePathname();
-  const portal = pathname?.includes('/buy') ? 'buy' : 'sell';
+export function UrlPagination({ totalPages, locale = 'es' }: UrlPaginationProps) {
   const [page, setPage] = useQueryState('page', pageParser);
-
+  const labels = LABELS[locale];
   const currentPage = page ?? 1;
 
   const handlePrevious = () => {
-    if (currentPage > 1) {
-      setPage(currentPage - 1);
-    }
+    if (currentPage > 1) setPage(currentPage - 1);
   };
 
   const handleNext = () => {
-    if (currentPage < totalPages) {
-      setPage(currentPage + 1);
-    }
+    if (currentPage < totalPages) setPage(currentPage + 1);
   };
 
   if (totalPages <= 1) return null;
@@ -42,10 +41,10 @@ export const UrlPagination = ({ totalPages }: UrlPaginationProps) => {
         className="border-border text-xs font-bold tracking-wider uppercase"
       >
         <ChevronLeft className="mr-2 h-4 w-4" />
-        {portal === 'buy' ? 'Anterior' : 'Previous'}
+        {labels.previous}
       </Button>
       <span className="text-muted-foreground text-xs font-black tracking-widest uppercase">
-        {portal === 'buy' ? 'Página' : 'Page'} {currentPage} {portal === 'buy' ? 'de' : 'of'} {totalPages}
+        {labels.page} {currentPage} {labels.of} {totalPages}
       </span>
       <Button
         variant="outline"
@@ -53,9 +52,9 @@ export const UrlPagination = ({ totalPages }: UrlPaginationProps) => {
         disabled={currentPage >= totalPages}
         className="border-border text-xs font-bold tracking-wider uppercase"
       >
-        {portal === 'buy' ? 'Siguiente' : 'Next'}
+        {labels.next}
         <ChevronRight className="ml-2 h-4 w-4" />
       </Button>
     </div>
   );
-};
+}

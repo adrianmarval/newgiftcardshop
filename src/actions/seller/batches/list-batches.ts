@@ -5,9 +5,41 @@ import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { hashCode } from '@/lib/encryption';
 import { sellerActionClient, ActionError } from '@/lib/safe-action';
-import { GiftcardStatus, PaymentDirection, PaymentCategory } from '@/generated/prisma/enums';
+import { GiftcardStatus } from '@/generated/prisma/enums';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { brandSchema, countrySchema, paymentListItemSchema, paginatedOutputSchema } from '@/types';
+
+const sellerBatchListItemSchema = z.object({
+  id: z.number(),
+  userId: z.string().nullable(),
+  sellRate: z.number(),
+  isPaid: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string().optional(),
+  giftcards: z.array(z.object({
+    id: z.string(),
+    claimCode: z.string(),
+    pinCode: z.string().nullable(),
+    amount: z.number(),
+    status: z.enum(GiftcardStatus),
+    isConfirmed: z.boolean(),
+    reportedAmount: z.number().nullable().optional(),
+    orderId: z.string().nullable(),
+    batchId: z.number().nullable().optional(),
+    provenanceImageId: z.string().nullable().optional(),
+    brand: brandSchema,
+    country: countrySchema.nullable(),
+    isSearchMatch: z.boolean().optional(),
+  })),
+  payments: z.array(paymentListItemSchema),
+  effectiveTotal: z.number(),
+  estimatedPayout: z.number(),
+  cardsCount: z.number().optional(),
+  confirmedCount: z.number().optional(),
+  paidCount: z.number().optional(),
+  hasIssues: z.boolean().optional(),
+});
 
 const getSellerBatchesInputSchema = z.object({
   page: z.number().int().positive().optional().default(1),
@@ -17,67 +49,7 @@ const getSellerBatchesInputSchema = z.object({
   sort: z.enum(['newest', 'oldest']).optional().default('newest'),
 });
 
-const paginatedOutputSchema = <T extends z.ZodSchema>(itemsSchema: T) =>
-  z.object({
-    success: z.literal(true),
-    items: itemsSchema,
-    pagination: z.object({
-      currentPage: z.number(),
-      totalPages: z.number(),
-      totalCount: z.number(),
-    }),
-  });
-
-const getSellerBatchesOutputSchema = paginatedOutputSchema(
-  z.array(
-    z.object({
-      id: z.number(),
-      userId: z.string().nullable(),
-      sellRate: z.number(),
-      isPaid: z.boolean(),
-      createdAt: z.string(),
-      updatedAt: z.string().optional(),
-      giftcards: z.array(
-        z.object({
-          id: z.string(),
-          claimCode: z.string(),
-          pinCode: z.string().nullable(),
-          amount: z.number(),
-          status: z.enum(GiftcardStatus),
-          isConfirmed: z.boolean(),
-          reportedAmount: z.number().nullable().optional(),
-          orderId: z.string().nullable(),
-          batchId: z.number().nullable().optional(),
-          provenanceImageId: z.string().nullable().optional(),
-          brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
-          country: z.object({ name: z.string(), code: z.string(), currency: z.string().nullable() }).nullable(),
-          isSearchMatch: z.boolean().optional(),
-        }),
-      ),
-      payments: z.array(
-        z.object({
-          id: z.string(),
-          amount: z.number(),
-          balanceAfter: z.number(),
-          direction: z.enum(PaymentDirection),
-          category: z.enum(PaymentCategory),
-          binanceTxId: z.string().optional(),
-          relatedUserId: z.string().optional(),
-          relatedUserName: z.string().optional(),
-          notes: z.string().optional(),
-          referenceType: z.enum(['ORDER', 'BATCH', 'MANUAL']).optional(),
-          createdAt: z.string(),
-        }),
-      ),
-      effectiveTotal: z.number(),
-      estimatedPayout: z.number(),
-      cardsCount: z.number().optional(),
-      confirmedCount: z.number().optional(),
-      paidCount: z.number().optional(),
-      hasIssues: z.boolean().optional(),
-    }),
-  ),
-);
+const getSellerBatchesOutputSchema = paginatedOutputSchema(z.array(sellerBatchListItemSchema));
 
 export const listBatches = sellerActionClient
   .inputSchema(getSellerBatchesInputSchema)

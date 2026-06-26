@@ -7,7 +7,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { useNotifications } from '@/providers/notification-provider';
 import { listNotifications, markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
-import { getNotificationIcon, formatTimeAgo } from '@/lib/utils/notification-helpers';
+import { NotificationIcon } from '@/components/common';
+import { timeAgo } from '@/lib/utils';
 import type { NotificationItem } from '@/types';
 import type { AppSection } from '@/types';
 
@@ -140,13 +141,13 @@ export function NotificationDropdown({ portal, badgeKey, href, className }: Noti
                     item.read ? 'opacity-50' : ''
                   }`}
                 >
-                  <div className="mt-0.5 shrink-0">{getNotificationIcon(item.type, 'h-3.5 w-3.5')}</div>
+                  <div className="mt-0.5 shrink-0"><NotificationIcon type={item.type} size="h-3.5 w-3.5" /></div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className={`truncate text-xs ${item.read ? 'text-muted-foreground' : 'font-medium'}`}>
                         {item.title}
                       </span>
-                      <span className="text-muted-foreground shrink-0 text-[10px]">{formatTimeAgo(item.createdAt)}</span>
+                      <span className="text-muted-foreground shrink-0 text-[10px]">{timeAgo(item.createdAt)}</span>
                     </div>
                     <p className="text-muted-foreground truncate text-[11px]">{item.description}</p>
                   </div>

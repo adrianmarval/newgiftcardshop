@@ -1,7 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Brand-Country — Catalog types
+// Brand-Country — Catalog types + shared Zod sub-schemas
 // Brand and Country entities with their relationship.
 // ─────────────────────────────────────────────────────────────────────────────
+
+import { z } from 'zod';
 
 // ── Brand ─────────────────────────────────────────────────────────────────────
 
@@ -13,6 +15,12 @@ export interface Brand {
   image: string | null;
 }
 
+export const brandSchema = z.object({
+  name: z.string(),
+  icon: z.string(),
+  image: z.string().nullable(),
+});
+
 // ── Country ───────────────────────────────────────────────────────────────────
 
 export interface Country {
@@ -21,6 +29,12 @@ export interface Country {
   code: string;
   currency: string | null;
 }
+
+export const countrySchema = z.object({
+  name: z.string(),
+  code: z.string(),
+  currency: z.string().nullable(),
+});
 
 // ── BrandCountry ──────────────────────────────────────────────────────────────
 

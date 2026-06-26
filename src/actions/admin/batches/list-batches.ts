@@ -8,6 +8,28 @@ import { adminActionClient, ActionError } from '@/lib/safe-action';
 import { PaymentDirection, PaymentCategory } from '@/generated/prisma/enums';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { brandSchema, countrySchema, paymentDetailListItemSchema, paginatedOutputSchema } from '@/types';
+
+const adminBatchGiftcardSchema = z.object({
+  id: z.string(),
+  claimCode: z.string(),
+  pinCode: z.string().nullable(),
+  amount: z.number(),
+  status: z.string(),
+  isConfirmed: z.boolean(),
+  reportedAmount: z.number().nullable(),
+  orderId: z.string().nullable(),
+  brand: brandSchema,
+  country: countrySchema.nullable(),
+  buyer: z.object({ id: z.string(), name: z.string(), email: z.string() }).nullable(),
+  order: z.object({ id: z.string(), status: z.string() }).nullable(),
+  issues: z.array(z.object({
+    id: z.string(), issueType: z.string(), reportedAmount: z.number().nullable(),
+    proofImageUrl: z.string().nullable(), giftcardId: z.string(), orderId: z.string(),
+    reportedById: z.string(), sellerId: z.string().nullable(), createdAt: z.string(),
+  })),
+  isSearchMatch: z.boolean().optional(),
+});
 
 const listBatchesInputSchema = z.object({
   sellerId: z.string().nullable().optional(),
@@ -22,39 +44,25 @@ const listBatchesInputSchema = z.object({
   limit: z.number().int().positive().max(100).optional().default(10),
 });
 
-const listBatchesOutputSchema = z.object({
-  success: z.literal(true),
-  items: z.array(z.object({
-    id: z.number(), sellRate: z.number(), isPaid: z.boolean(),
-    createdAt: z.string(), updatedAt: z.string().optional(),
+const listBatchesOutputSchema = paginatedOutputSchema(
+  z.array(z.object({
+    id: z.number(),
+    sellRate: z.number(),
+    isPaid: z.boolean(),
+    createdAt: z.string(),
+    updatedAt: z.string().optional(),
     seller: z.object({ id: z.string(), name: z.string(), email: z.string(), sellRate: z.number(), orderCount: z.number(), createdAt: z.string(), twoFactorEnabled: z.boolean() }),
-    giftcards: z.array(z.object({
-      id: z.string(), claimCode: z.string(), pinCode: z.string().nullable(),
-      amount: z.number(), status: z.string(), isConfirmed: z.boolean(),
-      reportedAmount: z.number().nullable(), orderId: z.string().nullable(),
-      brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
-      country: z.object({ name: z.string(), code: z.string(), currency: z.string().nullable() }).nullable(),
-      buyer: z.object({ id: z.string(), name: z.string(), email: z.string() }).nullable(),
-      order: z.object({ id: z.string(), status: z.string() }).nullable(),
-      issues: z.array(z.object({
-        id: z.string(), issueType: z.string(), reportedAmount: z.number().nullable(),
-        proofImageUrl: z.string().nullable(), giftcardId: z.string(), orderId: z.string(),
-        reportedById: z.string(), sellerId: z.string().nullable(), createdAt: z.string(),
-      })),
-      isSearchMatch: z.boolean().optional(),
-    })),
-    payments: z.array(z.object({
-      id: z.string(), amount: z.number(), balanceAfter: z.number(),
-      direction: z.string(), category: z.string(), binanceTxId: z.string().optional(),
-      relatedUserId: z.string().optional(), notes: z.string().optional(),
-      referenceType: z.string().optional(), referenceId: z.string().optional(), createdAt: z.string(),
-    })),
-    effectiveTotal: z.number(), estimatedPayout: z.number(),
-    cardsCount: z.number(), confirmedCount: z.number(), paidCount: z.number(),
-    hasIssues: z.boolean(), currency: z.string(),
+    giftcards: z.array(adminBatchGiftcardSchema),
+    payments: z.array(paymentDetailListItemSchema),
+    effectiveTotal: z.number(),
+    estimatedPayout: z.number(),
+    cardsCount: z.number(),
+    confirmedCount: z.number(),
+    paidCount: z.number(),
+    hasIssues: z.boolean(),
+    currency: z.string(),
   })),
-  pagination: z.object({ currentPage: z.number(), totalPages: z.number(), totalCount: z.number() }),
-});
+);
 
 export const listBatches = adminActionClient.inputSchema(listBatchesInputSchema).outputSchema(listBatchesOutputSchema).action(async ({ parsedInput }) => {
   try {
