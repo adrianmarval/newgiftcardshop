@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, Check, Settings, ExternalLink } from 'lucide-react';
+import { Bell, Settings, ExternalLink } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useNotifications } from '@/providers/notification-provider';
 import { listNotifications, markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
+import { getNotificationIcon, formatTimeAgo } from '@/lib/utils/notification-helpers';
 import type { NotificationItem } from '@/types';
 import type { AppSection } from '@/types';
 
@@ -27,30 +28,6 @@ const PORTAL_ROUTES: Record<AppSection, { notifications: string; settings: strin
   buy: { notifications: '/store/dashboard/notifications', settings: '/store/dashboard/notifications' },
   sell: { notifications: '/sell/dashboard/notifications', settings: '/sell/dashboard/notifications' },
   admin: { notifications: '/admin/dashboard/notifications', settings: '/admin/dashboard/notifications' },
-};
-
-const getIcon = (type: NotificationItem['type']) => {
-  switch (type) {
-    case 'STOCK_AVAILABLE':
-    case 'TIER_DROP_ACCESS':
-    case 'ORDER_COMPLETED':
-    case 'BATCH_PAID':
-      return <Check className="h-3.5 w-3.5 text-emerald-500" />;
-    case 'PAYMENT_PENDING':
-      return <Bell className="h-3.5 w-3.5 text-orange-500" />;
-    default:
-      return <Bell className="text-primary h-3.5 w-3.5" />;
-  }
-};
-
-const formatTimeAgo = (date: Date) => {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return 'Ahora';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
 };
 
 export function NotificationDropdown({ portal, badgeKey, href, className }: NotificationDropdownProps) {
@@ -163,7 +140,7 @@ export function NotificationDropdown({ portal, badgeKey, href, className }: Noti
                     item.read ? 'opacity-50' : ''
                   }`}
                 >
-                  <div className="mt-0.5 shrink-0">{getIcon(item.type)}</div>
+                  <div className="mt-0.5 shrink-0">{getNotificationIcon(item.type, 'h-3.5 w-3.5')}</div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className={`truncate text-xs ${item.read ? 'text-muted-foreground' : 'font-medium'}`}>

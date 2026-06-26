@@ -7,7 +7,7 @@ import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { encrypt, hashCode, encryptBuffer } from '@/lib/encryption';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
-import { getUserRates } from '@/lib/services/pricing/pricing';
+import { getUserRates } from '@/lib/services/pricing';
 import { getInitialTier } from './escalation';
 import { notifyBuyersStockAvailable } from '@/lib/notifications';
 import { MAX_BATCH_SIZE } from '@/lib/constants';

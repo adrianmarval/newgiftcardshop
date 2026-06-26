@@ -6,7 +6,7 @@ import type { ParsedGiftcard } from '@/types';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
-import { getUserRates } from '@/lib/services/pricing/pricing';
+import { getUserRates } from '@/lib/services/pricing';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────

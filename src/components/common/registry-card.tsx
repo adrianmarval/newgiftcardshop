@@ -4,7 +4,7 @@ import { ReactNode, MouseEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, AlertTriangle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { formatDateTime } from '@/lib/date-formatter';
+import { formatDateTime } from '@/lib/utils';
 
 export interface RegistryCardProps {
   id: string | number;

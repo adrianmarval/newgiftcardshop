@@ -2,7 +2,7 @@ import { useBuyFlow } from '@/hooks/use-buy-flow';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
-const BUY_STEP_LABELS = ['Buscar', 'Seleccionar', 'Redimir', 'Uso', 'Pagar'];
+export const STEP_LABELS = ['Buscar', 'Seleccionar', 'Redimir', 'Uso', 'Pagar'];
 
 export const BuyStepsProgress = () => {
   const step = useBuyFlow((s) => s.step);
@@ -21,7 +21,7 @@ export const BuyStepsProgress = () => {
         className="flex justify-center md:justify-end"
       >
         <div className="flex items-center gap-1 md:gap-1">
-          {BUY_STEP_LABELS.map((label, idx) => {
+          {STEP_LABELS.map((label, idx) => {
             const s = idx + 1;
             return (
               <div key={s} className="flex items-center">
@@ -46,7 +46,7 @@ export const BuyStepsProgress = () => {
                     {label}
                   </span>
                 </div>
-                {idx < BUY_STEP_LABELS.length - 1 && (
+                {idx < STEP_LABELS.length - 1 && (
                   <div className={`h-0.5 w-3 rounded-full transition-all md:w-8 ${s < step ? 'bg-primary/50' : 'bg-muted'} `} />
                 )}
               </div>

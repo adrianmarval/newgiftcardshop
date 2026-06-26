@@ -1,6 +1,6 @@
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
-import { computeEffectiveTotalDecimal } from '@/lib/services/pricing/pricing';
+import { computeEffectiveTotalDecimal } from '@/lib/services/pricing';
 import { OrderNotFoundError, InvalidOrderStateError, OrderAlreadyProcessedError } from './order-errors';
 
 /**

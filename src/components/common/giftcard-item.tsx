@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import { Eye, Trash2, AlertTriangle, EllipsisVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ClaimCodeField } from '@/components/common/claim-code-field';
+import { ClaimCodeField } from '.';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { formatCurrency } from '@/lib/currency-formatter';
+import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
 import type { Giftcard } from '@/types';
 

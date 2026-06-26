@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { getUserRates } from '@/lib/services/pricing/pricing';
+import { getUserRates } from '@/lib/services/pricing';
 import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
 

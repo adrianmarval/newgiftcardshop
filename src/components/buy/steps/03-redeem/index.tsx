@@ -18,9 +18,9 @@ import { GiftcardIssueType, GiftcardStatus } from '@/generated/prisma/enums';
 import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
 import { useAction } from 'next-safe-action/hooks';
-import { formatCurrency } from '@/lib/currency-formatter';
+import { formatCurrency } from '@/lib/utils';
 import { copyToClipboard } from '@/lib/utils/clipboard';
-import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
+import { BuyStepsProgress } from '../shared/buy-steps-progress';
 
 export const RedeemStep = () => {
   const { foundGiftcards, setFoundGiftcards, orderStatus, reportIssue, setStep, orderId, selectedBrand, selectedCountry, selectedCurrency } = useBuyFlow();

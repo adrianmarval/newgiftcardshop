@@ -5,10 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { Bell, Check } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
 import { markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
+import { getNotificationIcon, formatTimeAgo } from '@/lib/utils/notification-helpers';
 import type { NotificationItem } from '@/types';
 
 export interface NotificationsListProps {
@@ -16,30 +17,6 @@ export interface NotificationsListProps {
   initialNotifications: NotificationItem[];
   initialUnreadCount: number;
 }
-
-const getIcon = (type: NotificationItem['type']) => {
-  switch (type) {
-    case 'STOCK_AVAILABLE':
-    case 'TIER_DROP_ACCESS':
-    case 'ORDER_COMPLETED':
-    case 'BATCH_PAID':
-      return <Check className="h-4 w-4 text-emerald-500" />;
-    case 'PAYMENT_PENDING':
-      return <Bell className="h-4 w-4 text-orange-500" />;
-    default:
-      return <Bell className="text-primary h-4 w-4" />;
-  }
-};
-
-const formatTimeAgo = (date: Date) => {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return 'Ahora';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
-};
 
 export function NotificationsList({ portal, initialNotifications, initialUnreadCount }: NotificationsListProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
@@ -104,7 +81,7 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
               item.read ? 'border-transparent opacity-50' : 'border-border bg-muted/30 hover:bg-muted/50'
             }`}
           >
-            <div className="mt-0.5 shrink-0">{getIcon(item.type)}</div>
+            <div className="mt-0.5 shrink-0">{getNotificationIcon(item.type)}</div>
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">

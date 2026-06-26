@@ -1,8 +1,8 @@
+import { Decimal } from '@prisma/client/runtime/client';
 import prisma from '@/lib/prisma';
 import { notificationDispatcher } from './dispatcher';
 import type { NotificationMessage } from './types';
 import type { NotificationType } from '@/generated/prisma/client';
-import { getAccessibleStockSummary } from '@/lib/services/pricing/tier-estimation';
 import { getCountryFlag } from '@/lib/utils/country-flags';
 import type { TierDropEvent } from '@/types';
 
@@ -11,6 +11,21 @@ interface BrandCountryInfo {
   countryName: string;
   countryCode: string;
 }
+
+interface EligibleBuyer {
+  userId: string;
+  buyRate: Decimal;
+  notificationPreference: {
+    subscriptions: { brandCountryId: string }[];
+  } | null;
+}
+
+interface StockCard {
+  amount: Decimal;
+  escalationTier: number;
+}
+
+// ── Shared helpers ──────────────────────────────────────────────────────────
 
 async function getBrandCountryInfo(brandCountryId: string): Promise<BrandCountryInfo | null> {
   const bc = await prisma.brandCountry.findUnique({
@@ -28,39 +43,7 @@ async function getBrandCountryInfo(brandCountryId: string): Promise<BrandCountry
   };
 }
 
-async function hasBeenNotified(userId: string, type: NotificationType, referenceType: string, referenceId: string): Promise<boolean> {
-  const existing = await prisma.notificationLog.findUnique({
-    where: {
-      userId_type_referenceType_referenceId: {
-        userId,
-        type,
-        referenceType,
-        referenceId,
-      },
-    },
-    select: { id: true },
-  });
-  return existing !== null;
-}
-
-async function recordNotificationLog(userId: string, type: NotificationType, referenceType: string, referenceId: string): Promise<void> {
-  try {
-    await prisma.notificationLog.create({
-      data: { userId, type, referenceType, referenceId },
-    });
-  } catch (err: unknown) {
-    const code = (err as { code?: string })?.code;
-    if (code === 'P2002') return;
-    throw err;
-  }
-}
-
-export async function notifyBuyersStockAvailable(brandCountryId: string, initialTier: number | null, batchId: number): Promise<void> {
-  const info = await getBrandCountryInfo(brandCountryId);
-  if (!info) return;
-
-  const effectiveTier = initialTier ?? 85;
-
+async function getEligibleBuyers(brandCountryId: string): Promise<EligibleBuyer[]> {
   const eligibleRates = await prisma.userBrandCountryRate.findMany({
     where: {
       brandCountryId,
@@ -81,24 +64,113 @@ export async function notifyBuyersStockAvailable(brandCountryId: string, initial
     },
   });
 
-  const buyersToNotify = eligibleRates.filter((rate) => {
-    const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
-    return buyerBuyRate >= effectiveTier;
+  return eligibleRates.map((rate) => ({
+    userId: rate.user.id,
+    buyRate: rate.buyRate,
+    notificationPreference: rate.user.notificationPreference,
+  }));
+}
+
+function shouldNotifyBySubscription(
+  preference: EligibleBuyer['notificationPreference'],
+  brandCountryId: string,
+): boolean {
+  if (!preference) return true;
+  const subs = preference.subscriptions;
+  if (subs.length === 0) return true;
+  return subs.some((s) => s.brandCountryId === brandCountryId);
+}
+
+async function batchHasBeenNotified(
+  buyerIds: string[],
+  type: NotificationType,
+  referenceType: string,
+  referenceId: string,
+): Promise<Set<string>> {
+  if (buyerIds.length === 0) return new Set();
+
+  const existing = await prisma.notificationLog.findMany({
+    where: {
+      userId: { in: buyerIds },
+      type,
+      referenceType,
+      referenceId,
+    },
+    select: { userId: true },
   });
 
-  if (buyersToNotify.length === 0) return;
+  return new Set(existing.map((log) => log.userId));
+}
 
-  for (const rate of buyersToNotify) {
-    const alreadyNotified = await hasBeenNotified(rate.user.id, 'STOCK_AVAILABLE', 'BATCH', batchId.toString());
-    if (alreadyNotified) continue;
+async function getAllStockCards(brandCountryId: string): Promise<StockCard[]> {
+  const cards = await prisma.giftcard.findMany({
+    where: {
+      brandCountryId,
+      inStock: true,
+      status: 'UNUSED',
+    },
+    select: { amount: true, escalationTier: true },
+  });
 
-    if (rate.user.notificationPreference) {
-      const subs = rate.user.notificationPreference.subscriptions;
-      if (subs.length > 0 && !subs.some((s) => s.brandCountryId === brandCountryId)) continue;
+  return cards;
+}
+
+function computeSummary(allCards: StockCard[], buyerBuyRate: number) {
+  let totalAmount = new Decimal(0);
+  let cardCount = 0;
+
+  for (const card of allCards) {
+    if (card.escalationTier <= buyerBuyRate) {
+      totalAmount = totalAmount.add(card.amount);
+      cardCount++;
     }
+  }
 
-    const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
-    const summary = await getAccessibleStockSummary(brandCountryId, buyerBuyRate);
+  return { totalAmount, cardCount };
+}
+
+async function batchRecordNotificationLogs(
+  entries: { userId: string; type: NotificationType; referenceType: string; referenceId: string }[],
+): Promise<void> {
+  if (entries.length === 0) return;
+
+  await prisma.notificationLog.createMany({
+    data: entries,
+    skipDuplicates: true,
+  });
+}
+
+// ── Public functions ────────────────────────────────────────────────────────
+
+export async function notifyBuyersStockAvailable(
+  brandCountryId: string,
+  initialTier: number | null,
+  batchId: number,
+): Promise<void> {
+  const info = await getBrandCountryInfo(brandCountryId);
+  if (!info) return;
+
+  const effectiveTier = initialTier ?? 85;
+  const refId = batchId.toString();
+
+  const [eligibleBuyers, allCards] = await Promise.all([
+    getEligibleBuyers(brandCountryId),
+    getAllStockCards(brandCountryId),
+  ]);
+
+  const buyerIds = eligibleBuyers.map((b) => b.userId);
+  const alreadyNotified = await batchHasBeenNotified(buyerIds, 'STOCK_AVAILABLE', 'BATCH', refId);
+
+  const entriesToRecord: { userId: string; type: NotificationType; referenceType: string; referenceId: string }[] = [];
+  const dispatches: Promise<void>[] = [];
+
+  for (const buyer of eligibleBuyers) {
+    const buyerBuyRate = Math.floor(buyer.buyRate.toNumber() * 100);
+    if (buyerBuyRate < effectiveTier) continue;
+    if (alreadyNotified.has(buyer.userId)) continue;
+    if (!shouldNotifyBySubscription(buyer.notificationPreference, brandCountryId)) continue;
+
+    const summary = computeSummary(allCards, buyerBuyRate);
     const flag = getCountryFlag(info.countryCode);
     const stockText =
       summary.cardCount > 0
@@ -121,9 +193,12 @@ export async function notifyBuyersStockAvailable(brandCountryId: string, initial
       },
     };
 
-    await recordNotificationLog(rate.user.id, 'STOCK_AVAILABLE', 'BATCH', batchId.toString()).catch(() => {});
-    await notificationDispatcher.dispatch(rate.user.id, message);
+    entriesToRecord.push({ userId: buyer.userId, type: 'STOCK_AVAILABLE', referenceType: 'BATCH', referenceId: refId });
+    dispatches.push(notificationDispatcher.dispatch(buyer.userId, message));
   }
+
+  await batchRecordNotificationLogs(entriesToRecord);
+  await Promise.all(dispatches);
 }
 
 export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<void> {
@@ -147,47 +222,32 @@ export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<voi
     }
     if (!info) continue;
 
-    const eligibleRates = await prisma.userBrandCountryRate.findMany({
-      where: {
-        brandCountryId,
-        user: {
-          role: 'BUYER',
-          isActive: true,
-        },
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            notificationPreference: {
-              select: { subscriptions: { select: { brandCountryId: true } } },
-            },
-          },
-        },
-      },
-    });
+    const [eligibleBuyers, allCards] = await Promise.all([
+      getEligibleBuyers(brandCountryId),
+      getAllStockCards(brandCountryId),
+    ]);
 
     const notifiedBuyers = new Set<string>();
 
     for (const event of groupEvents) {
-      const buyersInCrossover = eligibleRates.filter((rate) => {
-        const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
+      const buyersInCrossover = eligibleBuyers.filter((buyer) => {
+        const buyerBuyRate = Math.floor(buyer.buyRate.toNumber() * 100);
         return buyerBuyRate >= event.newTier && buyerBuyRate < event.oldTier;
       });
 
-      for (const rate of buyersInCrossover) {
-        if (notifiedBuyers.has(rate.userId)) continue;
+      const buyerIds = buyersInCrossover.map((b) => b.userId).filter((id) => !notifiedBuyers.has(id));
+      const alreadyNotified = await batchHasBeenNotified(buyerIds, 'TIER_DROP_ACCESS', 'GIFTCARD', event.giftcardId);
 
-        const alreadyNotified = await hasBeenNotified(rate.userId, 'TIER_DROP_ACCESS', 'GIFTCARD', event.giftcardId);
-        if (alreadyNotified) continue;
+      const entriesToRecord: { userId: string; type: NotificationType; referenceType: string; referenceId: string }[] = [];
+      const dispatches: Promise<void>[] = [];
 
-        if (rate.user.notificationPreference) {
-          const subs = rate.user.notificationPreference.subscriptions;
-          if (subs.length > 0 && !subs.some((s) => s.brandCountryId === brandCountryId)) continue;
-        }
+      for (const buyer of buyersInCrossover) {
+        if (notifiedBuyers.has(buyer.userId)) continue;
+        if (alreadyNotified.has(buyer.userId)) continue;
+        if (!shouldNotifyBySubscription(buyer.notificationPreference, brandCountryId)) continue;
 
-        const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
-        const summary = await getAccessibleStockSummary(brandCountryId, buyerBuyRate);
+        const buyerBuyRate = Math.floor(buyer.buyRate.toNumber() * 100);
+        const summary = computeSummary(allCards, buyerBuyRate);
         const flag = getCountryFlag(info.countryCode);
         const stockText =
           summary.cardCount > 0
@@ -211,17 +271,20 @@ export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<voi
           },
         };
 
-        notifiedBuyers.add(rate.userId);
+        notifiedBuyers.add(buyer.userId);
 
         for (const ev of groupEvents) {
-          const buyerRate = Math.floor(rate.buyRate.toNumber() * 100);
-          if (buyerRate >= ev.newTier && buyerRate < ev.oldTier) {
-            await recordNotificationLog(rate.userId, 'TIER_DROP_ACCESS', 'GIFTCARD', ev.giftcardId).catch(() => {});
+          const rate = Math.floor(buyer.buyRate.toNumber() * 100);
+          if (rate >= ev.newTier && rate < ev.oldTier) {
+            entriesToRecord.push({ userId: buyer.userId, type: 'TIER_DROP_ACCESS', referenceType: 'GIFTCARD', referenceId: ev.giftcardId });
           }
         }
 
-        await notificationDispatcher.dispatch(rate.userId, message);
+        dispatches.push(notificationDispatcher.dispatch(buyer.userId, message));
       }
+
+      await batchRecordNotificationLogs(entriesToRecord);
+      await Promise.all(dispatches);
     }
   }
 }

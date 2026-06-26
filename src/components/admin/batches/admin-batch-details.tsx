@@ -2,9 +2,9 @@
 
 import { CardFooter } from '@/components/ui/card';
 import { showAlert } from '@/lib/ui';
-import { GiftcardItem } from '@/components/common/giftcard-item';
+import { GiftcardItem } from '@/components/common';
 import { deleteCard } from '@/actions/admin/batches';
-import { formatCurrency } from '@/lib/currency-formatter';
+import { formatCurrency } from '@/lib/utils';
 import { AdminBatchGallery } from './admin-batch-gallery';
 import type { AdminBatch } from '@/types';
 

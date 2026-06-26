@@ -1,395 +1,52 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, Sparkles, Loader2, Upload, X, Plus, Code, ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
+import { Paperclip, Sparkles, Loader2, Code, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { SellFlowImage } from '@/types';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import { useAction } from 'next-safe-action/hooks';
-import { uploadImage } from '@/actions/seller/ocr/upload-image';
-import { extractDraft } from '@/actions/seller/ocr/extract-draft';
-import { checkCodes } from '@/actions/seller/batches';
-import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
-
-import { showAlert } from '@/lib/ui';
+import { useDataEntryPipeline } from '@/hooks/use-data-entry-pipeline';
+import { FileDropZone } from './file-drop-zone';
+import { ProcessingProgress } from './processing-progress';
 import { cn } from '@/lib/ui';
-import { ProcessingStage, STAGE_LABELS, STAGE_PROGRESS } from '@/types';
-import { MAX_BATCH_SIZE } from '@/lib/constants';
-import { SellStepsProgress } from './sell-steps-progress';
+import { SellStepsProgress } from '../shared/sell-steps-progress';
 
 // ─── DataEntryStep ──────────────────────────────────────────────────────────
 
 export function DataEntryStep() {
-  const { addImage, clearImages, setGiftcards, handleBulkImport, ingestOCRDraft, setStep, giftcards, selectedBrandCountry } = useSellFlow();
-
-  const brandId = selectedBrandCountry?.split('|')[0] ?? '';
-  const countryId = selectedBrandCountry?.split('|')[1] ?? '';
+  const { giftcards, setStep } = useSellFlow();
 
   const [pasteContent, setPasteContent] = useState('');
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [dbBlockedCodes, setDbBlockedCodes] = useState<string[]>([]);
   const [localImages, setLocalImages] = useState<Array<{ file: File; previewUrl: string }>>([]);
-  const [stage, setStage] = useState<ProcessingStage>('idle');
   const [showFormatHelp, setShowFormatHelp] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingDbCheckRef = useRef<(() => void) | null>(null);
-  const pendingCodeToLineMapRef = useRef<Map<string, number>>(new Map());
+  const [isDragOver, setIsDragOver] = useState(false);
 
-  const isProcessing = stage !== 'idle' && stage !== 'done';
-  const hasContent = pasteContent.trim().length > 0 || localImages.length > 0;
-
-  // ── File handling ─────────────────────────────────────────────────────────
-
-  const handleFilesSelected = useCallback(
-    (files: FileList | File[]) => {
-      const filesArray = Array.from(files).filter((f) => f.type.startsWith('image/'));
-      if (filesArray.length === 0) {
-        showAlert.toast.error('Select valid images');
-        return;
-      }
-
-      // Deduplication logic: check by name, size, and lastModified
-      const uniqueFiles: File[] = [];
-      let duplicateCount = 0;
-
-      for (const f of filesArray) {
-        const isDuplicate =
-          localImages.some(
-            (local) => local.file.name === f.name && local.file.size === f.size && local.file.lastModified === f.lastModified,
-          ) || uniqueFiles.some((u) => u.name === f.name && u.size === f.size && u.lastModified === f.lastModified);
-
-        if (isDuplicate) {
-          duplicateCount++;
-        } else {
-          uniqueFiles.push(f);
-        }
-      }
-
-      if (uniqueFiles.length === 0 && filesArray.length > 0) {
-        showAlert.toast.info('Selected images are already attached');
-        return;
-      }
-
-      if (duplicateCount > 0) {
-        showAlert.toast.info(`${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} skipped`);
-      }
-
-      const newImages = uniqueFiles.map((file) => ({
-        file,
-        previewUrl: URL.createObjectURL(file),
-      }));
-
-      setLocalImages((prev) => [...prev, ...newImages]);
-    },
-    [localImages],
-  );
-
-  const removeLocalImage = useCallback((index: number) => {
-    setLocalImages((prev) => {
-      const removed = prev[index];
-      if (removed) URL.revokeObjectURL(removed.previewUrl);
-      return prev.filter((_, i) => i !== index);
-    });
-  }, []);
-
-  const clearLocalImages = useCallback(() => {
-    setLocalImages((prev) => {
-      prev.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-      return [];
-    });
-  }, []);
-
-  // ── DB check action ──────────────────────────────────────────────────────
-
-  const { execute: runCheckExistingCodes } = useAction(checkCodes, {
-    onSuccess: ({ data }) => {
-      if (data?.success && data.existingCodes && data.existingCodes.length > 0) {
-        const codeToLineMap = pendingCodeToLineMapRef.current;
-        const existingErrors = (data.existingCodes as string[]).map((code) => {
-          const normalizedCode = code.replace(/[^A-Z0-9]/g, '').toUpperCase();
-          const line = codeToLineMap.get(normalizedCode);
-          if (line) {
-            return `Line ${line}: Code ${code} already exists in inventory`;
-          }
-          return `Code ${code} already exists in inventory`;
-        });
-        setValidationErrors(existingErrors);
-        setDbBlockedCodes(data.existingCodes as string[]);
-        setStage('idle');
-        return;
-      }
-      pendingDbCheckRef.current?.();
-    },
-    onError: ({ error }) => {
-      console.error('[DB-CHECK] Error checking existing codes:', error.serverError);
-      pendingDbCheckRef.current?.();
-    },
+  const {
+    stage,
+    validationErrors,
+    setValidationErrors,
+    dbBlockedCodes,
+    setDbBlockedCodes,
+    isProcessing,
+    hasContent,
+    handleProcessCards,
+    handleFilesSelected,
+    removeLocalImage,
+    clearLocalImages,
+    fileInputRef,
+  } = useDataEntryPipeline({
+    pasteContent,
+    localImages,
+    setLocalImages,
+    setStep,
   });
 
-  // ── OCR extraction action ─────────────────────────────────────────────────
-
-  const { execute: runExtraction } = useAction(extractDraft, {
-    onSuccess: ({ data }) => {
-      if (data?.cards) {
-        setStage('ingesting');
-
-        //Deduplicar: si hay mismo claimCode, preferir el que tiene monto
-        const seen = new Map<string, (typeof data.cards)[0]>();
-        for (const card of data.cards) {
-          const key = card.claimCode?.toUpperCase().replace(/[^A-Z0-9]/g, '') ?? '';
-          if (!key) continue;
-          const existing = seen.get(key);
-          if (!existing) {
-            seen.set(key, card);
-          } else {
-            //Si ambos tienen monto, keep existing
-            //Si existing no tiene monto pero card sí, replace
-            if (!existing.amount && card.amount) {
-              seen.set(key, card);
-            }
-          }
-        }
-
-        const deduped = Array.from(seen.values());
-
-        const unmatchedImageIds: string[] = [];
-
-        if (data.ignoredImages && data.ignoredImages.length > 0) {
-          unmatchedImageIds.push(...data.ignoredImages.map((img) => img.imageId));
-        }
-
-        //Solo vincular a las já criadas del texto - no criar novas tarjetas desde OCR
-        //Las imágenes sin match se mandan a unmatchedImages
-        const onlyMatchExisting = deduped.filter((c) => {
-          const normCode = c.claimCode?.toUpperCase().replace(/[^A-Z0-9]/g, '') ?? '';
-          const existing = useSellFlow.getState().giftcards.filter((g) => g.claimCode.toUpperCase().replace(/[^A-Z0-9]/g, '') === normCode);
-          if (existing.length > 0) {
-            return true;
-          } else {
-            if (c.imageId) unmatchedImageIds.push(c.imageId);
-            return false;
-          }
-        });
-
-        ingestOCRDraft(onlyMatchExisting);
-        useSellFlow.getState().setUnmatchedImages(unmatchedImageIds.map((id) => ({ imageId: id })));
-
-        if (onlyMatchExisting.length > 0) {
-          showAlert.toast.success(`${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`);
-        }
-
-        const textCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
-        if (textCodes.length > 0) {
-          pendingDbCheckRef.current = () => {
-            setStage('done');
-            setTimeout(() => setStep(3), 600);
-          };
-          pendingCodeToLineMapRef.current = new Map();
-          runCheckExistingCodes({
-            codes: textCodes,
-            brandId: brandId,
-            countryId: countryId,
-          });
-          return;
-        }
-
-        setStage('done');
-        setTimeout(() => setStep(3), 600);
-      }
-    },
-    onError: ({ error }) => {
-      console.error(`[AI-OCR-BATCH] Server/Network error:`, error.serverError);
-      showAlert.error('Extraction error', error.serverError || 'Could not read images');
-      setStage('idle');
-    },
-  });
-
-  // ── Main processing pipeline ──────────────────────────────────────────────
-  //
-  // IMPORTANT: We clear ALL store state (giftcards + images) before each
-  // processing run. This guarantees:
-  //   - No stale evidence blocks correct amount_mismatch detection (Scenario 6)
-  //   - No stale usedMatches prevents mismatches
-  //   - No image duplication from previous runs
-  //
-  // After uploading, localImages are cleared so they don't show as duplicates
-  // of the newly-created store images.
-
-  const proceedToImageUpload = useCallback(
-    (filesToUpload: Array<{ file: File; previewUrl: string }>, parsedCount: number) => {
-      if (filesToUpload.length > 0) {
-        setStage('uploading');
-        (async () => {
-          let uploaded = 0;
-
-          for (const localImg of filesToUpload) {
-              try {
-              const result = await uploadImage({ file: localImg.file });
-              if (result.data?.compressedData) {
-                const imageId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-                const newImage: SellFlowImage = {
-                  id: imageId,
-                  compressedData: result.data.compressedData,
-                  previewUrl: localImg.previewUrl,
-                };
-                addImage(newImage);
-                uploaded++;
-              } else {
-                  showAlert.error(`Error with ${localImg.file.name}`, result.serverError || 'Upload failed');
-              }
-            } catch (error) {
-              showAlert.error(`Error with ${localImg.file.name}`, 'Critical upload error');
-            }
-          }
-
-          setLocalImages([]);
-
-          if (uploaded > 0) {
-            showAlert.toast.success(`${uploaded} screenshot${uploaded > 1 ? 's' : ''} uploaded`);
-          }
-
-          // Phase 3: Run OCR to associate images with existing text codes
-          const storeImages = useSellFlow.getState().images;
-          if (storeImages.length > 0) {
-            setStage('extracting');
-            runExtraction({
-              images: storeImages.map((img) => ({ id: img.id, compressedData: img.compressedData })),
-            });
-          } else {
-            // No images — go directly to review
-            const allGiftcards = useSellFlow.getState().giftcards;
-            if (parsedCount > 0 || allGiftcards.length > 0) {
-              setStage('done');
-              setTimeout(() => setStep(3), 400);
-            } else {
-              showAlert.toast.info('No cards to process');
-              setStage('idle');
-            }
-          }
-        })();
-      } else {
-        // No images — go directly to review
-        const allGiftcards = useSellFlow.getState().giftcards;
-        if (parsedCount > 0 || allGiftcards.length > 0) {
-          setStage('done');
-          setTimeout(() => setStep(3), 400);
-        } else {
-          showAlert.toast.info('No cards to process');
-          setStage('idle');
-        }
-      }
-    },
-    [addImage, setStep, setLocalImages, setStage, runExtraction],
-  );
-
-  const handleProcessCards = async () => {
-    if (!hasContent) {
-      showAlert.toast.info('Paste codes or attach screenshots first');
-      return;
-    }
-
-    setValidationErrors([]);
-
-    // ── Phase 0: Wipe store for clean re-processing ──────────────────────
-    const filesToUpload = [...localImages];
-
-    setGiftcards([]);
-    clearImages();
-
-    // Phase 1: Parse text codes
-    setStage('parsing');
-    let parsedCount = 0;
-
-    if (pasteContent.trim()) {
-      let allErrors: string[] = [];
-      const { parsed, errors, duplicates } = parseClaimCodes(pasteContent);
-
-      if (errors.length > 0) {
-        allErrors = [...errors];
-      }
-
-      if (duplicates.length > 0) {
-        allErrors = [...allErrors, ...duplicates];
-      }
-
-      // Build code-to-line map before handleBulkImport clears the store
-      const codeToLineMap = new Map<string, number>();
-      const lines = pasteContent.split('\n');
-      for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-        const line = lines[lineIdx];
-        const trimmedLine = line.trim();
-        if (!trimmedLine) continue;
-        const candidateRe = /[A-Z0-9][A-Z0-9-]{13,17}[A-Z0-9]/gi;
-        const match = trimmedLine.match(candidateRe);
-        if (match) {
-          const normalized = normalizeClaimCode(match[0]);
-          if (normalized) {
-            codeToLineMap.set(normalized, lineIdx + 1);
-          }
-        }
-      }
-
-      if (parsed.length > MAX_BATCH_SIZE) {
-        showAlert.error(
-          `Máximo ${MAX_BATCH_SIZE} tarjetas por batch`,
-          `Elimina líneas y vuelve a intentar. Puedes dividir en múltiples lotes.`,
-        );
-        setStage('idle');
-        return;
-      }
-
-      if (parsed.length > 0) {
-        const result = handleBulkImport(parsed);
-
-        if (result.error) {
-          showAlert.error('Límite excedido', result.error);
-          setStage('idle');
-          return;
-        }
-
-        parsedCount = result.importedCount;
-
-        const allGiftcards = useSellFlow.getState().giftcards;
-        const missingAmountErrors = allGiftcards
-          .filter((g) => !g.amount || g.amount.trim() === '')
-          .map((g) => `Line ${g.id}: Missing amount for claim code ${g.claimCode}`);
-
-        if (missingAmountErrors.length > 0) {
-          allErrors = [...allErrors, ...missingAmountErrors];
-        }
-      }
-
-      if (allErrors.length > 0) {
-        setValidationErrors(allErrors);
-        setStage('idle');
-        return;
-      }
-
-      // Phase 1.5: Check DB for existing codes BEFORE processing images
-      const allCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
-      if (allCodes.length > 0) {
-        pendingDbCheckRef.current = () => proceedToImageUpload(filesToUpload, parsedCount);
-        pendingCodeToLineMapRef.current = codeToLineMap;
-        runCheckExistingCodes({
-          codes: allCodes,
-          brandId: brandId,
-          countryId: countryId,
-        });
-        return;
-      }
-    }
-
-    // No codes to check — proceed directly to image upload
-    proceedToImageUpload(filesToUpload, parsedCount);
-  };
+  const hasExistingCards = giftcards.length > 0;
 
   // ── Drag & Drop ───────────────────────────────────────────────────────────
-
-  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -412,47 +69,32 @@ export function DataEntryStep() {
     [handleFilesSelected],
   );
 
-  // ── Re-entry cleanup ───────────────────────────────────────────────────────
-  // When DataEntryStep mounts (including re-entry from step 3), wipe store
-  // state so the user starts with a clean compose box.
-  useEffect(() => {
-    setGiftcards([]);
-    clearImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Thumbnail previews — only show localImages ────────────────────────────
-  // Store images are an internal pipeline detail (compressed data for OCR).
-  // The user-facing previews are the local file blobs they just attached.
-
-  const allPreviews = localImages.map((img, idx) => ({
-    id: `local-${idx}`,
-    previewUrl: img.previewUrl,
-    source: 'local' as const,
-    localIndex: idx,
-  }));
-  const hasAttachments = allPreviews.length > 0;
-
-  const hasExistingCards = giftcards.length > 0;
-
   return (
-    // CAMBIO CRÍTICO: "h-full flex flex-col min-h-0" para forzar el viewport estricto
-    <div className="flex h-full min-h-0 flex-col gap-1" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+    <div
+      className="flex h-full min-h-0 flex-col gap-1"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <SellStepsProgress />
 
-      {/* El Card pasa a flex-1 y min-h-0 para confinar sus dimensiones */}
       <Card
         className={cn(
           'flex min-h-0 flex-1 flex-col gap-0 border py-0 backdrop-blur-sm transition-all',
           isDragOver && 'border-primary bg-primary/5 scale-[1.01]',
         )}
       >
-        {/* Header con shrink-0 para preservar su tamaño exacto */}
+        {/* Header */}
         <CardHeader className="shrink-0 px-3 pt-2 md:px-6">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-foreground text-md font-bold md:text-xl">Load Gift Cards</CardTitle>
+            <CardTitle className="text-foreground text-md font-bold md:text-xl">
+              Load Gift Cards
+            </CardTitle>
             {hasExistingCards && (
-              <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary text-[10px] md:text-xs">
+              <Badge
+                variant="outline"
+                className="border-primary/20 bg-primary/10 text-primary text-[10px] md:text-xs"
+              >
                 {giftcards.length} card{giftcards.length !== 1 ? 's' : ''} loaded
               </Badge>
             )}
@@ -467,7 +109,11 @@ export function DataEntryStep() {
             >
               <Code className="h-3 w-3" />
               <span>Expected ClaimCode Format</span>
-              {showFormatHelp ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {showFormatHelp ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
             </Button>
             <AnimatePresence>
               {showFormatHelp && (
@@ -479,7 +125,10 @@ export function DataEntryStep() {
                 >
                   <div className="border-border bg-muted/30 space-y-1 rounded-lg border p-2 md:p-3">
                     <p className="text-muted-foreground text-[12px] md:text-xs">
-                      One card per line: <span className="text-foreground font-mono font-bold">CODE AMOUNT</span>
+                      One card per line:{' '}
+                      <span className="text-foreground font-mono font-bold">
+                        CODE AMOUNT
+                      </span>
                     </p>
                     <div className="text-muted-foreground/70 font-mono text-[12px] md:text-xs">
                       <div>HPGE-JV9RR4-8SA9 30.00</div>
@@ -492,7 +141,7 @@ export function DataEntryStep() {
           </CardDescription>
         </CardHeader>
 
-        {/* CONTENEDOR CENTRAL: Cambiado a flex-1 y min-h-0. Distribuye el Textarea y los Errores de forma balanceada */}
+        {/* Textarea + Errors */}
         <CardContent className="flex min-h-0 flex-1 flex-col space-y-1 p-2">
           <Textarea
             placeholder="Paste your gift card codes here…"
@@ -505,15 +154,15 @@ export function DataEntryStep() {
               }
             }}
             disabled={isProcessing}
-            // CAMBIO: flex-1 y h-full obligan al textarea a tomar TODO el espacio vertical libre del CardContent
             className={cn(
               'border-border bg-muted/20 focus-visible:ring-primary h-full w-full flex-1 resize-none rounded-xl p-3 font-mono text-sm transition-all md:text-sm',
               isDragOver && 'border-primary',
-              validationErrors.length > 0 && 'border-destructive/50 ring-destructive/20 ring-1',
+              validationErrors.length > 0 &&
+                'border-destructive/50 ring-destructive/20 ring-1',
             )}
           />
 
-          {/* Caja de Errores con max-h-36 y scroll interno aislado */}
+          {/* Error box */}
           <AnimatePresence>
             {validationErrors.length > 0 && (
               <motion.div
@@ -524,13 +173,17 @@ export function DataEntryStep() {
               >
                 <div className="mb-1.5 flex items-center gap-1">
                   <div className="bg-destructive h-1.5 w-1.5 animate-pulse rounded-full" />
-                  <p className="text-destructive text-[10px] font-bold tracking-wider uppercase">Format Errors Detected</p>
+                  <p className="text-destructive text-[10px] font-bold tracking-wider uppercase">
+                    Format Errors Detected
+                  </p>
                 </div>
                 <div className="custom-scrollbar max-h-24 space-y-1 overflow-y-auto pr-2 md:max-h-32">
                   {validationErrors.map((err, idx) => (
                     <div key={idx} className="flex gap-1 text-[11px] md:text-xs">
                       <span className="text-destructive/50 font-mono">•</span>
-                      <p className="text-destructive/80 font-mono leading-relaxed">{err}</p>
+                      <p className="text-destructive/80 font-mono leading-relaxed">
+                        {err}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -539,107 +192,21 @@ export function DataEntryStep() {
           </AnimatePresence>
         </CardContent>
 
-        {/* Adjuntos: shrink-0 para que use solo su franja exacta horizontal */}
-        <AnimatePresence>
-          {hasAttachments && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="border-border/40 shrink-0 overflow-hidden border-t px-2 py-2 md:px-4"
-            >
-              <div className="border-border bg-muted/20 rounded-lg border p-2">
-                <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1 text-[10px] font-semibold tracking-wider uppercase md:text-xs">
-                    <ImageIcon className="h-3 w-3" />
-                    {allPreviews.length} screenshot{allPreviews.length !== 1 ? 's' : ''}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      clearLocalImages();
-                    }}
-                    disabled={isProcessing}
-                    className="text-muted-foreground hover:text-destructive h-6 px-2 text-[10px]"
-                  >
-                    Clear all
-                  </Button>
-                </div>
+        {/* File previews + processing progress */}
+        <FileDropZone
+          ref={fileInputRef}
+          localImages={localImages}
+          isProcessing={isProcessing}
+          isDragOver={isDragOver}
+          onFilesSelected={handleFilesSelected}
+          onRemoveImage={removeLocalImage}
+          onClearImages={clearLocalImages}
+        />
 
-                <div className="custom-scrollbar flex gap-1 overflow-x-auto pb-1">
-                  <AnimatePresence mode="popLayout">
-                    {allPreviews.map((preview) => (
-                      <motion.div
-                        key={preview.id}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.8, opacity: 0 }}
-                        className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border md:h-20 md:w-20"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={preview.previewUrl} alt="Screenshot" className="h-full w-full object-cover" />
-                        {!isProcessing && (
-                          <button
-                            type="button"
-                            onClick={() => removeLocalImage(preview.localIndex)}
-                            className="bg-destructive text-destructive-foreground absolute top-0.5 right-0.5 rounded-full p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                          >
-                            <X className="h-2.5 w-2.5" />
-                          </button>
-                        )}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-
-                  {!isProcessing && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="hover:bg-muted text-muted-foreground flex h-16 w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border-2 border-dashed transition-colors md:h-20 md:w-20"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span className="text-[9px]">Add</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Barra de progreso de subida / OCR */}
-        <AnimatePresence>
-          {isProcessing && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="shrink-0 overflow-hidden px-2 pb-2 md:px-4 md:pb-4"
-            >
-              <div className="border-primary/20 bg-primary/5 space-y-1 rounded-xl border p-3">
-                <div className="flex items-center justify-between gap-1 text-sm">
-                  <div className="text-primary flex items-center gap-1">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>{STAGE_LABELS[stage]}</span>
-                  </div>
-                  <span className="text-primary font-semibold">{STAGE_PROGRESS[stage]}%</span>
-                </div>
-                <div className="bg-muted h-2 overflow-hidden rounded-full">
-                  <motion.div
-                    className="bg-primary h-full rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${STAGE_PROGRESS[stage]}%` }}
-                    transition={{ ease: 'easeOut', duration: 0.35 }}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Action bar inferior: Fija con shrink-0 */}
+        <ProcessingProgress stage={stage} />
       </Card>
+
+      {/* Action bar */}
       <div className="flex items-center justify-center-safe gap-1">
         <Button
           onClick={() => setStep(1)}
@@ -682,36 +249,6 @@ export function DataEntryStep() {
           )}
         </Button>
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          if (e.target.files) {
-            handleFilesSelected(e.target.files);
-            e.target.value = '';
-          }
-        }}
-      />
-
-      <AnimatePresence>
-        {isDragOver && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          >
-            <div className="border-primary bg-card flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed p-8">
-              <Upload className="text-primary h-12 w-12" />
-              <p className="text-foreground text-lg font-bold">Drop screenshots here</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

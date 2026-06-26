@@ -7,13 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TelegramAvatar } from '@/components/common/telegram-avatar';
+import { TelegramAvatar } from '@/components/common';
 import { CheckCircle, User, MessageCircle, Link2 } from 'lucide-react';
 import { updateProfile } from '@/actions/auth/update-profile';
 import { useAction } from 'next-safe-action/hooks';
-import { usePathname } from 'next/navigation';
 import type { AppSection } from '@/types';
 import Link from 'next/link';
+import { useLocale } from '@/hooks/use-locale';
 
 export interface ProfileInfoSectionProps {
   name: string;
@@ -40,8 +40,7 @@ export const ProfileInfoSection = ({
   telegramPhotoDataUrl,
   telegramLinkUrl,
 }: ProfileInfoSectionProps) => {
-  const pathname = usePathname();
-  const isSpanish = pathname.includes('/admin') || pathname.includes('/buy');
+  const { isSpanish } = useLocale();
   const [nameValue, setNameValue] = useState(name);
   const [success, setSuccess] = useState(false);
 

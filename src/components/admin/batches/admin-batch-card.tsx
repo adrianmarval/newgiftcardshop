@@ -2,15 +2,14 @@
 
 import { useState, MouseEvent } from 'react';
 import { Trash2, Copy } from 'lucide-react';
-import { RegistryCard } from '@/components/common/registry-card';
+import { RegistryCard } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { showAlert } from '@/lib/ui';
 import { deleteBatch } from '@/actions/admin/batches';
 import { AdminBatchDetails } from './admin-batch-details';
 import { Spinner } from '@/components/ui/spinner';
-import { formatDateTime } from '@/lib/date-formatter';
-import { formatCurrency } from '@/lib/currency-formatter';
+import { formatDateTime, formatCurrency } from '@/lib/utils';
 import { useLongPress } from '@/hooks/use-long-press';
 import { motion } from 'framer-motion';
 import type { AdminBatch } from '@/types';

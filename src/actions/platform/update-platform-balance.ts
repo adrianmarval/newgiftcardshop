@@ -6,7 +6,7 @@ import { adminActionClient } from '@/lib/safe-action';
 import { SETTING_KEYS } from '@/lib/settings';
 import { z } from 'zod';
 
-const updatePlatformBalanceInputSchema = z.object({ amount: z.instanceof(Decimal), type: z.enum(['add', 'substract']) });
+const updatePlatformBalanceInputSchema = z.object({ amount: z.instanceof(Decimal), type: z.enum(['add', 'subtract']) });
 
 const updatePlatformBalanceOutputSchema = z.object({ success: z.literal(true) });
 

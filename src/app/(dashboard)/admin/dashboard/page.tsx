@@ -1,5 +1,5 @@
 import { IconCurrencyDollar, IconChartBar, IconCalendarEvent, IconCreditCard } from '@tabler/icons-react';
-import { formatCurrency } from '@/lib/currency-formatter';
+import { formatCurrency } from '@/lib/utils';
 import { Metadata } from 'next';
 import { getBinanceBalances } from '@/actions/admin/binance';
 import { getPlatformBalance } from '@/actions/platform';
@@ -24,7 +24,7 @@ export default async function AdminDashboardPage() {
   ]);
 
   const { data: binanceBalance, serverError } = binanceRes;
-  const platformBalance = platformBalanceResponse.data?.balance.toNumber() || 0;
+  const platformBalance = platformBalanceResponse.data?.balance || 0;
 
   const inventoryData = inventoryRes.data || [];
   const profitData = profitRes.data || { summary: { today: 0, week: 0, month: 0, todayVolume: 0 }, chartData: [] };

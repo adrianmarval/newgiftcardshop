@@ -1,4 +1,4 @@
-import { formatDateTime } from '@/lib/date-formatter';
+import { formatDateTime } from '@/lib/utils';
 
 type Lang = 'en' | 'es';
 

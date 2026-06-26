@@ -14,7 +14,7 @@ import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
 import { copyToClipboard } from '@/lib/utils/clipboard';
-import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
+import { BuyStepsProgress } from '../shared/buy-steps-progress';
 
 export const PaymentStep = () => {
   const { orderId: storedOrderId, adjustedTotal } = useBuyFlow();

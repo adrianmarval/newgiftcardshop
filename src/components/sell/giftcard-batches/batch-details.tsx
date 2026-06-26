@@ -1,5 +1,5 @@
-import { formatCurrency } from '@/lib/currency-formatter';
-import { GiftcardItem } from '@/components/common/giftcard-item';
+import { formatCurrency } from '@/lib/utils';
+import { GiftcardItem } from '@/components/common';
 import { CheckCircle2 } from 'lucide-react';
 import type { SellerBatch } from '@/types';
 

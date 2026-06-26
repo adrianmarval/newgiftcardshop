@@ -3,7 +3,7 @@
 import type { PaginationMeta, SellerBatch } from '@/types';
 import { BatchesFilters } from './batches-filters';
 import { BatchesList } from './batches-list';
-import { StatusLegend } from '@/components/common/status-legend';
+import { StatusLegend } from '@/components/common';
 
 export interface SellerBatchesViewProps {
   batches: SellerBatch[];

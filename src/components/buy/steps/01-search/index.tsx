@@ -15,9 +15,9 @@ import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
 import { showAlert, showSwal } from '@/lib/ui';
 import Swal from 'sweetalert2';
 import type { BrandCountry } from '@/types';
-import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
-import { CompactSearchBar } from '@/components/buy/steps/compact-search-bar';
-import { AdvancedSettingsSheet } from '@/components/buy/steps/advanced-settings-sheet';
+import { BuyStepsProgress } from '../shared/buy-steps-progress';
+import { CompactSearchBar } from './compact-search-bar';
+import { AdvancedSettingsSheet } from './advanced-settings-sheet';
 
 export interface SearchStepProps {
   brandCountries: BrandCountry[];

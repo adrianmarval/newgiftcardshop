@@ -2,9 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, MouseEvent } from 'react';
-import { RegistryCard } from '@/components/common/registry-card';
-import { formatDateTime } from '@/lib/date-formatter';
-import { formatCurrency } from '@/lib/currency-formatter';
+import { RegistryCard } from '@/components/common';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';
 import { showAlert } from '@/lib/ui';

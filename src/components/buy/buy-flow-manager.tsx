@@ -8,8 +8,6 @@ import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep, PaymentStep } fr
 import type { BrandCountry, BuyerOrder } from '@/types';
 import { GiftcardStatus } from '@/types';
 
-export const STEP_LABELS = ['Buscar', 'Seleccionar', 'Redimir', 'Uso', 'Pagar'];
-
 export interface BuyGiftcardManagerProps {
   brandCountries: BrandCountry[];
   resumeOrder?: BuyerOrder | null;

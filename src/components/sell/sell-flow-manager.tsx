@@ -16,15 +16,13 @@ import {
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { publishBatch } from '@/actions/seller/batches';
 import { getSellerRate } from '@/actions/seller/rates';
-import { BrandStep } from '@/components/sell/steps/brand-step';
-import { DataEntryStep } from '@/components/sell/steps/data-entry-step';
-import { ReviewStep } from '@/components/sell/steps/review-step';
+import { BrandStep } from '@/components/sell/steps/01-config';
+import { DataEntryStep } from '@/components/sell/steps/02-data-entry';
+import { ReviewStep } from '@/components/sell/steps/03-review';
 import { showAlert } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 import type { BrandCountry } from '@/types';
-
-export const STEP_LABELS = ['Config', 'Load', 'Review'];
 
 export interface SellBatchManagerProps {
   brandCountries: BrandCountry[];

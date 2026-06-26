@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import Image from 'next/image';
 import type { BrandCountry } from '@/types';
-import { SellStepsProgress } from './sell-steps-progress';
+import { SellStepsProgress } from '../shared/sell-steps-progress';
 
 export interface BrandStepProps {
   brandCountries: BrandCountry[];

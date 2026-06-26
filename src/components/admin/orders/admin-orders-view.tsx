@@ -6,7 +6,7 @@ import { AdminOrdersFilters } from '@/components/admin/orders/admin-orders-filte
 import { AdminOrdersList } from '@/components/admin/orders/admin-orders-list';
 import { AdminReportDialog } from '@/components/admin/orders/admin-report-dialog';
 import { AdminBuyerDialog } from '@/components/admin/orders/admin-buyer-dialog';
-import { StatusLegend } from '@/components/common/status-legend';
+import { StatusLegend } from '@/components/common';
 import type { Giftcard } from '@/types';
 import type { AdminOrder, PaginationMeta } from '@/types';
 

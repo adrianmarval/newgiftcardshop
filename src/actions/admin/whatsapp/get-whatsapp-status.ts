@@ -1,6 +1,6 @@
 'use server';
 
-import { adminActionClient } from '@/lib/safe-action';
+import { adminActionClient, ActionError } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -12,11 +12,16 @@ const getWhatsAppStatusOutputSchema = z.object({
 });
 
 export const getWhatsAppStatus = adminActionClient.outputSchema(getWhatsAppStatusOutputSchema).action(async () => {
-  const session = await prisma.whatsappSession.findFirst();
-  return {
-    success: true as const,
-    qr: session?.qrCode ?? null,
-    status: session?.status ?? 'disconnected',
-    phoneNumber: session?.phoneNumber ?? null,
-  };
+  try {
+    const session = await prisma.whatsappSession.findFirst();
+    return {
+      success: true as const,
+      qr: session?.qrCode ?? null,
+      status: session?.status ?? 'disconnected',
+      phoneNumber: session?.phoneNumber ?? null,
+    };
+  } catch (error) {
+    console.error('[getWhatsAppStatus]', error);
+    throw new ActionError('Error al obtener el estado de WhatsApp.');
+  }
 });

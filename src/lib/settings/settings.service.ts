@@ -84,7 +84,7 @@ export async function getPlatformBalance(): Promise<Decimal> {
   return setting?.balance ?? new Decimal(0);
 }
 
-export async function updatePlatformBalance(amount: Decimal, type: 'add' | 'substract'): Promise<Decimal> {
+export async function updatePlatformBalance(amount: Decimal, type: 'add' | 'subtract'): Promise<Decimal> {
   const result = await prisma.platformSettings.update({
     where: { key: SETTING_KEYS.PLATFORM_BALANCE },
     data: {

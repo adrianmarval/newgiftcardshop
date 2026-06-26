@@ -14,8 +14,8 @@ import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
-import { formatCurrency } from '@/lib/currency-formatter';
-import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
+import { formatCurrency } from '@/lib/utils';
+import { BuyStepsProgress } from '../shared/buy-steps-progress';
 import {
   AlertDialog,
   AlertDialogContent,

@@ -21,7 +21,7 @@ import { validationStatusConfig } from '@/lib/config/ui-config';
 import type { BrandCountry } from '@/types';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
 import Image from 'next/image';
-import { SellStepsProgress } from './sell-steps-progress';
+import { SellStepsProgress } from '../shared/sell-steps-progress';
 
 export interface ReviewStepProps {
   onPublish: () => void;

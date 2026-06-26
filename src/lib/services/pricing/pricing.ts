@@ -1,7 +1,13 @@
 import prisma from '@/lib/prisma';
-import { ActionError } from '@/lib/safe-action';
 import { Prisma } from '@/generated/prisma/client';
 import { GiftcardStatus as GiftcardStatusEnum } from '@/generated/prisma/enums';
+
+export class PricingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PricingError';
+  }
+}
 
 type GiftcardLike = { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null };
 
@@ -83,7 +89,7 @@ export async function getUserRates(userId: string, params: { brandCountryId?: st
   }
 
   if (!brandCountryId) {
-    throw new Error('Combinación de marca y país no válida.');
+    throw new PricingError('Combinación de marca y país no válida.');
   }
 
   // 1. Buscar tasa personalizada del usuario
@@ -104,7 +110,7 @@ export async function getUserRates(userId: string, params: { brandCountryId?: st
     };
   }
 
-  throw new Error('You do not have a rate assigned for this brand and country. Contact the administrator.');
+  throw new PricingError('No tienes una tasa asignada para esta marca y país. Contacta al administrador.');
 }
 
 /**
@@ -122,5 +128,5 @@ export async function getBuyerBuyRate(userId: string, brandCountryId: string): P
     return Math.floor(userRate.buyRate.toNumber() * 100);
   }
 
-  throw new ActionError('No tienes tarifa asignada para esta marca y país.');
+  throw new PricingError('No tienes tarifa asignada para esta marca y país.');
 }

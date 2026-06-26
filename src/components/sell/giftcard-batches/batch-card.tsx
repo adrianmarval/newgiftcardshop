@@ -1,9 +1,8 @@
 'use client';
 
-import { RegistryCard } from '@/components/common/registry-card';
-import { formatDateTime } from '@/lib/date-formatter';
+import { RegistryCard } from '@/components/common';
+import { formatDateTime, formatCurrency } from '@/lib/utils';
 import { BatchDetails } from './batch-details';
-import { formatCurrency } from '@/lib/currency-formatter';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';

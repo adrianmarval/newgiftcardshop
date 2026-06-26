@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useLocale } from '@/hooks/use-locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,8 +72,8 @@ function getMsg(portal: string, key: keyof typeof MSG.sell) {
 }
 
 export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => {
+  const { isSpanish } = useLocale();
   const pathname = usePathname();
-  const isSpanish = pathname.includes('/admin') || pathname.includes('/buy');
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');

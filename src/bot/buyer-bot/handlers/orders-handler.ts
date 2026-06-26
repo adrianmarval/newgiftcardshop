@@ -14,7 +14,7 @@ import {
   deleteGiftcardIssue,
   OrderAlreadyProcessedError,
 } from '@/lib/services/order';
-import { computeEffectiveTotalDecimal } from '@/lib/services/pricing/pricing';
+import { computeEffectiveTotalDecimal } from '@/lib/services/pricing';
 import { Prisma } from '@/generated/prisma/client';
 import { strike } from '@/bot/shared/formatters';
 

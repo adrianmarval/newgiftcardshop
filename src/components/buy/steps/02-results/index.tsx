@@ -24,9 +24,9 @@ import { getOrderCards } from '@/actions/buyer/giftcards/get-order-cards';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { Brand } from '@/types';
-import { formatCurrency } from '@/lib/currency-formatter';
+import { formatCurrency } from '@/lib/utils';
 import { showAlert } from '@/lib/ui';
-import { BuyStepsProgress } from '@/components/buy/steps/buy-steps-progress';
+import { BuyStepsProgress } from '../shared/buy-steps-progress';
 
 export const ResultsStep = () => {
   const {

@@ -7,7 +7,7 @@ import { buyerActionClient } from '@/lib/safe-action';
 import { Decimal } from '@prisma/client/runtime/client';
 import { estimateTimeToAccess } from '@/lib/services/pricing/tier-estimation';
 import { getEscalationConfig } from '@/lib/settings/settings.service';
-import { getBuyerBuyRate } from '@/lib/services/pricing/pricing';
+import { getBuyerBuyRate } from '@/lib/services/pricing';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
 
 const searchGiftcardsInputSchema = z.object({

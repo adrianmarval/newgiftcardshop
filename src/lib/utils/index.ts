@@ -1,6 +1,10 @@
 export { serializeGiftcard, serializePayment } from './action-helpers';
 export { normalizeClaimCode, formatClaimCodeCanonical, parseClaimCodes } from './claim-code-parser';
 export { copyToClipboard } from './clipboard';
+export { formatCurrency, formatAmount } from './currency-formatter';
+export type { CurrencyLocale } from './currency-formatter';
+export { formatDateTime } from './date-formatter';
+export type { Locale } from './date-formatter';
 export { getCountryFlag } from './country-flags';
 export { maskEmail } from './mask-email';
 export { timeAgo } from './time-ago';
