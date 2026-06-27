@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { UrlPagination } from '@/components/ui/url-pagination';
 import { AdminBatchesFilters } from './admin-batches-filters';
 import { AdminBatchesList } from './admin-batches-list';
 import { AdminPayDialog } from './admin-pay-dialog';
@@ -19,7 +20,6 @@ interface AdminBatchesClientProps {
 
 export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [sellerDialog, setSellerDialog] = useState<{
@@ -50,14 +50,6 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
     setSellerDialog({ seller: batch.seller });
   };
 
-  const currentPage = parseInt(searchParams.get('page') || '1');
-
-  const handlePageChange = useCallback((newPage: number) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('page', newPage.toString());
-    window.location.href = url.toString();
-  }, []);
-
   const handleDeleted = () => {
     router.refresh();
   };
@@ -81,24 +73,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
         onViewSeller={handleViewSeller}
       />
 
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1">
-          <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1}>
-            Anterior
-          </Button>
-          <span className="text-muted-foreground text-sm">
-            Página {currentPage} de {pagination.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= pagination.totalPages}
-          >
-            Siguiente
-          </Button>
-        </div>
-      )}
+      <UrlPagination totalPages={pagination.totalPages} />
 
       <AdminPayDialog batches={selectedBatches} open={payDialogOpen} onOpenChange={setPayDialogOpen} onPaid={handlePaid} />
 

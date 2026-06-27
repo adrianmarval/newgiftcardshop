@@ -16,7 +16,8 @@ import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
 import { updateUser, getUserRates, updateUserRates, deleteUserRates } from '@/actions/admin/users/';
 import { listBrands } from '@/actions/admin/catalog';
-import { MoreVertical, Edit2, Power, Loader2, ChevronLeft, ChevronRight, ChevronsUpDown, Check } from 'lucide-react';
+import { UrlPagination } from '@/components/ui/url-pagination';
+import { MoreVertical, Edit2, Power, Loader2, ChevronsUpDown, Check } from 'lucide-react';
 import type { BrandCountrySummary, BrandWithCountries } from '@/types';
 
 interface User {
@@ -217,21 +218,18 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
     });
   };
 
-  const handlePageChange = (newPage: number) => {
-    const query = new URLSearchParams();
-    query.set('page', newPage.toString());
-    if (search) query.set('search', search);
-    if (role !== 'ALL') query.set('role', role);
-    router.push(`/admin/dashboard/users?${query.toString()}`);
-  };
-
-  const handleFilterChange = () => {
+  const handleApplyFilters = () => {
     const query = new URLSearchParams();
     query.set('page', '1');
     if (search) query.set('search', search);
     if (role !== 'ALL') query.set('role', role);
     router.push(`/admin/dashboard/users?${query.toString()}`);
   };
+
+  useEffect(() => {
+    setSearch(searchParams?.search || '');
+    setRole(searchParams?.role || 'ALL');
+  }, [searchParams?.search, searchParams?.role]);
 
   const isUpdating = updateStatus === 'executing' || toggleStatus === 'executing';
 
@@ -243,7 +241,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
             placeholder="Buscar por nombre o email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleFilterChange()}
+            onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
             className="h-10"
           />
         </div>
@@ -258,7 +256,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
             <SelectItem value="BUYER">Buyer</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleFilterChange}>Buscar</Button>
+        <Button onClick={handleApplyFilters}>Buscar</Button>
       </div>
 
       <div className="space-y-1">
@@ -308,31 +306,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
         )}
       </div>
 
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">
-            Página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalCount} usuarios)
-          </p>
-          <div className="flex gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pagination.currentPage <= 1}
-              onClick={() => handlePageChange(pagination.currentPage - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pagination.currentPage >= pagination.totalPages}
-              onClick={() => handlePageChange(pagination.currentPage + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <UrlPagination totalPages={pagination.totalPages} />
 
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-106.25 md:max-w-125">
