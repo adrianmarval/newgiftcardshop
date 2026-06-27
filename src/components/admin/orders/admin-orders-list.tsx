@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { AdminOrderCard } from '@/components/admin/orders/admin-order-card';
-import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { AdminOrder } from '@/types';
 import type { Giftcard } from '@/types';
@@ -128,7 +127,6 @@ export function AdminOrdersList({ orders, totalPages, onViewBuyer, onAddReport, 
             </motion.div>
           ))}
       </AnimatePresence>
-      <UrlPagination totalPages={totalPages} />
     </div>
   );
 }

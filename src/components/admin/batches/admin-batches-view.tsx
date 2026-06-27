@@ -60,20 +60,24 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
   };
 
   return (
-    <div className="space-y-1">
+    <div className="flex h-full min-h-0 flex-col gap-1">
       <StatusLegend />
 
       <AdminBatchesFilters sellers={sellers} />
 
-      <AdminBatchesList
-        batches={batches}
-        selectedIds={selectedIds}
-        onSelect={handleSelect}
-        onDeleted={handleDeleted}
-        onViewSeller={handleViewSeller}
-      />
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+        <AdminBatchesList
+          batches={batches}
+          selectedIds={selectedIds}
+          onSelect={handleSelect}
+          onDeleted={handleDeleted}
+          onViewSeller={handleViewSeller}
+        />
+      </div>
 
-      <UrlPagination totalPages={pagination.totalPages} />
+      <div className="shrink-0">
+        <UrlPagination totalPages={pagination.totalPages} />
+      </div>
 
       <AdminPayDialog batches={selectedBatches} open={payDialogOpen} onOpenChange={setPayDialogOpen} onPaid={handlePaid} />
 

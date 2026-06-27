@@ -234,7 +234,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
   const isUpdating = updateStatus === 'executing' || toggleStatus === 'executing';
 
   return (
-    <div className="space-y-1">
+    <div className="flex h-full min-h-0 flex-col gap-1">
       <div className="flex flex-col gap-1 md:flex-row">
         <div className="relative flex-1">
           <Input
@@ -259,7 +259,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
         <Button onClick={handleApplyFilters}>Buscar</Button>
       </div>
 
-      <div className="space-y-1">
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         {initialUsers.map((user) => (
           <Card key={user.id} className="hover:bg-muted/50 transition-colors">
             <CardContent className="flex items-center gap-1 p-3">
@@ -306,7 +306,9 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
         )}
       </div>
 
-      <UrlPagination totalPages={pagination.totalPages} />
+      <div className="shrink-0">
+        <UrlPagination totalPages={pagination.totalPages} />
+      </div>
 
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-106.25 md:max-w-125">

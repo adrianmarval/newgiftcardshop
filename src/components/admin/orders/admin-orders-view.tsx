@@ -6,6 +6,7 @@ import { AdminOrdersFilters } from './admin-orders-filters';
 import { AdminOrdersList } from './admin-orders-list';
 import { AdminReportDialog } from './admin-report-dialog';
 import { AdminBuyerDialog } from './admin-buyer-dialog';
+import { UrlPagination } from '@/components/ui/url-pagination';
 import { StatusLegend } from '@/components/common';
 import type { Giftcard } from '@/types';
 import type { AdminOrder, PaginationMeta } from '@/types';
@@ -58,17 +59,22 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
   };
 
   return (
-    <div className="space-y-1">
+    <div className="flex h-full min-h-0 flex-col gap-1">
       <StatusLegend />
       <AdminOrdersFilters buyers={buyers} />
-      <AdminOrdersList
-        orders={orders}
-        totalPages={pagination.totalPages}
-        onViewBuyer={handleViewBuyer}
-        onAddReport={handleAddReport}
-        onEditReport={handleEditReport}
-        onDeleteReport={handleDeleteReport}
-      />
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+        <AdminOrdersList
+          orders={orders}
+          totalPages={pagination.totalPages}
+          onViewBuyer={handleViewBuyer}
+          onAddReport={handleAddReport}
+          onEditReport={handleEditReport}
+          onDeleteReport={handleDeleteReport}
+        />
+      </div>
+      <div className="shrink-0">
+        <UrlPagination totalPages={pagination.totalPages} />
+      </div>
       <AdminReportDialog
         card={reportDialog.card}
         orderId={reportDialog.orderId}

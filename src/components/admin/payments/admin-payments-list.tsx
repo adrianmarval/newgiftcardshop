@@ -1,7 +1,6 @@
 'use client';
 
 import { History } from 'lucide-react';
-import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Payment } from '@/types/domain';
@@ -130,7 +129,6 @@ export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListPro
           </table>
         </div>
       </div>
-      <UrlPagination totalPages={totalPages} />
     </>
   );
 };

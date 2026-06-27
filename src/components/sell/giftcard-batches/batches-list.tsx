@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
-import { UrlPagination } from '@/components/ui/url-pagination';
 import { BatchCard } from './batch-card';
 import type { SellerBatch } from '@/types';
 
@@ -93,7 +92,6 @@ export function BatchesList({ batches, totalPages }: BatchesListProps) {
             </motion.div>
           ))}
       </AnimatePresence>
-      <UrlPagination totalPages={totalPages ?? 1} />
     </div>
   );
 }

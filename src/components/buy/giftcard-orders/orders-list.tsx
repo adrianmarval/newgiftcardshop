@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { History } from 'lucide-react';
 import { OrderCard } from '@/components/buy/giftcard-orders/order-card';
-import { UrlPagination } from '@/components/ui/url-pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { BuyerOrder } from '@/types';
 
@@ -98,7 +97,6 @@ export const OrdersList = ({ orders, totalPages }: OrdersListProps) => {
             ))}
         </AnimatePresence>
       </div>
-      <UrlPagination totalPages={totalPages} />
     </div>
   );
 };

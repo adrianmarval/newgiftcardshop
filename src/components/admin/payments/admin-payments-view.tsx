@@ -7,6 +7,7 @@ import { AdminPaymentsList } from '@/components/admin/payments/admin-payments-li
 import { AdminDepositDialog } from '@/components/admin/payments/admin-deposit-dialog';
 import { AdminRefundDialog } from '@/components/admin/payments/admin-refund-dialog';
 import { Button } from '@/components/ui/button';
+import { UrlPagination } from '@/components/ui/url-pagination';
 import { syncPendingWithdrawals } from '@/actions/admin/binance';
 import { useAction } from 'next-safe-action/hooks';
 import Swal from 'sweetalert2';
@@ -71,9 +72,14 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
   });
 
   return (
-    <div className="space-y-1">
+    <div className="flex h-full min-h-0 flex-col gap-1">
       <AdminPaymentsFilters sellers={sellers} buyers={buyers} />
-      <AdminPaymentsList payments={payments} totalPages={pagination.totalPages} />
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+        <AdminPaymentsList payments={payments} totalPages={pagination.totalPages} />
+      </div>
+      <div className="shrink-0">
+        <UrlPagination totalPages={pagination.totalPages} />
+      </div>
       <div className="flex gap-1">
         <Button onClick={() => setDepositOpen(true)}>+ Registrar Depósito</Button>
         <Button variant={'secondary'} onClick={() => setRefundOpen(true)}>
