@@ -34,7 +34,7 @@ export function UrlPagination({ totalPages, locale = 'es' }: UrlPaginationProps)
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-center gap-1 pt-4">
+    <div className="flex items-center justify-center gap-1">
       <Button
         variant="outline"
         onClick={handlePrevious}

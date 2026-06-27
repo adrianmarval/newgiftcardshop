@@ -52,9 +52,9 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
   return (
     <NotificationProvider initialUnreadCounts={initialUnreadCounts}>
       <AutoRefreshProvider interval={15000}>
-        <div className="flex h-svh flex-col pb-2 ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
+        <div className="flex h-svh flex-col ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}
-          <Card className="order-1 flex-10 overflow-hidden rounded-none py-0 shadow-2xl md:rounded-t-4xl md:p-4 lg:order-2">
+          <Card className="order-1 flex-10 overflow-hidden rounded-none py-0 shadow-2xl md:rounded-t-4xl md:p-1 lg:order-2">
             <AppTopBar
               portal={portal}
               userName={session.user.name}
@@ -64,14 +64,12 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
               notificationBadgeKey={PORTAL_BADGE_KEY[portal]}
             />
             <div className="flex h-full flex-col overflow-hidden p-1">
-              <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
-                {children}
-              </div>
+              <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">{children}</div>
             </div>
           </Card>
 
           {/*sidebar*/}
-          <div className="bg-background order-1 flex-1 p-0 ring-0">
+          <div className="bg-background order-1 p-2 ring-0">
             <DashboardSidebar portal={portal} />
           </div>
         </div>
