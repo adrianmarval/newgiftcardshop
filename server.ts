@@ -4,35 +4,67 @@ import { webhookCallback } from 'grammy';
 
 const isProd = process.env.NODE_ENV === 'production';
 
+// Lazy import to avoid circular deps — logger is initialized after app.prepare
+let serverLogger: typeof import('./src/lib/logger').logger | null = null;
+
+async function getServerLogger() {
+  if (!serverLogger) {
+    const { logger } = await import('./src/lib/logger');
+    serverLogger = logger;
+  }
+  return serverLogger;
+}
+
 // ── Giftcard Escalation Service ─────────────────────────────────────────────────
 let escalationInterval: NodeJS.Timeout | null = null;
 
 async function initEscalationService() {
   try {
     const { getConfig, processEscalationTiers } = await import('./src/lib/services/giftcard/escalation');
+    const log = await getServerLogger();
 
     const config = await getConfig();
 
     if (!config.enabled) {
-      console.log('[Escalation] Sistema deshabilitado via PlatformSettings');
+      log.info('[Escalation] Sistema deshabilitado via PlatformSettings');
       return;
     }
 
     const intervalMs = config.durationMinutes * 60 * 1000;
-    console.log(`[Escalation] Iniciado - intervalo: ${config.durationMinutes}min`);
+    log.info(`[Escalation] Iniciado - intervalo: ${config.durationMinutes}min`);
 
     escalationInterval = setInterval(async () => {
       try {
         const result = await processEscalationTiers();
         if (result.processed > 0) {
-          console.log(`[Escalation] Procesadas ${result.processed} tarjetas`);
+          log.action('batch', 'escalation-cron', `${result.processed} tarjetas procesadas en escalación`, {
+            metadata: { processed: result.processed },
+          });
+        }
+
+        // Auto-purge logs mayores a 30 días (cada ciclo de escalación)
+        try {
+          const { default: prisma } = await import('./src/lib/prisma');
+          const cutoff = new Date();
+          cutoff.setDate(cutoff.getDate() - 30);
+          const deleted = await prisma.appLog.deleteMany({ where: { timestamp: { lt: cutoff } } });
+          if (deleted.count > 0) {
+            log.info(`[AutoPurge] ${deleted.count} logs antiguos eliminados`);
+          }
+        } catch {
+          // Auto-purge failure is non-critical
         }
       } catch (err) {
-        console.error('[Escalation] Error:', err);
+        log.error('[Escalation] Error en ciclo', {
+          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+        });
       }
     }, intervalMs);
   } catch (err) {
-    console.error('[Escalation] Error al iniciar:', err);
+    const log = await getServerLogger();
+    log.error('[Escalation] Error al iniciar', {
+      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+    });
   }
 }
 const hostname = 'localhost';
@@ -44,7 +76,8 @@ const handleNextRequest = app.getRequestHandler();
 
 console.log('[Server] Preparando Next.js...');
 await app.prepare();
-console.log('[Server] Next.js listo.');
+const log = await getServerLogger();
+log.info('Next.js preparado');
 
 // ── Giftcard Escalation ───────────────────────────────────────────────────────
 await initEscalationService();
@@ -172,6 +205,14 @@ const shutdown = async () => {
   try {
     const { getWhatsAppSocket } = await import('./src/lib/whatsapp/index.js');
     getWhatsAppSocket()?.end(undefined);
+  } catch {
+    // ignored
+  }
+
+  // Flush logger buffer before exit
+  try {
+    const { gracefulFlush } = await import('./src/lib/logger/db-transport');
+    await gracefulFlush();
   } catch {
     // ignored
   }

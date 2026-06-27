@@ -9,6 +9,9 @@ import { fmt$ } from '@/bot/shared/formatters.js';
 import prisma from '@/lib/prisma';
 import { publishBatch } from '@/lib/services/giftcard/publish.service';
 import type { ParsedGiftcard } from '@/types';
+import { createLogger } from '@/lib/logger';
+
+const sellerLogger = createLogger('seller-bot');
 
 export async function handleSellConfirm(ctx: SellerContext) {
   await deleteUserInput(ctx);
@@ -80,7 +83,17 @@ export async function handleSellConfirm(ctx: SellerContext) {
     const kb = new InlineKeyboard().text('📦 View My Batches', 'my_batches').row().text('➕ Publish More', 'sell_start');
 
     await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb, callbackText: '✅ Published' });
+
+    sellerLogger.action('sell', 'bot-publish', `Batch #${result.batchId} publicado via bot: ${result.totalPublished} tarjetas`, {
+      userId: ctx.user.id,
+      metadata: { batchId: result.batchId, totalPublished: result.totalPublished, duplicates: result.duplicates.length },
+    });
   } catch (error: any) {
+    sellerLogger.error('Error al publicar batch via bot', {
+      userId: ctx.user.id,
+      metadata: { brandCountryId },
+      error: { name: error.name ?? 'Error', message: error.message },
+    });
     await ctx.answerCallbackQuery('Error publishing');
     return renderUI(ctx, `❌ ${error.message || 'Error publishing batch'}`, {
       reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start'),

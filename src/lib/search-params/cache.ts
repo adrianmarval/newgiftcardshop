@@ -5,6 +5,7 @@ import {
   adminOrdersSearchParamsParsers,
   adminUsersSearchParamsParsers,
   adminPaymentsSearchParamsParsers,
+  adminLogsSearchParamsParsers,
   sellerBatchesSearchParamsParsers,
 } from './index';
 
@@ -13,4 +14,5 @@ export const adminBatchesSearchParamsCache = createSearchParamsCache(adminBatche
 export const adminOrdersSearchParamsCache = createSearchParamsCache(adminOrdersSearchParamsParsers);
 export const adminUsersSearchParamsCache = createSearchParamsCache(adminUsersSearchParamsParsers);
 export const adminPaymentsSearchParamsCache = createSearchParamsCache(adminPaymentsSearchParamsParsers);
+export const adminLogsSearchParamsCache = createSearchParamsCache(adminLogsSearchParamsParsers);
 export const sellerBatchesSearchParamsCache = createSearchParamsCache(sellerBatchesSearchParamsParsers);

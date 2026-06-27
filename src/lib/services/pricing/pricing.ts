@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { GiftcardStatus as GiftcardStatusEnum } from '@/generated/prisma/enums';
+import { logger } from '@/lib/logger';
 
 export class PricingError extends Error {
   constructor(message: string) {
@@ -89,6 +90,12 @@ export async function getUserRates(userId: string, params: { brandCountryId?: st
   }
 
   if (!brandCountryId) {
+    logger.warn('PricingError: Combinación de marca y país no válida', {
+      flow: 'sell',
+      action: 'get-user-rates',
+      userId,
+      metadata: { brandId, countryId, brandCountryId },
+    });
     throw new PricingError('Combinación de marca y país no válida.');
   }
 
@@ -110,6 +117,12 @@ export async function getUserRates(userId: string, params: { brandCountryId?: st
     };
   }
 
+  logger.warn('PricingError: Sin tasa asignada', {
+    flow: 'sell',
+    action: 'get-user-rates',
+    userId,
+    metadata: { brandCountryId },
+  });
   throw new PricingError('No tienes una tasa asignada para esta marca y país. Contacta al administrador.');
 }
 
@@ -128,5 +141,11 @@ export async function getBuyerBuyRate(userId: string, brandCountryId: string): P
     return Math.floor(userRate.buyRate.toNumber() * 100);
   }
 
+  logger.warn('PricingError: Sin tarifa asignada (buyer)', {
+    flow: 'buy',
+    action: 'get-buyer-buy-rate',
+    userId,
+    metadata: { brandCountryId },
+  });
   throw new PricingError('No tienes tarifa asignada para esta marca y país.');
 }

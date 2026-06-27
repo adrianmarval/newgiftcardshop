@@ -1,11 +1,9 @@
 'use client';
 
-import { useQueryState } from 'nuqs';
-import { parseAsInteger } from 'nuqs';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-const pageParser = parseAsInteger.withDefault(1);
 
 const LABELS = {
   es: { previous: 'Anterior', next: 'Siguiente', page: 'Página', of: 'de' },
@@ -18,9 +16,16 @@ interface UrlPaginationProps {
 }
 
 export function UrlPagination({ totalPages, locale = 'es' }: UrlPaginationProps) {
-  const [page, setPage] = useQueryState('page', pageParser);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const labels = LABELS[locale];
-  const currentPage = page ?? 1;
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+
+  const setPage = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', newPage.toString());
+    router.push(`?${params.toString()}`);
+  };
 
   const handlePrevious = () => {
     if (currentPage > 1) setPage(currentPage - 1);

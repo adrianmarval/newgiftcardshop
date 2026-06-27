@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import { publishBatch as publishBatchService } from '@/lib/services/giftcard/publish.service';
+import { logger } from '@/lib/logger';
 
 const publishBatchInputSchema = z.object({
   cards: z.array(
@@ -37,8 +38,18 @@ export const publishBatch = sellerActionClient
         unmatchedImages,
       });
 
+      logger.action('sell', 'publish-batch', `Batch #${result.batchId} publicado: ${result.totalPublished} tarjetas`, {
+        userId: ctx.auth.user.id,
+        metadata: { batchId: result.batchId, totalPublished: result.totalPublished, duplicates: result.duplicates.length, brandId, countryId },
+      });
+
       return { success: true as const, batchId: result.batchId, duplicates: result.duplicates };
     } catch (error) {
+      logger.error('Error al publicar batch', {
+        userId: ctx.auth.user.id,
+        metadata: { brandId, countryId, cardCount: cards.length },
+        error: { name: error instanceof Error ? error.name : 'Error', message: error instanceof Error ? error.message : 'Unknown' },
+      });
       throw new ActionError(error instanceof Error ? error.message : 'Error publishing batch');
     }
   });

@@ -8,4 +8,5 @@ export * from './admin-batches';
 export * from './admin-orders';
 export * from './admin-payments';
 export * from './admin-users';
+export * from './admin-logs';
 export * from './cache';

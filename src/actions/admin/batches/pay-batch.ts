@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import { notifySellerBatchPaid } from '@/lib/notifications';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
+import { logger } from '@/lib/logger';
 
 const payBatchInputSchema = z.object({ batchIds: z.array(z.number().int().positive()) });
 
@@ -50,7 +51,9 @@ export const payBatch = adminActionClient.inputSchema(payBatchInputSchema).outpu
 
     return { success: true as const, results };
   } catch (error) {
-    console.error('[payBatch]', error);
+    logger.error('Error al pagar lotes', {
+      error: { name: error instanceof Error ? error.name : 'Error', message: error instanceof Error ? error.message : 'Unknown' },
+    });
     throw new ActionError('Error al procesar el pago de lotes.');
   }
 });

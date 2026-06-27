@@ -1,6 +1,7 @@
 import { Prisma } from '@/generated/prisma/client';
 import { GiftcardIssueType, GiftcardStatus } from '@/generated/prisma/enums';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import type { ReportIssueParams } from '@/types';
 
 /**
@@ -15,8 +16,12 @@ export async function reportGiftcardIssue(params: ReportIssueParams) {
     where: { id: orderId },
     select: { status: true },
   });
-  if (!order) throw new Error('Orden no encontrada');
+  if (!order) {
+    logger.warn('reportGiftcardIssue: orden no encontrada', { flow: 'order', action: 'report-issue', userId, metadata: { orderId } });
+    throw new Error('Orden no encontrada');
+  }
   if (order.status !== 'PENDING') {
+    logger.warn('reportGiftcardIssue: orden no está pendiente', { flow: 'order', action: 'report-issue', userId, metadata: { orderId, status: order.status } });
     throw new Error('No se pueden reportar problemas en una orden que ya fue confirmada');
   }
 
@@ -25,8 +30,14 @@ export async function reportGiftcardIssue(params: ReportIssueParams) {
     select: { ownerId: true, orderId: true },
   });
 
-  if (!card) throw new Error('Giftcard not found');
-  if (card.orderId !== orderId) throw new Error('La tarjeta no pertenece a esta orden');
+  if (!card) {
+    logger.warn('reportGiftcardIssue: giftcard no encontrada', { flow: 'order', action: 'report-issue', userId, metadata: { giftcardId, orderId } });
+    throw new Error('Giftcard not found');
+  }
+  if (card.orderId !== orderId) {
+    logger.warn('reportGiftcardIssue: tarjeta no pertenece a la orden', { flow: 'order', action: 'report-issue', userId, metadata: { giftcardId, orderId, cardOrderId: card.orderId } });
+    throw new Error('La tarjeta no pertenece a esta orden');
+  }
 
   return prisma.$transaction(async (tx) => {
     await tx.giftcardIssue.deleteMany({
@@ -66,8 +77,12 @@ export async function deleteGiftcardIssue(giftcardId: string, orderId: string, u
     where: { id: orderId },
     select: { status: true },
   });
-  if (!order) throw new Error('Orden no encontrada');
+  if (!order) {
+    logger.warn('deleteGiftcardIssue: orden no encontrada', { flow: 'order', action: 'delete-issue', userId, metadata: { orderId } });
+    throw new Error('Orden no encontrada');
+  }
   if (order.status !== 'PENDING') {
+    logger.warn('deleteGiftcardIssue: orden no está pendiente', { flow: 'order', action: 'delete-issue', userId, metadata: { orderId, status: order.status } });
     throw new Error('No se pueden modificar reportes en una orden que ya fue confirmada');
   }
 

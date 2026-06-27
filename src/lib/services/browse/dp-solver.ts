@@ -2,6 +2,7 @@ import { Giftcard } from '@/generated/prisma/client';
 import { Decimal } from '@prisma/client/runtime/client';
 import type { GiftcardSelectionResult, PreprocessedBatchData } from '@/types';
 import { isOlderCombination, isWithinTolerance, getLatestBatchDate } from './card-utils';
+import { logger } from '@/lib/logger';
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
@@ -41,11 +42,11 @@ export function canMakeExactAmount(cards: Giftcard[], amount: Decimal): boolean 
 
     return dp[targetAmount];
   } catch (error) {
-    console.error('Error en canMakeExactAmount:', {
-      amount,
-      targetAmount,
-      cardsLength: cards.length,
-      error: error instanceof Error ? error.message : String(error),
+    logger.warn('Error en canMakeExactAmount', {
+      flow: 'buy',
+      action: 'card-combination',
+      metadata: { amount: amount.toString(), targetAmount, cardsLength: cards.length },
+      error: { name: error instanceof Error ? error.name : 'Error', message: error instanceof Error ? error.message : String(error) },
     });
     return false;
   }
@@ -64,7 +65,7 @@ export function findExactInBatch(batchCards: Giftcard[], target: Decimal): Giftc
   };
 
   if (target.lte(0) || target.gt(MAX_DP_TARGET)) {
-    console.error('findExactInBatch: target inválido', { target });
+    logger.warn('findExactInBatch: target inválido', { flow: 'buy', action: 'card-combination', metadata: { target: target.toString() } });
     return emptyResult;
   }
 
@@ -132,11 +133,11 @@ export function findExactInBatch(batchCards: Giftcard[], target: Decimal): Giftc
 
     return emptyResult;
   } catch (error) {
-    console.error('Error en findExactInBatch:', {
-      target,
-      safeTarget,
-      cardsLength: batchCards.length,
-      error: error instanceof Error ? error.message : String(error),
+    logger.warn('Error en findExactInBatch', {
+      flow: 'buy',
+      action: 'card-combination',
+      metadata: { target: target.toString(), safeTarget, cardsLength: batchCards.length },
+      error: { name: error instanceof Error ? error.name : 'Error', message: error instanceof Error ? error.message : String(error) },
     });
     return emptyResult;
   }

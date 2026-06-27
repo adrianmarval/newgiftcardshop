@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
+import { logger } from '@/lib/logger';
 
 const createDepositInputSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
@@ -55,6 +56,11 @@ export const createDeposit = adminActionClient
         referenceType: 'MANUAL',
       },
     });
+  });
+
+  logger.action('payment', 'admin-deposit', `Depósito de ${amount} USDT creado por admin`, {
+    userId: ctx.auth.user.id,
+    metadata: { paymentId: payment.id, amount, binanceTxId },
   });
 
   return {

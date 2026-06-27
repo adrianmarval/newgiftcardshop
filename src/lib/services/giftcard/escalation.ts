@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/client';
 import { getEscalationConfig } from '@/lib/settings/settings.service';
 import { notifyBuyersTierDrop } from '@/lib/notifications';
+import { logger } from '@/lib/logger';
 import type { EscalationConfig, TierInfo, TierDropEvent } from '@/types';
 
 export async function getConfig(): Promise<EscalationConfig> {
@@ -113,7 +114,12 @@ export async function processEscalationTiers(): Promise<{ processed: number }> {
 
     if (tierDropEvents.length > 0) {
       notifyBuyersTierDrop(tierDropEvents)
-        .catch((err) => console.error('[Escalation] Error al notificar tier drops (non-blocking):', err));
+        .catch((err) => logger.error('Error al notificar tier drops (non-blocking)', {
+          flow: 'batch',
+          action: 'escalation-cron',
+          metadata: { eventCount: tierDropEvents.length },
+          error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown' },
+        }));
     }
   }
 

@@ -11,6 +11,7 @@ import { getUserRates } from '@/lib/services/pricing';
 import { getInitialTier } from './escalation';
 import { notifyBuyersStockAvailable } from '@/lib/notifications';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 import type { PublishCardInput, PublishResult, PublishContext } from '@/types';
 
 /**
@@ -20,7 +21,10 @@ import type { PublishCardInput, PublishResult, PublishContext } from '@/types';
 export async function publishBatch(ctx: PublishContext): Promise<PublishResult> {
   const { userId, brandId, countryId, cards, unmatchedImages } = ctx;
 
-  if (!brandId || !countryId) throw new Error('Brand and country are required');
+  if (!brandId || !countryId) {
+    logger.warn('publishBatch: brand y country requeridos', { flow: 'sell', action: 'publish-batch', userId });
+    throw new Error('Brand and country are required');
+  }
 
   // Filter valid cards
   const validCards = cards.filter((card) => {
@@ -28,8 +32,14 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     return !isNaN(amount) && amount > 0 && card.claimCode.trim().length > 0;
   });
 
-  if (validCards.length === 0) throw new Error('No valid cards were provided for processing.');
-  if (validCards.length > MAX_BATCH_SIZE) throw new Error(`Batch exceeds maximum size of ${MAX_BATCH_SIZE} cards.`);
+  if (validCards.length === 0) {
+    logger.warn('publishBatch: sin tarjetas válidas', { flow: 'sell', action: 'publish-batch', userId, metadata: { totalCards: cards.length } });
+    throw new Error('No valid cards were provided for processing.');
+  }
+  if (validCards.length > MAX_BATCH_SIZE) {
+    logger.warn('publishBatch: batch excede tamaño máximo', { flow: 'sell', action: 'publish-batch', userId, metadata: { validCards: validCards.length, max: MAX_BATCH_SIZE } });
+    throw new Error(`Batch exceeds maximum size of ${MAX_BATCH_SIZE} cards.`);
+  }
 
   // Normalize claim codes
   const normalizedCards = validCards.map((card) => {
@@ -44,7 +54,10 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
   const brandCountry = await prisma.brandCountry.findUnique({
     where: { brandId_countryId: { brandId, countryId } },
   });
-  if (!brandCountry) throw new Error('Invalid brand-country combination');
+  if (!brandCountry) {
+    logger.warn('publishBatch: combinación brand-country inválida', { flow: 'sell', action: 'publish-batch', userId, metadata: { brandId, countryId } });
+    throw new Error('Invalid brand-country combination');
+  }
 
   // DB dedup check (first pass)
   const codeHashes = normalizedCards.map((c) => hashCode(c.claimCode));
@@ -52,7 +65,10 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     where: { codeHash: { in: codeHashes } },
     select: { codeHash: true },
   });
-  if (existingInDb.length > 0) throw new Error(`${existingInDb.length} code(s) already exist in inventory`);
+  if (existingInDb.length > 0) {
+    logger.warn('publishBatch: códigos duplicados en DB', { flow: 'sell', action: 'publish-batch', userId, metadata: { duplicateCount: existingInDb.length } });
+    throw new Error(`${existingInDb.length} code(s) already exist in inventory`);
+  }
 
   // Request-level dedup
   const requestDeduped: PublishCardInput[] = [];
@@ -66,7 +82,10 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
 
   // Verify user exists
   const dbUser = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
-  if (!dbUser) throw new Error('User not found in the system.');
+  if (!dbUser) {
+    logger.warn('publishBatch: usuario no encontrado', { flow: 'sell', action: 'publish-batch', userId });
+    throw new Error('User not found in the system.');
+  }
 
   // DB dedup check (second pass, after request-level dedup)
   const hashedCodes = requestDeduped.map((card) => hashCode(card.claimCode));
@@ -82,7 +101,10 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     existingHashes.has(hashedCodes[i]) ? duplicates.push(card.claimCode) : uniqueCards.push(card),
   );
 
-  if (uniqueCards.length === 0) throw new Error('All provided cards already exist in the inventory.');
+  if (uniqueCards.length === 0) {
+    logger.warn('publishBatch: todas las tarjetas son duplicadas', { flow: 'sell', action: 'publish-batch', userId, metadata: { duplicates: duplicates.length } });
+    throw new Error('All provided cards already exist in the inventory.');
+  }
 
   // Get sell rate
   let sellRateSnapshot: Prisma.Decimal;
@@ -90,7 +112,13 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     const rates = await getUserRates(userId, { brandCountryId: brandCountry.id });
     sellRateSnapshot = rates.sellRate as Prisma.Decimal;
   } catch (error) {
-    console.error(error);
+    logger.error('Error al obtener tasa para publicar batch', {
+      userId,
+      flow: 'sell',
+      action: 'publish-batch',
+      metadata: { brandCountryId: brandCountry.id },
+      error: { name: error instanceof Error ? error.name : 'Error', message: error instanceof Error ? error.message : 'Unknown' },
+    });
     throw new Error('You do not have a rate assigned for this brand and country. Contact the administrator.');
   }
 
@@ -160,7 +188,13 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
 
   // Non-blocking: notify buyers
   notifyBuyersStockAvailable(brandCountry.id, initialTier, batch.id)
-    .catch((err) => console.error('[publish-batch] Error al notificar buyers (non-blocking):', err));
+    .catch((err) => logger.error('Error al notificar buyers post-publish (non-blocking)', {
+      flow: 'sell',
+      action: 'publish-batch',
+      userId,
+      metadata: { batchId: batch.id, brandCountryId: brandCountry.id },
+      error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown' },
+    }));
 
   return { batchId: batch.id, duplicates, totalPublished: uniqueCards.length };
 }

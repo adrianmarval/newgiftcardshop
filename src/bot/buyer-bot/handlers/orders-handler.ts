@@ -17,6 +17,9 @@ import {
 import { computeEffectiveTotalDecimal } from '@/lib/services/pricing';
 import { Prisma } from '@/generated/prisma/client';
 import { strike } from '@/bot/shared/formatters';
+import { createLogger } from '@/lib/logger';
+
+const buyerLogger = createLogger('buyer-bot');
 
 const PAGE_SIZE = 5;
 
@@ -215,6 +218,11 @@ export async function handleCancelOrder(ctx: BuyerContext) {
 
   await cancelOrder(orderId);
 
+  buyerLogger.action('buy', 'bot-cancel-order', `Orden ${orderId} cancelada via bot`, {
+    userId: ctx.user.id,
+    metadata: { orderId },
+  });
+
   await renderUI(ctx, '❌ <b>Orden cancelada.</b>\n\nLas tarjetas reportadas han sido guardadas y la orden cerrada.', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
@@ -285,6 +293,11 @@ export async function handleConfirmUsageFinal(ctx: BuyerContext) {
   try {
     const { adjustedTotal } = await confirmOrderUsage(orderId, order.giftcards, order.buyRate);
 
+    buyerLogger.action('buy', 'bot-confirm-usage', `Uso confirmado para orden ${orderId}`, {
+      userId: ctx.user.id,
+      metadata: { orderId, adjustedTotal: adjustedTotal.toString() },
+    });
+
     const kb = new InlineKeyboard().text('💳 Enviar pago ahora', `make_payment_${orderId}`).row().text('⬅️ Ver mis órdenes', 'my_orders');
 
     await renderUI(
@@ -339,6 +352,11 @@ export async function handlePaymentText(ctx: BuyerContext) {
 
   try {
     const { paymentAmount } = await completeOrderPayment(orderId, txId);
+
+    buyerLogger.action('buy', 'bot-complete-payment', `Pago completado para orden ${orderId}`, {
+      userId: ctx.user.id,
+      metadata: { orderId, paymentAmount: paymentAmount.toString(), txId },
+    });
 
     ctx.session.wizard.step = 'idle';
     ctx.session.wizard.orderId = undefined;

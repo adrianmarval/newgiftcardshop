@@ -55,6 +55,9 @@ model User {
   notifications          Notification[]
   notificationLogs       NotificationLog[]
 
+  // Logs de aplicación
+  logs AppLog[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -603,4 +606,32 @@ enum NotificationType {
   BATCH_STATUS
   BATCH_UNDER_REVIEW
   RATE_UPDATE
+}
+
+// --------------------------------------
+// Sistema de Logging
+// --------------------------------------
+
+model AppLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  level     String   // "info" | "warn" | "error" | "debug"
+  source    String   // "web" | "seller-bot" | "buyer-bot" | "cron" | "system"
+  flow      String?  // "sell" | "buy" | "order" | "payment" | "batch" | "auth"
+  action    String?  // "publish-batch" | "create-order" | "complete-payment" | etc.
+  message   String
+  userId    String?
+  metadata  Json?
+  error     Json?    // { name, message, stack }
+  ip        String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([level])
+  @@index([source])
+  @@index([flow])
+  @@index([userId])
+  @@index([timestamp])
+  @@index([source, flow, timestamp])
+  @@map("app_log")
 }

@@ -1,4 +1,5 @@
 import type { TransactionClient } from '@/generated/prisma/internal/prismaNamespace';
+import { logger } from '@/lib/logger';
 
 export class GiftcardReservationError extends Error {
   constructor(message: string) {
@@ -26,6 +27,11 @@ export async function reserveGiftcards(
   });
 
   if (result.count !== giftcardIds.length) {
+    logger.warn('GiftcardReservationError: tarjetas ya no disponibles', {
+      flow: 'buy',
+      action: 'reserve-giftcards',
+      metadata: { orderId, requested: giftcardIds.length, reserved: result.count, missing: giftcardIds.length - result.count },
+    });
     throw new GiftcardReservationError(
       'Una o más tarjetas ya no están disponibles. Por favor, volvé a buscar.',
     );

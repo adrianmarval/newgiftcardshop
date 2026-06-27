@@ -19,6 +19,7 @@ import {
   FaMoon,
   FaSun,
   FaWhatsapp,
+  FaClipboardList,
 } from 'react-icons/fa';
 import Link from 'next/link';
 
@@ -35,6 +36,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   settings: FaCog,
   theme: FaMoon,
   whatsapp: FaWhatsapp,
+  logs: FaClipboardList,
 };
 
 interface SidebarItemProps {

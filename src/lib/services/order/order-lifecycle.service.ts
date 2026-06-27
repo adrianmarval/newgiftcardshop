@@ -2,6 +2,7 @@ import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { computeEffectiveTotalDecimal } from '@/lib/services/pricing';
 import { OrderNotFoundError, InvalidOrderStateError, OrderAlreadyProcessedError } from './order-errors';
+import { logger } from '@/lib/logger';
 
 /**
  * Cancels an order and marks all giftcards as confirmed.
@@ -54,8 +55,14 @@ export async function confirmOrderUsage(orderId: string, giftcards: Prisma.Giftc
  */
 export async function completeOrderPayment(orderId: string, txId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order) throw new OrderNotFoundError();
-  if (order.status !== 'AWAITING_PAYMENT') throw new InvalidOrderStateError('La orden debe estar en estado AWAITING_PAYMENT');
+  if (!order) {
+    logger.warn('OrderNotFoundError en completeOrderPayment', { flow: 'order', action: 'complete-payment', metadata: { orderId } });
+    throw new OrderNotFoundError();
+  }
+  if (order.status !== 'AWAITING_PAYMENT') {
+    logger.warn('InvalidOrderStateError en completeOrderPayment', { flow: 'order', action: 'complete-payment', userId: order.userId, metadata: { orderId, actualStatus: order.status } });
+    throw new InvalidOrderStateError('La orden debe estar en estado AWAITING_PAYMENT');
+  }
 
   const paymentAmount = order.adjustedTotal ?? order.total;
 
@@ -86,8 +93,16 @@ export async function completeOrderPayment(orderId: string, txId: string) {
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      logger.warn('OrderAlreadyProcessedError en completeOrderPayment', { flow: 'order', action: 'complete-payment', userId: order.userId, metadata: { orderId, txId } });
       throw new OrderAlreadyProcessedError('La orden ya fue procesada por otra solicitud.');
     }
+    logger.error('Error inesperado en transacción de completeOrderPayment', {
+      flow: 'order',
+      action: 'complete-payment',
+      userId: order.userId,
+      metadata: { orderId, txId, paymentAmount: paymentAmount.toString() },
+      error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown', stack: err instanceof Error ? err.stack : undefined },
+    });
     throw err;
   }
 

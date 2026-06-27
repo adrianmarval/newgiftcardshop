@@ -4,6 +4,7 @@ import { betterAuth } from '@next-safe-action/adapter-better-auth';
 import { Role } from '@/generated/prisma/enums';
 import { unauthorized } from 'next/navigation';
 import type { Session } from '@/types';
+import { logger } from '@/lib/logger';
 
 export class ActionError extends Error {
   constructor(message: string) {
@@ -31,7 +32,9 @@ export class ActionError extends Error {
 export const actionClient = createSafeActionClient({
   handleServerError(e) {
     if (e instanceof ActionError) return e.message;
-    console.error('Error de servidor:', e);
+    logger.error('Unhandled server error in action', {
+      error: { name: e.name ?? 'Error', message: e.message, stack: e.stack },
+    });
     return 'Error inesperado en el sistema.';
   },
 });

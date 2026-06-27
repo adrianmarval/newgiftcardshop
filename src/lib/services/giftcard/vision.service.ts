@@ -1,4 +1,5 @@
 import { createProvider, type AIProvider, type ProviderName, type AIProviderConfig } from '@/lib/ai-providers';
+import { logger } from '@/lib/logger';
 
 export interface ParsedClaimCode {
   formatted: string;
@@ -48,9 +49,9 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       if (attempt === 1) {
-        console.log(`[AI-VISION] [${imgId}] Starting extraction using model ${modelName}`);
+        logger.info(`[AI-VISION] Iniciando extracción modelo ${modelName}`, { flow: 'sell', action: 'ocr-extract', metadata: { imgId, model: modelName } });
       } else {
-        console.log(`[AI-VISION] [${imgId}] 🔄 [RETRY ${attempt}/${maxAttempts}] Re-attempting extraction...`);
+        logger.info(`[AI-VISION] Reintento ${attempt}/${maxAttempts}`, { flow: 'sell', action: 'ocr-extract', metadata: { imgId, attempt } });
       }
 
       const { text } = await provider.complete(
@@ -67,7 +68,7 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
         true,
       );
 
-      console.log(`[AI-VISION] [${imgId}] Raw response:`, text);
+      logger.debug('[AI-VISION] Respuesta recibida', { flow: 'sell', action: 'ocr-extract', metadata: { imgId } });
 
       const parsed = JSON.parse(text);
       const claimCode = parsed.claim_code || null;
@@ -76,19 +77,27 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
         throw new Error('AI returned empty claim_code (Null-Retry triggered)');
       }
 
-      console.log(`[AI-VISION] [${imgId}] ✅ Extraction successful.`);
+      logger.info('[AI-VISION] Extracción exitosa', { flow: 'sell', action: 'ocr-extract', metadata: { imgId, hasClaimCode: !!claimCode } });
       return { claimCode, amount: parsed.amount || null };
     } catch (err) {
       lastError = err;
       if (attempt < maxAttempts) {
         const delay = Math.pow(2, attempt) * 1000;
-        console.log(
-          `[AI-VISION] [${imgId}]  Attempt ${attempt} failed: ${err instanceof Error ? err.message : 'Unknown error'}. Retrying in ${delay}ms...`,
-        );
+        logger.warn(`[AI-VISION] Intento ${attempt} falló, reintentando en ${delay}ms`, {
+          flow: 'sell',
+          action: 'ocr-extract',
+          metadata: { imgId, attempt, delay },
+          error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown' },
+        });
         await new Promise((r) => setTimeout(r, delay));
         continue;
       }
-      console.error(`[AI-VISION] [${imgId}] ❌ Final failure after ${maxAttempts} attempts:`, err);
+      logger.error(`[AI-VISION] Fallo definitivo después de ${maxAttempts} intentos`, {
+        flow: 'sell',
+        action: 'ocr-extract',
+        metadata: { imgId, maxAttempts },
+        error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown' },
+      });
     }
   }
 

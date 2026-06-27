@@ -1,6 +1,7 @@
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { OrderNotFoundError, UnauthorizedError } from './order-errors';
+import { logger } from '@/lib/logger';
 
 /**
  * Finds an order by ID, verifies ownership, and returns it with giftcards.
@@ -12,8 +13,14 @@ export async function findOrderForUser(orderId: string, userId: string) {
     include: { giftcards: true },
   });
 
-  if (!order) throw new OrderNotFoundError();
-  if (order.userId !== userId) throw new UnauthorizedError();
+  if (!order) {
+    logger.warn('OrderNotFoundError en findOrderForUser', { flow: 'order', action: 'find-order', userId, metadata: { orderId } });
+    throw new OrderNotFoundError();
+  }
+  if (order.userId !== userId) {
+    logger.warn('UnauthorizedError en findOrderForUser', { flow: 'order', action: 'find-order', userId, metadata: { orderId, orderOwner: order.userId } });
+    throw new UnauthorizedError();
+  }
 
   return order;
 }

@@ -1,5 +1,6 @@
 import { createHmac } from 'crypto';
 
+import { logger } from '@/lib/logger';
 import type {
   AcceptQuoteRequest,
   AcceptQuoteResponse,
@@ -61,12 +62,21 @@ class BinanceService {
     if (err && err.isFetchError) {
       const msg = err.data?.msg || err.response?.statusText || err.message;
       const code = err.data?.code || err.response?.status;
-      console.error(`❌ BinanceService Error (${context}):`, { code, msg });
+      logger.error(`BinanceService Error: ${context}`, {
+        flow: 'payment',
+        action: 'binance-api',
+        metadata: { context, code, msg },
+      });
       const apiError = new Error(`Binance error (${context}): ${msg}`);
       (apiError as any).isBinanceApiError = true;
       throw apiError;
     }
-    console.error(`❌ Unexpected Error (${context}):`, err);
+    logger.error(`BinanceService Unexpected Error: ${context}`, {
+      flow: 'payment',
+      action: 'binance-api',
+      metadata: { context },
+      error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+    });
     const genericError = err instanceof Error ? err : new Error(String(err));
     (genericError as any).isNetworkError = true;
     throw genericError;

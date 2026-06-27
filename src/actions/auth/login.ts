@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
 import { dashboardMap, portalSchema, roleMap } from '@/types';
+import { logger } from '@/lib/logger';
 
 const loginInputSchema = z.object({
   email: z.email('Invalid email address'),
@@ -24,6 +25,8 @@ export const login = actionClient
     const callbackURL = dashboardMap[portal];
     const requiredRole = roleMap[portal];
     const isSpanish = portal === 'buy' || portal === 'admin';
+    const hdrs = await headers();
+    const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() || hdrs.get('x-real-ip') || undefined;
 
     try {
       const response = (await auth.api.signInEmail({
@@ -51,15 +54,17 @@ export const login = actionClient
 
         if (user.role !== requiredRole && user.role !== 'ADMIN') {
           await auth.api.signOut({ headers: await headers() });
+          logger.warn('Login con rol incorrecto', { flow: 'auth', action: 'login', metadata: { email, portal, userRole: user.role, requiredRole }, ip });
           return { success: false as const, error: `Your account does not have ${requiredRole.toLowerCase()} access` };
         }
 
+        logger.action('auth', 'login', `Login exitoso: ${email}`, { userId: user.id, metadata: { email, portal }, ip });
         return { success: true as const, redirectTo: callbackURL };
       }
 
       return { success: false as const, error: 'Invalid email or password' };
     } catch (error) {
-      console.error('Login error:', error);
+      logger.warn('Login fallido', { flow: 'auth', action: 'login', metadata: { email, portal }, ip });
 
       const errorObj = error as { status?: number; message?: string; body?: { message?: string; status?: number } };
       const status = errorObj?.status || errorObj?.body?.status;

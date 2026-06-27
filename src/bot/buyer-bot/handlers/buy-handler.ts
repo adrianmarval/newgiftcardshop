@@ -15,6 +15,9 @@ import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftc
 import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
 import { getBrandsWithStock, getBrandWithCountries, getCountryById } from '@/lib/services/catalog/catalog';
+import { createLogger } from '@/lib/logger';
+
+const buyerLogger = createLogger('buyer-bot');
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -367,12 +370,20 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     });
   } catch (error) {
     if (error instanceof GiftcardReservationError) {
+      buyerLogger.warn('Reserva fallida en bot buy', {
+        userId: ctx.user.id,
+        metadata: { giftcardIds: selectedGiftcardIds, error: error.message },
+      });
       await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
       return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.', {
         reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
       });
     }
     if (error instanceof Error && error.message === 'CREDIT_LIMIT_EXCEEDED') {
+      buyerLogger.warn('Crédito insuficiente en bot buy', {
+        userId: ctx.user.id,
+        metadata: { total: total.toString() },
+      });
       await ctx.answerCallbackQuery('Crédito insuficiente');
       return renderUI(ctx, '❌ Límite de crédito insuficiente. Completá tus pagos pendientes primero.', {
         reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
@@ -380,6 +391,11 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     }
     throw error;
   }
+
+  buyerLogger.action('buy', 'bot-create-order', `Orden ${order.id} creada via bot con ${giftcards.length} tarjetas`, {
+    userId: ctx.user.id,
+    metadata: { orderId: order.id, giftcardCount: giftcards.length, total: total.toString() },
+  });
 
   ctx.session.wizard.selectedGiftcardIds = undefined;
 

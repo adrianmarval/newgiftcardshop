@@ -7,6 +7,7 @@ import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { getUserRates } from '@/lib/services/pricing';
 import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
+import { logger } from '@/lib/logger';
 
 const createOrderInputSchema = z.object({
   giftcardIds: z.array(z.string()),
@@ -67,6 +68,7 @@ export const createOrder = buyerActionClient
         select: { id: true },
       });
       if (existing) {
+        logger.debug('Orden existente por idempotency key', { userId: ctx.auth.user.id, metadata: { orderId: existing.id, idempotencyKey } });
         return { success: true as const, orderId: existing.id };
       }
     }
@@ -119,10 +121,24 @@ export const createOrder = buyerActionClient
       });
     } catch (error) {
       if (error instanceof GiftcardReservationError) {
+        logger.warn('Error de reserva en creación de orden', {
+          userId: ctx.auth.user.id,
+          metadata: { giftcardIds, error: error.message },
+        });
         throw new ActionError(error.message);
       }
+      logger.error('Error inesperado al crear orden', {
+        userId: ctx.auth.user.id,
+        metadata: { giftcardIds },
+        error: { name: error instanceof Error ? error.name : 'Error', message: error instanceof Error ? error.message : 'Unknown' },
+      });
       throw error;
     }
+
+    logger.action('buy', 'create-order', `Orden ${order.id} creada con ${giftcardIds.length} tarjetas`, {
+      userId: ctx.auth.user.id,
+      metadata: { orderId: order.id, giftcardCount: giftcardIds.length, total: order.total.toString(), buyRate: order.buyRate.toString() },
+    });
 
     return { success: true as const, orderId: order.id };
   });

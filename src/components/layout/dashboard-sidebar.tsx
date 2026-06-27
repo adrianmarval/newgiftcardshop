@@ -23,6 +23,7 @@ const NAV_ITEMS: Record<AppSection, NavItem[]> = {
     { title: 'Lotes', url: '/admin/dashboard/batches', icon: 'cards' },
     { title: 'Pagos', url: '/admin/dashboard/payments', icon: 'cash' },
     { title: 'Brands', url: '/admin/dashboard/brands', icon: 'tag' },
+    { title: 'Logs', url: '/admin/dashboard/logs', icon: 'logs' },
     { title: 'Config', url: '/admin/dashboard/config', icon: 'settings' },
     { title: 'Perfil', url: '/admin/dashboard/profile', icon: 'user' },
   ],
