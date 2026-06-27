@@ -29,7 +29,7 @@ function UserAvatar({ email }: { email: string }) {
 function OrderBookRow({ entry }: { entry: OrderBookEntry }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm">
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex min-w-0 items-center gap-2">
         <UserAvatar email={entry.buyerEmail} />
         <span className="truncate font-mono text-xs">{entry.buyerEmail}</span>
       </div>
@@ -65,11 +65,10 @@ export function BuyerDashboard({ stats }: BuyerDashboardProps) {
               </Link>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{stats.availableCards.toLocaleString()} cards</p>
-              <p className="text-muted-foreground text-sm">
-                ${stats.availableAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} en
-                inventario
+              <p className="text-3xl font-bold">
+                ${stats.availableAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
               </p>
+              <p className="text-muted-foreground text-sm">{stats.availableCards.toLocaleString()} cards en inventario</p>
             </CardContent>
           </Card>
 
