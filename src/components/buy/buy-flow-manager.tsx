@@ -61,7 +61,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
   return (
     <div className="h-full">
       {/* Steps Content */}
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}

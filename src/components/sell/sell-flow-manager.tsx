@@ -109,7 +109,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
 
   return (
     <div className="h-full">
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
