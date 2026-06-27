@@ -14,7 +14,7 @@ type RegContext = SellerContext | BuyerContext;
 
 const i18n = {
   en: {
-    welcome: '👋 Welcome!\n\nTo get started, please enter your <b>email address.</b>',
+    welcome: 'To get started, <b>ENTER YOUR EMAIL ADDRESS:</b>',
     nameShort: '❌ Name too short. Please enter your full name.',
     helloName: '✅ Hello, <b>{name}</b>!\n\n📧 <b>What is your email address?</b>',
     invalidEmail: '❌ Invalid email format.\nExample: <code>user@gmail.com</code>',
