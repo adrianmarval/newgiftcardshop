@@ -1,4 +1,4 @@
-import { DashboardSidebar } from '@/components/layout';
+import { DashboardSidebar } from './dashboard-sidebar';
 import { AppTopBar } from '@/components/layout';
 import { authorizeByRequiredRole } from '@/lib/auth/authorization';
 import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';

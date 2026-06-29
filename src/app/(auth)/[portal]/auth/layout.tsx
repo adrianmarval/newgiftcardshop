@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
-import { AuthLayout } from '@/components/layout';
+import { AuthLayout } from '@/components/layout/auth-layout';
 import { isAppSection, PORTAL_AUTH_CONFIG } from '@/types';
 
 export default async function DynamicAuthLayout({

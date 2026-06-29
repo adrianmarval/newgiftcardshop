@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BuyFlowCard, useBuyFlow } from '@/hooks/use-buy-flow';
 import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep, PaymentStep } from '@/components/buy/steps';
@@ -15,11 +15,11 @@ export interface BuyGiftcardManagerProps {
 export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardManagerProps) => {
   const { step } = useBuyFlow();
 
-  // Sync store ONCE per mount / per orderId change — synchronously before first paint
   const syncedRef = useRef<string | null>(null);
   const targetKey = resumeOrder?.id ?? 'fresh';
 
-  if (syncedRef.current !== targetKey) {
+  useEffect(() => {
+    if (syncedRef.current === targetKey) return;
     syncedRef.current = targetKey;
 
     if (resumeOrder) {
@@ -52,10 +52,9 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
         targetAmount: '',
       });
     } else {
-      // Fresh flow — clean slate
       useBuyFlow.getState().resetForm();
     }
-  }
+  }, [targetKey, resumeOrder]);
 
   return (
     <div className="h-full">

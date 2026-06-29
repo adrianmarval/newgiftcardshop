@@ -62,7 +62,7 @@ export async function handleBrandSelected(ctx: SellerContext) {
   }
   kb.text('⬅️ Back', 'sell_start').row().text('❌ Cancel', 'sell_cancel');
 
-  await renderUI(ctx, `🌍 <b>Country for ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, `🌍 <b>Country for ${brand.icon} ${escapeHTML(brand.name)}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
 }
 
 // ── Step 3: Enter Codes ───────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ export async function handleCountrySelected(ctx: SellerContext) {
   await renderUI(
     ctx,
     `📝 <b>Enter the codes</b> (max ${MAX_BATCH_SIZE})\n\n` +
-      `Brand: <b>${ctx.session.wizard.brandName} — ${country.name}</b>\n\n` +
+      `Brand: <b>${escapeHTML(ctx.session.wizard.brandName ?? '')} — ${escapeHTML(country.name)}</b>\n\n` +
       `Format (one per line):\n` +
       `<code>CODE AMOUNT</code>\n` +
       `<code>CODE AMOUNT PIN</code>\n\n` +
@@ -211,8 +211,8 @@ export async function handleCodesText(ctx: SellerContext) {
     return renderUI(
       ctx,
       `❌ <b>No valid codes to publish.</b>\n\n` +
-        `${errors.length > 0 ? `<b>Parsing errors:</b>\n<code>${errors.join('\n')}</code>\n\n` : ''}` +
-        `${duplicateInDbLines.length > 0 ? `<b>Duplicates found:</b>\n<code>${duplicateInDbLines.join('\n')}</code>\n\n` : ''}` +
+        `${errors.length > 0 ? `<b>Parsing errors:</b>\n<code>${escapeHTML(errors.join('\n'))}</code>\n\n` : ''}` +
+        `${duplicateInDbLines.length > 0 ? `<b>Duplicates found:</b>\n<code>${escapeHTML(duplicateInDbLines.join('\n'))}</code>\n\n` : ''}` +
         `Please check your list and try again.`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start') },
     );

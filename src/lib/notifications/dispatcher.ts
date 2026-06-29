@@ -3,6 +3,7 @@ import type { NotificationChannelResult, NotificationContext, NotificationMessag
 import { TelegramChannel } from './channels/telegram.channel';
 import { WhatsAppChannel } from './channels/whatsapp.channel';
 import type { Prisma } from '@/generated/prisma/client';
+import { logger } from '@/lib/logger';
 
 export class NotificationDispatcher {
   async dispatch(userId: string, message: NotificationMessage): Promise<void> {
@@ -12,7 +13,7 @@ export class NotificationDispatcher {
     });
 
     if (!user) {
-      console.warn(`[Notifications] Usuario ${userId} no encontrado, se omite dispatch`);
+      logger.warn(`[Notifications] Usuario ${userId} no encontrado, se omite dispatch`);
       return;
     }
 
@@ -40,7 +41,7 @@ export class NotificationDispatcher {
         },
       });
     } catch (err) {
-      console.error(`[Notifications] Error persistiendo Notification (web):`, err);
+      logger.error(`[Notifications] Error persistiendo Notification (web):`, { error: { name: 'NotificationPersistError', message: String(err) } });
     }
 
     if (preference.telegramEnabled) {
@@ -50,7 +51,7 @@ export class NotificationDispatcher {
       }));
 
       if (result.status === 'failed') {
-        console.warn(`[Notifications] Telegram falló para user ${userId}: ${result.error}`);
+        logger.warn(`[Notifications] Telegram falló para user ${userId}: ${result.error}`);
       }
     }
 
@@ -61,14 +62,14 @@ export class NotificationDispatcher {
       }));
 
       if (result.status === 'failed') {
-        console.warn(`[Notifications] WhatsApp falló para user ${userId}: ${result.error}`);
+        logger.warn(`[Notifications] WhatsApp falló para user ${userId}: ${result.error}`);
       }
     }
   }
 
   async dispatchMany(userIds: string[], message: NotificationMessage): Promise<void> {
     await Promise.all(userIds.map((id) => this.dispatch(id, message).catch((err) => {
-      console.error(`[Notifications] Error en dispatchMany para user ${id}:`, err);
+      logger.error(`[Notifications] Error en dispatchMany para user ${id}:`, { error: { name: 'DispatchManyError', message: String(err) } });
     })));
   }
 }

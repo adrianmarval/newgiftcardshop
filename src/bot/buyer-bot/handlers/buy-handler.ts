@@ -70,7 +70,7 @@ export async function handleBuyBrandSelected(ctx: BuyerContext) {
   }
   kb.text('⬅️ Volver', 'buy_start').row().text('❌ Cancelar', 'buy_cancel');
 
-  await renderUI(ctx, `🌍 <b>País para ${brand.icon} ${brand.name}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
+  await renderUI(ctx, `🌍 <b>País para ${brand.icon} ${escapeHTML(brand.name)}:</b>`, { parse_mode: 'HTML', reply_markup: kb });
 }
 
 // ── Step 3: Ingresar monto ────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ export async function handleAmountText(ctx: BuyerContext) {
   } catch (error: any) {
     return renderUI(
       ctx,
-      `❌ ${error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.'}`,
+      `❌ ${escapeHTML(error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.')}`,
       {
         reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
       },
@@ -311,7 +311,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     await ctx.answerCallbackQuery('Error al obtener la tasa de compra');
     return renderUI(
       ctx,
-      `❌ ${error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.'}`,
+      `❌ ${escapeHTML(error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.')}`,
       {
         reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
       },

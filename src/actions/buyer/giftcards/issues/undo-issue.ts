@@ -18,26 +18,29 @@ export const undoIssue = buyerActionClient
       select: { ownerId: true },
     });
     if (!foundGiftcard) throw new ActionError('Giftcard not found');
-    const deleted = await prisma.giftcardIssue.deleteMany({
-      where: { giftcardId, orderId, reportedById: ctx.auth.user.id },
-    });
-
-    if (deleted.count === 0) {
-      throw new ActionError('No se encontró ningún problema para deshacer en esta tarjeta');
-    }
     return next({ ctx: { foundGiftcard } });
   })
-  .action(async ({ parsedInput: { giftcardId } }) => {
-    const remainingIssues = await prisma.giftcardIssue.findFirst({
-      where: { giftcardId },
-    });
-
-    if (!remainingIssues) {
-      await prisma.giftcard.update({
-        where: { id: giftcardId },
-        data: { status: 'UNUSED', reportedAmount: null },
+  .action(async ({ parsedInput: { giftcardId, orderId }, ctx }) => {
+    await prisma.$transaction(async (tx) => {
+      const deleted = await tx.giftcardIssue.deleteMany({
+        where: { giftcardId, orderId, reportedById: ctx.auth.user.id },
       });
-    }
+
+      if (deleted.count === 0) {
+        throw new ActionError('No se encontró ningún problema para deshacer en esta tarjeta');
+      }
+
+      const remainingIssues = await tx.giftcardIssue.findFirst({
+        where: { giftcardId },
+      });
+
+      if (!remainingIssues) {
+        await tx.giftcard.update({
+          where: { id: giftcardId },
+          data: { status: 'UNUSED', reportedAmount: null },
+        });
+      }
+    });
 
     return { success: true as const };
   });

@@ -1,6 +1,6 @@
 'use server';
 
-import { authApi } from '@/lib/auth';
+import { authApi } from '@/lib/auth/auth-server';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
 import { appSectionMap, roleMap } from '@/types';

@@ -44,7 +44,7 @@ export function serializeGiftcard(card: {
   pinCode: string | null;
   amount: Prisma.Decimal;
   reportedAmount: Prisma.Decimal | null;
-  status: string;
+  status: GiftcardStatus;
   isConfirmed: boolean;
   orderId: string | null;
   batchId?: string | null;

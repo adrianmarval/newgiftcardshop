@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Prisma } from '@/generated/prisma/client';
+import type { GiftcardStatus } from '@/generated/prisma/enums';
 
 // ── Batch Publish ───────────────────────────────────────────────────────────
 
@@ -87,7 +88,7 @@ export interface CreditCheckResult {
 
 /** Structural subset of Giftcard needed by pricing calculations. */
 export type GiftcardLike = {
-  status: string;
+  status: GiftcardStatus;
   amount: Prisma.Decimal;
   reportedAmount: Prisma.Decimal | null;
 };

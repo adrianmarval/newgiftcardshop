@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { InlineKeyboard } from 'grammy';
-import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
+import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
 import prisma from '@/lib/prisma';
@@ -95,7 +95,7 @@ export async function handleSellConfirm(ctx: SellerContext) {
       error: { name: error.name ?? 'Error', message: error.message },
     });
     await ctx.answerCallbackQuery('Error publishing');
-    return renderUI(ctx, `❌ ${error.message || 'Error publishing batch'}`, {
+    return renderUI(ctx, `❌ ${escapeHTML(error.message || 'Error publishing batch')}`, {
       reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start'),
     });
   }

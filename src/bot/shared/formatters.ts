@@ -1,4 +1,5 @@
 import { formatDateTime } from '@/lib/utils';
+import type { OrderStatus, GiftcardStatus } from '@/generated/prisma/enums';
 import type { Lang } from './types.js';
 
 // ── Money ─────────────────────────────────────────────────────────────────────
@@ -22,8 +23,8 @@ export function fmtDate(date: Date | string, lang: Lang = 'es'): string {
 
 // ── Enums → emoji label ───────────────────────────────────────────────────────
 
-export function fmtOrderStatus(status: string, lang: Lang = 'es'): string {
-  const labels: Record<Lang, Record<string, string>> = {
+export function fmtOrderStatus(status: OrderStatus, lang: Lang = 'es'): string {
+  const labels: Record<Lang, Record<OrderStatus, string>> = {
     es: {
       PENDING: '⏳ Pendiente',
       AWAITING_PAYMENT: '💳 Esperando pago',
@@ -45,8 +46,8 @@ export function fmtBatchStatus(isPaid: boolean, lang: Lang = 'es'): string {
   return isPaid ? '✅ Pagado' : '⏳ Pendiente de pago';
 }
 
-export function fmtGiftcardStatus(status: string, lang: Lang = 'es'): string {
-  const labels: Record<Lang, Record<string, string>> = {
+export function fmtGiftcardStatus(status: GiftcardStatus, lang: Lang = 'es'): string {
+  const labels: Record<Lang, Record<GiftcardStatus, string>> = {
     es: {
       UNUSED: '🟢 Sin usar',
       USED: '✅ Usada',

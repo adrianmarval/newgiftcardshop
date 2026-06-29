@@ -91,7 +91,7 @@ export const auth = betterAuth({
     }),
     twoFactor({
       issuer: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop',
-      skipVerificationOnEnable: true,
+      skipVerificationOnEnable: false,
     }),
     nextCookies(),
   ],

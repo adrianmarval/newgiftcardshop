@@ -1,4 +1,5 @@
 import { Prisma } from '@/generated/prisma/client';
+import type { GiftcardStatus } from '@/generated/prisma/enums';
 import prisma from '@/lib/prisma';
 import { OrderNotFoundError, UnauthorizedError } from './order-errors';
 import { logger } from '@/lib/logger';
@@ -28,7 +29,7 @@ export async function findOrderForUser(orderId: string, userId: string) {
 /**
  * Checks if an order can be cancelled (no active cards with value).
  */
-export function canCancelOrder(giftcards: { status: string; reportedAmount: Prisma.Decimal | null }[]): boolean {
+export function canCancelOrder(giftcards: { status: GiftcardStatus; reportedAmount: Prisma.Decimal | null }[]): boolean {
   return !giftcards.some((g) => {
     if (g.status === 'UNUSED' || g.status === 'USED') return true;
     if (g.status === 'WRONG_AMOUNT' && g.reportedAmount && g.reportedAmount.toNumber() > 0) return true;

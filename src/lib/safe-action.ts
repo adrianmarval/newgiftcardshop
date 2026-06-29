@@ -1,5 +1,5 @@
 import { createSafeActionClient } from 'next-safe-action';
-import { auth } from './auth';
+import { auth } from './auth/auth-server';
 import { betterAuth } from '@next-safe-action/adapter-better-auth';
 import { Role } from '@/generated/prisma/enums';
 import { unauthorized } from 'next/navigation';

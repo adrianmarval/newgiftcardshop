@@ -95,7 +95,7 @@ export interface GiftcardForList {
   claimCode: string;
   pinCode: string | null;
   amount: number;
-  status: string;
+  status: GiftcardStatus;
   isConfirmed: boolean;
   reportedAmount: number | null;
   orderId: string | null;

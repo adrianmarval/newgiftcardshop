@@ -1,4 +1,3 @@
-export { AuthLayout } from './auth-layout';
+// Client-only barrel — safe for 'use client' components
 export { AppTopBar } from './app-top-bar';
-export { DashboardSidebar } from './dashboard-sidebar';
 export { NotificationDropdown } from './notification-dropdown';

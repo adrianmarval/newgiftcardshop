@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from '@/lib/auth';
+import { auth } from '@/lib/auth/auth-server';
 import { headers } from 'next/headers';
 import { authActionClient } from '@/lib/safe-action';
 import { updateProfileInputSchema, updateProfileOutputSchema } from './schemas';

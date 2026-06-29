@@ -2,6 +2,7 @@ import { makeWASocket, fetchLatestBaileysVersion, DisconnectReason, WASocket } f
 import pino from 'pino';
 import prisma from '@/lib/prisma';
 import { useDbAuthState } from './auth-state-adapter';
+import { logger } from '@/lib/logger';
 
 const globalForWhatsApp = globalThis as unknown as {
   __whatsappSocket?: WASocket;
@@ -39,7 +40,7 @@ function clearSocket(): void {
 
 export async function initWhatsAppSocket(): Promise<WASocket | undefined> {
   if (whatsappSocket) {
-    console.log('[WhatsApp] Socket ya existe, reusando');
+    logger.info('[WhatsApp] Socket ya existe, reusando');
     return whatsappSocket;
   }
 
@@ -49,13 +50,13 @@ export async function initWhatsAppSocket(): Promise<WASocket | undefined> {
   const { state, saveCreds } = await useDbAuthState();
   const { version } = await fetchLatestBaileysVersion();
 
-  const logger = pino({ level: 'silent' });
+  const pinoLogger = pino({ level: 'silent' });
 
   const sock = makeWASocket({
     version,
     auth: state,
     browser: ['GiftCardShop', 'Chrome', '1.0.0'],
-    logger,
+    logger: pinoLogger,
     generateHighQualityLinkPreview: true,
   });
 
@@ -66,25 +67,25 @@ export async function initWhatsAppSocket(): Promise<WASocket | undefined> {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
-      console.log('[WhatsApp] QR recibido — guardando en DB');
+      logger.info('[WhatsApp] QR recibido — guardando en DB');
       await updateSessionStatus({ status: 'connecting', qrCode: qr });
     }
 
     if (connection === 'open') {
       const phoneNumber = sock.user?.id?.split(':')[0] ?? null;
-      console.log('[WhatsApp] Conexión abierta ✓', phoneNumber ? `@${phoneNumber}` : '');
+      logger.info('[WhatsApp] Conexión abierta ✓', { metadata: { phoneNumber } });
       await updateSessionStatus({ status: 'open', phoneNumber, qrCode: null });
     }
 
     if (connection === 'close') {
       const statusCode = (lastDisconnect?.error as { output?: { statusCode?: number } })?.output?.statusCode;
       const errorMsg = lastDisconnect?.error?.message ?? '';
-      console.log('[WhatsApp] Conexión cerrada', { statusCode, reason: errorMsg });
+      logger.info('[WhatsApp] Conexión cerrada', { metadata: { statusCode, reason: errorMsg } });
 
       clearSocket();
 
       if (statusCode === DisconnectReason.loggedOut) {
-        console.log('[WhatsApp] loggedOut — limpiando auth state');
+        logger.info('[WhatsApp] loggedOut — limpiando auth state');
         await prisma.whatsappAuthState.deleteMany();
         await updateSessionStatus({ status: 'disconnected', phoneNumber: null, qrCode: null });
         return;
@@ -92,18 +93,18 @@ export async function initWhatsAppSocket(): Promise<WASocket | undefined> {
 
       // Handle corrupted signal sessions (Bad MAC = key material mismatch)
       if (errorMsg.includes('Bad MAC') || errorMsg.includes('decrypt')) {
-        console.log('[WhatsApp] Decryption failure — limpiando session keys (manteniendo creds)');
+        logger.info('[WhatsApp] Decryption failure — limpiando session keys (manteniendo creds)');
         await prisma.whatsappAuthState.deleteMany({
           where: { key: { not: 'creds' } },
         });
       }
 
-      console.log('[WhatsApp] Reintentando en 5s...');
+      logger.info('[WhatsApp] Reintentando en 5s...');
       await updateSessionStatus({ status: 'connecting' });
 
       globalForWhatsApp.__reconnectTimeout = setTimeout(() => {
         initWhatsAppSocket().catch((err) => {
-          console.error('[WhatsApp] Error en reconexión:', err);
+          logger.error('[WhatsApp] Error en reconexión:', { error: { name: 'WhatsAppReconnectError', message: String(err) } });
         });
       }, 5000);
     }

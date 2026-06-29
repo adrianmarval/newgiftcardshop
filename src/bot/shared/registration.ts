@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 import { resend, EMAIL_FROM } from '@/lib/resend';
-import { authApi } from '@/lib/auth';
+import { authApi } from '@/lib/auth/auth-server';
 import type { BotContext, BotRole, Lang } from './types.js';
 import { TelegramOtpTemplate } from '@/components/emails';
 import React from 'react';

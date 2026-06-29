@@ -472,7 +472,7 @@ export async function handleReportCardSelect(ctx: BuyerContext) {
 
     const currency = card.brandCountry?.country?.currency || 'USD';
     let reportDetail =
-      `🚩 <b>Reporte actual:</b>\n\n` + `Tarjeta: ${card.brandCountry.brand.name}\n` + `Tipo: ${fmtGiftcardStatus(card.status)}\n`;
+      `🚩 <b>Reporte actual:</b>\n\n` + `Tarjeta: ${escapeHTML(card.brandCountry.brand.name)}\n` + `Tipo: ${fmtGiftcardStatus(card.status)}\n`;
 
     if (card.status === 'WRONG_AMOUNT' && card.reportedAmount) {
       reportDetail += `Monto reportado: <b>${fmt$(card.reportedAmount, currency)}</b>\n`;
@@ -515,7 +515,7 @@ export async function handleReportDelete(ctx: BuyerContext) {
   try {
     await deleteGiftcardIssue(reportCardId, orderId, ctx.user.id);
   } catch (err) {
-    return renderUI(ctx, `❌ ${(err as Error).message}`, {
+    return renderUI(ctx, `❌ ${escapeHTML((err as Error).message)}`, {
       reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
     });
   }

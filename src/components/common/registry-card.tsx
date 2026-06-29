@@ -8,6 +8,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { formatDateTime, formatCurrency } from '@/lib/utils';
+import type { GiftcardStatus } from '@/generated/prisma/enums';
+import type { OrderStatus } from '@/generated/prisma/enums';
 import { showAlert } from '@/lib/ui';
 import { orderStatusConfig } from '@/lib/config/ui-config';
 import { cancelOrder } from '@/actions/admin/orders';
@@ -129,7 +131,7 @@ export function RegistryCard({
 
 // ── Shared hooks for cards (orders + batches) ─────────────────────────────────
 
-export function useCardProgress<T extends { giftcards: { isConfirmed: boolean; status: string }[] }>(item: T) {
+export function useCardProgress<T extends { giftcards: { isConfirmed: boolean; status: GiftcardStatus }[] }>(item: T) {
   const confirmedCount = item.giftcards.filter((g) => g.isConfirmed).length;
   const totalItems = item.giftcards.length;
   const progressPercentage = totalItems > 0 ? (confirmedCount / totalItems) * 100 : 0;
@@ -200,7 +202,7 @@ export function useDeleteBatchAction() {
 
 // ── Order config helpers ─────────────────────────────────────────────────────
 
-export function getOrderProgressConfig(status: string, progressPercentage: number) {
+export function getOrderProgressConfig(status: OrderStatus, progressPercentage: number) {
   const isCompleted = status === 'COMPLETED';
   const isCancelled = status === 'CANCELLED';
   return {
@@ -210,8 +212,8 @@ export function getOrderProgressConfig(status: string, progressPercentage: numbe
   };
 }
 
-export function getOrderActiveBg(status: string): string {
-  return orderStatusConfig[status as keyof typeof orderStatusConfig]?.activeBg ?? 'bg-muted/10 dark:bg-muted/15';
+export function getOrderActiveBg(status: OrderStatus): string {
+  return orderStatusConfig[status]?.activeBg ?? 'bg-muted/10 dark:bg-muted/15';
 }
 
 export function getOrderHasReports(giftcards: Giftcard[]): boolean {

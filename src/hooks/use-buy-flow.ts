@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { type BuyFlowCard, type BuyFlowTierInfo } from '@/types';
+import type { OrderStatus } from '@/generated/prisma/enums';
 
 // ── Re-export types (consumers import from here) ─────────────────────────────
 export { type BuyFlowCard, type BuyFlowTierInfo } from '@/types';
@@ -14,7 +15,7 @@ export interface BuyFlowState {
   targetAmount: string;
   foundGiftcards: BuyFlowCard[];
   orderId: string | null;
-  orderStatus: string | null;
+  orderStatus: OrderStatus | null;
   adjustedTotal: number | null;
   tierInfo: BuyFlowTierInfo | null;
   setStep: (step: number) => void;
@@ -24,7 +25,7 @@ export interface BuyFlowState {
   setTargetAmount: (amount: string) => void;
   setFoundGiftcards: (cards: BuyFlowCard[]) => void;
   setOrderId: (id: string | null) => void;
-  setOrderStatus: (status: string | null) => void;
+  setOrderStatus: (status: OrderStatus | null) => void;
   setAdjustedTotal: (total: number | null) => void;
   setTierInfo: (info: BuyFlowTierInfo | null) => void;
   removeGiftcard: (id: string) => void;

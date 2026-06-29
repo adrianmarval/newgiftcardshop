@@ -135,7 +135,11 @@ const httpServer = createServer(async (req, res) => {
     // Webhook routing — solo en producción
     if (isProd && sellerEntry && pathname === sellerEntry.webhookPath) {
       const secret = process.env.WEBHOOK_SECRET_TOKEN;
-      if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+      if (!secret) {
+        res.statusCode = 500;
+        return res.end('Webhook secret not configured');
+      }
+      if (req.headers['x-telegram-bot-api-secret-token'] !== secret) {
         res.statusCode = 401;
         return res.end('Unauthorized');
       }
@@ -143,7 +147,11 @@ const httpServer = createServer(async (req, res) => {
     }
     if (isProd && buyerEntry && pathname === buyerEntry.webhookPath) {
       const secret = process.env.WEBHOOK_SECRET_TOKEN;
-      if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+      if (!secret) {
+        res.statusCode = 500;
+        return res.end('Webhook secret not configured');
+      }
+      if (req.headers['x-telegram-bot-api-secret-token'] !== secret) {
         res.statusCode = 401;
         return res.end('Unauthorized');
       }
