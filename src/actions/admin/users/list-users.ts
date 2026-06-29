@@ -3,7 +3,7 @@
 import prisma from '@/lib/prisma';
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import { Role } from '@/generated/prisma/enums';
-import { listUsersInputSchema, listUsersOutputSchema, type GetUsersInput, type GetUsersOutput } from './schemas';
+import { listUsersInputSchema, listUsersOutputSchema } from './schemas';
 
 export const listUsers = adminActionClient
   .inputSchema(listUsersInputSchema)
@@ -64,5 +64,3 @@ export const listUsers = adminActionClient
       throw new ActionError('Error al obtener los usuarios.');
     }
   });
-
-export type { GetUsersInput, GetUsersOutput };
