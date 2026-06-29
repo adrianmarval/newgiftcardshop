@@ -1,21 +1,9 @@
 'use server';
 
-import { z } from 'zod';
-import { Prisma } from '@/generated/prisma/client';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { findOrderForUser, completeOrderPayment, OrderAlreadyProcessedError } from '@/lib/services/order';
 import { logger } from '@/lib/logger';
-
-const completeOrderInputSchema = z.object({
-  orderId: z.string().min(1),
-  _transactionId: z.string().trim().min(1, 'Transaction ID is required'),
-});
-
-const completeOrderOutputSchema = z.object({
-  success: z.literal(true),
-  orderId: z.string(),
-  message: z.string(),
-});
+import { completeOrderInputSchema, completeOrderOutputSchema } from './schemas';
 
 export const completeOrder = buyerActionClient
   .inputSchema(completeOrderInputSchema)

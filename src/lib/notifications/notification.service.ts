@@ -4,21 +4,7 @@ import { notificationDispatcher } from './dispatcher';
 import type { NotificationMessage } from './types';
 import type { NotificationType } from '@/generated/prisma/client';
 import { getCountryFlag } from '@/lib/utils/country-flags';
-import type { TierDropEvent } from '@/types';
-
-interface BrandCountryInfo {
-  brandName: string;
-  countryName: string;
-  countryCode: string;
-}
-
-interface EligibleBuyer {
-  userId: string;
-  buyRate: Decimal;
-  notificationPreference: {
-    subscriptions: { brandCountryId: string }[];
-  } | null;
-}
+import type { BrandCountryInfo, EligibleBuyer, TierDropEvent } from '@/types';
 
 interface StockCard {
   amount: Decimal;

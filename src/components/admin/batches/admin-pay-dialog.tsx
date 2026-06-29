@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { InlineAlert, type InlineAlertVariant } from '@/components/ui/inline-alert';
+import { InlineAlert } from '@/components/ui/inline-alert';
 import { payBatch } from '@/actions/admin/batches';
 import type { AdminBatch } from '@/types';
 import type { AlertState } from '@/components/admin/types';

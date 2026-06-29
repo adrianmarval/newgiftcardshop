@@ -1,9 +1,7 @@
 'use server';
 
 import { adminActionClient, ActionError } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const disconnectWhatsAppOutputSchema = z.object({ success: z.literal(true) });
+import { disconnectWhatsAppOutputSchema } from './schemas';
 
 export const disconnectWhatsApp = adminActionClient.outputSchema(disconnectWhatsAppOutputSchema).action(async () => {
   try {

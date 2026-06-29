@@ -1,9 +1,9 @@
-import { getSession } from '@/lib/auth/authorization';
+
 import { Metadata } from 'next';
 import { getSellerStats } from '@/actions/seller/stats';
 import { recentBatches } from '@/actions/seller/batches';
 import { SellerDashboardClient } from '@/components/sell/seller-dashboard-client';
-import type { SellerStats as SellerStatsType } from '@/types';
+import type { SellerStats } from '@/types';
 import type { RecentBatch } from '@/types';
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default async function SellerDashboardPage() {
     throw new Error('Failed to load recent batches');
   }
 
-  const stats: SellerStatsType = {
+  const stats: SellerStats = {
     totalCards: statsResult.data.totalCards,
     totalBatches: statsResult.data.totalBatches,
     paidBatches: statsResult.data.paidBatches,

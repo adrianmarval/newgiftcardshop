@@ -3,17 +3,8 @@
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-import { appSectionMap, portalSchema } from '@/types';
-
-const logoutInputSchema = z.object({
-  portal: portalSchema,
-});
-
-const logoutOutputSchema = z.object({
-  success: z.literal(true),
-  redirectTo: z.string(),
-});
+import { appSectionMap } from '@/types';
+import { logoutInputSchema, logoutOutputSchema } from './schemas';
 
 export const logout = actionClient
   .inputSchema(logoutInputSchema)

@@ -1,15 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-
-const undoIssueInputSchema = z.object({
-  giftcardId: z.string(),
-  orderId: z.string(),
-});
-
-const undoIssueOutputSchema = z.object({ success: z.literal(true) });
+import { undoIssueInputSchema, undoIssueOutputSchema } from './schemas';
 
 export const undoIssue = buyerActionClient
   .inputSchema(undoIssueInputSchema)

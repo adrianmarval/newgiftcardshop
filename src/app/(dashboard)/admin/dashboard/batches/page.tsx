@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { listBatches } from '@/actions/admin/batches';
-import { getSellers } from '@/actions/admin/users/get-sellers';
+import { getUsersByRole } from '@/actions/admin/users';
 import { AdminBatchesView } from '@/components/admin/batches/admin-batches-view';
 import { adminBatchesSearchParamsCache } from '@/lib/search-params';
 
@@ -23,14 +23,14 @@ export default async function AdminBatchesPage({ searchParams }: { searchParams:
 
   const [batchesResult, sellersResult] = await Promise.all([
     listBatches({ page, limit, search, sort, sellerId, status, dateFrom, dateTo, amountMin, amountMax }),
-    getSellers(),
+    getUsersByRole({ role: 'SELLER' }),
   ]);
 
   if (!batchesResult.data?.success) {
     throw new Error('Failed to load batches');
   }
 
-  const sellers = sellersResult.data?.success ? sellersResult.data.sellers : [];
+  const sellers = sellersResult.data?.success ? sellersResult.data.users : [];
 
   return <AdminBatchesView batches={batchesResult.data.items} sellers={sellers} pagination={batchesResult.data.pagination} />;
 }

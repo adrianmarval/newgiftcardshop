@@ -1,30 +1,13 @@
 'use server';
 
-import prisma from '@/lib/prisma';
-import { z } from 'zod';
 import { buyerActionClient, ActionError } from '@/lib/safe-action';
+import prisma from '@/lib/prisma';
 import { startOfDay } from 'date-fns';
 import { maskEmail } from '@/lib/utils/mask-email';
 import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
+import { buyerStatsOutputSchema } from './schemas';
 
 const ORDER_BOOK_LIMIT = 10;
-
-const buyerStatsOutputSchema = z.object({
-  availableCards: z.number(),
-  availableAmount: z.number(),
-  orderBook: z.object({
-    totalOrdersToday: z.number(),
-    totalTradedToday: z.number(),
-    entries: z.array(z.object({
-      orderId: z.string(),
-      buyerEmail: z.string(),
-      cardCount: z.number(),
-      total: z.number(),
-      status: z.string(),
-      createdAt: z.string(),
-    })),
-  }),
-});
 
 export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSchema).action(async () => {
   try {

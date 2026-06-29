@@ -153,7 +153,7 @@ function selectBestResult(
   result1: GiftcardSelectionResult,
   result2: GiftcardSelectionResult,
   target: Decimal,
-  toleranceRange: Decimal,
+  _toleranceRange: Decimal,
 ): GiftcardSelectionResult {
   // Descartar resultados que exceden el objetivo
   const r1Valid = result1.total.lte(target);

@@ -5,4 +5,3 @@ export { WhatsAppChannel } from './channels/whatsapp.channel';
 export { NotificationDispatcher, notificationDispatcher } from './dispatcher';
 export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid } from './notification.service';
 export { getSubscribedBrandCountries } from './get-subscribed-brand-countries';
-export type { SubscribedBrandCountry } from './get-subscribed-brand-countries';

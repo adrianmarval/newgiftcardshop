@@ -1,6 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Escalation — Tier escalation config types
+// Escalation — Tier escalation config + estimation result types
 // ─────────────────────────────────────────────────────────────────────────────
+
+import type { Decimal } from '@prisma/client/runtime/client';
 
 export interface EscalationConfig {
   enabled: boolean;
@@ -20,4 +22,16 @@ export interface TierDropEvent {
   brandCountryId: string;
   oldTier: number;
   newTier: number;
+}
+
+export interface TierEstimationResult {
+  minMinutes: number;
+  nextCardTier: number;
+  totalInaccessible: number;
+  totalInaccessibleAmount: Decimal;
+}
+
+export interface AccessibleStockSummary {
+  totalAmount: Decimal;
+  cardCount: number;
 }

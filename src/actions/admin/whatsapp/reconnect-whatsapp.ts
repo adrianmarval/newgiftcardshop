@@ -1,9 +1,7 @@
 'use server';
 
 import { adminActionClient, ActionError } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const reconnectWhatsAppOutputSchema = z.object({ success: z.literal(true) });
+import { reconnectWhatsAppOutputSchema } from './schemas';
 
 export const reconnectWhatsApp = adminActionClient.outputSchema(reconnectWhatsAppOutputSchema).action(async () => {
   try {

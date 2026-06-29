@@ -87,3 +87,14 @@ export interface SellerContext extends Context, SessionFlavor<SellerSessionData>
 export interface BuyerContext extends Context, SessionFlavor<BuyerSessionData> {
   user: User;
 }
+
+// ── Shared bot types ─────────────────────────────────────────────────────────
+
+/** Union of seller and buyer contexts — used by helpers that don't care which bot. */
+export type BotContext = SellerContext | BuyerContext;
+
+/** Bot-supported languages. */
+export type Lang = 'en' | 'es';
+
+/** Roles restricted to bot onboarding (excludes ADMIN). */
+export type BotRole = 'SELLER' | 'BUYER';

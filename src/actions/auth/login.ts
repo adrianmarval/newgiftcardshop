@@ -1,22 +1,11 @@
 'use server';
 
-import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { dashboardMap, portalSchema, roleMap } from '@/types';
+import { dashboardMap, roleMap } from '@/types';
 import { logger } from '@/lib/logger';
-
-const loginInputSchema = z.object({
-  email: z.email('Invalid email address'),
-  password: z.string().trim().min(1, 'Password is required'),
-  portal: portalSchema,
-});
-
-const loginOutputSchema = z.union([
-  z.object({ success: z.literal(true), redirectTo: z.string() }),
-  z.object({ success: z.literal(false), error: z.string().optional(), needsVerification: z.boolean().optional() }),
-]);
+import { loginInputSchema, loginOutputSchema } from './schemas';
 
 export const login = actionClient
   .inputSchema(loginInputSchema)
@@ -54,11 +43,20 @@ export const login = actionClient
 
         if (user.role !== requiredRole && user.role !== 'ADMIN') {
           await auth.api.signOut({ headers: await headers() });
-          logger.warn('Login con rol incorrecto', { flow: 'auth', action: 'login', metadata: { email, portal, userRole: user.role, requiredRole }, ip });
+          logger.warn('Login con rol incorrecto', {
+            flow: 'auth',
+            action: 'login',
+            metadata: { email, portal, userRole: user.role, requiredRole },
+            ip,
+          });
           return { success: false as const, error: `Your account does not have ${requiredRole.toLowerCase()} access` };
         }
 
-        logger.action('auth', 'login', `Login exitoso: ${email}`, { userId: user.id, metadata: { email, portal }, ip });
+        logger.action('auth', 'login', `Login exitoso: ${email}`, {
+          userId: user.id,
+          metadata: { email, portal },
+          ip,
+        });
         return { success: true as const, redirectTo: callbackURL };
       }
 
@@ -70,7 +68,11 @@ export const login = actionClient
       const status = errorObj?.status || errorObj?.body?.status;
       const apiMessage = errorObj?.body?.message || errorObj?.message;
 
-      if (status === 403 || apiMessage?.toLowerCase().includes('not verified') || apiMessage?.toLowerCase().includes('verification')) {
+      if (
+        status === 403 ||
+        apiMessage?.toLowerCase().includes('not verified') ||
+        apiMessage?.toLowerCase().includes('verification')
+      ) {
         return {
           success: false as const,
           error: isSpanish

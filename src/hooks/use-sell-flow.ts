@@ -5,14 +5,10 @@
 'use client';
 
 import { create } from 'zustand';
-import { z } from 'zod';
+
 import { MAX_BATCH_SIZE } from '@/lib/constants';
 import {
-  type ValidationState,
-  type BlockingEvidenceState,
-  isBlockingEvidenceState,
   type SellFlowCard,
-  type SellFlowCardEvidence,
   type SellFlowImage,
   type SellFlowUnmatchedImage,
   type OCRDraftCard,

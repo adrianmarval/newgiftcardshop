@@ -1,6 +1,5 @@
 'use server';
 
-import { z } from 'zod';
 import { findGiftcardCombination } from '@/lib/services/browse/card-combinator';
 import prisma from '@/lib/prisma';
 import { buyerActionClient } from '@/lib/safe-action';
@@ -9,39 +8,7 @@ import { estimateTimeToAccess } from '@/lib/services/pricing/tier-estimation';
 import { getEscalationConfig } from '@/lib/settings/settings.service';
 import { getBuyerBuyRate } from '@/lib/services/pricing';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
-
-const searchGiftcardsInputSchema = z.object({
-  brandId: z.string(),
-  countryId: z.string(),
-  amount: z.number(),
-});
-
-const searchGiftcardsOutputSchema = z.object({
-  success: z.literal(true),
-  giftcards: z.array(
-    z.object({
-      id: z.string(),
-      brand: z.string(),
-      amount: z.number(),
-      status: z.literal('UNUSED'),
-      country: z.object({ name: z.string(), code: z.string(), currency: z.string().nullable() }).nullable().optional(),
-      escalationTier: z.number().optional(),
-    }),
-  ),
-  error: z.string().optional(),
-  tierInfo: z
-    .object({
-      buyerBuyRate: z.number(),
-      accessibleAmount: z.string(),
-      inaccessibleAmount: z.string(),
-      totalCards: z.number(),
-      accessibleCardCount: z.number(),
-      inaccessibleCardCount: z.number(),
-      nextCardTier: z.number().optional(),
-      estimatedMinutes: z.number().optional(),
-    })
-    .optional(),
-});
+import { searchGiftcardsInputSchema, searchGiftcardsOutputSchema } from './schemas';
 
 export const searchGiftcards = buyerActionClient
   .inputSchema(searchGiftcardsInputSchema)
@@ -149,7 +116,6 @@ export const searchGiftcards = buyerActionClient
         };
       }
 
-      // Tarjetas accesibles existen pero la mínima supera el monto buscado
       if (accessibleCards.length > 0) {
         const minCard = accessibleCards.reduce((min, c) => (c.amount.lt(min.amount) ? c : min), accessibleCards[0]);
         if (minCard.amount.gt(amount)) {

@@ -1,25 +1,18 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { getUserRates } from '@/lib/services/pricing';
 import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
 import { logger } from '@/lib/logger';
+import { createOrderInputSchema, createOrderOutputSchema } from './schemas';
 
-const createOrderInputSchema = z.object({
-  giftcardIds: z.array(z.string()),
-  idempotencyKey: z.string().uuid().optional(),
-});
-
-const createOrderOutputSchema = z.object({
-  success: z.literal(true),
-  orderId: z.string(),
-});
-
-function validateTierAccess(cards: { id: string; escalationTier: number | null | undefined }[], buyerBuyRate: number): string | null {
+function validateTierAccess(
+  cards: { id: string; escalationTier: number | null | undefined }[],
+  buyerBuyRate: number,
+): string | null {
   const blockedCards: string[] = [];
 
   for (const card of cards) {
@@ -61,14 +54,16 @@ export const createOrder = buyerActionClient
     });
   })
   .action(async ({ parsedInput: { giftcardIds, idempotencyKey }, ctx }) => {
-    // Idempotency: si ya existe una orden con este key, retornarla
     if (idempotencyKey) {
       const existing = await prisma.order.findUnique({
         where: { idempotencyKey },
         select: { id: true },
       });
       if (existing) {
-        logger.debug('Orden existente por idempotency key', { userId: ctx.auth.user.id, metadata: { orderId: existing.id, idempotencyKey } });
+        logger.debug('Orden existente por idempotency key', {
+          userId: ctx.auth.user.id,
+          metadata: { orderId: existing.id, idempotencyKey },
+        });
         return { success: true as const, orderId: existing.id };
       }
     }
@@ -98,7 +93,6 @@ export const createOrder = buyerActionClient
     let order;
     try {
       order = await prisma.$transaction(async (tx) => {
-        // Revalidar credit limit atómicamente dentro de la tx
         const creditCheck = await checkCreditLimit(ctx.auth.user.id, total, tx);
         if (!creditCheck.allowed) {
           throw new ActionError('Límite de crédito insuficiente. Tenés pagos pendientes que bloquean esta compra.');
@@ -137,7 +131,12 @@ export const createOrder = buyerActionClient
 
     logger.action('buy', 'create-order', `Orden ${order.id} creada con ${giftcardIds.length} tarjetas`, {
       userId: ctx.auth.user.id,
-      metadata: { orderId: order.id, giftcardCount: giftcardIds.length, total: order.total.toString(), buyRate: order.buyRate.toString() },
+      metadata: {
+        orderId: order.id,
+        giftcardCount: giftcardIds.length,
+        total: order.total.toString(),
+        buyRate: order.buyRate.toString(),
+      },
     });
 
     return { success: true as const, orderId: order.id };

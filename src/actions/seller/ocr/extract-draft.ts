@@ -1,8 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import { extractGiftCardData } from '@/lib/services/giftcard/vision.service';
+import { extractDraftInputSchema } from './schemas';
 
 const chunk = <T>(arr: T[], size: number): T[][] => {
   return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size));
@@ -27,10 +27,6 @@ const extractFromImages = async (images: Array<{ id: string; compressedData: str
   }
   return results;
 };
-
-const extractDraftInputSchema = z.object({
-  images: z.array(z.object({ id: z.string(), compressedData: z.string() })),
-});
 
 export const extractDraft = sellerActionClient
   .inputSchema(extractDraftInputSchema)

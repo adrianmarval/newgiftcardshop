@@ -1,6 +1,5 @@
 import { formatDateTime } from '@/lib/utils';
-
-type Lang = 'en' | 'es';
+import type { Lang } from './types.js';
 
 // ── Money ─────────────────────────────────────────────────────────────────────
 

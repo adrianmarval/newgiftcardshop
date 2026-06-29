@@ -4,9 +4,7 @@ import React, { forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, ImageIcon, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/ui';
-
-type LocalImage = { file: File; previewUrl: string };
+import type { LocalImage } from '@/types';
 
 interface FileDropZoneProps {
   localImages: LocalImage[];

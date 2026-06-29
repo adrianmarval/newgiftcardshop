@@ -1,15 +1,8 @@
 'use server';
 
-import { z } from 'zod';
-import prisma from '@/lib/prisma';
 import { sellerActionClient, ActionError } from '@/lib/safe-action';
-
-const sellerStatsOutputSchema = z.object({
-  totalCards: z.number(),
-  totalBatches: z.number(),
-  paidBatches: z.number(),
-  unpaidBatches: z.number(),
-});
+import prisma from '@/lib/prisma';
+import { sellerStatsOutputSchema } from './schemas';
 
 export const getSellerStats = sellerActionClient.outputSchema(sellerStatsOutputSchema).action(async ({ ctx }) => {
   try {

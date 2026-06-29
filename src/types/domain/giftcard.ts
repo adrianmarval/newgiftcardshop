@@ -87,3 +87,21 @@ export interface GiftcardSelectionWithTierInfo extends GiftcardSelectionResult {
     buyerBuyRate: number;
   };
 }
+
+// ── Serialized Giftcard (list views with seller info) ────────────────────────
+
+export interface GiftcardForList {
+  id: string;
+  claimCode: string;
+  pinCode: string | null;
+  amount: number;
+  status: string;
+  isConfirmed: boolean;
+  reportedAmount: number | null;
+  orderId: string | null;
+  batchId: number | null;
+  brand: { name: string; icon: string; image: string | null };
+  country: { name: string; code: string; currency: string | null };
+  isSearchMatch: boolean;
+  seller: { id: string; name: string; email: string } | null;
+}

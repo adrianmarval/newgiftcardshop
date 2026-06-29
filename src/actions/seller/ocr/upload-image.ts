@@ -1,10 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
 import { compressImage } from '@/lib/image-utils';
-
-const uploadImageInputSchema = z.object({ file: z.instanceof(File) });
+import { uploadImageInputSchema } from './schemas';
 
 export const uploadImage = sellerActionClient
   .inputSchema(uploadImageInputSchema)

@@ -2,34 +2,9 @@
 
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
+import { listBrandsOutputSchema } from './schemas';
 
-const getBrandsOutputSchema = z.object({
-  success: z.literal(true),
-  brands: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      slug: z.string(),
-      icon: z.string(),
-      image: z.string().nullable(),
-      isActive: z.boolean(),
-      countries: z.array(
-        z.object({
-          id: z.string(),
-          countryId: z.string(),
-          countryName: z.string(),
-          countryCode: z.string(),
-          minAmount: z.number().nullable(),
-          maxAmount: z.number().nullable(),
-          isActive: z.boolean(),
-        }),
-      ),
-    })
-    .array(),
-});
-
-export const listBrands = adminActionClient.outputSchema(getBrandsOutputSchema).action(async () => {
+export const listBrands = adminActionClient.outputSchema(listBrandsOutputSchema).action(async () => {
   const brands = await prisma.brand.findMany({
     orderBy: { name: 'asc' },
     include: {

@@ -3,17 +3,7 @@
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
 import { startOfDay, startOfWeek, startOfMonth, subDays, format } from 'date-fns';
-import { z } from 'zod';
-
-const getProfitStatsOutputSchema = z.object({
-  summary: z.object({
-    today: z.number(),
-    week: z.number(),
-    month: z.number(),
-    todayVolume: z.number(),
-  }),
-  chartData: z.array(z.object({ date: z.string(), profit: z.number() })),
-});
+import { getProfitStatsOutputSchema } from './schemas';
 
 export const getProfitStats = adminActionClient.outputSchema(getProfitStatsOutputSchema).action(async () => {
   try {
@@ -21,9 +11,8 @@ export const getProfitStats = adminActionClient.outputSchema(getProfitStatsOutpu
     const todayStart = startOfDay(now);
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const monthStart = startOfMonth(now);
-    const thirtyDaysAgo = subDays(todayStart, 29); // Last 30 days including today
+    const thirtyDaysAgo = subDays(todayStart, 29);
 
-    // Consideramos vendidas a aquellas asociadas a una orden COMPLETED.
     const soldGiftcards = await prisma.giftcard.findMany({
       where: {
         orderId: { not: null },
@@ -49,7 +38,6 @@ export const getProfitStats = adminActionClient.outputSchema(getProfitStatsOutpu
 
     const chartMap: Record<string, number> = {};
 
-    // Inicializar los últimos 30 días en 0
     for (let i = 0; i < 30; i++) {
       const d = subDays(todayStart, 29 - i);
       chartMap[format(d, 'yyyy-MM-dd')] = 0;
@@ -67,9 +55,7 @@ export const getProfitStats = adminActionClient.outputSchema(getProfitStatsOutpu
       const buyRate = gc.order.buyRate.toNumber();
       const sellRate = gc.batch.sellRate.toNumber();
 
-      // Profit = (lo que paga el buyer) - (lo que se le paga al seller)
       const profit = effectiveAmount * buyRate - effectiveAmount * sellRate;
-
       const saleDate = gc.order.createdAt;
 
       if (saleDate >= todayStart) {

@@ -104,7 +104,7 @@ class BinanceService {
       let data;
       try {
         data = await response.json();
-      } catch (e) {
+      } catch (_e) {
         data = {};
       }
 

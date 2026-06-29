@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { GiftcardStatus as GiftcardStatusEnum } from '@/generated/prisma/enums';
+import type { GiftcardLike } from '@/types';
 import { logger } from '@/lib/logger';
 
 export class PricingError extends Error {
@@ -9,8 +10,6 @@ export class PricingError extends Error {
     this.name = 'PricingError';
   }
 }
-
-type GiftcardLike = { status: string; amount: Prisma.Decimal; reportedAmount: Prisma.Decimal | null };
 
 function sumFaceValue(giftcards: GiftcardLike[]): Prisma.Decimal {
   return giftcards.reduce((sum, card) => {

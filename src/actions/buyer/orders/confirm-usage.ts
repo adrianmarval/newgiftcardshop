@@ -1,15 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { findOrderForUser, confirmOrderUsage } from '@/lib/services/order';
-
-const confirmUsageInputSchema = z.object({ orderId: z.string() });
-
-const confirmUsageOutputSchema = z.object({
-  success: z.literal(true),
-  adjustedTotal: z.number(),
-});
+import { confirmUsageInputSchema, confirmUsageOutputSchema } from './schemas';
 
 export const confirmUsage = buyerActionClient
   .inputSchema(confirmUsageInputSchema)

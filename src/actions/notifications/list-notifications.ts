@@ -1,34 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-
-const listNotificationsInputSchema = z.object({
-  page: z.number().int().positive().optional().default(1),
-  limit: z.number().int().positive().max(100).optional().default(20),
-  filter: z.enum(['all', 'unread']).optional().default('all'),
-});
-
-const listNotificationsOutputSchema = z.object({
-  success: z.literal(true),
-  notifications: z.array(
-    z.object({
-      id: z.string(),
-      title: z.string(),
-      description: z.string(),
-      type: z.string(),
-      read: z.boolean(),
-      actionUrl: z.string().nullable(),
-      metadata: z.record(z.string(), z.unknown()).nullable(),
-      createdAt: z.date(),
-    }),
-  ),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  hasMore: z.boolean(),
-});
+import { listNotificationsInputSchema, listNotificationsOutputSchema } from './schemas';
 
 export const listNotifications = authActionClient
   .inputSchema(listNotificationsInputSchema)

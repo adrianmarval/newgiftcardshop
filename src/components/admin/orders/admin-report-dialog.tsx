@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { manageReport } from '@/actions/admin/orders';
 import { Spinner } from '@/components/ui/spinner';
-import { InlineAlert, type InlineAlertVariant } from '@/components/ui/inline-alert';
+import { InlineAlert } from '@/components/ui/inline-alert';
 import type { Giftcard } from '@/types';
 import type { AlertState } from '@/components/admin/types';
 

@@ -1,8 +1,6 @@
 import { Metadata } from 'next';
 import { listPayments } from '@/actions/admin/payments/list-payments';
-import { getSellers } from '@/actions/admin/users/get-sellers';
-import { getBuyers } from '@/actions/admin/users/get-buyers';
-import { getAdmins } from '@/actions/admin/users/get-admins';
+import { getUsersByRole } from '@/actions/admin/users';
 import { AdminPaymentsView } from '@/components/admin/payments/admin-payments-view';
 import { adminPaymentsSearchParamsCache } from '@/lib/search-params';
 
@@ -29,18 +27,18 @@ export default async function AdminPaymentsPage({
 
   const [paymentsResult, sellersResult, buyersResult, adminsResult] = await Promise.all([
     listPayments({ page, limit, direction, category, userId, search, dateFrom, dateTo }),
-    getSellers(),
-    getBuyers(),
-    getAdmins(),
+    getUsersByRole({ role: 'SELLER' }),
+    getUsersByRole({ role: 'BUYER' }),
+    getUsersByRole({ role: 'ADMIN' }),
   ]);
 
   if (!paymentsResult.data?.success) {
     throw new Error('Failed to load payments');
   }
 
-  const sellers = sellersResult.data?.success ? sellersResult.data.sellers : [];
-  const buyers = buyersResult.data?.success ? buyersResult.data.buyers : [];
-  const admins = adminsResult.data?.success ? adminsResult.data.admins : [];
+  const sellers = sellersResult.data?.success ? sellersResult.data.users : [];
+  const buyers = buyersResult.data?.success ? buyersResult.data.users : [];
+  const admins = adminsResult.data?.success ? adminsResult.data.users : [];
 
   return (
     <AdminPaymentsView

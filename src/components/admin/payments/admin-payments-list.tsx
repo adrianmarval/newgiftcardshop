@@ -12,7 +12,7 @@ interface AdminPaymentsListProps {
   totalPages: number;
 }
 
-export const AdminPaymentsList = ({ payments, totalPages }: AdminPaymentsListProps) => {
+export const AdminPaymentsList = ({ payments, totalPages: _totalPages }: AdminPaymentsListProps) => {
   if (payments.length === 0) {
     return (
       <EmptyState

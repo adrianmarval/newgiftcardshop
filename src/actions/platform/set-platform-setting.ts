@@ -3,15 +3,7 @@
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
 import { SETTING_DEFINITIONS, validateSettingValue, serializeSettingValue, type SettingKey } from '@/lib/settings';
-import { z } from 'zod';
-
-const setPlatformSettingInputSchema = z.object({
-  key: z.string().trim().min(1),
-  value: z.string().trim().min(1),
-  description: z.string().trim().optional(),
-});
-
-const setPlatformSettingOutputSchema = z.object({ success: z.literal(true) });
+import { setPlatformSettingInputSchema, setPlatformSettingOutputSchema } from './schemas';
 
 export const setPlatformSetting = adminActionClient
   .inputSchema(setPlatformSettingInputSchema)

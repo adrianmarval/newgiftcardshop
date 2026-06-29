@@ -52,25 +52,4 @@ export interface AdminOrder {
   };
 }
 
-// ── Buyer Stats ───────────────────────────────────────────────────────────────
 
-export interface OrderBookEntry {
-  orderId: string;
-  buyerEmail: string;
-  cardCount: number;
-  total: number;
-  status: OrderStatus;
-  createdAt: string;
-}
-
-export interface OrderBookData {
-  totalOrdersToday: number;
-  totalTradedToday: number;
-  entries: OrderBookEntry[];
-}
-
-export interface BuyerStats {
-  availableCards: number;
-  availableAmount: number;
-  orderBook: OrderBookData;
-}

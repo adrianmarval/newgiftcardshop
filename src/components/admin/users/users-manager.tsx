@@ -19,30 +19,7 @@ import { listBrands } from '@/actions/admin/catalog';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { MoreVertical, Edit2, Power, Loader2, ChevronsUpDown, Check } from 'lucide-react';
 import type { BrandCountrySummary, BrandWithCountries } from '@/types';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'ADMIN' | 'SELLER' | 'BUYER';
-  isActive: boolean;
-  creditLimit: number;
-  minAmountPreference: number | null;
-  maxAmountPreference: number | null;
-  allowSearchPreferences: boolean;
-  allowBuyRateAdjustment: boolean;
-  createdAt: Date;
-}
-
-interface UserRate {
-  id: string;
-  brandCountryId: string;
-  brandName: string;
-  countryName: string;
-  countryCode: string;
-  buyRate: number;
-  sellRate: number;
-}
+import type { User, UserRate } from '@/types';
 
 interface UsersManagerProps {
   initialUsers: User[];

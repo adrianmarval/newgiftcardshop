@@ -37,7 +37,7 @@ export interface AIProvider {
 // ─── Anthropic ────────────────────────────────────────────────────────────────
 export function createAnthropicProvider(config: AIProviderConfig): AIProvider {
   return {
-    async complete(messages, system, jsonMode) {
+    async complete(messages, system, _jsonMode) {
       // Convert vision messages to Anthropic format
       const anthropicMessages = messages.map((m) => {
         if (typeof m.content === 'string') {

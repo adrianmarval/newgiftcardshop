@@ -1,14 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-
-const markAsReadInputSchema = z.object({
-  notificationId: z.string().optional(),
-  all: z.boolean().optional(),
-});
-const markAsReadOutputSchema = z.union([z.object({ success: z.literal(true), updated: z.number() }), z.object({ success: z.literal(false), error: z.string() })]);
+import { markAsReadInputSchema, markAsReadOutputSchema } from './schemas';
 
 export const markAsRead = authActionClient
   .inputSchema(markAsReadInputSchema)

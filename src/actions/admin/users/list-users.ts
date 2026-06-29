@@ -2,41 +2,12 @@
 
 import prisma from '@/lib/prisma';
 import { adminActionClient, ActionError } from '@/lib/safe-action';
-import { z } from 'zod';
-import { paginatedOutputSchema } from '@/types';
 import { Role } from '@/generated/prisma/enums';
-
-const getUsersInputSchema = z.object({
-  page: z.number().int().positive().optional().default(1),
-  limit: z.number().int().positive().max(100).optional().default(10),
-  search: z.string().optional().default(''),
-  role: z.enum(['ALL', 'ADMIN', 'SELLER', 'BUYER']).optional().default('ALL'),
-});
-
-const getUsersOutputSchema = paginatedOutputSchema(
-  z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      email: z.string(),
-      role: z.enum(['ADMIN', 'SELLER', 'BUYER']),
-      isActive: z.boolean(),
-      creditLimit: z.number(),
-      minAmountPreference: z.number().nullable(),
-      maxAmountPreference: z.number().nullable(),
-      allowSearchPreferences: z.boolean(),
-      allowBuyRateAdjustment: z.boolean(),
-      createdAt: z.date(),
-    })
-    .array(),
-);
-
-export type GetUsersInput = z.infer<typeof getUsersInputSchema>;
-export type GetUsersOutput = z.infer<typeof getUsersOutputSchema>;
+import { listUsersInputSchema, listUsersOutputSchema, type GetUsersInput, type GetUsersOutput } from './schemas';
 
 export const listUsers = adminActionClient
-  .inputSchema(getUsersInputSchema)
-  .outputSchema(getUsersOutputSchema)
+  .inputSchema(listUsersInputSchema)
+  .outputSchema(listUsersOutputSchema)
   .action(async ({ parsedInput }) => {
     try {
       const { page, limit, role, search } = parsedInput;
@@ -49,7 +20,10 @@ export const listUsers = adminActionClient
       }
 
       if (search) {
-        where.OR = [{ name: { contains: search, mode: 'insensitive' } }, { email: { contains: search, mode: 'insensitive' } }];
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+        ];
       }
 
       const items = await prisma.user.findMany({
@@ -90,3 +64,5 @@ export const listUsers = adminActionClient
       throw new ActionError('Error al obtener los usuarios.');
     }
   });
+
+export type { GetUsersInput, GetUsersOutput };

@@ -1,12 +1,9 @@
 'use server';
 
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
 import { canCancelOrder, cancelOrder as cancelOrderService } from '@/lib/services/order';
-
-const cancelOrderInputSchema = z.object({ orderId: z.string() });
-const cancelOrderOutputSchema = z.object({ success: z.literal(true), message: z.string() });
+import { cancelOrderInputSchema, cancelOrderOutputSchema } from './schemas';
 
 export const cancelOrder = adminActionClient
   .inputSchema(cancelOrderInputSchema)

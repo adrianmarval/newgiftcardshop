@@ -1,15 +1,5 @@
 import prisma from '@/lib/prisma';
-import type { NotificationItem } from '@/types';
-
-export interface NotificationPageData {
-  notifications: NotificationItem[];
-  unreadCount: number;
-  preference: {
-    telegramEnabled: boolean;
-    whatsappEnabled: boolean;
-    whatsappPhone: string | null;
-  } | null;
-}
+import type { NotificationItem, NotificationPageData } from '@/types';
 
 export async function getNotificationPageData(userId: string): Promise<NotificationPageData> {
   const [rawNotifications, unreadCount, preference] = await Promise.all([

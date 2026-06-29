@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, Power } from 'lucide-react';
+import { Power } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NotificationDropdown } from '@/components/layout';

@@ -10,7 +10,7 @@ import { showAlert } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
 import { purgeLogs } from '@/actions/admin/logs';
 import { Trash2 } from 'lucide-react';
-import type { AppLogItem } from './admin-logs-list';
+import type { AppLogItem } from '@/types';
 import type { PaginationMeta } from '@/types';
 
 interface AdminLogsViewProps {

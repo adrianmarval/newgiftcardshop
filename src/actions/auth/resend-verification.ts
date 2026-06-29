@@ -1,17 +1,10 @@
 'use server';
 
-import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { dashboardMap, portalSchema } from '@/types';
-
-const resendVerificationInputSchema = z.object({
-  email: z.email('Invalid email address'),
-  portal: portalSchema,
-});
-
-const resendVerificationOutputSchema = z.union([z.object({ success: z.literal(true) }), z.object({ error: z.string() })]);
+import { dashboardMap } from '@/types';
+import { resendVerificationInputSchema, resendVerificationOutputSchema } from './schemas';
 
 export const resendVerification = actionClient
   .inputSchema(resendVerificationInputSchema)

@@ -8,12 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { Spinner } from '@/components/ui/spinner';
-import { Send, MessageCircle, Link2, Package, Check, Globe } from 'lucide-react';
+import { Send, MessageCircle, Link2, Package, Check } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { updateNotificationPreferences } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
-import type { SubscribedBrandCountry } from '@/lib/notifications';
+import type { SubscribedBrandCountry } from '@/types';
 
 export interface NotificationsSettingsProps {
   portal: 'buyer' | 'seller' | 'admin';

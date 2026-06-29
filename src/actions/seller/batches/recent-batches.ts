@@ -1,28 +1,9 @@
 'use server';
 
-import { z } from 'zod';
-import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { sellerActionClient, ActionError } from '@/lib/safe-action';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
-
-const recentBatchesOutputSchema = z
-  .object({
-    id: z.number(),
-    sellRate: z.number(),
-    isPaid: z.boolean(),
-    createdAt: z.string(),
-    giftcards: z.array(
-      z.object({
-        id: z.string(),
-        amount: z.number(),
-        brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
-      }),
-    ),
-    cardsCount: z.number(),
-    effectiveTotal: z.number(),
-  })
-  .array();
+import { recentBatchesOutputSchema } from './schemas';
 
 export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutputSchema).action(async ({ ctx }) => {
   try {

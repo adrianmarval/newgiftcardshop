@@ -2,16 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const updateUserRatesInputSchema = z.object({
-  userId: z.string(),
-  brandCountryId: z.string(),
-  buyRate: z.number().min(0).max(1),
-  sellRate: z.number().min(0).max(1),
-});
-
-const updateUserRatesOutputSchema = z.object({ success: z.literal(true) });
+import { updateUserRatesInputSchema, updateUserRatesOutputSchema } from './schemas';
 
 export const updateUserRates = adminActionClient
   .inputSchema(updateUserRatesInputSchema)

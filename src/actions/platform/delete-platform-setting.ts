@@ -3,11 +3,7 @@
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
 import { SETTING_DEFINITIONS, type SettingKey } from '@/lib/settings';
-import { z } from 'zod';
-
-const deletePlatformSettingInputSchema = z.object({ key: z.string().trim().min(1) });
-
-const deletePlatformSettingOutputSchema = z.object({ success: z.literal(true) });
+import { deletePlatformSettingInputSchema, deletePlatformSettingOutputSchema } from './schemas';
 
 export const deletePlatformSetting = adminActionClient
   .inputSchema(deletePlatformSettingInputSchema)

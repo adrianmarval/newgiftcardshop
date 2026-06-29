@@ -2,19 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const getActiveCountriesOutputSchema = z.object({
-  success: z.literal(true),
-  countries: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      code: z.string(),
-      currency: z.string().nullable(),
-    }),
-  ),
-});
+import { getActiveCountriesOutputSchema } from './schemas';
 
 export const getActiveCountries = authActionClient.outputSchema(getActiveCountriesOutputSchema).action(async () => {
   const countries = await prisma.country.findMany({

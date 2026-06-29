@@ -1,20 +1,10 @@
 'use server';
 
-import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
 import { reportGiftcardIssue, deleteGiftcardIssue } from '@/lib/services/order';
-import { GiftcardIssueType } from '@/generated/prisma/enums';
-
-const manageReportInputSchema = z.object({
-  action: z.enum(['ADD', 'UPDATE', 'DELETE']),
-  giftcardId: z.string(),
-  orderId: z.string(),
-  issueType: z.enum(GiftcardIssueType).optional(),
-  reportedAmount: z.number().optional(),
-});
-const manageReportOutputSchema = z.object({ success: z.literal(true) });
+import { manageReportInputSchema, manageReportOutputSchema } from './schemas';
 
 export const manageReport = adminActionClient
   .inputSchema(manageReportInputSchema)
@@ -56,8 +46,14 @@ export const manageReport = adminActionClient
 
     if (action === 'UPDATE') {
       await prisma.$transaction([
-        prisma.giftcardIssue.updateMany({ where: { giftcardId, orderId }, data: { reportedAmount: new Prisma.Decimal(reportedAmount!) } }),
-        prisma.giftcard.update({ where: { id: giftcardId }, data: { reportedAmount: new Prisma.Decimal(reportedAmount!) } }),
+        prisma.giftcardIssue.updateMany({
+          where: { giftcardId, orderId },
+          data: { reportedAmount: new Prisma.Decimal(reportedAmount!) },
+        }),
+        prisma.giftcard.update({
+          where: { id: giftcardId },
+          data: { reportedAmount: new Prisma.Decimal(reportedAmount!) },
+        }),
       ]);
       return { success: true as const };
     }

@@ -16,7 +16,6 @@ async function getServerLogger() {
 }
 
 // ── Giftcard Escalation Service ─────────────────────────────────────────────────
-let escalationInterval: NodeJS.Timeout | null = null;
 
 async function initEscalationService() {
   try {
@@ -33,7 +32,7 @@ async function initEscalationService() {
     const intervalMs = config.durationMinutes * 60 * 1000;
     log.info(`[Escalation] Iniciado - intervalo: ${config.durationMinutes}min`);
 
-    escalationInterval = setInterval(async () => {
+    setInterval(async () => {
       try {
         const result = await processEscalationTiers();
         if (result.processed > 0) {

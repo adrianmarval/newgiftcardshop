@@ -27,13 +27,13 @@ export const Enable2FAFlow = ({
   is2FAEnabled,
   is2FAPending,
   twoFactorError,
-  qrCodeData,
-  totpCode,
+  qrCodeData: _qrCodeData,
+  totpCode: _totpCode,
   password,
   onPasswordChange,
-  onTotpCodeChange,
+  onTotpCodeChange: _onTotpCodeChange,
   onEnable,
-  onVerify,
+  onVerify: _onVerify,
   onRegenerate,
 }: Enable2FAFlowProps) => {
   return (

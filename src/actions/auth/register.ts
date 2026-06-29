@@ -1,31 +1,10 @@
 'use server';
 
-import { z } from 'zod';
 import { authApi } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
 import { appSectionMap, roleMap } from '@/types';
-
-const registerInputSchema = z
-  .object({
-    fullName: z.string().trim().min(1, 'Full name is required'),
-    email: z.email('Invalid email address'),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain an uppercase letter')
-      .regex(/[a-z]/, 'Password must contain a lowercase letter')
-      .regex(/[0-9]/, 'Password must contain a number')
-      .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain a special character'),
-    confirmPassword: z.string().trim(),
-    portal: z.enum(['sell', 'buy', 'admin']),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
-
-const registerOutputSchema = z.union([z.object({ success: z.literal(true), redirectTo: z.string() }), z.object({ error: z.string() })]);
+import { registerInputSchema, registerOutputSchema } from './schemas';
 
 export const register = actionClient
   .inputSchema(registerInputSchema)

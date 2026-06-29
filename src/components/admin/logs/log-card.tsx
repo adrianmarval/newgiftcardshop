@@ -2,21 +2,9 @@
 
 import { RegistryCard } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
+import type { AppLogItem } from '@/types';
 
-export interface AppLogItem {
-  id: string;
-  timestamp: string;
-  level: string;
-  source: string;
-  flow: string | null;
-  action: string | null;
-  message: string;
-  userId: string | null;
-  userName: string | null;
-  metadata: unknown;
-  error: unknown;
-  ip: string | null;
-}
+export type { AppLogItem };
 
 const LEVEL_CONFIG: Record<string, { label: string; className: string }> = {
   info: { label: 'INFO', className: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' },
@@ -31,15 +19,6 @@ const SOURCE_CONFIG: Record<string, { label: string; className: string }> = {
   'buyer-bot': { label: 'Buyer Bot', className: 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border-sky-500/30' },
   cron: { label: 'Cron', className: 'bg-gray-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30' },
   system: { label: 'Sistema', className: 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30' },
-};
-
-const FLOW_CONFIG: Record<string, string> = {
-  sell: 'Venta',
-  buy: 'Compra',
-  order: 'Orden',
-  payment: 'Pago',
-  batch: 'Lote',
-  auth: 'Auth',
 };
 
 interface LogCardProps {

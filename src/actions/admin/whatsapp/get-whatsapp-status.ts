@@ -2,14 +2,7 @@
 
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
-import { z } from 'zod';
-
-const getWhatsAppStatusOutputSchema = z.object({
-  success: z.literal(true),
-  qr: z.string().nullable(),
-  status: z.string(),
-  phoneNumber: z.string().nullable(),
-});
+import { getWhatsAppStatusOutputSchema } from './schemas';
 
 export const getWhatsAppStatus = adminActionClient.outputSchema(getWhatsAppStatusOutputSchema).action(async () => {
   try {

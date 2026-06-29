@@ -2,33 +2,11 @@
 
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const brandCountrySchema = z.object({
-  id: z.string(),
-  brandId: z.string(),
-  countryId: z.string(),
-  brandName: z.string(),
-  brandSlug: z.string(),
-  brandIcon: z.string(),
-  brandImage: z.string().nullable(),
-  countryName: z.string(),
-  countryCode: z.string(),
-  countryCurrency: z.string().default('USD'),
-  isActive: z.boolean(),
-  minAmount: z.number().nullable(),
-  maxAmount: z.number().nullable(),
-});
-
-const inputSchema = z.object({ countryId: z.string() });
-const outputSchema = z.union([
-  z.object({ success: z.literal(true), brandCountries: z.array(brandCountrySchema) }),
-  z.object({ error: z.string() }),
-]);
+import { getBrandsByCountryInputSchema, getBrandsByCountryOutputSchema } from './schemas';
 
 export const getBrandsByCountry = authActionClient
-  .inputSchema(inputSchema)
-  .outputSchema(outputSchema)
+  .inputSchema(getBrandsByCountryInputSchema)
+  .outputSchema(getBrandsByCountryOutputSchema)
   .action(async ({ parsedInput }) => {
     const { countryId } = parsedInput;
 

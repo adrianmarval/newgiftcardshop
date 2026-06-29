@@ -1,12 +1,6 @@
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
-
-export interface CreditCheckResult {
-  allowed: boolean;
-  unpaidTotal: Prisma.Decimal;
-  availableCredit: Prisma.Decimal;
-  creditLimit: Prisma.Decimal;
-}
+import type { CreditCheckResult } from '@/types';
 
 /**
  * Checks if a buyer has enough credit for a purchase.

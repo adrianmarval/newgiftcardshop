@@ -1,19 +1,7 @@
 import { Decimal } from '@prisma/client/runtime/client';
 import type { Giftcard } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
-import type { EscalationConfig } from '@/types';
-
-export interface TierEstimationResult {
-  minMinutes: number;
-  nextCardTier: number;
-  totalInaccessible: number;
-  totalInaccessibleAmount: Decimal;
-}
-
-export interface AccessibleStockSummary {
-  totalAmount: Decimal;
-  cardCount: number;
-}
+import type { AccessibleStockSummary, EscalationConfig, TierEstimationResult } from '@/types';
 
 export function estimateTimeToAccess(
   inaccessibleCards: Giftcard[],

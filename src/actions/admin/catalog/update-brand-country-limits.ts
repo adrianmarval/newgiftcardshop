@@ -2,16 +2,10 @@
 
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const updateBrandCountryLimitsInputSchema = z.object({
-  brandId: z.string(),
-  countryId: z.string(),
-  minAmount: z.number().nullable().optional(),
-  maxAmount: z.number().nullable().optional(),
-  isActive: z.boolean().optional(),
-});
-const updateBrandCountryLimitsOutputSchema = z.object({ success: z.literal(true) });
+import {
+  updateBrandCountryLimitsInputSchema,
+  updateBrandCountryLimitsOutputSchema,
+} from './schemas';
 
 export const updateBrandCountryLimits = adminActionClient
   .inputSchema(updateBrandCountryLimitsInputSchema)
@@ -24,8 +18,8 @@ export const updateBrandCountryLimits = adminActionClient
         brandId_countryId: { brandId, countryId },
       },
       data: {
-        ...(minAmount !== undefined && { minAmount: minAmount }),
-        ...(maxAmount !== undefined && { maxAmount: maxAmount }),
+        ...(minAmount !== undefined && { minAmount }),
+        ...(maxAmount !== undefined && { maxAmount }),
         ...(isActive !== undefined && { isActive }),
       },
     });

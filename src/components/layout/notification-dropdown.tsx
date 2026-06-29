@@ -31,7 +31,7 @@ const PORTAL_ROUTES: Record<AppSection, { notifications: string; settings: strin
   admin: { notifications: '/admin/dashboard/notifications', settings: '/admin/dashboard/notifications' },
 };
 
-export function NotificationDropdown({ portal, badgeKey, href, className }: NotificationDropdownProps) {
+export function NotificationDropdown({ portal, badgeKey, href: _href, className }: NotificationDropdownProps) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loaded, setLoaded] = useState(false);

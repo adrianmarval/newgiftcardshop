@@ -65,6 +65,13 @@ export interface SellFlowImage {
   previewUrl: string;
 }
 
+// ── Local Image (UI pre-upload state) ───────────────────────────────────────
+
+export interface LocalImage {
+  file: File;
+  previewUrl: string;
+}
+
 // ── OCR ─────────────────────────────────────────────────────────────────────
 
 export interface OCRDraftCard {

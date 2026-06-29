@@ -1,25 +1,14 @@
 'use server';
 
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { decrypt, hashCode } from '@/lib/encryption';
 import { sellerActionClient } from '@/lib/safe-action';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
-
-const checkExistingCodesInputSchema = z.object({
-  codes: z.array(z.string()),
-  brandId: z.string(),
-  countryId: z.string(),
-});
-
-const checkExistingCodesOutputSchema = z.object({
-  success: z.literal(true),
-  existingCodes: z.array(z.string()),
-});
+import { checkCodesInputSchema, checkCodesOutputSchema } from './schemas';
 
 export const checkCodes = sellerActionClient
-  .inputSchema(checkExistingCodesInputSchema)
-  .outputSchema(checkExistingCodesOutputSchema)
+  .inputSchema(checkCodesInputSchema)
+  .outputSchema(checkCodesOutputSchema)
   .useValidated(async ({ parsedInput: { codes, brandId, countryId }, next }) => {
     if (codes.length === 0) {
       return next({ ctx: { existingCodes: [] } });

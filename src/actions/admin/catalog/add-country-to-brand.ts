@@ -2,16 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const addCountryInputSchema = z.object({
-  brandId: z.string(),
-  countryId: z.string(),
-  minAmount: z.number().nullable().optional(),
-  maxAmount: z.number().nullable().optional(),
-  isActive: z.boolean().default(true),
-});
-const addCountryToBrandOutputSchema = z.object({ success: z.literal(true) });
+import { addCountryInputSchema, addCountryToBrandOutputSchema } from './schemas';
 
 export const addCountryToBrand = adminActionClient
   .inputSchema(addCountryInputSchema)
@@ -19,7 +10,6 @@ export const addCountryToBrand = adminActionClient
   .action(async ({ parsedInput }) => {
     const { brandId, countryId, minAmount, maxAmount, isActive } = parsedInput;
 
-    // Check if already exists
     const existing = await prisma.brandCountry.findUnique({
       where: {
         brandId_countryId: { brandId, countryId },

@@ -2,6 +2,8 @@
 // Service interfaces — Shared contracts between services, actions, and bots
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { Prisma } from '@/generated/prisma/client';
+
 // ── Batch Publish ───────────────────────────────────────────────────────────
 
 export interface PublishCardInput {
@@ -35,3 +37,57 @@ export interface ReportIssueParams {
   reportedAmount?: number;
   proofImageUrl?: string;
 }
+
+// ── Order List Service ──────────────────────────────────────────────────────
+
+export interface ListOrdersServiceInput {
+  scope: 'admin' | 'buyer';
+  /** Required for scope='buyer'. Ignored for scope='admin' (returns all). */
+  userId?: string;
+  /** Admin-only: filter by specific buyer. */
+  buyerId?: string | null;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  sort?: 'newest' | 'oldest';
+}
+
+// ── Batch List Service ──────────────────────────────────────────────────────
+
+export interface ListBatchesServiceInput {
+  scope: 'admin' | 'seller';
+  /** Required for scope='seller'. Ignored for scope='admin'. */
+  userId?: string;
+  /** Admin-only: filter by specific seller. */
+  sellerId?: string | null;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  amountMin?: number | null;
+  amountMax?: number | null;
+  sort?: 'newest' | 'oldest' | 'amount_high' | 'amount_low';
+}
+
+// ── Credit Check ────────────────────────────────────────────────────────────
+
+export interface CreditCheckResult {
+  allowed: boolean;
+  unpaidTotal: Prisma.Decimal;
+  availableCredit: Prisma.Decimal;
+  creditLimit: Prisma.Decimal;
+}
+
+// ── Pricing ─────────────────────────────────────────────────────────────────
+
+/** Structural subset of Giftcard needed by pricing calculations. */
+export type GiftcardLike = {
+  status: string;
+  amount: Prisma.Decimal;
+  reportedAmount: Prisma.Decimal | null;
+};

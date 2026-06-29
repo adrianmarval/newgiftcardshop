@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TelegramAvatar } from '@/components/common';
-import { CheckCircle, User, MessageCircle, Link2 } from 'lucide-react';
+import { CheckCircle, MessageCircle, Link2 } from 'lucide-react';
 import { updateProfile } from '@/actions/auth/update-profile';
 import { useAction } from 'next-safe-action/hooks';
 import type { AppSection } from '@/types';

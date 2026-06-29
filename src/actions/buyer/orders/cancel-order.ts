@@ -1,15 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { findOrderForUser, canCancelOrder, cancelOrder as cancelOrderService } from '@/lib/services/order';
-
-const cancelOrderInputSchema = z.object({ orderId: z.string() });
-
-const cancelOrderOutputSchema = z.object({
-  success: z.literal(true),
-  message: z.string(),
-});
+import { cancelOrderInputSchema, cancelOrderOutputSchema } from './schemas';
 
 export const cancelOrder = buyerActionClient
   .inputSchema(cancelOrderInputSchema)

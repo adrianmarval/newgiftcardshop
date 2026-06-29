@@ -7,10 +7,6 @@ import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import type { Giftcard } from '@/types';
 import type { AdminOrder } from '@/types';
 
-interface GiftcardWithSeller extends Giftcard {
-  seller: { id: string; name: string; email: string } | null;
-}
-
 interface AdminOrderDetailsProps {
   order: AdminOrder;
   onAddReport?: (card: Giftcard) => void;
@@ -74,20 +70,20 @@ export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteRe
             card={card}
             dropdownActions={renderCardActions(card)}
             contextualInfo={
-              (card as GiftcardWithSeller).seller ? (
+              card.seller ? (
                 <CardFooter className="bg-muted/30 mt-auto flex items-center justify-between border-t p-1 px-3">
                   <div className="flex min-w-0 items-center gap-1">
                     <div className="border-primary/20 bg-primary/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
                       <span className="text-primary text-[10px] font-bold">
-                        {(card as GiftcardWithSeller).seller!.name.charAt(0).toUpperCase()}
+                        {card.seller.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex min-w-0 flex-col">
                       <span className="text-foreground truncate text-[11px] leading-tight font-semibold">
-                        {(card as GiftcardWithSeller).seller!.name}
+                        {card.seller.name}
                       </span>
                       <span className="text-muted-foreground truncate text-[9px] leading-tight">
-                        {(card as GiftcardWithSeller).seller!.email}
+                        {card.seller.email}
                       </span>
                     </div>
                   </div>

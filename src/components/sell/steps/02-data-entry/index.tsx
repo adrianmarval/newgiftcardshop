@@ -12,6 +12,7 @@ import { useDataEntryPipeline } from '@/hooks/use-data-entry-pipeline';
 import { FileDropZone } from './file-drop-zone';
 import { ProcessingProgress } from './processing-progress';
 import { cn } from '@/lib/ui';
+import type { LocalImage } from '@/types';
 import { SellStepsProgress } from '../shared/sell-steps-progress';
 
 // ─── DataEntryStep ──────────────────────────────────────────────────────────
@@ -20,7 +21,7 @@ export function DataEntryStep() {
   const { giftcards, setStep } = useSellFlow();
 
   const [pasteContent, setPasteContent] = useState('');
-  const [localImages, setLocalImages] = useState<Array<{ file: File; previewUrl: string }>>([]);
+  const [localImages, setLocalImages] = useState<LocalImage[]>([]);
   const [showFormatHelp, setShowFormatHelp] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
 

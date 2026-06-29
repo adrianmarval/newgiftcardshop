@@ -1,19 +1,11 @@
 'use server';
 
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { authActionClient, ActionError } from '@/lib/safe-action';
-
-const updateNotificationPreferencesInputSchema = z.object({
-  telegramEnabled: z.boolean().optional(),
-  whatsappEnabled: z.boolean().optional(),
-  whatsappPhone: z.string().trim().optional().nullable(),
-  subscribedBrandCountryIds: z.array(z.string().min(1)).optional(),
-});
-const updateNotificationPreferencesOutputSchema = z.object({
-  success: z.literal(true),
-  preference: z.object({ telegramEnabled: z.boolean(), whatsappEnabled: z.boolean(), whatsappPhone: z.string().nullable() }),
-});
+import {
+  updateNotificationPreferencesInputSchema,
+  updateNotificationPreferencesOutputSchema,
+} from './schemas';
 
 export const updateNotificationPreferences = authActionClient
   .inputSchema(updateNotificationPreferencesInputSchema)

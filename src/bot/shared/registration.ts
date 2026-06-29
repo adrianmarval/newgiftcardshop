@@ -1,16 +1,14 @@
 import prisma from '@/lib/prisma';
 import { resend, EMAIL_FROM } from '@/lib/resend';
 import { authApi } from '@/lib/auth';
-import type { SellerContext, BuyerContext } from './types.js';
+import type { BotContext, BotRole, Lang } from './types.js';
 import { TelegramOtpTemplate } from '@/components/emails';
 import React from 'react';
 import { randomInt } from 'node:crypto';
 import { encryptBuffer } from '@/lib/encryption';
 import { renderUI, deleteUserInput, escapeHTML } from './ui.js';
 
-type BotRole = 'SELLER' | 'BUYER';
-type Lang = 'en' | 'es';
-type RegContext = SellerContext | BuyerContext;
+type RegContext = BotContext;
 
 const i18n = {
   en: {
@@ -184,7 +182,7 @@ export async function handleRegName(ctx: RegContext, role: BotRole): Promise<voi
 
   try {
     await sendOtpEmail(email, name, otp, lang);
-  } catch (err) {
+  } catch (_err) {
     ctx.session.wizard.step = 'awaitingName';
     await renderUI(ctx, i18n[lang].otpEmailError);
     return;
@@ -234,7 +232,7 @@ export async function handleRegEmail(ctx: RegContext, role: BotRole): Promise<vo
 
     try {
       await sendOtpEmail(email, name, otp, lang);
-    } catch (err) {
+    } catch (_err) {
       ctx.session.wizard.step = 'awaitingEmail';
       await renderUI(ctx, i18n[lang].otpEmailError);
       return;

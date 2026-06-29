@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FileText } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LogCard } from './log-card';
-import type { AppLogItem } from './log-card';
+import type { AppLogItem } from '@/types';
 
 export type { AppLogItem };
 
@@ -15,7 +15,7 @@ interface AdminLogsListProps {
   totalCount: number;
 }
 
-export const AdminLogsList = ({ logs, totalPages, totalCount }: AdminLogsListProps) => {
+export const AdminLogsList = ({ logs, totalPages: _totalPages, totalCount: _totalCount }: AdminLogsListProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [lastExpandedId, setLastExpandedId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);

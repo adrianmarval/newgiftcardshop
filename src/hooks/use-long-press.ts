@@ -39,7 +39,7 @@ export function useLongPress({ threshold = 500, onLongPress, onClick }: UseLongP
     [onClick],
   );
 
-  const cancel = useCallback((e: any) => {
+  const cancel = useCallback((_e: any) => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;

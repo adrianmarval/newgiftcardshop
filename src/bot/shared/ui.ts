@@ -1,11 +1,9 @@
 import { InlineKeyboard } from 'grammy';
-import type { SellerContext, BuyerContext } from './types.js';
-import { escapeHTML, truncateForTelegram } from '@/lib/utils/html';
+import type { BotContext } from './types.js';
+import { truncateForTelegram } from '@/lib/utils/html';
 
 // Re-export for bot consumers
 export { escapeHTML, truncateForTelegram } from '@/lib/utils/html';
-
-type BotContext = SellerContext | BuyerContext;
 
 /**
  * Safely deletes a user's input message (text, command, photo).
@@ -15,7 +13,7 @@ export async function deleteUserInput(ctx: BotContext): Promise<void> {
   if (!ctx.message) return;
   try {
     await ctx.deleteMessage();
-  } catch (err) {
+  } catch (_err) {
     // Silencioso, a veces el mensaje ya no existe
   }
 }
@@ -102,7 +100,7 @@ export async function renderUI(
         if (oldMessageId) {
           await ctx.api.deleteMessage(chatId, oldMessageId).catch(() => {});
         }
-      } catch (innerErr) {
+      } catch (_innerErr) {
         // Fallback falló silenciosamente
       }
     }

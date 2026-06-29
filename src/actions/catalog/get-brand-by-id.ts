@@ -2,24 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const getBrandByIdInputSchema = z.object({
-  id: z.string(),
-});
-
-const getBrandByIdOutputSchema = z.object({
-  success: z.literal(true),
-  brand: z
-    .object({
-      id: z.string(),
-      slug: z.string(),
-      name: z.string(),
-      icon: z.string().nullable(),
-      image: z.string().nullable(),
-    })
-    .nullable(),
-});
+import { getBrandByIdInputSchema, getBrandByIdOutputSchema } from './schemas';
 
 export const getBrandById = authActionClient
   .inputSchema(getBrandByIdInputSchema)

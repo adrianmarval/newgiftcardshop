@@ -70,7 +70,6 @@ export function parseClaimCodes(raw: string): ParseClaimCodesResult {
   const duplicates: string[] = [];
 
   const seen = new Set<string>();
-  const seenLines = new Map<string, number>();
 
   const lines = raw.split('\n');
 

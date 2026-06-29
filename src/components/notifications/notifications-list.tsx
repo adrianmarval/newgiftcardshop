@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Spinner } from '@/components/ui/spinner';
 import { Bell } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
 import { markAsRead } from '@/actions/notifications';
@@ -19,7 +18,7 @@ export interface NotificationsListProps {
   initialUnreadCount: number;
 }
 
-export function NotificationsList({ portal, initialNotifications, initialUnreadCount }: NotificationsListProps) {
+export function NotificationsList({ portal, initialNotifications, initialUnreadCount: _initialUnreadCount }: NotificationsListProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const { setUnreadCount } = useNotifications();
 

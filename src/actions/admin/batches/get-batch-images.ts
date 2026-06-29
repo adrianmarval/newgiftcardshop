@@ -3,22 +3,7 @@
 import prisma from '@/lib/prisma';
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import { decryptBuffer } from '@/lib/encryption';
-import { z } from 'zod';
-
-const getBatchImagesInputSchema = z.object({
-  batchId: z.string(),
-});
-
-const getBatchImagesOutputSchema = z.object({
-  success: z.literal(true),
-  images: z.array(
-    z.object({
-      id: z.string(),
-      mimeType: z.string(),
-      base64: z.string(),
-    }),
-  ),
-});
+import { getBatchImagesInputSchema, getBatchImagesOutputSchema } from './schemas';
 
 export const getBatchImages = adminActionClient
   .inputSchema(getBatchImagesInputSchema)
@@ -45,12 +30,15 @@ export const getBatchImages = adminActionClient
 
           if (img.telegramFileId) {
             try {
-              // Get file_path from Telegram API
-              const fileRes = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${img.telegramFileId}`);
+              const fileRes = await fetch(
+                `https://api.telegram.org/bot${botToken}/getFile?file_id=${img.telegramFileId}`,
+              );
               const fileData = await fileRes.json();
 
               if (!fileData.ok) {
-                console.error(`[AdminBatchImages] Error fetching file info from Telegram for ID ${img.telegramFileId}`);
+                console.error(
+                  `[AdminBatchImages] Error fetching file info from Telegram for ID ${img.telegramFileId}`,
+                );
                 return null;
               }
 
@@ -67,8 +55,6 @@ export const getBatchImages = adminActionClient
             }
           } else if (img.data) {
             try {
-              // data is a Prisma Bytes / Uint8Array.
-              // Enryption uses Buffer, so we create a Buffer from the DB field
               const decrypted = decryptBuffer(Buffer.from(img.data));
               base64Data = decrypted.toString('base64');
             } catch (err) {
@@ -76,7 +62,7 @@ export const getBatchImages = adminActionClient
               return null;
             }
           } else {
-            return null; // Empty record?
+            return null;
           }
 
           return {

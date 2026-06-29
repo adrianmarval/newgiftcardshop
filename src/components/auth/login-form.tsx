@@ -77,7 +77,7 @@ export const LoginForm = ({
     },
   });
 
-  const { execute: resendExecute, status: resendStatus } = useAction(resendVerification, {
+  const { execute: resendExecute, status: _resendStatus } = useAction(resendVerification, {
     onSuccess: ({ data }) => {
       if (data?.success) {
         showSwal.fire({

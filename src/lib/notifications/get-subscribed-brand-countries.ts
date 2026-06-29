@@ -1,15 +1,5 @@
 import prisma from '@/lib/prisma';
-
-export interface SubscribedBrandCountry {
-  id: string;
-  brandName: string;
-  brandIcon: string;
-  brandImage: string | null;
-  countryName: string;
-  countryCode: string;
-  countryCurrency: string;
-  subscribed: boolean;
-}
+import type { SubscribedBrandCountry } from '@/types';
 
 export async function getSubscribedBrandCountries(userId: string): Promise<SubscribedBrandCountry[]> {
   const rates = await prisma.userBrandCountryRate.findMany({

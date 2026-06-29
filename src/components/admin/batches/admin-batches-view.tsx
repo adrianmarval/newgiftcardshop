@@ -4,35 +4,32 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { UrlPagination } from '@/components/ui/url-pagination';
-import { AdminBatchesFilters } from './admin-batches-filters';
 import { AdminBatchesList } from './admin-batches-list';
 import { AdminPayDialog } from './admin-pay-dialog';
 import { AdminSellerDialog } from './admin-seller-dialog';
 import type { AdminBatch, PaginationMeta } from '@/types';
 import { IconCurrencyDollar } from '@tabler/icons-react';
-import { StatusLegend } from '@/components/common';
+import { FiltersBar, StatusLegend } from '@/components/common';
+import { adminBatchesSearchParamsParsers } from '@/lib/search-params';
 
-interface AdminBatchesClientProps {
+interface AdminBatchesViewProps {
   batches: AdminBatch[];
-  sellers: Array<{ id: string; name: string }>;
+  sellers: Array<{ id: string; name: string; email?: string }>;
   pagination: PaginationMeta;
 }
 
-export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesClientProps) {
+const FILTERS_DEFAULTS = {
+  status: 'ALL',
+  search: '',
+  sort: 'newest',
+  sellerId: '',
+};
+
+export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesViewProps) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [payDialogOpen, setPayDialogOpen] = useState(false);
-  const [sellerDialog, setSellerDialog] = useState<{
-    seller: {
-      id: string;
-      name: string;
-      email: string;
-      sellRate: number;
-      orderCount: number;
-      createdAt: string;
-      twoFactorEnabled: boolean;
-    } | null;
-  }>({ seller: null });
+  const [sellerDialog, setSellerDialog] = useState<{ seller: AdminBatch['seller'] | null }>({ seller: null });
 
   const selectedBatches = batches.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount);
   const showFloatingBar = useMemo(() => selectedBatches.length > 0, [selectedBatches.length]);
@@ -63,7 +60,41 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesC
     <div className="flex h-full min-h-0 flex-col gap-1">
       <StatusLegend />
 
-      <AdminBatchesFilters sellers={sellers} />
+      <FiltersBar
+        parsers={adminBatchesSearchParamsParsers}
+        defaults={FILTERS_DEFAULTS}
+        config={{
+          search: { placeholder: 'Buscar por ID de lote o vendedor...', paramKey: 'search' },
+          combobox: {
+            label: 'Vendedor',
+            paramKey: 'sellerId',
+            options: sellers,
+            allLabel: 'Todos los vendedores',
+            emptyLabel: 'No se encontraron vendedores.',
+          },
+          status: {
+            label: 'Estado',
+            paramKey: 'status',
+            options: [
+              { value: 'ALL', label: 'Todos' },
+              { value: 'PROCESSING', label: 'En proceso' },
+              { value: 'CONFIRMED', label: 'Confirmado' },
+              { value: 'PAID', label: 'Pagado' },
+              { value: 'WITH_ISSUES', label: 'Con problemas' },
+            ],
+          },
+          sort: {
+            label: 'Ordenar por',
+            paramKey: 'sort',
+            options: [
+              { value: 'newest', label: 'Más recientes' },
+              { value: 'oldest', label: 'Más antiguos' },
+              { value: 'amount_high', label: 'Monto: Mayor a menor' },
+              { value: 'amount_low', label: 'Monto: Menor a mayor' },
+            ],
+          },
+        }}
+      />
 
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         <AdminBatchesList

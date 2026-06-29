@@ -77,7 +77,7 @@ export async function startBuyer(ctx: BuyerContext) {
     await startRegistration(ctx, 'BUYER');
     await cleanupOldMessage();
     await deleteUserInput(ctx);
-  } catch (err: any) {
+  } catch (_err: any) {
     await ctx.reply('❌ Ocurrió un error al iniciar el bot. Por favor, intentá de nuevo más tarde.').catch(() => {});
   }
 }

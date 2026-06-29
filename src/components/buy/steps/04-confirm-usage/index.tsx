@@ -24,7 +24,6 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogAction,
-  AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 
 export const ConfirmUsageStep = () => {

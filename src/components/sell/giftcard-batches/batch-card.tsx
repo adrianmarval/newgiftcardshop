@@ -1,12 +1,8 @@
 'use client';
 
-import { RegistryCard } from '@/components/common';
-import { formatDateTime, formatCurrency } from '@/lib/utils';
+import { RegistryCard, useCardProgress, useCardCurrency, getBatchProgressConfig, CopyableId, BrandIcon, BatchTopRight } from '@/components/common';
+import { formatDateTime } from '@/lib/utils';
 import { BatchDetails } from './batch-details';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-react';
-import { showAlert } from '@/lib/ui';
 import type { SellerBatch } from '@/types';
 
 export interface BatchCardProps {
@@ -17,73 +13,43 @@ export interface BatchCardProps {
 }
 
 export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchCardProps) {
-  const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
-  const totalItems = batch.giftcards.length;
-  const allConfirmed = confirmedCount === totalItems && totalItems > 0;
+  useCardProgress(batch);
+  const currency = useCardCurrency(batch.giftcards);
   const isPaid = batch.isPaid || batch.payments.length > 0;
-  const progressPercentage = totalItems > 0 ? (confirmedCount / totalItems) * 100 : 0;
-  const batchTotal = batch.effectiveTotal;
-  const firstCard = batch.giftcards[0];
-  const currency = firstCard?.country?.currency || 'USD';
+  const allConfirmed =
+    batch.confirmedCount !== undefined &&
+    batch.cardsCount !== undefined &&
+    batch.confirmedCount === batch.cardsCount;
 
-  const getStatus = (): { label: string; color: string; activeBg: string } => {
-    if (isPaid)
-      return {
-        label: 'PAID',
-        color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-        activeBg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
-      };
-    if (allConfirmed)
-      return {
-        label: 'CONFIRMED',
-        color: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-        activeBg: 'bg-blue-500/10 dark:bg-blue-500/15',
-      };
-    return {
-      label: 'PROCESSING',
-      color: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-      activeBg: 'bg-amber-500/10 dark:bg-amber-500/15',
-    };
+  // Override getBatchActiveBg to use seller-specific status (PROCESSING/CONFIRMED/PAID)
+  const getSellerBg = (): string => {
+    if (isPaid) return 'bg-emerald-500/10 dark:bg-emerald-500/15';
+    if (allConfirmed) return 'bg-blue-500/10 dark:bg-blue-500/15';
+    return 'bg-amber-500/10 dark:bg-amber-500/15';
   };
-
-  const status = getStatus();
 
   return (
     <RegistryCard
       id={batch.id}
-      title={
-        <div className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate">Batch #{batch.id}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigator.clipboard.writeText(batch.id.toString());
-              showAlert.toast.success('ID copiado');
-            }}
-          >
-            <Copy className="h-3 w-3" />
-          </Button>
-        </div>
-      }
+      title={<CopyableId id={batch.id} prefix="Batch #" />}
       icon={
-        <Image
-          src={batch.giftcards[0]?.brand?.image || '/'}
-          alt={batch.giftcards[0]?.brand?.name || 'Batch'}
-          width={40}
-          height={40}
-          className={`h-10 w-10 rounded-lg object-contain p-1 ${status.color}`}
-          style={{ width: 'auto', height: 'auto' }}
+        <BrandIcon
+          image={batch.giftcards[0]?.brand?.image}
+          name={batch.giftcards[0]?.brand?.name}
+          className="h-10 w-10 rounded-lg object-contain p-1"
         />
       }
       topRightContent={
         <>
-          <span className="text-md text-foreground font-semibold md:text-lg">{formatCurrency(batchTotal, { currency })}</span>
-          <span className="text-muted-foreground text-xs md:text-sm">
-            You get: {formatCurrency(batch.estimatedPayout, { currency: 'USD' })}
+          <span className="text-md text-foreground font-semibold md:text-lg">
+            {formatDateTime(batch.createdAt, 'en-US').split(',')[0] ? `$${batch.effectiveTotal.toFixed(2)}` : ''}
           </span>
+          <BatchTopRight
+            faceValueTotal={batch.effectiveTotal}
+            estimatedPayout={batch.estimatedPayout}
+            faceValueCurrency={currency}
+            payoutCurrency="USD"
+          />
         </>
       }
       date={formatDateTime(batch.createdAt, 'en-US')}
@@ -91,12 +57,8 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
       isHighlighted={isHighlighted}
       onToggle={onToggle}
       hasReport={batch.giftcards.some((g) => g.status === 'WRONG_AMOUNT')}
-      activeBgClass={status.activeBg}
-      progress={{
-        percentage: progressPercentage,
-        colorClass: 'bg-blue-500',
-        fullColorClass: isPaid ? 'bg-emerald-500' : allConfirmed ? 'bg-blue-500' : 'bg-amber-500',
-      }}
+      activeBgClass={getSellerBg()}
+      progress={getBatchProgressConfig(batch)}
     >
       <BatchDetails batch={batch} />
     </RegistryCard>

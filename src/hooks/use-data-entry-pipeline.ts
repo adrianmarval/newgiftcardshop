@@ -8,10 +8,8 @@ import { checkCodes } from '@/actions/seller/batches';
 import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
 import { showAlert } from '@/lib/ui';
 import { useSellFlow } from '@/hooks/use-sell-flow';
-import { SellFlowImage, type ProcessingStage } from '@/types';
+import { SellFlowImage, type ProcessingStage, type LocalImage } from '@/types';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
-
-type LocalImage = { file: File; previewUrl: string };
 
 interface UseDataEntryPipelineProps {
   pasteContent: string;
@@ -180,7 +178,7 @@ export function useDataEntryPipeline({
                   result.serverError || 'Upload failed',
                 );
               }
-            } catch (error) {
+            } catch (_error) {
               showAlert.error(`Error with ${localImg.file.name}`, 'Critical upload error');
             }
           }

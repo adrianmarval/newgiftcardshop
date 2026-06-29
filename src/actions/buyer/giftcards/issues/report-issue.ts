@@ -1,32 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { GiftcardIssueType } from '@/generated/prisma/enums';
 import { reportGiftcardIssue } from '@/lib/services/order';
-
-const reportIssueInputSchema = z.object({
-  giftcardId: z.string(),
-  orderId: z.string(),
-  issueType: z.enum(GiftcardIssueType),
-  reportedAmount: z.number().optional(),
-  proofImageUrl: z.string().optional(),
-});
-
-const reportIssueOutputSchema = z.object({
-  success: z.literal(true),
-  issue: z.object({
-    id: z.string(),
-    issueType: z.string(),
-    reportedAmount: z.number().nullable().optional(),
-    proofImageUrl: z.string().nullable().optional(),
-    giftcardId: z.string(),
-    orderId: z.string(),
-    reportedById: z.string(),
-    sellerId: z.string().nullable().optional(),
-    createdAt: z.string(),
-  }),
-});
+import { reportIssueInputSchema, reportIssueOutputSchema } from './schemas';
 
 export const reportIssue = buyerActionClient
   .inputSchema(reportIssueInputSchema)

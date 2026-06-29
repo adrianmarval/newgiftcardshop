@@ -2,10 +2,10 @@
 
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const toggleBrandCountryActiveInputSchema = z.object({ brandId: z.string(), countryId: z.string(), isActive: z.boolean() });
-const toggleBrandCountryActiveOutputSchema = z.object({ success: z.literal(true) });
+import {
+  toggleBrandCountryActiveInputSchema,
+  toggleBrandCountryActiveOutputSchema,
+} from './schemas';
 
 export const toggleBrandCountryActive = adminActionClient
   .inputSchema(toggleBrandCountryActiveInputSchema)

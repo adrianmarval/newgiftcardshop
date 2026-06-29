@@ -2,14 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
-import { z } from 'zod';
-
-const deleteUserRatesInputSchema = z.object({
-  userId: z.string(),
-  brandCountryId: z.string(),
-});
-
-const deleteUserRatesOutputSchema = z.object({ success: z.literal(true) });
+import { deleteUserRatesInputSchema, deleteUserRatesOutputSchema } from './schemas';
 
 export const deleteUserRates = adminActionClient
   .inputSchema(deleteUserRatesInputSchema)

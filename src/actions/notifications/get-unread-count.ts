@@ -1,10 +1,8 @@
 'use server';
 
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { authActionClient } from '@/lib/safe-action';
-
-const getUnreadCountOutputSchema = z.object({ success: z.literal(true), count: z.number() });
+import { getUnreadCountOutputSchema } from './schemas';
 
 export const getUnreadCount = authActionClient.outputSchema(getUnreadCountOutputSchema).action(async ({ ctx }) => {
   const count = await prisma.notification.count({

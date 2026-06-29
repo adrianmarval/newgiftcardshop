@@ -2,9 +2,7 @@
 
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
-import { z } from 'zod';
-
-const getInventoryStatsOutputSchema = z.array(z.object({ range: z.string(), count: z.number(), total: z.number() }));
+import { getInventoryStatsOutputSchema } from './schemas';
 
 export const getInventoryStats = adminActionClient.outputSchema(getInventoryStatsOutputSchema).action(async () => {
   try {

@@ -1,4 +1,5 @@
-export { getPlatformSetting, type PlatformSetting } from './get-platform-setting';
+export { getPlatformSetting } from './get-platform-setting';
+export type { PlatformSetting } from './schemas';
 export { getBinancePayPaymentId } from './get-binance-pay-payment-id';
 export { setPlatformSetting } from './set-platform-setting';
 export { deletePlatformSetting } from './delete-platform-setting';

@@ -1,10 +1,21 @@
 'use client';
 
-import { ReactNode, MouseEvent } from 'react';
+import { ReactNode, MouseEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, AlertTriangle } from 'lucide-react';
+import { ChevronDown, AlertTriangle, Copy, Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { formatDateTime } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { formatDateTime, formatCurrency } from '@/lib/utils';
+import { showAlert } from '@/lib/ui';
+import { orderStatusConfig } from '@/lib/config/ui-config';
+import { cancelOrder } from '@/actions/admin/orders';
+import { deleteBatch } from '@/actions/admin/batches';
+import Image from 'next/image';
+import type { AdminBatch, Giftcard, SellerBatch } from '@/types';
+
+// ── RegistryCard shell ────────────────────────────────────────────────────────
 
 export interface RegistryCardProps {
   id: string | number;
@@ -113,5 +124,231 @@ export function RegistryCard({
         )}
       </AnimatePresence>
     </Card>
+  );
+}
+
+// ── Shared hooks for cards (orders + batches) ─────────────────────────────────
+
+export function useCardProgress<T extends { giftcards: { isConfirmed: boolean; status: string }[] }>(item: T) {
+  const confirmedCount = item.giftcards.filter((g) => g.isConfirmed).length;
+  const totalItems = item.giftcards.length;
+  const progressPercentage = totalItems > 0 ? (confirmedCount / totalItems) * 100 : 0;
+  return { confirmedCount, totalItems, progressPercentage };
+}
+
+export function useCardCurrency(giftcards: { country?: { currency: string | null } | null }[]) {
+  return giftcards[0]?.country?.currency || 'USD';
+}
+
+export function useCopyId(id: string | number) {
+  return (e: MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(String(id));
+    showAlert.toast.success('ID copiado');
+  };
+}
+
+export function useCancelOrderAction() {
+  const router = useRouter();
+  const [isCancelling, setIsCancelling] = useState(false);
+  const cancel = async (orderId: string, e: MouseEvent) => {
+    e.stopPropagation();
+    const confirmed = await showAlert.confirm('¿Seguro que quieres cancelar esta orden?', 'Esta acción no se puede deshacer.');
+    if (!confirmed) return;
+    setIsCancelling(true);
+    try {
+      const result = await cancelOrder({ orderId });
+      if (result.serverError || result.validationErrors) {
+        showAlert.error('Error al cancelar la orden');
+      } else {
+        showAlert.toast.success('Orden cancelada con éxito');
+        router.refresh();
+      }
+    } catch {
+      showAlert.error('Error al cancelar');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+  return { cancel, isCancelling };
+}
+
+export function useDeleteBatchAction() {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const remove = async (batchId: number, onDeleted: () => void, e: MouseEvent) => {
+    e.stopPropagation();
+    const confirmed = await showAlert.confirm('Eliminar lote', `¿Eliminar lote #${batchId}?`);
+    if (!confirmed) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteBatch({ batchId });
+      if (result.serverError) {
+        showAlert.error('Error', result.serverError);
+      } else {
+        showAlert.toast.success('Lote eliminado');
+        onDeleted();
+      }
+    } catch (error) {
+      console.error(error);
+      showAlert.error('Error', 'Error al eliminar');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  return { remove, isDeleting };
+}
+
+// ── Order config helpers ─────────────────────────────────────────────────────
+
+export function getOrderProgressConfig(status: string, progressPercentage: number) {
+  const isCompleted = status === 'COMPLETED';
+  const isCancelled = status === 'CANCELLED';
+  return {
+    percentage: progressPercentage,
+    colorClass: 'bg-primary',
+    fullColorClass: isCompleted ? 'bg-emerald-500' : isCancelled ? 'bg-destructive' : undefined,
+  };
+}
+
+export function getOrderActiveBg(status: string): string {
+  return orderStatusConfig[status as keyof typeof orderStatusConfig]?.activeBg ?? 'bg-muted/10 dark:bg-muted/15';
+}
+
+export function getOrderHasReports(giftcards: Giftcard[]): boolean {
+  return giftcards.some((g) => ['INVALID', 'ALREADY_USED', 'DEACTIVATED', 'WRONG_AMOUNT'].includes(g.status));
+}
+
+// ── Batch config helpers ─────────────────────────────────────────────────────
+
+export function getBatchProgressConfig(batch: AdminBatch | SellerBatch) {
+  const isPaid = 'isPaid' in batch ? batch.isPaid : false;
+  const allConfirmed =
+    batch.confirmedCount !== undefined &&
+    batch.cardsCount !== undefined &&
+    batch.confirmedCount === batch.cardsCount;
+  return {
+    percentage: ((batch.confirmedCount ?? 0) / (batch.cardsCount || 1)) * 100,
+    colorClass: 'bg-blue-500',
+    fullColorClass: isPaid ? 'bg-emerald-500' : allConfirmed ? 'bg-blue-500' : 'bg-amber-500',
+  };
+}
+
+export function getBatchActiveBg(batch: AdminBatch | SellerBatch): string {
+  const isPaid = batch.isPaid;
+  const allConfirmed =
+    batch.confirmedCount !== undefined &&
+    batch.cardsCount !== undefined &&
+    batch.confirmedCount === batch.cardsCount;
+  if (isPaid) return 'bg-emerald-500/10 dark:bg-emerald-500/15';
+  if (allConfirmed) return 'bg-blue-500/10 dark:bg-blue-500/15';
+  return 'bg-amber-500/10 dark:bg-amber-500/15';
+}
+
+// ── Shared presentational components used by all 4 cards ─────────────────────
+
+export function BrandIcon({
+  image,
+  name,
+  fallbackIcon,
+  className,
+}: {
+  image: string | null | undefined;
+  name: string | undefined;
+  fallbackIcon?: string;
+  className?: string;
+}) {
+  if (image) {
+    return (
+      <Image
+        src={image}
+        alt={name || 'Card'}
+        width={40}
+        height={40}
+        className={className ?? 'h-10 w-10 rounded-lg object-contain p-1'}
+        style={{ width: 'auto', height: 'auto' }}
+      />
+    );
+  }
+  return <span className="text-3xl">{fallbackIcon ?? '📦'}</span>;
+}
+
+export function CopyableId({ id, prefix = '#', className }: { id: string | number; prefix?: string; className?: string }) {
+  const handleCopy = useCopyId(id);
+  return (
+    <div className={`flex min-w-0 items-center gap-1.5 ${className ?? ''}`}>
+      <span className="truncate">
+        {prefix}
+        {typeof id === 'string' ? id.slice(-8).toUpperCase() : id}
+      </span>
+      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={handleCopy}>
+        <Copy className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
+
+export function DeleteIcon({
+  isDeleting,
+  onClick,
+}: {
+  isDeleting: boolean;
+  onClick: (e: MouseEvent) => void;
+}) {
+  return (
+    <Button
+      onClick={onClick}
+      disabled={isDeleting}
+      variant="ghost"
+      size="icon"
+      className="text-destructive hover:bg-destructive/10 h-8 w-8"
+    >
+      {isDeleting ? <Spinner size="sm" /> : <Trash2 className="h-4 w-4" />}
+    </Button>
+  );
+}
+
+export function OrderTopRight({
+  faceValueTotal,
+  effectiveTotal,
+  faceValueCurrency,
+  paymentCurrency,
+}: {
+  faceValueTotal: number;
+  effectiveTotal: number;
+  faceValueCurrency: string;
+  paymentCurrency: string;
+}) {
+  return (
+    <>
+      <span className="text-md text-foreground font-semibold md:text-lg">
+        {formatCurrency(faceValueTotal, { currency: faceValueCurrency })}
+      </span>
+      <span className="text-muted-foreground text-xs md:text-sm">
+        Precio: {formatCurrency(effectiveTotal, { currency: paymentCurrency })}
+      </span>
+    </>
+  );
+}
+
+export function BatchTopRight({
+  faceValueTotal,
+  estimatedPayout,
+  faceValueCurrency,
+  payoutCurrency,
+}: {
+  faceValueTotal: number;
+  estimatedPayout: number;
+  faceValueCurrency: string;
+  payoutCurrency: string;
+}) {
+  return (
+    <>
+      <span className="text-md text-foreground font-semibold md:text-lg">
+        {formatCurrency(faceValueTotal, { currency: faceValueCurrency })}
+      </span>
+      <span className="text-muted-foreground text-xs md:text-sm">
+        A Pagar: {formatCurrency(estimatedPayout, { currency: payoutCurrency })}
+      </span>
+    </>
   );
 }

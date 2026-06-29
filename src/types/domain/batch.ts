@@ -25,15 +25,6 @@ export interface SellerBatch {
   hasIssues?: boolean;
 }
 
-// ── SellerStats ────────────────────────────────────────────────────────────────
-
-export interface SellerStats {
-  totalCards: number;
-  totalBatches: number;
-  paidBatches: number;
-  unpaidBatches: number;
-}
-
 // ── RecentBatch (for dashboard) ────────────────────────────────────────────────
 
 export interface RecentBatch {
