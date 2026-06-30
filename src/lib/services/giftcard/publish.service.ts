@@ -10,7 +10,7 @@ import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-
 import { getUserRates } from '@/lib/services/pricing';
 import { getInitialTier } from './escalation';
 import { notifyBuyersStockAvailable } from '@/lib/notifications';
-import { MAX_BATCH_SIZE } from '@/lib/constants';
+import { MAX_BATCH_SIZE, WALLET_MIN_PAYOUT_EXTERNAL } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import type { PublishCardInput, PublishResult, PublishContext } from '@/types';
 
@@ -120,6 +120,26 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
       error: { name: error instanceof Error ? error.name : 'Error', message: error instanceof Error ? error.message : 'Unknown' },
     });
     throw new Error('You do not have a rate assigned for this brand and country. Contact the administrator.');
+  }
+
+  // Min payout validation for external wallets (payout = totalAmount × sellRate / 100)
+  const paymentMethod = await prisma.paymentMethod.findUnique({ where: { userId } });
+  if (paymentMethod && !paymentMethod.isBinanceWallet) {
+    const totalAmount = uniqueCards.reduce((sum, card) => sum + parseFloat(card.amount), 0);
+    const estimatedPayout = totalAmount * Number(sellRateSnapshot) / 100;
+    if (estimatedPayout < WALLET_MIN_PAYOUT_EXTERNAL) {
+      logger.warn('publishBatch: pago estimado insuficiente para wallet externa', {
+        flow: 'sell',
+        action: 'publish-batch',
+        userId,
+        metadata: { totalAmount, sellRate: Number(sellRateSnapshot), estimatedPayout, min: WALLET_MIN_PAYOUT_EXTERNAL },
+      });
+      throw new Error(
+        `External wallets require a minimum estimated payout of $${WALLET_MIN_PAYOUT_EXTERNAL}. ` +
+          `Your batch total: $${totalAmount.toFixed(2)} × ${Number(sellRateSnapshot)}% = $${estimatedPayout.toFixed(2)} payout. ` +
+          `Add more cards or use a Binance wallet.`,
+      );
+    }
   }
 
   // Get initial escalation tier

@@ -22,7 +22,7 @@ import { copyToClipboard } from '@/lib/utils/clipboard';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
 
 export const RedeemStep = () => {
-  const { foundGiftcards, setFoundGiftcards, orderStatus, reportIssue, setStep, orderId, selectedBrand, selectedCountry, selectedCurrency } = useBuyFlow();
+  const { foundGiftcards, setFoundGiftcards, orderStatus, orderBuyRate, reportIssue, setStep, setOrderStatus, orderId, selectedBrand, selectedCountry, selectedCurrency } = useBuyFlow();
   const isPending = orderStatus === 'PENDING' || !orderStatus;
 
   const [redeemState, setRedeemState] = useState<{
@@ -39,6 +39,9 @@ export const RedeemStep = () => {
     copiedIds: new Set<string>(),
   });
 
+  // Use the order's locked buyRate if available, otherwise fetch current rate
+  const effectiveBuyRate = orderBuyRate ?? redeemState.buyRate;
+
   const { execute: executeGetUserBuyRate } = useAction(getUserBuyRate, {
     onSuccess: ({ data }) => {
       if (data?.success && typeof data.rate === 'number') {
@@ -51,15 +54,17 @@ export const RedeemStep = () => {
   });
 
   useEffect(() => {
+    // If we already have the order's buyRate, don't fetch the current rate
+    if (orderBuyRate) return;
     if (selectedBrand.includes('|')) {
       const [brandId, countryId] = selectedBrand.split('|');
       executeGetUserBuyRate({ brandId, countryId });
     } else if (selectedBrand) {
       executeGetUserBuyRate({ brandCountryId: selectedBrand });
     }
-  }, [executeGetUserBuyRate, selectedBrand, selectedCountry]);
+  }, [executeGetUserBuyRate, selectedBrand, selectedCountry, orderBuyRate]);
 
-  // Refetch cards from server on mount to stay in sync with external mutations (e.g., Telegram bot)
+  // Refetch cards AND verify order status on mount to stay in sync with external mutations
   useEffect(() => {
     if (!orderId) return;
     getOrderCards({ orderId }).then((result) => {
@@ -96,8 +101,15 @@ export const RedeemStep = () => {
       issueType: status,
     });
     if (!result.data) {
-      showAlert.error('Error', result.serverError || result.validationErrors?._errors?.join('') || 'Error al reportar el problema');
+      const errorMsg = result.serverError || result.validationErrors?._errors?.join('') || 'Error al reportar el problema';
       reportIssue(id, 'UNUSED');
+      // If the error indicates the order is no longer pending, refresh status
+      if (errorMsg.includes('confirmada') || errorMsg.includes('estado')) {
+        setOrderStatus('AWAITING_PAYMENT');
+        setStep(5);
+        return;
+      }
+      showAlert.error('Error', errorMsg);
     } else {
       showAlert.toast.success('Problema reportado con éxito');
     }
@@ -132,8 +144,14 @@ export const RedeemStep = () => {
       reportedAmount: val,
     });
     if (!result.data) {
-      showAlert.error('Error', result.serverError || result.validationErrors?._errors?.join('') || 'Error al reportar el problema');
+      const errorMsg = result.serverError || result.validationErrors?._errors?.join('') || 'Error al reportar el problema';
       reportIssue(id, 'UNUSED');
+      if (errorMsg.includes('confirmada') || errorMsg.includes('estado')) {
+        setOrderStatus('AWAITING_PAYMENT');
+        setStep(5);
+        return;
+      }
+      showAlert.error('Error', errorMsg);
     } else {
       showAlert.toast.success('Problema reportado con éxito');
     }
@@ -167,14 +185,23 @@ export const RedeemStep = () => {
     });
   };
 
+  const handleAdvanceToConfirm = () => {
+    // If order was already confirmed externally (e.g., via Telegram), go directly to payment
+    if (orderStatus === 'AWAITING_PAYMENT') {
+      setStep(5);
+      return;
+    }
+    setStep(4);
+  };
+
   // Calculate totals based on status and apply buyRate
   const rawTotal = useMemo(() => foundGiftcards.reduce((sum, card) => {
-    if (card.status === 'UNUSED') return sum + card.amount;
+    if (card.status === 'UNUSED' || card.status === 'USED') return sum + card.amount;
     if (card.status === 'WRONG_AMOUNT') return sum + (card.reportedAmount ?? 0);
     return sum; // INVALID, ALREADY_USED, DEACTIVATED = 0
   }, 0), [foundGiftcards]);
 
-  const totalAmount = useMemo(() => rawTotal * redeemState.buyRate, [rawTotal, redeemState.buyRate]);
+  const totalAmount = useMemo(() => rawTotal * effectiveBuyRate, [rawTotal, effectiveBuyRate]);
 
   // Clipboard progress tracking
   const copiedCount = redeemState.copiedIds.size;
@@ -200,7 +227,7 @@ export const RedeemStep = () => {
               <span className="text-muted-foreground">Monto a pagar</span>
               <div className="flex flex-col text-right">
                 <span className="text-primary text-lg font-black md:text-xl">{formatCurrency(totalAmount, { currency: 'USD' })}</span>
-                <span className="text-muted-foreground text-[10px] md:text-xs">Rate ({(redeemState.buyRate * 100).toFixed(1)}%)</span>
+                <span className="text-muted-foreground text-[10px] md:text-xs">Rate ({(effectiveBuyRate * 100).toFixed(1)}%)</span>
               </div>
             </div>
           </div>
@@ -413,7 +440,7 @@ export const RedeemStep = () => {
 
       <div className="flex items-center justify-center-safe gap-1">
         <Button
-          onClick={() => setStep(4)}
+          onClick={handleAdvanceToConfirm}
           className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 text-xs font-bold md:h-10 md:text-sm"
         >
           Confirmar uso/reportes <ChevronRight className="ml-1 h-3 w-3 md:ml-2 md:h-4 md:w-4" />

@@ -26,7 +26,7 @@ export default async function SellerNotificationsPage() {
           settingsProps={{
             portal: 'seller',
             telegramLinked: !!session.user.telegramUser,
-            telegramProfileUrl: '/sell/dashboard/profile',
+            telegramProfileUrl: '/sell/dashboard/account',
             initialPreferences: preference
               ? {
                   telegramEnabled: preference.telegramEnabled,

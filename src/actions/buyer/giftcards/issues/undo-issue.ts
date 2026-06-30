@@ -13,6 +13,7 @@ export const undoIssue = buyerActionClient
     });
     if (!order) throw new ActionError('Orden no encontrada');
     if (order.userId !== ctx.auth.user.id) throw new ActionError('No autorizado');
+    if (order.status !== 'PENDING') throw new ActionError('No se pueden modificar reportes en una orden que ya fue confirmada');
     const foundGiftcard = await prisma.giftcard.findUnique({
       where: { id: giftcardId },
       select: { ownerId: true },

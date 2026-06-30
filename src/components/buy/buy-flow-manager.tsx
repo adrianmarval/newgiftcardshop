@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { BuyFlowCard, useBuyFlow } from '@/hooks/use-buy-flow';
 import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep, PaymentStep } from '@/components/buy/steps';
 import type { BrandCountry, BuyerOrder } from '@/types';
@@ -14,6 +15,7 @@ export interface BuyGiftcardManagerProps {
 
 export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardManagerProps) => {
   const { step } = useBuyFlow();
+  const router = useRouter();
 
   const syncedRef = useRef<string | null>(null);
   const targetKey = resumeOrder?.id ?? 'fresh';
@@ -23,6 +25,13 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
     syncedRef.current = targetKey;
 
     if (resumeOrder) {
+      // Fix #8: If order is already COMPLETED or CANCELLED, redirect to orders list
+      if (resumeOrder.status === 'COMPLETED' || resumeOrder.status === 'CANCELLED') {
+        useBuyFlow.getState().resetForm();
+        router.push('/store/dashboard/orders');
+        return;
+      }
+
       const giftcards: BuyFlowCard[] = resumeOrder.giftcards.map((card) => ({
         id: card.id,
         brand: card.brand.name,
@@ -46,6 +55,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
         orderId: resumeOrder.id,
         orderStatus: resumeOrder.status,
         adjustedTotal: resumeOrder.adjustedTotal,
+        orderBuyRate: resumeOrder.buyRate,
         foundGiftcards: giftcards,
         selectedBrand: resumeBrandCountryId,
         selectedCountry: '',
@@ -54,7 +64,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
     } else {
       useBuyFlow.getState().resetForm();
     }
-  }, [targetKey, resumeOrder]);
+  }, [targetKey, resumeOrder, router]);
 
   return (
     <div className="h-full">

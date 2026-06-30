@@ -5,11 +5,11 @@ import { decryptBuffer } from '@/lib/encryption';
 import prisma from '@/lib/prisma';
 
 export const metadata: Metadata = {
-  title: `Perfil | Panel de Administración | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
-  description: `Gestiona los ajustes de tu perfil de administrador de ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  title: `Account | Seller Dashboard | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Manage your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} seller account settings`,
 };
 
-export default async function AdminProfilePage() {
+export default async function SellerAccountPage() {
   const session = await getSession();
   const telegramUser = session.user.telegramUser ?? null;
 
@@ -26,6 +26,9 @@ export default async function AdminProfilePage() {
     }
   }
 
+  const botUsername = process.env.SELLER_BOT_USERNAME;
+  const telegramLinkUrl = botUsername ? `https://t.me/${botUsername}` : null;
+
   return (
     <ProfileForm
       user={{
@@ -34,10 +37,12 @@ export default async function AdminProfilePage() {
         emailVerified: session.user.emailVerified,
         image: null,
         twoFactorEnabled: !!session.user.twoFactorEnabled,
+        createdAt: session.user.createdAt,
         telegramUser,
       }}
       telegramPhotoDataUrl={telegramPhotoDataUrl}
-      portal="admin"
+      portal="sell"
+      telegramLinkUrl={telegramLinkUrl}
     />
   );
 }

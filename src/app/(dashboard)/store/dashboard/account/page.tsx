@@ -5,11 +5,11 @@ import { decryptBuffer } from '@/lib/encryption';
 import prisma from '@/lib/prisma';
 
 export const metadata: Metadata = {
-  title: `Profile | Seller Dashboard | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
-  description: `Manage your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} seller profile settings`,
+  title: `Account | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Manage your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} account settings`,
 };
 
-export default async function SellerProfilePage() {
+export default async function BuyerAccountPage() {
   const session = await getSession();
   const telegramUser = session.user.telegramUser ?? null;
 
@@ -26,8 +26,13 @@ export default async function SellerProfilePage() {
     }
   }
 
-  const botUsername = process.env.SELLER_BOT_USERNAME;
+  const botUsername = process.env.BUYER_BOT_USERNAME;
   const telegramLinkUrl = botUsername ? `https://t.me/${botUsername}` : null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { creditLimit: true },
+  });
 
   return (
     <ProfileForm
@@ -37,10 +42,12 @@ export default async function SellerProfilePage() {
         emailVerified: session.user.emailVerified,
         image: null,
         twoFactorEnabled: !!session.user.twoFactorEnabled,
+        createdAt: session.user.createdAt,
+        creditLimit: user?.creditLimit ? Number(user.creditLimit) : null,
         telegramUser,
       }}
       telegramPhotoDataUrl={telegramPhotoDataUrl}
-      portal="sell"
+      portal="buy"
       telegramLinkUrl={telegramLinkUrl}
     />
   );

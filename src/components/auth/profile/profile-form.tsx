@@ -3,6 +3,9 @@
 import { ProfileInfoSection } from '@/components/auth/profile/profile-info-section';
 import { SecuritySection } from '@/components/auth/profile/security-section';
 import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
+import { PaymentMethodSection } from '@/components/sell/payment-method';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { User, Lock, ShieldCheck, Wallet } from 'lucide-react';
 import type { AppSection } from '@/types';
 
 interface ProfileFormProps {
@@ -12,6 +15,8 @@ interface ProfileFormProps {
     emailVerified: boolean;
     image?: string | null;
     twoFactorEnabled: boolean;
+    createdAt?: Date | null;
+    creditLimit?: number | null;
     telegramUser?: {
       username: string | null;
       firstName: string | null;
@@ -27,27 +32,58 @@ interface ProfileFormProps {
 
 export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUrl }: ProfileFormProps) => {
   const emailVerified = true;
+  const isSeller = portal === 'sell';
 
   return (
-    <div className="w-full space-y-3">
-      <div className="grid gap-1 md:grid-cols-12 md:gap-1">
-        <div className="space-y-3 md:col-span-7 md:space-y-1">
-          <ProfileInfoSection
-            name={user.name}
-            email={user.email}
-            emailVerified={emailVerified}
-            portal={portal}
-            telegramUser={user.telegramUser}
-            telegramPhotoDataUrl={telegramPhotoDataUrl}
-            telegramLinkUrl={telegramLinkUrl}
-          />
-        </div>
+    <div className="w-full">
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList variant="line" className="w-full justify-start">
+          <TabsTrigger value="profile" className="gap-1.5">
+            <User className="h-4 w-4" /> Profile
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-1.5">
+            <Lock className="h-4 w-4" /> Security
+          </TabsTrigger>
+          <TabsTrigger value="2fa" className="gap-1.5">
+            <ShieldCheck className="h-4 w-4" /> 2FA
+          </TabsTrigger>
+          {isSeller && (
+            <TabsTrigger value="wallet" className="gap-1.5">
+              <Wallet className="h-4 w-4" /> Wallet
+            </TabsTrigger>
+          )}
+        </TabsList>
 
-        <div className="space-y-3 md:col-span-5 md:space-y-1">
-          <SecuritySection />
-          <TwoFactorSection initialEnabled={user.twoFactorEnabled} />
+        <div className="mt-4">
+          <TabsContent value="profile">
+            <ProfileInfoSection
+              name={user.name}
+              email={user.email}
+              emailVerified={emailVerified}
+              portal={portal}
+              createdAt={user.createdAt}
+              creditLimit={user.creditLimit}
+              telegramUser={user.telegramUser}
+              telegramPhotoDataUrl={telegramPhotoDataUrl}
+              telegramLinkUrl={telegramLinkUrl}
+            />
+          </TabsContent>
+
+          <TabsContent value="security">
+            <SecuritySection />
+          </TabsContent>
+
+          <TabsContent value="2fa">
+            <TwoFactorSection initialEnabled={user.twoFactorEnabled} />
+          </TabsContent>
+
+          {isSeller && (
+            <TabsContent value="wallet">
+              <PaymentMethodSection isSeller={isSeller} />
+            </TabsContent>
+          )}
         </div>
-      </div>
+      </Tabs>
     </div>
   );
 };

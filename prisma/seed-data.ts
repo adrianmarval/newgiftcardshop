@@ -2,6 +2,8 @@ import { Prisma } from '../src/generated/prisma/client';
 import { hashPassword } from 'better-auth/crypto';
 
 interface SeedData {
+  coinData: Prisma.CoinCreateInput[];
+  networkData: Prisma.NetworkCreateInput[];
   userData: Prisma.UserCreateInput[];
   countryData: Prisma.CountryCreateInput[];
   brandData: Prisma.BrandCreateInput[];
@@ -10,6 +12,16 @@ interface SeedData {
 }
 
 export const seedData: SeedData = {
+  coinData: [
+    { name: 'Tether', symbol: 'USDT', decimals: 6 },
+  ],
+  networkData: [
+    { name: 'BSC', description: 'BNB Smart Chain BEP20', regex: '^(0x)[0-9A-Fa-f]{40}$' },
+    { name: 'TRX', description: 'Tron TRC20', regex: '^T[1-9A-HJ-NP-Za-km-z]{33}$' },
+    { name: 'MATIC', description: 'Polygon POS', regex: '^(0x)[0-9A-Fa-f]{40}$' },
+    { name: 'AVAXC', description: 'AVAX C-Chain', regex: '^(0x)[0-9A-Fa-f]{40}$' },
+    { name: 'PLASMA', description: 'Plasma', regex: '^(0x)[0-9A-Fa-f]{40}$' },
+  ],
   userData: [
     {
       name: 'Adrian Marval',
@@ -17,13 +29,6 @@ export const seedData: SeedData = {
       emailVerified: true,
       isActive: true,
       role: 'ADMIN',
-      paymentMethod: {
-        create: {
-          address: 'ssdgsdgsdgsdgsdg',
-          coin: 'USDT',
-          network: 'AVAXC',
-        },
-      },
       accounts: {
         create: {
           accountId: 'admin-account-provider-id',
@@ -38,13 +43,6 @@ export const seedData: SeedData = {
       emailVerified: true,
       isActive: true,
       role: 'SELLER',
-      paymentMethod: {
-        create: {
-          address: '118s4g684sd68g48s64dg68sdg',
-          coin: 'USDT',
-          network: 'AVAXC',
-        },
-      },
       accounts: {
         create: {
           accountId: 'seller-account-provider-id',
@@ -59,13 +57,6 @@ export const seedData: SeedData = {
       emailVerified: true,
       isActive: true,
       role: 'BUYER',
-      paymentMethod: {
-        create: {
-          address: '118s4g684sd68g48s64dg68sdg',
-          coin: 'USDT',
-          network: 'AVAXC',
-        },
-      },
       accounts: {
         create: {
           accountId: 'buyer-account-provider-id',
@@ -80,13 +71,6 @@ export const seedData: SeedData = {
       emailVerified: true,
       isActive: true,
       role: 'BUYER',
-      paymentMethod: {
-        create: {
-          address: '118s4g684sd68g48s64dg68jjj',
-          coin: 'USDT',
-          network: 'AVAXC',
-        },
-      },
       accounts: {
         create: {
           accountId: 'buyer-account1-provider-id',

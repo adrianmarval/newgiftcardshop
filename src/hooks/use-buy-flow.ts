@@ -17,6 +17,7 @@ export interface BuyFlowState {
   orderId: string | null;
   orderStatus: OrderStatus | null;
   adjustedTotal: number | null;
+  orderBuyRate: number | null;
   tierInfo: BuyFlowTierInfo | null;
   setStep: (step: number) => void;
   setSelectedBrand: (brand: string) => void;
@@ -27,6 +28,7 @@ export interface BuyFlowState {
   setOrderId: (id: string | null) => void;
   setOrderStatus: (status: OrderStatus | null) => void;
   setAdjustedTotal: (total: number | null) => void;
+  setOrderBuyRate: (rate: number | null) => void;
   setTierInfo: (info: BuyFlowTierInfo | null) => void;
   removeGiftcard: (id: string) => void;
   reportIssue: (id: string, status: BuyFlowCard['status'], correctedAmount?: number) => void;
@@ -43,6 +45,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   orderId: null,
   orderStatus: null,
   adjustedTotal: null,
+  orderBuyRate: null,
   tierInfo: null,
 
   setStep: (step) => set({ step }),
@@ -54,6 +57,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
   setOrderId: (id) => set({ orderId: id }),
   setOrderStatus: (status) => set({ orderStatus: status }),
   setAdjustedTotal: (total) => set({ adjustedTotal: total }),
+  setOrderBuyRate: (rate) => set({ orderBuyRate: rate }),
   setTierInfo: (info) => set({ tierInfo: info }),
 
   removeGiftcard: (id) =>
@@ -85,6 +89,7 @@ export const useBuyFlow = create<BuyFlowState>((set) => ({
       orderId: null,
       orderStatus: null,
       adjustedTotal: null,
+      orderBuyRate: null,
       tierInfo: null,
     }),
 }));

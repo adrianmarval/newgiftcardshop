@@ -21,6 +21,16 @@ import {
   handleSellCancel,
 } from './handlers/sell-handler.js';
 import { handleSellConfirm } from './handlers/sell-confirm-handler.js';
+import {
+  handleWallet,
+  handleWalletConfigure,
+  handleWalletCoinSelected,
+  handleWalletNetworkSelected,
+  handleWalletAddressInput,
+  handleWalletType,
+  handleWalletDelete,
+  handleWalletCancel,
+} from './handlers/wallet-handler.js';
 import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
 
 export function createSellerBot() {
@@ -36,6 +46,7 @@ export function createSellerBot() {
       { command: 'sell', description: 'Publish giftcards' },
       { command: 'batches', description: 'View my batches' },
       { command: 'stats', description: 'View my statistics' },
+      { command: 'wallet', description: 'Configure USDT wallet' },
       { command: 'help', description: 'Help' },
     ])
     .catch((err) => console.warn('[SellerBot] setMyCommands failed (non-critical):', err.message));
@@ -77,6 +88,7 @@ export function createSellerBot() {
   bot.command('sell', startSellWizard);
   bot.command('batches', handleBatches);
   bot.command('stats', handleStats);
+  bot.command('wallet', handleWallet);
   bot.command('help', async (ctx) => {
     await deleteUserInput(ctx);
     await renderUI(
@@ -84,7 +96,8 @@ export function createSellerBot() {
       '📋 <b>Available commands:</b>\n\n' +
         '/sell — Publish giftcards\n' +
         '/batches — View your published batches\n' +
-        '/stats — View your sales statistics\n\n' +
+        '/stats — View your sales statistics\n' +
+        '/wallet — Configure USDT wallet\n\n' +
         '<i>Use the buttons to navigate through the menus.</i>',
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('🏠 Back to Menu', 'start') },
     );
@@ -110,8 +123,29 @@ export function createSellerBot() {
   bot.callbackQuery(/^my_batches(_\d+)?$/, handleBatches);
   bot.callbackQuery(/^view_batch_/, handleViewBatch);
 
-  // ── Mensajes de texto y fotos post-auth (wizard de venta) ────────────────
-  bot.on(':text', handleCodesText);
+  // Wallet
+  bot.callbackQuery('wallet', handleWallet);
+  bot.callbackQuery('wallet_configure', handleWalletConfigure);
+  bot.callbackQuery(/^wallet_coin_/, (ctx) => {
+    const coinId = ctx.callbackQuery.data.replace('wallet_coin_', '');
+    return handleWalletCoinSelected(ctx, coinId);
+  });
+  bot.callbackQuery(/^wallet_network_/, (ctx) => {
+    const networkId = ctx.callbackQuery.data.replace('wallet_network_', '');
+    return handleWalletNetworkSelected(ctx, networkId);
+  });
+  bot.callbackQuery('wallet_type_binance', (ctx) => handleWalletType(ctx, true));
+  bot.callbackQuery('wallet_type_external', (ctx) => handleWalletType(ctx, false));
+  bot.callbackQuery('wallet_delete', handleWalletDelete);
+  bot.callbackQuery('wallet_cancel', handleWalletCancel);
+
+  // ── Mensajes de texto y fotos post-auth (wizard de venta + wallet) ─────
+  bot.on(':text', async (ctx, next) => {
+    const step = ctx.session.wizard.step;
+    if (step === 'awaitingAddress' && ctx.message?.text) return handleWalletAddressInput(ctx, ctx.message.text);
+    if (step === 'awaitingCodes') return handleCodesText(ctx);
+    return next();
+  });
   bot.on(':photo', handleSellPhotos);
 
   // ── Error handler ─────────────────────────────────────────────────────────

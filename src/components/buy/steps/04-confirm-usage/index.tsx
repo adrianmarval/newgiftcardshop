@@ -27,11 +27,14 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export const ConfirmUsageStep = () => {
-  const { foundGiftcards, setFoundGiftcards, setStep, orderId, setOrderStatus, setAdjustedTotal, resetForm, selectedBrand, selectedCountry } = useBuyFlow();
+  const { foundGiftcards, setFoundGiftcards, setStep, orderId, orderStatus, setOrderStatus, setAdjustedTotal, resetForm, selectedBrand, selectedCountry, orderBuyRate } = useBuyFlow();
   const router = useRouter();
   const [buyRate, setBuyRate] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Use the order's locked buyRate if available, otherwise fetch current rate
+  const effectiveBuyRate = orderBuyRate ?? buyRate;
 
   const { execute: executeGetUserBuyRate } = useAction(getUserBuyRate, {
     onSuccess: ({ data }) => {
@@ -45,13 +48,15 @@ export const ConfirmUsageStep = () => {
   });
 
   useEffect(() => {
+    // If we already have the order's buyRate, don't fetch the current rate
+    if (orderBuyRate) return;
     if (selectedBrand.includes('|')) {
       const [brandId, countryId] = selectedBrand.split('|');
       executeGetUserBuyRate({ brandId, countryId });
     } else if (selectedBrand) {
       executeGetUserBuyRate({ brandCountryId: selectedBrand });
     }
-  }, [executeGetUserBuyRate, selectedBrand, selectedCountry]);
+  }, [executeGetUserBuyRate, selectedBrand, selectedCountry, orderBuyRate]);
 
   // Refetch cards from server on mount to stay in sync with external mutations
   useEffect(() => {
@@ -63,13 +68,23 @@ export const ConfirmUsageStep = () => {
     });
   }, [orderId]);
 
+  // Fix #6: Detect if order was already confirmed externally and redirect to payment
+  useEffect(() => {
+    if (orderStatus === 'AWAITING_PAYMENT') {
+      setStep(5);
+    } else if (orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED') {
+      resetForm();
+      router.push('/store/dashboard/orders');
+    }
+  }, [orderStatus, setStep, resetForm, router]);
+
   const rawTotal = useMemo(() => foundGiftcards.reduce((sum, card) => {
-    if (card.status === 'UNUSED') return sum + card.amount;
+    if (card.status === 'UNUSED' || card.status === 'USED') return sum + card.amount;
     if (card.status === 'WRONG_AMOUNT') return sum + (card.reportedAmount ?? 0);
     return sum;
   }, 0), [foundGiftcards]);
 
-  const totalAmount = useMemo(() => rawTotal * buyRate, [rawTotal, buyRate]);
+  const totalAmount = useMemo(() => rawTotal * effectiveBuyRate, [rawTotal, effectiveBuyRate]);
 
   const { execute: confirmExecute, status: confirmStatus } = useAction(confirmUsage, {
     onSuccess: ({ data }) => {

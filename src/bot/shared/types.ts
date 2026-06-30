@@ -13,7 +13,12 @@ export type SellerWizardStep =
   // Flujo de venta
   | 'awaitingCodes'
   | 'awaitingImages'
-  | 'awaitingConfirm';
+  | 'awaitingConfirm'
+  // Configuración de wallet
+  | 'awaitingCoinSelection'
+  | 'awaitingNetworkSelection'
+  | 'awaitingAddress'
+  | 'awaitingWalletType';
 
 export type BuyerWizardStep =
   | 'idle'

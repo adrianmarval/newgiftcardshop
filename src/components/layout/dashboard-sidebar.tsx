@@ -8,13 +8,13 @@ const NAV_ITEMS: Record<AppSection, NavItem[]> = {
     { title: 'Inicio', url: '/store/dashboard', icon: 'home' },
     { title: 'Historial', url: '/store/dashboard/orders', icon: 'history' },
     { title: 'Comprar', url: '/store/dashboard/browse-cards', icon: 'cart' },
-    { title: 'Perfil', url: '/store/dashboard/profile', icon: 'user' },
+    { title: 'Account', url: '/store/dashboard/account', icon: 'user' },
   ],
   sell: [
     { title: 'Home', url: '/sell/dashboard', icon: 'home' },
     { title: 'History', url: '/sell/dashboard/cards', icon: 'cards' },
     { title: 'Sell', url: '/sell/dashboard/sell-cards', icon: 'cash' },
-    { title: 'Profile', url: '/sell/dashboard/profile', icon: 'user' },
+    { title: 'Account', url: '/sell/dashboard/account', icon: 'user' },
   ],
   admin: [
     { title: 'Home', url: '/admin/dashboard', icon: 'home' },
@@ -23,9 +23,10 @@ const NAV_ITEMS: Record<AppSection, NavItem[]> = {
     { title: 'Lotes', url: '/admin/dashboard/batches', icon: 'cards' },
     { title: 'Pagos', url: '/admin/dashboard/payments', icon: 'cash' },
     { title: 'Brands', url: '/admin/dashboard/brands', icon: 'tag' },
+    { title: 'Coins', url: '/admin/dashboard/coins', icon: 'coins' },
     { title: 'Logs', url: '/admin/dashboard/logs', icon: 'logs' },
-    { title: 'Config', url: '/admin/dashboard/config', icon: 'settings' },
-    { title: 'Perfil', url: '/admin/dashboard/profile', icon: 'user' },
+    { title: 'Platform', url: '/admin/dashboard/config', icon: 'settings' },
+    { title: 'Account', url: '/admin/dashboard/account', icon: 'user' },
   ],
 };
 

@@ -12,17 +12,19 @@ const prisma = new PrismaClient({
 });
 
 export async function main() {
-  const { userData, countryData, brandData, brandCountryData } = seedData;
+  const { coinData, networkData, userData, countryData, brandData, brandCountryData } = seedData;
   console.log(`Iniciando el seed...`);
 
   // Limpiar base de datos (ordenado para evitar errores de claves foráneas)
-
   await prisma.payment.deleteMany();
   await prisma.giftcardIssue.deleteMany();
   await prisma.giftcard.deleteMany();
   await prisma.order.deleteMany();
   await prisma.giftcardBatch.deleteMany();
   await prisma.paymentMethod.deleteMany();
+  await prisma.coinNetwork.deleteMany();
+  await prisma.coin.deleteMany();
+  await prisma.network.deleteMany();
   await prisma.session.deleteMany();
   await prisma.account.deleteMany();
   await prisma.telegramUser.deleteMany();
@@ -33,19 +35,44 @@ export async function main() {
   await prisma.brand.deleteMany();
   await prisma.platformSettings.deleteMany();
 
-  // 1. Crear marcas
+  // 1. Crear monedas
+  const coins: Record<string, { id: string }> = {};
+  for (const c of coinData) {
+    const coin = await prisma.coin.create({ data: c });
+    coins[coin.symbol] = coin;
+  }
+  console.log('Monedas creadas:', Object.keys(coins).join(', '));
+
+  // 2. Crear redes
+  const networks: Record<string, { id: string }> = {};
+  for (const n of networkData) {
+    const network = await prisma.network.create({ data: n });
+    networks[network.name] = network;
+  }
+  console.log('Redes creadas:', Object.keys(networks).join(', '));
+
+  // 3. Crear relaciones Coin-Network (USDT en todas las redes)
+  const usdt = coins['USDT'];
+  for (const net of Object.values(networks)) {
+    await prisma.coinNetwork.create({
+      data: { coinId: usdt.id, networkId: net.id },
+    });
+  }
+  console.log('Relaciones Coin-Network creadas.');
+
+  // 4. Crear marcas
   await prisma.brand.createMany({
     data: brandData,
   });
   console.log('Marcas creadas.');
 
-  // 2. Crear países
+  // 5. Crear países
   await prisma.country.createMany({
     data: countryData,
   });
   console.log('Países creados.');
 
-  // 3. Crear BrandCountries (relaciones marca-país con límites)
+  // 6. Crear BrandCountries
   if (brandCountryData && brandCountryData.length > 0) {
     for (const bc of brandCountryData) {
       await prisma.brandCountry.create({
@@ -55,15 +82,26 @@ export async function main() {
     console.log(`BrandCountries creados: ${brandCountryData.length}`);
   }
 
-  // 4. Crear usuarios (incluyendo batches y giftcards anidados)
+  // 7. Crear usuarios
+  const avaxcNetwork = networks['AVAXC'];
   for (const u of userData) {
     const user = await prisma.user.create({
       data: u,
     });
+    // Crear payment method para cada usuario
+    await prisma.paymentMethod.create({
+      data: {
+        userId: user.id,
+        coinId: usdt.id,
+        networkId: avaxcNetwork.id,
+        address: '0x0000000000000000000000000000000000000000',
+        isBinanceWallet: false,
+      },
+    });
     console.log(`Usuario creado: ${user.email} (ID: ${user.id})`);
   }
 
-  // 5. Crear platformSettings
+  // 8. Crear platformSettings
   await prisma.platformSettings.createMany({
     data: seedData.platformSettingData,
   });
@@ -72,7 +110,6 @@ export async function main() {
   console.log(`Seed finalizado con éxito.`);
 }
 
-// 3. Ejecutamos main con el manejo de errores y desconexión recomendado por Prisma
 main()
   .then(async () => {
     await prisma.$disconnect();

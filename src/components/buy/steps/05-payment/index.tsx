@@ -15,9 +15,11 @@ import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
 import { copyToClipboard } from '@/lib/utils/clipboard';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
+import { useRouter } from 'next/navigation';
 
 export const PaymentStep = () => {
-  const { orderId: storedOrderId, adjustedTotal } = useBuyFlow();
+  const { orderId: storedOrderId, adjustedTotal, orderStatus, setStep, resetForm } = useBuyFlow();
+  const router = useRouter();
 
   const [transactionId, setTransactionId] = useState('');
   const [notified, setNotified] = useState(false);
@@ -43,6 +45,16 @@ export const PaymentStep = () => {
   useEffect(() => {
     executeGetPlatformSetting();
   }, [executeGetPlatformSetting]);
+
+  // Fix #7: Detect if order status changed externally and redirect accordingly
+  useEffect(() => {
+    if (orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED') {
+      resetForm();
+      router.push('/store/dashboard/orders');
+    } else if (orderStatus === 'PENDING') {
+      setStep(3);
+    }
+  }, [orderStatus, setStep, resetForm, router]);
 
   const { execute: completeExecute, status: completeStatus } = useAction(completeOrder, {
     onSuccess: ({ data }) => {

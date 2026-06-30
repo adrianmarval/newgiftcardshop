@@ -62,7 +62,12 @@ export async function startSeller(ctx: SellerContext) {
     ctx.session.wizard.step = 'idle';
     await prisma.provenanceImage.deleteMany({ where: { batchId: `temp_${ctx.from?.id}` } });
 
-    const kb = new InlineKeyboard().text('📦 View My Batches', 'my_batches').row().text('➕ Sell Giftcards', 'sell_start');
+    const kb = new InlineKeyboard()
+      .text('📦 View My Batches', 'my_batches')
+      .row()
+      .text('➕ Sell Giftcards', 'sell_start')
+      .row()
+      .text('💰 Wallet', 'wallet');
     const escapedName = escapeHTML(user.name);
 
     await renderUI(ctx, `👋 Welcome back, <b>${escapedName}</b>!\n\nUse the buttons below to navigate.`, {

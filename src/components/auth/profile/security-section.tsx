@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useLocale } from '@/hooks/use-locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,11 +9,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InlineAlert } from '@/components/ui/inline-alert';
-import { Lock } from 'lucide-react';
+import { Lock, MonitorSmartphone, LogOut } from 'lucide-react';
 import { LogoutButton } from '@/components/auth/logout-button';
 import { updateProfile } from '@/actions/auth/update-profile';
+import { getActiveSessions } from '@/actions/auth/get-active-sessions';
+import { revokeOtherSessions } from '@/actions/auth/revoke-other-sessions';
 import { useAction } from 'next-safe-action/hooks';
 import { Spinner } from '@/components/ui/spinner';
+import { showAlert } from '@/lib/ui';
+
+function parseUserAgent(ua: string | null): { icon: string; label: string } {
+  if (!ua) return { icon: '🌐', label: 'Unknown device' };
+  if (/android/i.test(ua)) return { icon: '📱', label: 'Android' };
+  if (/iphone|ipad|ipod/i.test(ua)) return { icon: '📱', label: /ipad/i.test(ua) ? 'iPad' : 'iPhone' };
+  if (/mac/i.test(ua)) return { icon: '🖥️', label: 'Mac' };
+  if (/windows/i.test(ua)) return { icon: '🖥️', label: 'Windows' };
+  if (/linux/i.test(ua)) return { icon: '🐧', label: 'Linux' };
+  if (/bot|crawler|spider/i.test(ua)) return { icon: '🤖', label: 'Bot' };
+  return { icon: '🌐', label: 'Unknown device' };
+}
+
+function formatDate(date: Date): string {
+  const d = new Date(date);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
 
 export interface SecuritySectionProps {
   isPending?: boolean;
@@ -82,6 +110,31 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
   const [alert, setAlert] = useState<{ variant: 'success' | 'error'; title: string; description?: string } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ current?: string; new?: string; confirm?: string }>({});
 
+  const [sessions, setSessions] = useState<Array<{ id: string; ipAddress: string | null; userAgent: string | null; createdAt: Date; expiresAt: Date }>>([]);
+  const [sessionsLoaded, setSessionsLoaded] = useState(false);
+
+  const { execute: executeGetSessions, status: sessionsStatus } = useAction(getActiveSessions, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        setSessions(data.sessions);
+        setSessionsLoaded(true);
+      }
+    },
+  });
+
+  const { execute: executeRevoke, status: revokeStatus } = useAction(revokeOtherSessions, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        showAlert.toast.success(
+          isSpanish
+            ? `${data.revokedCount} sesiones revocadas`
+            : `${data.revokedCount} sessions revoked`
+        );
+        setSessions((prev) => prev.filter((_, i) => i === 0));
+      }
+    },
+  });
+
   const portal = pathname.includes('/admin') ? 'admin' : pathname.includes('/sell') ? 'sell' : 'buy';
 
   const { execute: executeUpdate, status: updateStatus } = useAction(updateProfile, {
@@ -117,6 +170,10 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
   });
 
   const isUpdating = updateStatus === 'executing' || isPending;
+
+  useEffect(() => {
+    executeGetSessions();
+  }, []);
 
   const handleSubmitPassword = () => {
     const errors: { current?: string; new?: string; confirm?: string } = {};
@@ -298,8 +355,73 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
         </AnimatePresence>
 
         {!showPasswordFields && (
-          <div className="flex flex-col gap-1">
-            <p className="text-muted-foreground text-xs md:text-sm">{isSpanish ? 'Oculto por seguridad' : 'Hidden for security'}</p>
+          <div className="flex flex-col gap-3">
+            {/* Active Sessions */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <MonitorSmartphone className="h-3.5 w-3.5 text-muted-foreground" />
+                  <p className="text-xs font-medium md:text-sm">
+                    {isSpanish ? 'Sesiones activas' : 'Active sessions'}
+                  </p>
+                </div>
+                <span className="text-muted-foreground text-xs">{sessions.length}</span>
+              </div>
+
+              {sessionsStatus === 'executing' && sessionsLoaded === false ? (
+                <Spinner size="sm" />
+              ) : (
+                <div className="space-y-1.5">
+                  {sessions.map((s, i) => {
+                    const isCurrent = i === 0;
+                    const device = parseUserAgent(s.userAgent);
+                    return (
+                      <div
+                        key={s.id}
+                        className={`flex items-center justify-between rounded-md border px-3 py-2 text-xs ${
+                          isCurrent
+                            ? 'border-emerald-500/20 bg-emerald-500/5'
+                            : 'border-slate-800 bg-slate-900/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{device.icon}</span>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-foreground font-medium">{device.label}</span>
+                            <span className="text-muted-foreground">
+                              {s.ipAddress || '—'} · {formatDate(s.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                        {isCurrent && (
+                          <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
+                            {isSpanish ? 'Actual' : 'Current'}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {sessions.length > 1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start gap-1.5 text-xs text-destructive hover:text-destructive"
+                  disabled={revokeStatus === 'executing'}
+                  onClick={() => executeRevoke()}
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  {revokeStatus === 'executing'
+                    ? isSpanish ? 'Revocando...' : 'Revoking...'
+                    : isSpanish
+                      ? `Cerrar otras sesiones (${sessions.length - 1})`
+                      : `Revoke other sessions (${sessions.length - 1})`}
+                </Button>
+              )}
+            </div>
+
             <LogoutButton
               portal={portal}
               variant="outline"

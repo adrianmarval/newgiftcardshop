@@ -59,7 +59,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
               portal={portal}
               userName={session.user.name}
               telegramPhotoDataUrl={telegramPhotoDataUrl}
-              profileUrl={`${dashboardMap[portal]}/profile`}
+              profileUrl={`${dashboardMap[portal]}/account`}
               notificationHref={`${dashboardMap[portal]}/notifications`}
               notificationBadgeKey={PORTAL_BADGE_KEY[portal]}
             />

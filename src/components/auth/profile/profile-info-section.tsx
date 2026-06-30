@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TelegramAvatar } from '@/components/common';
-import { CheckCircle, MessageCircle, Link2 } from 'lucide-react';
+import { CheckCircle, MessageCircle, Link2, Calendar, CreditCard } from 'lucide-react';
 import { updateProfile } from '@/actions/auth/update-profile';
 import { useAction } from 'next-safe-action/hooks';
 import type { AppSection } from '@/types';
@@ -20,6 +20,8 @@ export interface ProfileInfoSectionProps {
   email: string;
   emailVerified: boolean;
   portal: AppSection;
+  createdAt?: Date | null;
+  creditLimit?: number | null;
   telegramUser?: {
     username: string | null;
     firstName: string | null;
@@ -36,6 +38,8 @@ export const ProfileInfoSection = ({
   email,
   emailVerified,
   portal,
+  createdAt,
+  creditLimit,
   telegramUser,
   telegramPhotoDataUrl,
   telegramLinkUrl,
@@ -205,6 +209,31 @@ export const ProfileInfoSection = ({
               </Button>
             </div>
           </form>
+
+          {(createdAt || (portal === 'buy' && creditLimit != null)) && (
+            <div className="mt-3 flex flex-wrap gap-3 border-t border-slate-800 pt-3">
+              {createdAt && (
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                  <span>
+                    {isSpanish ? 'Miembro desde' : 'Member since'}{' '}
+                    <span className="font-medium text-slate-300">
+                      {new Date(createdAt).toLocaleDateString(isSpanish ? 'es-ES' : 'en-US', { month: 'short', year: 'numeric' })}
+                    </span>
+                  </span>
+                </div>
+              )}
+              {portal === 'buy' && creditLimit != null && (
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <CreditCard className="h-3.5 w-3.5 text-slate-500" />
+                  <span>
+                    {isSpanish ? 'Límite de crédito' : 'Credit limit'}{' '}
+                    <span className="font-medium text-emerald-400">${creditLimit.toFixed(2)}</span>
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </>

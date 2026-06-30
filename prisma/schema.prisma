@@ -313,10 +313,14 @@ enum PaymentReferenceType {
 }
 
 model PaymentMethod {
-  id      String            @id @default(cuid())
-  coin    SupportedCoins
-  address String
-  network SupportedNetworks
+  id              String  @id @default(cuid())
+  address         String
+  isBinanceWallet Boolean @default(false)
+
+  coinId    String
+  coin      Coin    @relation(fields: [coinId], references: [id])
+  networkId String
+  network   Network @relation(fields: [networkId], references: [id])
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
@@ -370,6 +374,53 @@ model PlatformSettings {
 }
 
 // --------------------------------------
+// Catálogo de Coins y Redes
+// --------------------------------------
+
+model Coin {
+  id       String  @id @default(cuid())
+  name     String  // "Tether"
+  symbol   String  @unique // "USDT"
+  decimals Int     @default(6)
+  isActive Boolean @default(true)
+
+  networks       CoinNetwork[]
+  paymentMethods PaymentMethod[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("coin")
+}
+
+model Network {
+  id          String  @id @default(cuid())
+  name        String  @unique // "BSC", "TRX", "MATIC", "AVAXC", "PLASMA"
+  description String  // "BNB Smart Chain BEP20"
+  regex       String  // Regex para validar direcciones de wallet
+  isActive    Boolean @default(true)
+
+  coins          CoinNetwork[]
+  paymentMethods PaymentMethod[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("network")
+}
+
+model CoinNetwork {
+  id        String  @id @default(cuid())
+  coinId    String
+  coin      Coin    @relation(fields: [coinId], references: [id], onDelete: Cascade)
+  networkId String
+  network   Network @relation(fields: [networkId], references: [id], onDelete: Cascade)
+
+  @@unique([coinId, networkId])
+  @@map("coin_network")
+}
+
+// --------------------------------------
 // Enums
 // --------------------------------------
 
@@ -420,18 +471,6 @@ enum PaymentStatus {
   PENDING
   COMPLETED
   FAILED
-}
-
-enum SupportedNetworks {
-  BSC
-  TRX
-  MATIC
-  AVAXC
-  PLASMA
-}
-
-enum SupportedCoins {
-  USDT
 }
 
 model TwoFactor {

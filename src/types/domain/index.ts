@@ -9,6 +9,7 @@ export * from './giftcard';
 export * from './payment';
 export * from './order';
 export * from './brand-country';
+export * from './coin-network';
 
 // Entity collections
 export * from './batch';
