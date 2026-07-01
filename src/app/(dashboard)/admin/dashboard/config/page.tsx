@@ -2,15 +2,17 @@ import { getPlatformSetting } from '@/actions/platform';
 import { ConfigManager } from '@/components/admin/config/config-manager';
 import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
+import { getAllProviders } from '@/lib/ai-provider-config';
 
 export const metadata: Metadata = {
   title: 'Configuraciones de Plataforma | Admin',
 };
 
 export default async function ConfigurationPage() {
-  const [result, whatsappSession] = await Promise.all([
+  const [result, whatsappSession, aiProviders] = await Promise.all([
     getPlatformSetting(),
     prisma.whatsappSession.findFirst(),
+    getAllProviders(),
   ]);
 
   if (!result?.data?.success) {
@@ -24,6 +26,7 @@ export default async function ConfigurationPage() {
         status: whatsappSession?.status ?? 'disconnected',
         phoneNumber: whatsappSession?.phoneNumber ?? null,
       }}
+      initialAIProviders={aiProviders}
     />
   );
 }

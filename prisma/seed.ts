@@ -1,6 +1,7 @@
 import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { seedData } from './seed-data';
+import { encrypt } from '../src/lib/encryption';
 import 'dotenv/config';
 
 const adapter = new PrismaPg({
@@ -34,6 +35,7 @@ export async function main() {
   await prisma.country.deleteMany();
   await prisma.brand.deleteMany();
   await prisma.platformSettings.deleteMany();
+  await prisma.aIProviderConfig.deleteMany();
 
   // 1. Crear monedas
   const coins: Record<string, { id: string }> = {};
@@ -106,6 +108,22 @@ export async function main() {
     data: seedData.platformSettingData,
   });
   console.log('PlatformSettings creados.');
+
+  // 9. Crear AI Providers (con API key cifrada)
+  for (const ap of seedData.aiProviderData) {
+    await prisma.aIProviderConfig.create({
+      data: {
+        name: ap.name,
+        label: ap.label,
+        model: ap.model,
+        baseUrl: ap.baseUrl,
+        apiKey: encrypt(ap.apiKey),
+        isActive: ap.isActive,
+        isDefault: ap.isDefault,
+      },
+    });
+  }
+  console.log(`AI Providers creados: ${seedData.aiProviderData.length}`);
 
   console.log(`Seed finalizado con éxito.`);
 }

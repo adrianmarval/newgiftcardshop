@@ -12,6 +12,7 @@ export const getBatchImages = adminActionClient
     try {
       const images = await prisma.provenanceImage.findMany({
         where: { batchId },
+        select: { id: true, mimeType: true, data: true, telegramFileId: true, giftcardId: true },
       });
 
       if (!images || images.length === 0) {
@@ -69,13 +70,14 @@ export const getBatchImages = adminActionClient
             id: img.id,
             mimeType,
             base64: base64Data,
+            giftcardId: img.giftcardId ?? null,
           };
         }),
       );
 
       return {
         success: true as const,
-        images: processedImages.filter(Boolean) as Array<{ id: string; mimeType: string; base64: string }>,
+        images: processedImages.filter(Boolean) as Array<{ id: string; mimeType: string; base64: string; giftcardId: string | null }>,
       };
     } catch (error) {
       console.error('[AdminBatchImages] Server error:', error);

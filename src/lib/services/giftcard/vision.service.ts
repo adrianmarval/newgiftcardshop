@@ -1,29 +1,10 @@
-import { createProvider, type AIProvider, type ProviderName, type AIProviderConfig } from '@/lib/ai-providers';
+import OpenAI from 'openai';
+import { getActiveProvider, type AIProviderConfigFull } from '@/lib/ai-provider-config';
 import { logger } from '@/lib/logger';
-
-export interface ParsedClaimCode {
-  formatted: string;
-  raw: string;
-  parts: string[];
-  isLong: boolean;
-  confidence: 'high' | 'medium' | 'low';
-}
 
 export interface ExtractionResult {
   claimCode: string | null;
   amount: string | null;
-}
-
-export function buildVisionProvider(): AIProvider {
-  const providerName = (process.env.PROVENANCE_PROVIDER || 'openrouter') as ProviderName;
-  const model = process.env.PROVENANCE_MODEL || 'google/gemini-2.0-flash-001';
-
-  const config: AIProviderConfig = {
-    apiKey: process.env.OPENROUTER_API_KEY || process.env.AI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY,
-    model,
-  };
-
-  return createProvider(providerName, config);
 }
 
 const VISION_SYSTEM_PROMPT = `You are an expert at reading gift card screenshots.
@@ -33,29 +14,92 @@ A claim code is always 14 or 15 alphanumeric characters, typically formatted lik
 
 CRITICAL: If you cannot find a valid claim code, return null for both fields.
 Do not guess or extract irrelevant numbers like tracking IDs, phone numbers, or order numbers.
-Always respond with valid JSON only.`;
 
-const VISION_USER_PROMPT = `Extract the gift card claim code and amount from this image. Respond ONLY with: {"claim_code": "<code or null>", "amount": "<number with decimals or null>"}`;
+You MUST call the extract_giftcard function with the extracted data.`;
+
+const VISION_USER_PROMPT = `Extract the gift card claim code and amount from this image.`;
+
+const EXTRACT_TOOL: OpenAI.ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'extract_giftcard',
+    description: 'Extract gift card claim code and amount from a screenshot',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        claimCode: {
+          type: ['string', 'null'],
+          description: 'The 14-15 alphanumeric claim code, or null if not found',
+        },
+        amount: {
+          type: ['string', 'null'],
+          description: 'The monetary amount as a string with decimals, or null if not found',
+        },
+      },
+      required: ['claimCode', 'amount'],
+      additionalProperties: false,
+    },
+  },
+};
+
+function createClient(provider: AIProviderConfigFull): OpenAI {
+  return new OpenAI({
+    apiKey: provider.apiKey,
+    baseURL: provider.baseUrl || undefined,
+  });
+}
+
+function extractFromToolCall(response: OpenAI.ChatCompletion): ExtractionResult {
+  const message = response.choices[0]?.message;
+
+  // Standard tool call
+  const toolCall = message?.tool_calls?.[0];
+  if (toolCall && 'function' in toolCall && toolCall.type === 'function') {
+    const args = JSON.parse(toolCall.function.arguments);
+    return { claimCode: args.claimCode || null, amount: args.amount || null };
+  }
+
+  // Fallback: parse content (some models embed JSON in content)
+  const raw = message?.content || '';
+  const cleaned = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  const parsed = JSON.parse(cleaned);
+  return { claimCode: parsed.claimCode || parsed.claim_code || null, amount: parsed.amount || null };
+}
 
 export async function extractGiftCardData(imageBase64: string, mimeType: string): Promise<ExtractionResult> {
-  const provider = buildVisionProvider();
+  const provider = await getActiveProvider();
+  if (!provider) {
+    throw new Error('No active AI provider configured. Configure one in Admin > Platform > AI Vision Provider.');
+  }
+
+  const client = createClient(provider);
   const imageUrl = `data:${mimeType};base64,${imageBase64}`;
 
   const maxAttempts = 3;
   let lastError: any;
   const imgId = imageBase64.slice(-10);
-  const modelName = (provider as any).model || 'default';
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       if (attempt === 1) {
-        logger.info(`[AI-VISION] Iniciando extracción modelo ${modelName}`, { flow: 'sell', action: 'ocr-extract', metadata: { imgId, model: modelName } });
+        logger.info(`[AI-VISION] Iniciando extracción modelo ${provider.model}`, {
+          flow: 'sell',
+          action: 'ocr-extract',
+          metadata: { imgId, model: provider.model, provider: provider.name },
+        });
       } else {
-        logger.info(`[AI-VISION] Reintento ${attempt}/${maxAttempts}`, { flow: 'sell', action: 'ocr-extract', metadata: { imgId, attempt } });
+        logger.info(`[AI-VISION] Reintento ${attempt}/${maxAttempts}`, {
+          flow: 'sell',
+          action: 'ocr-extract',
+          metadata: { imgId, attempt },
+        });
       }
 
-      const { text } = await provider.complete(
-        [
+      const response = await client.chat.completions.create({
+        model: provider.model,
+        messages: [
+          { role: 'system', content: VISION_SYSTEM_PROMPT },
           {
             role: 'user',
             content: [
@@ -64,21 +108,29 @@ export async function extractGiftCardData(imageBase64: string, mimeType: string)
             ],
           },
         ],
-        VISION_SYSTEM_PROMPT,
-        true,
-      );
+        tools: [EXTRACT_TOOL],
+        tool_choice: { type: 'function', function: { name: 'extract_giftcard' } },
+        thinking: { type: 'disabled' },
+      } as any);
 
-      logger.debug('[AI-VISION] Respuesta recibida', { flow: 'sell', action: 'ocr-extract', metadata: { imgId } });
+      logger.debug('[AI-VISION] Respuesta recibida', {
+        flow: 'sell',
+        action: 'ocr-extract',
+        metadata: { imgId },
+      });
 
-      const parsed = JSON.parse(text);
-      const claimCode = parsed.claim_code || null;
+      const result = extractFromToolCall(response);
 
-      if (!claimCode && attempt < maxAttempts) {
-        throw new Error('AI returned empty claim_code (Null-Retry triggered)');
+      if (!result.claimCode && attempt < maxAttempts) {
+        throw new Error('AI returned empty claimCode (Null-Retry triggered)');
       }
 
-      logger.info('[AI-VISION] Extracción exitosa', { flow: 'sell', action: 'ocr-extract', metadata: { imgId, hasClaimCode: !!claimCode } });
-      return { claimCode, amount: parsed.amount || null };
+      logger.info('[AI-VISION] Extracción exitosa', {
+        flow: 'sell',
+        action: 'ocr-extract',
+        metadata: { imgId, hasClaimCode: !!result.claimCode },
+      });
+      return result;
     } catch (err) {
       lastError = err;
       if (attempt < maxAttempts) {

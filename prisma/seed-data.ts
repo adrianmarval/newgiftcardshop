@@ -9,6 +9,7 @@ interface SeedData {
   brandData: Prisma.BrandCreateInput[];
   brandCountryData: Prisma.BrandCountryCreateInput[];
   platformSettingData: Prisma.PlatformSettingsCreateInput[];
+  aiProviderData: { name: string; label: string; model: string; baseUrl: string | null; apiKey: string; isActive: boolean; isDefault: boolean }[];
 }
 
 export const seedData: SeedData = {
@@ -154,6 +155,17 @@ export const seedData: SeedData = {
       key: 'escalation_drop_amount',
       value: '1',
       description: 'Cuánto baja el tier en cada ciclo de escalación',
+    },
+  ],
+  aiProviderData: [
+    {
+      name: 'minimax',
+      label: 'MiniMax M3',
+      model: 'MiniMax-M3',
+      baseUrl: 'https://api.minimax.chat/v1',
+      apiKey: 'PLACEHOLDER_ENCRYPT_ME',
+      isActive: false,
+      isDefault: true,
     },
   ],
 };

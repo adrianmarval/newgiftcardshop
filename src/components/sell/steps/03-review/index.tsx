@@ -369,28 +369,24 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
       {/* Modal Preview Imagen */}
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
-        <DialogContent className="max-w-lg overflow-hidden border-0 bg-transparent p-0 shadow-none sm:max-w-xl">
+        <DialogContent className="max-h-[95vh] max-w-3xl overflow-hidden border-0 bg-transparent p-0 shadow-none sm:max-w-4xl md:max-w-6xl">
           <DialogTitle className="sr-only">Screenshot Preview</DialogTitle>
           <DialogDescription className="sr-only">Preview of the uploaded gift card screenshot</DialogDescription>
           {previewImage && imageMap.has(previewImage) && (
-            <div className="relative w-full max-w-full overflow-hidden">
+            <div className="relative flex max-h-[93vh] w-full items-center justify-center overflow-auto">
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}
-                className="bg-background/80 hover:bg-background border-border absolute top-2 right-2 z-10 rounded-full border p-1.5 backdrop-blur-sm transition-colors"
+                className="bg-background/80 hover:bg-background border-border fixed top-3 right-3 z-10 rounded-full border p-2 backdrop-blur-sm transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
-              <div className="relative max-h-[80vh] min-h-[300px] w-full">
-                <Image
-                  src={imageMap.get(previewImage)!.previewUrl}
-                  fill
-                  alt="Gift card screenshot"
-                  className="rounded-xl object-contain shadow-2xl"
-                  sizes="(max-w-768px) 100vw, 600px"
-                  priority
-                />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageMap.get(previewImage)!.previewUrl}
+                alt="Gift card screenshot"
+                className="max-h-[90vh] w-auto rounded-xl object-contain shadow-2xl"
+              />
             </div>
           )}
         </DialogContent>

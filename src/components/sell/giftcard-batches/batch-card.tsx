@@ -40,17 +40,12 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
         />
       }
       topRightContent={
-        <>
-          <span className="text-md text-foreground font-semibold md:text-lg">
-            {formatDateTime(batch.createdAt, 'en-US').split(',')[0] ? `$${batch.effectiveTotal.toFixed(2)}` : ''}
-          </span>
-          <BatchTopRight
-            faceValueTotal={batch.effectiveTotal}
-            estimatedPayout={batch.estimatedPayout}
-            faceValueCurrency={currency}
-            payoutCurrency="USD"
-          />
-        </>
+        <BatchTopRight
+          faceValueTotal={batch.effectiveTotal}
+          estimatedPayout={batch.estimatedPayout}
+          faceValueCurrency={currency}
+          payoutCurrency="USD"
+        />
       }
       date={formatDateTime(batch.createdAt, 'en-US')}
       isExpanded={isExpanded}

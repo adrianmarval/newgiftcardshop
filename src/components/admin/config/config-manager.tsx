@@ -16,15 +16,18 @@ import { MessageSquare, Loader2, Power, PowerOff } from 'lucide-react';
 import { disconnectWhatsApp } from '@/actions/admin/whatsapp';
 import { useRouter } from 'next/navigation';
 import type { WhatsAppStatus } from '@/types';
+import { AIProvidersManager } from './ai-providers-manager';
+import type { AIProviderConfigResponse } from '@/lib/ai-provider-config';
 
 const AUDIT_ONLY_KEYS: SettingKey[] = [SETTING_KEYS.PLATFORM_BALANCE];
 
 interface ConfigManagerProps {
   initialSettings: PlatformSetting[];
   initialWhatsAppStatus: WhatsAppStatus;
+  initialAIProviders: AIProviderConfigResponse[];
 }
 
-export function ConfigManager({ initialSettings, initialWhatsAppStatus }: ConfigManagerProps) {
+export function ConfigManager({ initialSettings, initialWhatsAppStatus, initialAIProviders }: ConfigManagerProps) {
   const settingsMap = new Map(initialSettings.map((s) => [s.key, s]));
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -229,6 +232,11 @@ export function ConfigManager({ initialSettings, initialWhatsAppStatus }: Config
       </div>
 
       <WhatsAppModal open={isWhatsAppOpen} onOpenChange={setIsWhatsAppOpen} onStatusChange={setWhatsappStatus} />
+
+      {/* ── AI Vision Provider ── */}
+      <div className="mt-6">
+        <AIProvidersManager initialProviders={initialAIProviders} />
+      </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>

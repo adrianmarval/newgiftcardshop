@@ -1,5 +1,5 @@
 // ── Giftcard Domain ──────────────────────────────────────────────────────────
-export { publishBatch, getEscalationConfig, getInitialTier, processEscalationTiers, getTierInfoForBuyer, canBuyerAccessTier, reserveGiftcards, GiftcardReservationError, buildVisionProvider, extractGiftCardData } from './giftcard';
+export { publishBatch, getEscalationConfig, getInitialTier, processEscalationTiers, getTierInfoForBuyer, canBuyerAccessTier, reserveGiftcards, GiftcardReservationError, extractGiftCardData } from './giftcard';
 
 // ── Order Domain ─────────────────────────────────────────────────────────────
 export { OrderNotFoundError, UnauthorizedError, InvalidOrderStateError, OrderAlreadyProcessedError, findOrderForUser, canCancelOrder, cancelOrder, confirmOrderUsage, completeOrderPayment, reportGiftcardIssue, deleteGiftcardIssue } from './order';

@@ -374,6 +374,26 @@ model PlatformSettings {
 }
 
 // --------------------------------------
+// AI Vision Provider Configuration
+// --------------------------------------
+
+model AIProviderConfig {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  label     String
+  model     String
+  baseUrl   String?
+  apiKey    String // AES-256-GCM encrypted
+  isActive  Boolean @default(false)
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ai_provider_config")
+}
+
+// --------------------------------------
 // Catálogo de Coins y Redes
 // --------------------------------------
 

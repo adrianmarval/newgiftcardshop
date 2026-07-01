@@ -107,6 +107,24 @@ export const getBatchImagesOutputSchema = z.object({
       id: z.string(),
       mimeType: z.string(),
       base64: z.string(),
+      giftcardId: z.string().nullable(),
     }),
   ),
 });
+
+export const linkImageToCardInputSchema = z.object({
+  imageId: z.string(),
+  giftcardId: z.string(),
+});
+
+export const linkImageToCardOutputSchema = z.union([
+  z.object({ success: z.literal(true) }),
+  z.object({ success: z.literal(false), error: z.string() }),
+]);
+
+export const unlinkImageFromCardInputSchema = z.object({ imageId: z.string() });
+
+export const unlinkImageFromCardOutputSchema = z.union([
+  z.object({ success: z.literal(true) }),
+  z.object({ success: z.literal(false), error: z.string() }),
+]);
