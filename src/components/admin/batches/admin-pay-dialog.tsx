@@ -27,16 +27,53 @@ export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPay
     setIsPaying(true);
     try {
       const result = await payBatch({ batchIds: batches.map((b) => b.id) });
+
       if (result.serverError) {
         setAlert({ variant: 'error', title: 'Pago fallido', description: result.serverError });
-      } else if (!result.data?.success) {
+        return;
+      }
+
+      if (!result.data?.success) {
         setAlert({ variant: 'error', title: 'Pago fallido', description: 'Error desconocido' });
-      } else {
-        setAlert({ variant: 'success', title: `${batches.length} lote(s) pagado(s) exitosamente` });
+        return;
+      }
+
+      const { results, errors } = result.data;
+      const successCount = results.length;
+      const errorCount = errors?.length ?? 0;
+
+      if (errorCount > 0 && successCount > 0) {
+        const errorDetails = errors!
+          .map((e) => `Lote #${e.batchId}: ${e.error}`)
+          .join('\n');
+        setAlert({
+          variant: 'warning',
+          title: `${successCount} pagado(s), ${errorCount} fallido(s)`,
+          description: `Lotes exitosos: ${results.map((r) => `#${r.batchId}`).join(', ')}. Errores:\n${errorDetails}`,
+        });
         setTimeout(() => {
           onOpenChange(false);
           onPaid();
-        }, 1200);
+        }, 3000);
+      } else if (errorCount > 0) {
+        const errorDetails = errors!
+          .map((e) => `Lote #${e.batchId}: ${e.error}`)
+          .join('\n');
+        setAlert({
+          variant: 'error',
+          title: `${errorCount} pago(s) fallido(s)`,
+          description: errorDetails,
+        });
+      } else {
+        setAlert({
+          variant: 'success',
+          title: `${successCount} lote(s) en proceso de pago`,
+          description: 'Los pagos están siendo procesados por Binance. Se confirmarán automáticamente.',
+        });
+        setTimeout(() => {
+          onOpenChange(false);
+          onPaid();
+        }, 1500);
       }
     } catch (error) {
       setAlert({ variant: 'error', title: 'Pago fallido', description: error instanceof Error ? error.message : 'Error desconocido' });
@@ -51,7 +88,7 @@ export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPay
         <DialogHeader>
           <DialogTitle>Pagar lotes</DialogTitle>
           <DialogDescription>
-            Estás a punto de pagar {batches.length} lote{batches.length > 1 ? 's' : ''}. Esta acción no se puede deshacer.
+            Estás a punto de pagar {batches.length} lote{batches.length > 1 ? 's' : ''} vía Binance. El proceso puede tardar unos segundos.
           </DialogDescription>
         </DialogHeader>
 
@@ -60,8 +97,8 @@ export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPay
             variant={alert.variant}
             title={alert.title}
             description={alert.description}
-            autoDismiss
-            dismissAfter={3000}
+            autoDismiss={alert.variant === 'success' || alert.variant === 'warning'}
+            dismissAfter={alert.variant === 'warning' ? 5000 : 3000}
             onDismiss={() => setAlert(null)}
           />
         )}

@@ -128,3 +128,11 @@ export async function getEditableSettings(): Promise<Record<SettingKey, { value:
   ) as Record<SettingKey, { value: unknown; definition: typeof SETTING_DEFINITIONS[SettingKey] }>;
   return filtered;
 }
+
+export async function getAutoPaySellers(): Promise<boolean> {
+  return getSetting<boolean>(SETTING_KEYS.AUTO_PAY_SELLERS);
+}
+
+export async function setAutoPaySellers(enabled: boolean): Promise<void> {
+  await setSetting(SETTING_KEYS.AUTO_PAY_SELLERS, enabled);
+}

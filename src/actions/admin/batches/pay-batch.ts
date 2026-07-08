@@ -1,9 +1,7 @@
 'use server';
 
-import prisma from '@/lib/prisma';
 import { adminActionClient, ActionError } from '@/lib/safe-action';
-import { notifySellerBatchPaid } from '@/lib/notifications';
-import { computeFaceValueTotal } from '@/lib/services/pricing';
+import { executeSellerPayout } from '@/lib/services/payment/seller-payout.service';
 import { logger } from '@/lib/logger';
 import { payBatchInputSchema, payBatchOutputSchema } from './schemas';
 
@@ -15,38 +13,40 @@ export const payBatch = adminActionClient
       const { batchIds } = parsedInput;
 
       const results: { batchId: number; paymentId: string; amount: number }[] = [];
+      const errors: { batchId: number; error: string }[] = [];
 
       for (const batchId of batchIds) {
-        const batch = await prisma.giftcardBatch.findUnique({
-          where: { id: batchId },
-          include: {
-            giftcards: true,
-            user: { select: { id: true } },
-          },
-        });
+        const result = await executeSellerPayout(batchId);
 
-        if (!batch) continue;
-
-        const isPayable = batch.giftcards.every((g) => g.isConfirmed) && batch.giftcards.length > 0 && !batch.isPaid;
-
-        if (!isPayable) continue;
-
-        const effectiveTotal = computeFaceValueTotal(batch.giftcards);
-
-        const paymentAmount = effectiveTotal.mul(batch.sellRate);
-
-        // TODO: Payment transaction disabled intentionally — uncomment when payment flow is validated.
-        // The notification below won't fire until results is populated by the transaction.
-
-        if (batch.user?.id) {
-          notifySellerBatchPaid(batch.user.id, batchId, Number(paymentAmount))
-            .catch((err) => console.error('[pay-batch] Error al notificar seller (non-blocking):', err));
+        if (result.status === 'FAILED') {
+          errors.push({ batchId, error: result.error || 'Error desconocido' });
+          continue;
         }
+
+        results.push({
+          batchId: result.batchId,
+          paymentId: result.paymentId,
+          amount: result.amount,
+        });
       }
 
-      return { success: true as const, results };
+      if (results.length === 0 && errors.length > 0) {
+        throw new ActionError(
+          `Ningún lote pudo ser pagado. Errores: ${errors.map((e) => `#${e.batchId}: ${e.error}`).join('; ')}`,
+        );
+      }
+
+      return {
+        success: true as const,
+        results,
+        errors: errors.length > 0 ? errors : undefined,
+      };
     } catch (error) {
+      if (error instanceof ActionError) throw error;
+
       logger.error('Error al pagar lotes', {
+        flow: 'payment',
+        action: 'pay-batch',
         error: {
           name: error instanceof Error ? error.name : 'Error',
           message: error instanceof Error ? error.message : 'Unknown',

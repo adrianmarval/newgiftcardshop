@@ -250,7 +250,7 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
       return {
         id: batch.id,
         sellRate: Number(batch.sellRate),
-        isPaid: batch.isPaid || batch.payments.length > 0,
+        isPaid: batch.isPaid,
         createdAt: batch.createdAt.toISOString(),
         updatedAt: batch.updatedAt?.toISOString(),
         seller,

@@ -84,6 +84,7 @@ export const payBatchInputSchema = z.object({ batchIds: z.array(z.number().int()
 export const payBatchOutputSchema = z.object({
   success: z.literal(true),
   results: z.array(z.object({ batchId: z.number(), paymentId: z.string(), amount: z.number() })),
+  errors: z.array(z.object({ batchId: z.number(), error: z.string() })).optional(),
 });
 
 export const deleteCardInputSchema = z.object({ cardId: z.string() });

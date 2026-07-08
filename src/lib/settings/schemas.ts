@@ -6,6 +6,7 @@ export const SETTING_KEYS = {
   ESCALATION_ENABLED: 'escalation_enabled',
   ESCALATION_DURATION_MINUTES: 'escalation_duration_minutes',
   ESCALATION_DROP_AMOUNT: 'escalation_drop_amount',
+  AUTO_PAY_SELLERS: 'auto_pay_sellers',
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -83,6 +84,12 @@ export const SETTING_DEFINITIONS: Record<SettingKey, SettingDefinition> = {
       max: 10,
     },
   },
+  [SETTING_KEYS.AUTO_PAY_SELLERS]: {
+    key: SETTING_KEYS.AUTO_PAY_SELLERS,
+    type: 'boolean',
+    description: 'Pago automático a sellers vía Binance al confirmar lote (false = requiere aprobación manual)',
+    default: false,
+  },
 };
 
 export const SETTING_SCHEMAS: Record<SettingKey, z.ZodTypeAny> = {
@@ -91,6 +98,7 @@ export const SETTING_SCHEMAS: Record<SettingKey, z.ZodTypeAny> = {
   [SETTING_KEYS.ESCALATION_ENABLED]: booleanSchema,
   [SETTING_KEYS.ESCALATION_DURATION_MINUTES]: numberSchema,
   [SETTING_KEYS.ESCALATION_DROP_AMOUNT]: numberSchema,
+  [SETTING_KEYS.AUTO_PAY_SELLERS]: booleanSchema,
 };
 
 export function parseSettingValue<T>(key: SettingKey, rawValue: string | null | undefined): T {
