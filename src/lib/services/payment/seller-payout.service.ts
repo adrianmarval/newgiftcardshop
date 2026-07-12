@@ -48,7 +48,6 @@ export interface SyncResult {
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const WITHDRAW_ORDER_PREFIX = 'BATCH_';
-const MAX_RETRIES = 3;
 
 // ── Execute Payout ───────────────────────────────────────────────────────────
 
@@ -187,7 +186,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
         networkName: batch.user.paymentMethod.network.name as Network,
         isBinanceWallet: batch.user.paymentMethod.isBinanceWallet,
       };
-    });
+    }, { isolationLevel: 'Serializable' });
 
     paymentRecord = result.payment;
     payoutAmount = result.payoutAmount;
@@ -307,7 +306,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
   // Revert: mark batch as not paid, payment as failed, and restore platform balance
   try {
     await prisma.$transaction(async (tx) => {
-      await tx.platformSettings.upsert({
+      const revertedSettings = await tx.platformSettings.upsert({
         where: { key: 'platformBalance' },
         update: { balance: { increment: payoutAmount } },
         create: { key: 'platformBalance', value: '', description: 'Balance General', balance: payoutAmount },
@@ -322,6 +321,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
         where: { id: paymentRecord.id },
         data: {
           status: PaymentStatus.FAILED,
+          balanceAfter: revertedSettings.balance,
           notes: `Pago rechazado por Binance: ${errorMessage}`,
         },
       });
@@ -420,7 +420,12 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
               payment.batchId!,
               Number(payment.amount),
             ).catch((err) =>
-              console.error('[sync] Error notifying seller (non-blocking):', err),
+              logger.error('Error notificando seller post-sync', {
+                flow: 'payment',
+                action: 'sync-seller-payments',
+                metadata: { userId: payment.batch?.userId, batchId: payment.batchId },
+                error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+              }),
             );
           }
 
@@ -430,7 +435,7 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
         // Status 1, 3, 5 = CANCELLED, REJECTED, FAILURE → FAILED
         if ([1, 3, 5].includes(record.status)) {
           await prisma.$transaction(async (tx) => {
-            await tx.platformSettings.upsert({
+            const revertedSettings = await tx.platformSettings.upsert({
               where: { key: 'platformBalance' },
               update: { balance: { increment: payment.amount } },
               create: { key: 'platformBalance', value: '', description: 'Balance General', balance: payment.amount },
@@ -440,6 +445,7 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
               where: { id: payment.id },
               data: {
                 status: PaymentStatus.FAILED,
+                balanceAfter: revertedSettings.balance,
                 notes: `Pago fallido en Binance (estado: ${record.status})${record.info ? `: ${record.info}` : ''}`,
               },
             });
