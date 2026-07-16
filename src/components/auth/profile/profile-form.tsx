@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ProfileInfoSection } from '@/components/auth/profile/profile-info-section';
 import { SecuritySection } from '@/components/auth/profile/security-section';
 import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
@@ -30,13 +32,21 @@ interface ProfileFormProps {
   telegramLinkUrl?: string | null;
 }
 
+const VALID_TABS = ['profile', 'security', '2fa', 'wallet'] as const;
+type TabValue = (typeof VALID_TABS)[number];
+
 export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUrl }: ProfileFormProps) => {
+  const searchParams = useSearchParams();
   const emailVerified = true;
   const isSeller = portal === 'sell';
 
+  const tabParam = searchParams.get('tab');
+  const initialTab: TabValue = tabParam && VALID_TABS.includes(tabParam as TabValue) ? (tabParam as TabValue) : 'profile';
+  const [activeTab, setActiveTab] = useState<TabValue>(initialTab);
+
   return (
     <div className="w-full">
-      <Tabs defaultValue="profile" className="w-full">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
         <TabsList variant="line" className="w-full justify-start">
           <TabsTrigger value="profile" className="gap-1.5">
             <User className="h-4 w-4" /> Profile

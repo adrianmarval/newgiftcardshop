@@ -17,6 +17,7 @@ import { uploadImage } from '@/actions/seller/ocr/upload-image';
 import { extractDraft } from '@/actions/seller/ocr/extract-draft';
 import { showAlert } from '@/lib/ui';
 import { normalizeClaimCode } from '@/lib/utils/claim-code-parser';
+import { validateAmountsAgainstRange, type AmountRangeViolation } from '@/lib/utils/amount-range-validator';
 import { validationStatusConfig } from '@/lib/config/ui-config';
 import type { BrandCountry } from '@/types';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
@@ -107,6 +108,22 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
   const totalToReceive = totalAmount * sellRate;
   const currencySymbol = brandCountry?.countryCurrency === 'GBP' ? '£' : brandCountry?.countryCurrency === 'CAD' ? 'C$' : '$';
 
+  const rangeViolations: AmountRangeViolation[] = useMemo(
+    () =>
+      validateAmountsAgainstRange(
+        giftcards.map((g) => ({ ref: g.id, claimCode: g.claimCode, amount: g.amount })),
+        { minAmount: brandCountry?.minAmount ?? null, maxAmount: brandCountry?.maxAmount ?? null },
+      ),
+    [giftcards, brandCountry?.minAmount, brandCountry?.maxAmount],
+  );
+
+  const hasRangeViolations = rangeViolations.length > 0;
+  const violationByCardId = useMemo(() => {
+    const map = new Map<string, AmountRangeViolation>();
+    for (const v of rangeViolations) map.set(v.ref, v);
+    return map;
+  }, [rangeViolations]);
+
   const sortedGiftcards = useMemo(() => {
     return [...giftcards].sort((a, b) => {
       const aStatus = a.evidence?.status ?? 'no_capture';
@@ -142,6 +159,34 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold md:text-lg">Review</h2>
           </div>
+
+          {/* Range Violations Banner */}
+          {hasRangeViolations && (
+            <div className="border-destructive/30 bg-destructive/10 mt-2 space-y-1.5 rounded-lg border p-2">
+              <p className="text-destructive text-[10px] font-black tracking-wider uppercase">
+                Amount Out of Range ({rangeViolations.length})
+              </p>
+              <div className="custom-scrollbar max-h-32 space-y-1 overflow-y-auto">
+                {rangeViolations.map((v) => (
+                  <div key={v.ref} className="text-destructive/90 text-[10px] font-medium leading-snug md:text-xs">
+                    <span className="font-mono">{v.claimCode || '(no code)'}</span>
+                    <span className="text-destructive/60">
+                      {' — '}
+                      {currencySymbol}
+                      {v.amount.toFixed(2)}
+                    </span>
+                    <span className="text-destructive/70">
+                      {' '}
+                      ({v.violation === 'below_min' ? `min ${currencySymbol}${v.minAmount!.toFixed(2)}` : `max ${currencySymbol}${v.maxAmount!.toFixed(2)}`})
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-destructive/70 text-[9px] leading-snug md:text-[10px]">
+                Go back to Data Entry and adjust the amounts.
+              </p>
+            </div>
+          )}
 
           {/* Opción B: 2 columnas arriba, full-width abajo */}
           <div className="flex flex-col gap-1">
@@ -190,6 +235,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                 const matchedImageId = card.evidence?.matchedImageId;
                 const evidenceStatus = card.evidence?.status;
                 const hasCapture = !!matchedImageId;
+                const rangeViolation = violationByCardId.get(card.id);
 
                 const config = validationStatusConfig[evidenceStatus as ValidationState] || validationStatusConfig.no_capture;
                 const Icon = config.icon;
@@ -203,7 +249,9 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                     transition={{ delay: Math.min(idx * 0.02, 0.2) }}
                     className={cn(
                       'group border-border bg-muted/20 relative w-full max-w-full rounded-xl border p-2 transition-all md:p-3',
-                      isBlocking ? 'border-primary/40 bg-primary/5 ring-primary/20 shadow-sm ring-1' : 'hover:border-primary/30',
+                      isBlocking && !rangeViolation && 'border-primary/40 bg-primary/5 ring-primary/20 shadow-sm ring-1',
+                      rangeViolation && 'border-destructive/40 bg-destructive/5 ring-destructive/20 shadow-sm ring-1',
+                      !isBlocking && !rangeViolation && 'hover:border-primary/30',
                     )}
                   >
                     <div className="flex w-full flex-col gap-1.5 md:gap-1">
@@ -212,10 +260,20 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                           <div className="bg-primary/20 text-primary flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-black md:h-5 md:w-5 md:text-[10px]">
                             {idx + 1}
                           </div>
-                          <span className="text-foreground text-sm font-black md:text-lg">
+                          <span
+                            className={cn(
+                              'text-sm font-black md:text-lg',
+                              rangeViolation ? 'text-destructive' : 'text-foreground',
+                            )}
+                          >
                             {currencySymbol}
                             {card.amount || '0.00'}
                           </span>
+                          {rangeViolation && (
+                            <Badge className="border-0 bg-destructive/20 px-1.5 py-0.5 text-[9px] font-bold text-destructive shadow-none">
+                              {rangeViolation.violation === 'below_min' ? 'below min' : 'above max'}
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5">
                           {hasCapture ? (
@@ -359,7 +417,12 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         </Button>
         <Button
           onClick={onPublish}
-          disabled={isPublishing || giftcards.length > MAX_BATCH_SIZE || giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status))}
+          disabled={
+            isPublishing ||
+            giftcards.length > MAX_BATCH_SIZE ||
+            giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status)) ||
+            hasRangeViolations
+          }
           size="sm"
           className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 flex-1 text-xs font-bold md:h-10"
         >

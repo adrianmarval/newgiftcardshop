@@ -8,6 +8,7 @@ import { fmt$ } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { getUserRates } from '@/lib/services/pricing';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
+import { validateAmountsAgainstRange, type AmountRangeViolation } from '@/lib/utils/amount-range-validator';
 
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
@@ -183,42 +184,155 @@ export async function handleCodesText(ctx: SellerContext) {
     );
   }
 
-  // Validar duplicados en DB
   const { brandCountryId } = ctx.session.wizard;
-  const duplicateInDbLines: string[] = [];
-  const validCards: ParsedGiftcard[] = [];
 
+  // ── Validate all 3 problem types independently on every parsed line ────────
+  // 1. Intra-paste duplicate — same normalized claimCode appears more than once.
+  // 2. DB duplicate — codeHash already exists in the giftcards table.
+  // 3. Range violation — amount outside [minAmount, maxAmount] for the brand-country.
+  //
+  // Each line can carry multiple reasons; they're concatenated in the rendered view.
+
+  // 1. Intra-paste duplicate detection (first occurrence wins, later ones are duplicates).
+  const intraPasteDuplicateLines = new Set<number>();
+  {
+    const seenCodes = new Set<string>();
+    const sortedByLine = cards.slice().sort((a, b) => (a.line ?? 0) - (b.line ?? 0));
+    for (const c of sortedByLine) {
+      const key = c.claimCode.toUpperCase();
+      if (seenCodes.has(key)) {
+        if (c.line !== undefined) intraPasteDuplicateLines.add(c.line);
+      } else {
+        seenCodes.add(key);
+      }
+    }
+  }
+
+  // 2. DB duplicate detection
+  const dbDuplicateLines = new Set<number>();
+  let existingHashes = new Set<string>();
   if (cards.length > 0 && brandCountryId) {
     const hashes = cards.map((c) => hashCode(c.claimCode.toUpperCase()));
     const existing = await prisma.giftcard.findMany({
       where: { codeHash: { in: hashes } },
       select: { codeHash: true },
     });
-    const existingSet = new Set(existing.map((e) => e.codeHash));
-
-    for (const card of cards) {
-      if (existingSet.has(hashCode(card.claimCode.toUpperCase()))) {
-        duplicateInDbLines.push(`Line ${card.line}: <code>${escapeHTML(card.claimCode)}</code> already exists in database.`);
-      } else {
-        validCards.push(card);
+    existingHashes = new Set(existing.map((e) => e.codeHash).filter((h): h is string => h !== null));
+    for (const c of cards) {
+      if (existingHashes.has(hashCode(c.claimCode.toUpperCase())) && c.line !== undefined) {
+        dbDuplicateLines.add(c.line);
       }
     }
-  } else {
-    validCards.push(...cards);
   }
 
-  if (validCards.length === 0) {
+  // 3. Range validation
+  let rangeLimits: { minAmount: number | null; maxAmount: number | null } | null = null;
+  const rangeViolationByLine = new Map<number, AmountRangeViolation>();
+  if (brandCountryId) {
+    const brandCountry = await prisma.brandCountry.findUnique({
+      where: { id: brandCountryId },
+      select: { minAmount: true, maxAmount: true },
+    });
+    if (brandCountry) {
+      rangeLimits = {
+        minAmount: brandCountry.minAmount !== null ? Number(brandCountry.minAmount) : null,
+        maxAmount: brandCountry.maxAmount !== null ? Number(brandCountry.maxAmount) : null,
+      };
+      const rangeViolations = validateAmountsAgainstRange(
+        cards.map((c) => ({ ref: String(c.line), claimCode: c.claimCode, amount: c.amount ?? '' })),
+        rangeLimits,
+      );
+      for (const v of rangeViolations) {
+        rangeViolationByLine.set(Number(v.ref), v);
+      }
+    }
+  }
+
+  // Aggregate per-line reasons (in stable order).
+  const buildReason = (line: number): string | null => {
+    const parts: string[] = [];
+    if (intraPasteDuplicateLines.has(line)) parts.push('duplicate in paste');
+    if (dbDuplicateLines.has(line)) parts.push('already exists in database');
+    const rv = rangeViolationByLine.get(line);
+    if (rv) {
+      parts.push(
+        rv.violation === 'below_min'
+          ? `below min $${rv.minAmount!.toFixed(2)}`
+          : `above max $${rv.maxAmount!.toFixed(2)}`,
+      );
+    }
+    return parts.length > 0 ? parts.join('; ') : null;
+  };
+
+  const badLines: Array<{ line: number; reason: string }> = [];
+  for (const c of cards) {
+    if (c.line === undefined) continue;
+    const reason = buildReason(c.line);
+    if (reason) badLines.push({ line: c.line, reason });
+  }
+  // De-dup by line (a single line can appear once per card, but cards could
+  // collide on the same line number — guard anyway).
+  const seenLines = new Set<number>();
+  const uniqueBadLines = badLines.filter((b) => (seenLines.has(b.line) ? false : (seenLines.add(b.line), true)));
+
+  const validCards = cards.filter((c) => {
+    if (c.line === undefined) return true;
+    return !intraPasteDuplicateLines.has(c.line) && !dbDuplicateLines.has(c.line) && !rangeViolationByLine.has(c.line);
+  });
+
+  const renderPasteBlock = (): string => {
+    return cards
+      .slice()
+      .sort((a, b) => (a.line ?? 0) - (b.line ?? 0))
+      .map((c) => {
+        const raw = `${c.claimCode} ${c.amount ?? ''}${c.pinCode ? ` ${c.pinCode}` : ''}`.trim();
+        const reason = c.line !== undefined ? buildReason(c.line) : null;
+        if (!reason) return escapeHTML(raw);
+        return `<s>${escapeHTML(raw)}  ← ${escapeHTML(reason)}</s>`;
+      })
+      .join('\n');
+  };
+
+  if (uniqueBadLines.length > 0) {
+    const rangeLabel = rangeLimits
+      ? [
+          rangeLimits.minAmount !== null ? `min $${rangeLimits.minAmount.toFixed(2)}` : '',
+          rangeLimits.maxAmount !== null ? `max $${rangeLimits.maxAmount.toFixed(2)}` : '',
+        ]
+          .filter(Boolean)
+          .join(', ')
+      : '';
+    const title =
+      rangeViolationByLine.size > 0 && rangeLabel
+        ? `❌ <b>Cards not accepted (${rangeLabel})</b>`
+        : `❌ <b>Cards not accepted</b>`;
+    const totalLabel = cards.length > 0 ? cards.length : uniqueBadLines.length;
+    const pasteBlock = renderPasteBlock();
+
+    return renderUI(
+      ctx,
+      `${title}\n\n` +
+        `${uniqueBadLines.length} of ${totalLabel} line(s) cannot be processed. Strikes are reasons, remove them and resend.\n\n` +
+        `<pre>${pasteBlock}</pre>\n\n` +
+        `<i>The platform does not accept these cards. Remove the struck lines and send the batch again.</i>`,
+      {
+        parse_mode: 'HTML',
+        reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start'),
+      },
+    );
+  }
+
+  if (validCards.length === 0 && errors.length > 0) {
     return renderUI(
       ctx,
       `❌ <b>No valid codes to publish.</b>\n\n` +
         `${errors.length > 0 ? `<b>Parsing errors:</b>\n<code>${escapeHTML(errors.join('\n'))}</code>\n\n` : ''}` +
-        `${duplicateInDbLines.length > 0 ? `<b>Duplicates found:</b>\n<code>${escapeHTML(duplicateInDbLines.join('\n'))}</code>\n\n` : ''}` +
         `Please check your list and try again.`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start') },
     );
   }
 
-  const allErrors = [...errors, ...duplicateInDbLines];
+  const allErrors = [...errors];
 
   // Guardar en sesión temporalmente
   ctx.session.storedMessageIds = ctx.session.storedMessageIds ?? [];

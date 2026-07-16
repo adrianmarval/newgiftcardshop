@@ -6,6 +6,7 @@ import { uploadImage } from '@/actions/seller/ocr/upload-image';
 import { extractDraft } from '@/actions/seller/ocr/extract-draft';
 import { checkCodes } from '@/actions/seller/batches';
 import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
+import { validateAmountsAgainstRange, formatAmountRangeViolation } from '@/lib/utils/amount-range-validator';
 import { showAlert } from '@/lib/ui';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { SellFlowImage, type ProcessingStage, type LocalImage } from '@/types';
@@ -31,6 +32,7 @@ export function useDataEntryPipeline({
     handleBulkImport,
     ingestOCRDraft,
     selectedBrandCountry,
+    brandCountryLimits,
   } = useSellFlow();
 
   const brandId = selectedBrandCountry?.split('|')[0] ?? '';
@@ -298,6 +300,31 @@ export function useDataEntryPipeline({
         if (missingAmountErrors.length > 0) {
           allErrors = [...allErrors, ...missingAmountErrors];
         }
+
+        // Range validation against brandCountry limits
+        if (brandCountryLimits.minAmount !== null || brandCountryLimits.maxAmount !== null) {
+          const currentCards = useSellFlow.getState().giftcards;
+          const violations = validateAmountsAgainstRange(
+            currentCards.map((g) => ({ ref: g.id, claimCode: g.claimCode, amount: g.amount })),
+            brandCountryLimits,
+          );
+          if (violations.length > 0) {
+            const minMsg =
+              brandCountryLimits.minAmount !== null
+                ? `min $${brandCountryLimits.minAmount.toFixed(2)}`
+                : '';
+            const maxMsg =
+              brandCountryLimits.maxAmount !== null
+                ? `max $${brandCountryLimits.maxAmount.toFixed(2)}`
+                : '';
+            const range = [minMsg, maxMsg].filter(Boolean).join(', ');
+            allErrors = [
+              ...allErrors,
+              `${violations.length} card(s) out of allowed range (${range}):`,
+              ...violations.map(formatAmountRangeViolation),
+            ];
+          }
+        }
       }
 
       if (allErrors.length > 0) {
@@ -327,6 +354,7 @@ export function useDataEntryPipeline({
     pasteContent,
     brandId,
     countryId,
+    brandCountryLimits,
     setGiftcards,
     clearImages,
     handleBulkImport,

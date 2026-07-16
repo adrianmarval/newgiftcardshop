@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, Wallet } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,9 +11,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { publishBatch } from '@/actions/seller/batches';
 import { getSellerRate } from '@/actions/seller/rates';
+import { getPaymentMethod } from '@/actions/seller/payment-method';
 import { BrandStep } from '@/components/sell/steps/01-config';
 import { DataEntryStep } from '@/components/sell/steps/02-data-entry';
 import { ReviewStep } from '@/components/sell/steps/03-review';
@@ -33,7 +36,19 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
   const [duplicates, setDuplicates] = useState<string[]>([]);
   const [sellRate, setSellRate] = useState(sellRateProp ?? 0);
   const [rateError, setRateError] = useState<string | null>(null);
+  const [walletConfigured, setWalletConfigured] = useState<boolean | null>(null);
+  const [isBinanceWallet, setIsBinanceWallet] = useState<boolean>(false);
   const router = useRouter();
+
+  useEffect(() => {
+    getPaymentMethod().then((res) => {
+      if (res?.data?.success) {
+        const hasWallet = res.data.paymentMethod !== null;
+        setWalletConfigured(hasWallet);
+        setIsBinanceWallet(res.data.paymentMethod?.isBinanceWallet ?? false);
+      }
+    });
+  }, []);
 
   const selectedBrandCountryData = useMemo(() => {
     if (!selectedBrandCountry) return null;
@@ -104,6 +119,37 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
     resetForm();
     router.push('/sell/dashboard/cards');
   };
+
+  if (walletConfigured === null) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-muted-foreground text-sm">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!walletConfigured) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-4">
+        <Card className="w-full max-w-md border-amber-500/30 bg-amber-500/5">
+          <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
+            <div className="bg-amber-500/20 flex h-16 w-16 items-center justify-center rounded-full">
+              <Wallet className="h-8 w-8 text-amber-500" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold">Wallet Required</h3>
+              <p className="text-muted-foreground text-sm">
+                You need to configure your USDT wallet before you can publish gift cards. This is where you&apos;ll receive your payments.
+              </p>
+            </div>
+            <Button onClick={() => router.push('/sell/dashboard/account?tab=wallet')} className="bg-amber-600 hover:bg-amber-700 text-white">
+              Configure Wallet
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full">

@@ -95,8 +95,16 @@ export async function handleSellConfirm(ctx: SellerContext) {
       error: { name: error.name ?? 'Error', message: error.message },
     });
     await ctx.answerCallbackQuery('Error publishing');
+
+    const isWalletError = error.message?.includes('wallet') || error.message?.includes('USDT');
+    const kb = new InlineKeyboard();
+    if (isWalletError) {
+      kb.text('💰 Configure Wallet', 'wallet').row();
+    }
+    kb.text('⬅️ Back', 'sell_start');
+
     return renderUI(ctx, `❌ ${escapeHTML(error.message || 'Error publishing batch')}`, {
-      reply_markup: new InlineKeyboard().text('⬅️ Back', 'sell_start'),
+      reply_markup: kb,
     });
   }
 }

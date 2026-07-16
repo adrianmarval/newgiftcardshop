@@ -11,6 +11,7 @@ import { getUserRates } from '@/lib/services/pricing';
 import { getInitialTier } from './escalation';
 import { notifyBuyersStockAvailable } from '@/lib/notifications';
 import { MAX_BATCH_SIZE, WALLET_MIN_PAYOUT_EXTERNAL } from '@/lib/constants';
+import { validateAmountsAgainstRange, buildAmountRangeErrorMessage } from '@/lib/utils/amount-range-validator';
 import { logger } from '@/lib/logger';
 import type { PublishCardInput, PublishResult, PublishContext } from '@/types';
 
@@ -59,6 +60,32 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     throw new Error('Invalid brand-country combination');
   }
 
+  // Validate card amounts against brand-country limits
+  if (brandCountry.minAmount !== null || brandCountry.maxAmount !== null) {
+    const minAmount = brandCountry.minAmount !== null ? Number(brandCountry.minAmount) : null;
+    const maxAmount = brandCountry.maxAmount !== null ? Number(brandCountry.maxAmount) : null;
+    const violations = validateAmountsAgainstRange(
+      normalizedCards.map((c, i) => ({ ref: String(i), claimCode: c.claimCode, amount: c.amount })),
+      { minAmount, maxAmount },
+    );
+    if (violations.length > 0) {
+      const minMsg = minAmount !== null ? `min $${minAmount}` : '';
+      const maxMsg = maxAmount !== null ? `max $${maxAmount}` : '';
+      const range = [minMsg, maxMsg].filter(Boolean).join(', ');
+      logger.warn('publishBatch: tarjetas fuera de rango permitido', {
+        flow: 'sell',
+        action: 'publish-batch',
+        userId,
+        metadata: {
+          invalidCount: violations.length,
+          range,
+          offenders: violations.map((v) => ({ claimCode: v.claimCode, amount: v.amount, violation: v.violation })),
+        },
+      });
+      throw new Error(buildAmountRangeErrorMessage(violations, { minAmount, maxAmount }));
+    }
+  }
+
   // DB dedup check (first pass)
   const codeHashes = normalizedCards.map((c) => hashCode(c.claimCode));
   const existingInDb = await prisma.giftcard.findMany({
@@ -85,6 +112,13 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
   if (!dbUser) {
     logger.warn('publishBatch: usuario no encontrado', { flow: 'sell', action: 'publish-batch', userId });
     throw new Error('User not found in the system.');
+  }
+
+  // Verify wallet is configured before publishing
+  const paymentMethod = await prisma.paymentMethod.findUnique({ where: { userId } });
+  if (!paymentMethod) {
+    logger.warn('publishBatch: wallet no configurada', { flow: 'sell', action: 'publish-batch', userId });
+    throw new Error('You must configure your USDT wallet before publishing cards. Go to Settings > Payment Method to set it up.');
   }
 
   // DB dedup check (second pass, after request-level dedup)
@@ -123,8 +157,7 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
   }
 
   // Min payout validation for external wallets (payout = totalAmount × sellRate)
-  const paymentMethod = await prisma.paymentMethod.findUnique({ where: { userId } });
-  if (paymentMethod && !paymentMethod.isBinanceWallet) {
+  if (!paymentMethod.isBinanceWallet) {
     const totalAmount = uniqueCards.reduce((sum, card) => sum + parseFloat(card.amount), 0);
     const estimatedPayout = totalAmount * Number(sellRateSnapshot);
     if (estimatedPayout < WALLET_MIN_PAYOUT_EXTERNAL) {
