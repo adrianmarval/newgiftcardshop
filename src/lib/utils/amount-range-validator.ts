@@ -32,9 +32,26 @@ function parseAmountSafe(value: string | number): number | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
-  // Match use-sell-flow.ts parser: strip $/commas, accept comma or dot as decimal.
-  const normalized = Number.parseFloat(trimmed.replace(/[$,]/g, '').replace(/,/g, '.'));
-  return Number.isFinite(normalized) ? normalized : null;
+  // Strip $, then normalize comma-as-decimal to dot.
+  // If there's a dot, commas are thousands separators → strip them.
+  // If there's no dot, check if comma is thousands (e.g. 1,000) or decimal (e.g. 25,50).
+  const withoutCurrency = trimmed.replace(/[$]/g, '');
+  const hasDot = withoutCurrency.includes('.');
+  const hasComma = withoutCurrency.includes(',');
+  let normalized: string;
+  if (hasDot) {
+    // Dot present → commas are thousands separators → strip them
+    normalized = withoutCurrency.replace(/,/g, '');
+  } else if (hasComma) {
+    // No dot but comma → check if it's thousands (1,000) or decimal (25,50)
+    // Thousands: comma followed by exactly 3 digits and no other commas
+    const isThousands = /^[0-9]{1,3}(,[0-9]{3})+$/.test(withoutCurrency);
+    normalized = isThousands ? withoutCurrency.replace(/,/g, '') : withoutCurrency.replace(/,/g, '.');
+  } else {
+    normalized = withoutCurrency;
+  }
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 /**
