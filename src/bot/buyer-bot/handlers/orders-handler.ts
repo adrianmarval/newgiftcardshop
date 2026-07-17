@@ -53,7 +53,7 @@ export async function handleOrders(ctx: BuyerContext) {
   const kb = new InlineKeyboard();
   let msg = `📋 <b>Tus Órdenes</b> (Página ${page}/${totalPages})\n\n`;
   msg += '<b>Leyenda:</b>\n';
-  msg += '<pre>🟢 Completada\n🔵 Esperando Pago\n🟡 Pendiente\n🔴 Cancelada</pre>\n\n';
+  msg += '🟢 Completada\n🔵 Esperando Pago\n🟡 Pendiente\n🔴 Cancelada\n\n';
   msg += '👇 Selecciona una orden para ver sus detalles:';
 
   for (const order of orders) {
@@ -472,7 +472,9 @@ export async function handleReportCardSelect(ctx: BuyerContext) {
 
     const currency = card.brandCountry?.country?.currency || 'USD';
     let reportDetail =
-      `🚩 <b>Reporte actual:</b>\n\n` + `Tarjeta: ${escapeHTML(card.brandCountry.brand.name)}\n` + `Tipo: ${fmtGiftcardStatus(card.status)}\n`;
+      `🚩 <b>Reporte actual:</b>\n\n` +
+      `Tarjeta: ${escapeHTML(card.brandCountry.brand.name)}\n` +
+      `Tipo: ${fmtGiftcardStatus(card.status)}\n`;
 
     if (card.status === 'WRONG_AMOUNT' && card.reportedAmount) {
       reportDetail += `Monto reportado: <b>${fmt$(card.reportedAmount, currency)}</b>\n`;
