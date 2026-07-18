@@ -86,7 +86,7 @@ export async function handleCountrySelected(ctx: SellerContext) {
   try {
     await getUserRates(ctx.user.id, { brandCountryId: brandCountry.id });
   } catch {
-    return ctx.answerCallbackQuery('No tienes tarifa para vender aquí. Contactá al admin.');
+    return ctx.answerCallbackQuery("You don't have a rate to sell on this Brand/Country. Please contact the administrator.");
   }
 
   ctx.session.wizard.countryId = country.id;
@@ -255,11 +255,7 @@ export async function handleCodesText(ctx: SellerContext) {
     if (dbDuplicateLines.has(line)) parts.push('already exists in database');
     const rv = rangeViolationByLine.get(line);
     if (rv) {
-      parts.push(
-        rv.violation === 'below_min'
-          ? `below min $${rv.minAmount!.toFixed(2)}`
-          : `above max $${rv.maxAmount!.toFixed(2)}`,
-      );
+      parts.push(rv.violation === 'below_min' ? `below min $${rv.minAmount!.toFixed(2)}` : `above max $${rv.maxAmount!.toFixed(2)}`);
     }
     return parts.length > 0 ? parts.join('; ') : null;
   };
@@ -303,9 +299,7 @@ export async function handleCodesText(ctx: SellerContext) {
           .join(', ')
       : '';
     const title =
-      rangeViolationByLine.size > 0 && rangeLabel
-        ? `❌ <b>Cards not accepted (${rangeLabel})</b>`
-        : `❌ <b>Cards not accepted</b>`;
+      rangeViolationByLine.size > 0 && rangeLabel ? `❌ <b>Cards not accepted (${rangeLabel})</b>` : `❌ <b>Cards not accepted</b>`;
     const totalLabel = cards.length > 0 ? cards.length : uniqueBadLines.length;
     const pasteBlock = renderPasteBlock();
 
