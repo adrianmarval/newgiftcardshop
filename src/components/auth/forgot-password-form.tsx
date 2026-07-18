@@ -14,7 +14,6 @@ import { forgotPassword } from '@/actions/auth/forgot-password';
 import { useAction } from 'next-safe-action/hooks';
 import { forgotPasswordInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';
-import { appSectionMap } from '@/types';
 import type { z } from 'zod';
 
 interface ForgotPasswordFormProps {
@@ -25,8 +24,7 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: ForgotPasswordFormProps) 
   const [success, setSuccess] = useState(false);
 
   const isSpanish = portal === 'buy' || portal === 'admin';
-  const portalPath = appSectionMap[portal];
-  const authPath = `${portalPath}/auth`;
+  const authPath = `/${portal}/auth`;
 
   const {
     register,

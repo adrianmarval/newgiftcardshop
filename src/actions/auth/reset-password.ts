@@ -3,15 +3,13 @@
 import { auth } from '@/lib/auth/auth-server';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { appSectionMap } from '@/types';
 import { resetPasswordInputSchema, resetPasswordOutputSchema } from './schemas';
 
 export const resetPassword = actionClient
   .inputSchema(resetPasswordInputSchema)
   .outputSchema(resetPasswordOutputSchema)
   .action(async function ({ parsedInput: { token, newPassword, portal } }) {
-    const portalPath = appSectionMap[portal];
-    const loginPath = `${portalPath}/auth/login?reset=success`;
+    const loginPath = `/${portal}/auth/login?reset=success`;
 
     try {
       await auth.api.resetPassword({

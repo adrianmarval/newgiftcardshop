@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { LoginForm } from '@/components/auth/login-form';
-import { appSectionMap, isAppSection, PORTAL_AUTH_CONFIG } from '@/types';
+import { isAppSection, PORTAL_AUTH_CONFIG } from '@/types';
 
 interface PageProps {
   params: Promise<{ portal: string }>;
@@ -25,7 +25,7 @@ export default async function DynamicLoginPage({ params }: PageProps) {
   const { portal } = await params;
   if (!isAppSection(portal)) notFound();
   const config = PORTAL_AUTH_CONFIG[portal];
-  const basePath = `${appSectionMap[portal]}/auth`;
+  const basePath = `/${portal}/auth`;
 
   return (
     <Suspense fallback={<div>{portal === 'sell' ? 'Loading...' : 'Cargando...'}</div>}>

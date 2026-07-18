@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { CheckCircle, Mail, XCircle, ArrowRight } from 'lucide-react';
-import { appSectionMap, dashboardMap, type AppSection } from '@/types';
+import { dashboardMap, type AppSection } from '@/types';
 
 const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => {
   const router = useRouter();
@@ -83,7 +83,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
         <Button
           type="button"
           variant="ghost"
-          onClick={() => router.push(`${appSectionMap[portal]}/auth/login`)}
+          onClick={() => router.push(`/${portal}/auth/login`)}
           className="h-12 w-full text-sm text-slate-400 hover:text-white"
         >
           {isSpanish ? 'Volver al Login' : 'Back to Login'}

@@ -3,14 +3,15 @@
 import { authApi } from '@/lib/auth/auth-server';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { appSectionMap, roleMap } from '@/types';
+import { dashboardMap, roleMap } from '@/types';
 import { registerInputSchema, registerOutputSchema } from './schemas';
 
 export const register = actionClient
   .inputSchema(registerInputSchema)
   .outputSchema(registerOutputSchema)
   .action(async function ({ parsedInput: { fullName, email, password, portal } }) {
-    const verifyEmailUrl = `${appSectionMap[portal]}/auth/verify-email`;
+    const callbackURL = dashboardMap[portal];
+    const verifyEmailUrl = `/${portal}/auth/verify-email`;
     const role = roleMap[portal];
 
     try {
@@ -20,7 +21,7 @@ export const register = actionClient
           email,
           password,
           role,
-          callbackURL: verifyEmailUrl,
+          callbackURL,
         },
         headers: await headers(),
       });

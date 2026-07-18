@@ -15,7 +15,6 @@ import { resetPassword } from '@/actions/auth/reset-password';
 import { useAction } from 'next-safe-action/hooks';
 import { resetPasswordInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';
-import { appSectionMap } from '@/types';
 import { PasswordCheckItem } from './ui/password-check-item';
 import type { z } from 'zod';
 
@@ -29,8 +28,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
   const token = searchParams.get('token') || '';
 
   const isSpanish = portal === 'buy' || portal === 'admin';
-  const portalPath = appSectionMap[portal];
-  const authPath = `${portalPath}/auth`;
+  const authPath = `/${portal}/auth`;
 
   const {
     register,

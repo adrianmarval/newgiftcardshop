@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth/auth-server';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { appSectionMap, dashboardMap, roleMap } from '@/types';
+import { dashboardMap, roleMap } from '@/types';
 import { logger } from '@/lib/logger';
 import { loginInputSchema, loginOutputSchema } from './schemas';
 
@@ -35,7 +35,7 @@ export const login = actionClient
         };
       };
       if (response.twoFactorRedirect) {
-        return { success: true as const, redirectTo: `${appSectionMap[portal]}/auth/verify-2fa` };
+        return { success: true as const, redirectTo: `/${portal}/auth/verify-2fa` };
       }
 
       if (response.user) {

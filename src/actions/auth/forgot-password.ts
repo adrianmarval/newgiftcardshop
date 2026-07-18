@@ -3,15 +3,13 @@
 import { auth } from '@/lib/auth/auth-server';
 import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
-import { appSectionMap } from '@/types';
 import { forgotPasswordInputSchema, forgotPasswordOutputSchema } from './schemas';
 
 export const forgotPassword = actionClient
   .inputSchema(forgotPasswordInputSchema)
   .outputSchema(forgotPasswordOutputSchema)
   .action(async function ({ parsedInput: { email, portal } }) {
-    const portalPath = appSectionMap[portal];
-    const callbackURL = `${process.env.BETTER_AUTH_URL}${portalPath}/auth/reset-password`;
+    const callbackURL = `${process.env.BETTER_AUTH_URL}/${portal}/auth/reset-password`;
 
     try {
       await auth.api.requestPasswordReset({
