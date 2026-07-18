@@ -52,7 +52,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
   return (
     <NotificationProvider initialUnreadCounts={initialUnreadCounts}>
       <AutoRefreshProvider interval={15000}>
-        <div className="flex h-svh flex-col ring-0 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
+        <div className="flex h-svh flex-col ring-0 lg:flex-row md:px-4 lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}
           <Card className="order-1 flex-10 overflow-hidden rounded-none py-0 shadow-2xl md:rounded-t-4xl md:p-1 lg:order-2">
             <AppTopBar
