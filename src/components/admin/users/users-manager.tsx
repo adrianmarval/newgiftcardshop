@@ -238,7 +238,7 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
 
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         {initialUsers.map((user) => (
-          <Card key={user.id} className="hover:bg-muted/50 transition-colors">
+          <Card key={user.id} className="hover:border-primary/30 overflow-hidden py-1 transition-all duration-200 ease-out">
             <CardContent className="flex items-center gap-1 p-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1">

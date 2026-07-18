@@ -286,3 +286,29 @@ export async function notifySellerBatchPaid(sellerId: string, batchId: number, a
 
   await notificationDispatcher.dispatch(sellerId, message);
 }
+
+export async function notifyAdminPaymentReceived(
+  orderId: string,
+  buyerName: string,
+  amount: number,
+  txId: string,
+): Promise<void> {
+  const admin = await prisma.user.findFirst({
+    where: { role: 'ADMIN' },
+    select: { id: true },
+  });
+
+  if (!admin) {
+    return;
+  }
+
+  const message: NotificationMessage = {
+    type: 'PAYMENT_PENDING',
+    title: '💰 Pago recibido',
+    description: `${buyerName} pagó ${amount.toFixed(2)} USDT — Orden #${orderId.slice(-8)}`,
+    actionUrl: '/admin/payments',
+    metadata: { orderId, buyerName, amount, txId },
+  };
+
+  await notificationDispatcher.dispatch(admin.id, message);
+}

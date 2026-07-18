@@ -25,3 +25,13 @@ export class OrderAlreadyProcessedError extends Error {
     this.name = 'OrderAlreadyProcessedError';
   }
 }
+
+export class PaymentVerificationError extends Error {
+  public readonly code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = 'PaymentVerificationError';
+    this.code = code;
+  }
+}

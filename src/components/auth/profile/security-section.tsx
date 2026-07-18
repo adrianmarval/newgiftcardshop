@@ -110,7 +110,9 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
   const [alert, setAlert] = useState<{ variant: 'success' | 'error'; title: string; description?: string } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ current?: string; new?: string; confirm?: string }>({});
 
-  const [sessions, setSessions] = useState<Array<{ id: string; ipAddress: string | null; userAgent: string | null; createdAt: Date; expiresAt: Date }>>([]);
+  const [sessions, setSessions] = useState<
+    Array<{ id: string; ipAddress: string | null; userAgent: string | null; createdAt: Date; expiresAt: Date }>
+  >([]);
   const [sessionsLoaded, setSessionsLoaded] = useState(false);
 
   const { execute: executeGetSessions, status: sessionsStatus } = useAction(getActiveSessions, {
@@ -125,11 +127,7 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
   const { execute: executeRevoke, status: revokeStatus } = useAction(revokeOtherSessions, {
     onSuccess: ({ data }) => {
       if (data?.success) {
-        showAlert.toast.success(
-          isSpanish
-            ? `${data.revokedCount} sesiones revocadas`
-            : `${data.revokedCount} sessions revoked`
-        );
+        showAlert.toast.success(isSpanish ? `${data.revokedCount} sesiones revocadas` : `${data.revokedCount} sessions revoked`);
         setSessions((prev) => prev.filter((_, i) => i === 0));
       }
     },
@@ -360,12 +358,9 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <MonitorSmartphone className="h-3.5 w-3.5 text-muted-foreground" />
-                  <p className="text-xs font-medium md:text-sm">
-                    {isSpanish ? 'Sesiones activas' : 'Active sessions'}
-                  </p>
+                  <MonitorSmartphone className="text-muted-foreground h-3.5 w-3.5" />
+                  <p className="text-xs font-medium md:text-sm">{isSpanish ? 'Sesiones activas' : 'Active sessions'}</p>
                 </div>
-                <span className="text-muted-foreground text-xs">{sessions.length}</span>
               </div>
 
               {sessionsStatus === 'executing' && sessionsLoaded === false ? (
@@ -379,9 +374,7 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
                       <div
                         key={s.id}
                         className={`flex items-center justify-between rounded-md border px-3 py-2 text-xs ${
-                          isCurrent
-                            ? 'border-emerald-500/20 bg-emerald-500/5'
-                            : 'border-slate-800 bg-slate-900/30'
+                          isCurrent ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-slate-800 bg-slate-900/30'
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -408,13 +401,15 @@ export const SecuritySection = ({ isPending = false }: SecuritySectionProps) => 
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start gap-1.5 text-xs text-destructive hover:text-destructive"
+                  className="text-destructive hover:text-destructive w-full justify-start gap-1.5 text-xs"
                   disabled={revokeStatus === 'executing'}
                   onClick={() => executeRevoke()}
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   {revokeStatus === 'executing'
-                    ? isSpanish ? 'Revocando...' : 'Revoking...'
+                    ? isSpanish
+                      ? 'Revocando...'
+                      : 'Revoking...'
                     : isSpanish
                       ? `Cerrar otras sesiones (${sessions.length - 1})`
                       : `Revoke other sessions (${sessions.length - 1})`}

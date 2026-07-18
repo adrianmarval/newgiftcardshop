@@ -13,6 +13,7 @@ import {
   reportGiftcardIssue,
   deleteGiftcardIssue,
   OrderAlreadyProcessedError,
+  PaymentVerificationError,
 } from '@/lib/services/order';
 
 import { Prisma } from '@/generated/prisma/client';
@@ -372,6 +373,19 @@ export async function handlePaymentText(ctx: BuyerContext) {
       return renderUI(ctx, ' Esta orden ya fue procesada.', {
         reply_markup: new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders'),
       });
+    }
+    if (err instanceof PaymentVerificationError) {
+      return renderUI(
+        ctx,
+        `❌ <b>No se pudo verificar tu pago.</b>\n\n${escapeHTML(err.message)}\n\n<b>Revisá el ID de transacción y enviálo nuevamente:</b>`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: new InlineKeyboard()
+            .text('🔄 Reintentar', `make_payment_${orderId}`)
+            .text('📋 Ver mis órdenes', 'my_orders')
+            .row(),
+        },
+      );
     }
     throw err;
   }

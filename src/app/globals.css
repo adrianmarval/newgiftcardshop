@@ -5,6 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --card-spacing: 0;
   --background: oklch(0.9765 0.0076 241.6619);
   --foreground: oklch(0.3774 0.0189 260.6754);
   --card: oklch(1 0 0);

@@ -1,7 +1,8 @@
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { computeEffectiveTotalDecimal } from '@/lib/services/pricing';
-import { OrderNotFoundError, InvalidOrderStateError, OrderAlreadyProcessedError } from './order-errors';
+import { OrderNotFoundError, InvalidOrderStateError, OrderAlreadyProcessedError, PaymentVerificationError } from './order-errors';
+import { validateBuyerPayment } from '@/lib/services/payment/buyer-payment.service';
 import { logger } from '@/lib/logger';
 
 /**
@@ -66,6 +67,19 @@ export async function completeOrderPayment(orderId: string, txId: string) {
 
   const paymentAmount = order.adjustedTotal ?? order.total;
 
+  // ── Verify TxID against Binance Pay API ──────────────────────────────────
+  const verification = await validateBuyerPayment(txId, paymentAmount.toString(), orderId);
+
+  if (!verification.isValid) {
+    logger.warn('Payment verification failed', {
+      flow: 'order',
+      action: 'complete-payment',
+      userId: order.userId,
+      metadata: { orderId, txId: txId.substring(0, 6) + '...', code: verification.code },
+    });
+    throw new PaymentVerificationError(verification.code, verification.message);
+  }
+
   try {
     await prisma.$transaction(async (tx) => {
       const updatedSettings = await tx.platformSettings.upsert({
@@ -105,6 +119,23 @@ export async function completeOrderPayment(orderId: string, txId: string) {
     });
     throw err;
   }
+
+  // ── Notify admin (fire-and-forget — don't block payment flow) ─────────────
+  const { notifyAdminPaymentReceived } = await import('@/lib/notifications/notification.service');
+  const buyer = await prisma.user.findUnique({
+    where: { id: order.userId },
+    select: { name: true, email: true },
+  });
+  const buyerName = buyer?.name || buyer?.email || 'Buyer';
+
+  notifyAdminPaymentReceived(order.id, buyerName, paymentAmount.toNumber(), txId).catch((err) =>
+    logger.error('Error notificando admin sobre pago recibido', {
+      flow: 'order',
+      action: 'complete-payment',
+      metadata: { orderId, userId: order.userId },
+      error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+    }),
+  );
 
   return { orderId: order.id, paymentAmount: paymentAmount.toNumber() };
 }

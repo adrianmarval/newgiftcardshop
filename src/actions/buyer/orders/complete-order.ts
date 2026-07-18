@@ -1,7 +1,7 @@
 'use server';
 
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { findOrderForUser, completeOrderPayment, OrderAlreadyProcessedError } from '@/lib/services/order';
+import { findOrderForUser, completeOrderPayment, OrderAlreadyProcessedError, PaymentVerificationError } from '@/lib/services/order';
 import { logger } from '@/lib/logger';
 import { completeOrderInputSchema, completeOrderOutputSchema } from './schemas';
 
@@ -31,6 +31,13 @@ export const completeOrder = buyerActionClient
         logger.warn('Orden ya procesada en complete-order', {
           userId: ctx.auth.user.id,
           metadata: { orderId: ctx.order.id },
+        });
+        throw new ActionError(err.message);
+      }
+      if (err instanceof PaymentVerificationError) {
+        logger.warn('Verificación de pago fallida en complete-order', {
+          userId: ctx.auth.user.id,
+          metadata: { orderId: ctx.order.id, code: err.code },
         });
         throw new ActionError(err.message);
       }

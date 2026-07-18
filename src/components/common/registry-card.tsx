@@ -224,10 +224,7 @@ export function getOrderHasReports(giftcards: Giftcard[]): boolean {
 
 export function getBatchProgressConfig(batch: AdminBatch | SellerBatch) {
   const isPaid = 'isPaid' in batch ? batch.isPaid : false;
-  const allConfirmed =
-    batch.confirmedCount !== undefined &&
-    batch.cardsCount !== undefined &&
-    batch.confirmedCount === batch.cardsCount;
+  const allConfirmed = batch.confirmedCount !== undefined && batch.cardsCount !== undefined && batch.confirmedCount === batch.cardsCount;
   return {
     percentage: ((batch.confirmedCount ?? 0) / (batch.cardsCount || 1)) * 100,
     colorClass: 'bg-blue-500',
@@ -237,10 +234,7 @@ export function getBatchProgressConfig(batch: AdminBatch | SellerBatch) {
 
 export function getBatchActiveBg(batch: AdminBatch | SellerBatch): string {
   const isPaid = batch.isPaid;
-  const allConfirmed =
-    batch.confirmedCount !== undefined &&
-    batch.cardsCount !== undefined &&
-    batch.confirmedCount === batch.cardsCount;
+  const allConfirmed = batch.confirmedCount !== undefined && batch.cardsCount !== undefined && batch.confirmedCount === batch.cardsCount;
   if (isPaid) return 'bg-emerald-500/10 dark:bg-emerald-500/15';
   if (allConfirmed) return 'bg-blue-500/10 dark:bg-blue-500/15';
   return 'bg-amber-500/10 dark:bg-amber-500/15';
@@ -289,13 +283,7 @@ export function CopyableId({ id, prefix = '#', className }: { id: string | numbe
   );
 }
 
-export function DeleteIcon({
-  isDeleting,
-  onClick,
-}: {
-  isDeleting: boolean;
-  onClick: (e: MouseEvent) => void;
-}) {
+export function DeleteIcon({ isDeleting, onClick }: { isDeleting: boolean; onClick: (e: MouseEvent) => void }) {
   return (
     <Button
       onClick={onClick}
