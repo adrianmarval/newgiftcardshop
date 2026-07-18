@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,20 +12,30 @@ import { Spinner } from '@/components/ui/spinner';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 import { forgotPassword } from '@/actions/auth/forgot-password';
 import { useAction } from 'next-safe-action/hooks';
+import { forgotPasswordInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';
 import { appSectionMap } from '@/types';
+import type { z } from 'zod';
 
 interface ForgotPasswordFormProps {
   portal?: AppSection;
 }
 
 export const ForgotPasswordForm = ({ portal = 'buy' }: ForgotPasswordFormProps) => {
-  const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
 
   const isSpanish = portal === 'buy' || portal === 'admin';
   const portalPath = appSectionMap[portal];
   const authPath = `${portalPath}/auth`;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<z.infer<typeof forgotPasswordInputSchema>>({
+    resolver: zodResolver(forgotPasswordInputSchema),
+    defaultValues: { email: '', portal },
+  });
 
   const { execute, status } = useAction(forgotPassword, {
     onSuccess: ({ data }) => {
@@ -41,10 +53,11 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: ForgotPasswordFormProps) 
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    execute({ email, portal });
+  const onSubmit = (values: z.infer<typeof forgotPasswordInputSchema>) => {
+    execute(values);
   };
+
+  const isExecuting = status === 'executing';
 
   return (
     <div className="space-y-8">
@@ -64,32 +77,28 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: ForgotPasswordFormProps) 
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <input type="hidden" name="portal" value={portal} />
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-3">
           <Label htmlFor="email" className="text-sm font-medium text-slate-300">
             {isSpanish ? 'Correo electrónico' : 'Email'}
           </Label>
           <Input
             id="email"
-            name="email"
             type="email"
             placeholder="you@example.com"
-            required
-            disabled={status === 'executing' || success}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            disabled={isExecuting || success}
+            {...register('email')}
             className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
           />
+          {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
         </div>
 
         <Button
           type="submit"
           className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
-          disabled={status === 'executing' || success}
+          disabled={isExecuting || success}
         >
-          {status === 'executing' ? (
+          {isExecuting ? (
             <span className="flex items-center gap-1">
               <Spinner size="sm" className="text-white" />
               {isSpanish ? 'Enviando...' : 'Sending...'}

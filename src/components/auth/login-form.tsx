@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { showSwal } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/actions/auth/login';
 import { resendVerification } from '@/actions/auth/resend-verification';
 import { useAction } from 'next-safe-action/hooks';
+import { loginInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';
+import type { z } from 'zod';
 
 export interface LoginFormProps {
   portal: AppSection;
@@ -35,11 +38,20 @@ export const LoginForm = ({
   registerLinkText = 'Sign up',
 }: LoginFormProps) => {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
   const portalValue = portal;
   const isSpanish = portal === 'buy' || portal === 'admin';
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<z.infer<typeof loginInputSchema>>({
+    resolver: zodResolver(loginInputSchema),
+    defaultValues: { email: '', password: '', portal: portalValue },
+  });
+
+  const emailValue = watch('email');
 
   const { execute, status } = useAction(login, {
     onSuccess: ({ data }) => {
@@ -59,8 +71,8 @@ export const LoginForm = ({
               showCancelButton: true,
             })
             .then((result) => {
-              if (result.isConfirmed && email) {
-                resendExecute({ portal: portalValue, email });
+              if (result.isConfirmed && emailValue) {
+                resendExecute({ portal: portalValue, email: emailValue });
               }
             });
         } else {
@@ -98,66 +110,61 @@ export const LoginForm = ({
     },
   });
 
-  const handleSubmit = (e: React.SubmitEvent) => {
-    e.preventDefault();
-    execute({ email, password, portal: portalValue });
+  const onSubmit = (values: z.infer<typeof loginInputSchema>) => {
+    execute(values);
   };
 
+  const isExecuting = status === 'executing';
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       <div className="space-y-1">
-        <h1 className="text-2xl font-medium tracking-tight text-white">{title}</h1>
-        <p className="text-sm text-slate-400">{subtitle}</p>
+        <h1 className="text-xl font-medium tracking-tight text-white sm:text-2xl">{title}</h1>
+        <p className="text-xs text-slate-400 sm:text-sm">{subtitle}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <input type="hidden" name="portal" value={portalValue} />
-
-        <div className="space-y-3">
-          <Label htmlFor="email" className="text-sm font-medium text-slate-300">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+        <div className="space-y-2 sm:space-y-3">
+          <Label htmlFor="email" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Correo electrónico' : 'Email'}
           </Label>
           <Input
             id="email"
-            name="email"
             type="email"
             placeholder={emailPlaceholder}
-            required
-            disabled={status === 'executing'}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            disabled={isExecuting}
+            {...register('email')}
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
           />
+          {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-sm font-medium text-slate-300">
+            <Label htmlFor="password" className="text-xs font-medium text-slate-300 sm:text-sm">
               {isSpanish ? 'Contraseña' : 'Password'}
             </Label>
-            <Link href={forgotPasswordUrl} className="text-xs font-medium text-emerald-400 hover:text-emerald-300">
+            <Link href={forgotPasswordUrl} className="text-[11px] font-medium text-emerald-400 hover:text-emerald-300 sm:text-xs">
               {isSpanish ? '¿Olvidaste?' : 'Forgot?'}
             </Link>
           </div>
           <Input
             id="password"
-            name="password"
             type="password"
             placeholder="••••••••"
-            required
-            disabled={status === 'executing'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            disabled={isExecuting}
+            {...register('password')}
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
           />
+          {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
         </div>
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
-          disabled={status === 'executing'}
+          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50 sm:h-12 sm:text-sm"
+          disabled={isExecuting}
         >
-          {status === 'executing' ? (
+          {isExecuting ? (
             <span className="flex items-center gap-1">
               <Spinner size="sm" className="text-white" />
               {isSpanish ? 'Iniciando...' : 'Signing in...'}
@@ -171,7 +178,7 @@ export const LoginForm = ({
       </form>
 
       {registerUrl && (
-        <p className="text-center text-sm text-slate-400">
+        <p className="text-center text-xs text-slate-400 sm:text-sm">
           {registerPrompt}{' '}
           <Link href={registerUrl} className="font-medium text-emerald-400 hover:text-emerald-300">
             {registerLinkText}

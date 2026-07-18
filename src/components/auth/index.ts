@@ -7,6 +7,7 @@ export { Verify2FAForm } from './verify-2fa-form';
 export { VerifyEmailForm } from './verify-email-form';
 export { ProfileForm } from './profile/profile-form';
 export { ProfileInfoSection } from './profile/profile-info-section';
-export { SecuritySection } from './profile/security-section';
+export { PasswordSection } from './profile/password-section';
+export { SessionsSection } from './profile/sessions-section';
 export { TwoFactorSection } from './profile/two-factor-section';
 export { PasswordCheckItem } from './ui/password-check-item';

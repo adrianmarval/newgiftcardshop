@@ -10,7 +10,7 @@ export const register = actionClient
   .inputSchema(registerInputSchema)
   .outputSchema(registerOutputSchema)
   .action(async function ({ parsedInput: { fullName, email, password, portal } }) {
-    const callbackURL = `${appSectionMap[portal]}/auth/login`;
+    const verifyEmailUrl = `${appSectionMap[portal]}/auth/verify-email`;
     const role = roleMap[portal];
 
     try {
@@ -20,11 +20,11 @@ export const register = actionClient
           email,
           password,
           role,
-          callbackURL,
+          callbackURL: verifyEmailUrl,
         },
         headers: await headers(),
       });
-      return { success: true as const, redirectTo: callbackURL };
+      return { success: true as const, redirectTo: verifyEmailUrl };
     } catch (error) {
       console.error('Registration error:', error);
       return {

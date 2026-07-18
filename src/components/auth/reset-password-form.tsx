@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +13,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { resetPassword } from '@/actions/auth/reset-password';
 import { useAction } from 'next-safe-action/hooks';
+import { resetPasswordInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';
 import { appSectionMap } from '@/types';
 import { PasswordCheckItem } from './ui/password-check-item';
+import type { z } from 'zod';
 
 interface ResetPasswordFormProps {
   portal?: AppSection;
@@ -24,36 +28,33 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
 
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
   const isSpanish = portal === 'buy' || portal === 'admin';
+  const portalPath = appSectionMap[portal];
+  const authPath = `${portalPath}/auth`;
 
-  const [passwordChecks, setPasswordChecks] = useState({
-    length: false,
-    uppercase: false,
-    lowercase: false,
-    number: false,
-    special: false,
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<z.infer<typeof resetPasswordInputSchema>>({
+    resolver: zodResolver(resetPasswordInputSchema),
+    defaultValues: { newPassword: '', confirmPassword: '', token, portal },
   });
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setNewPassword(value);
-    setPasswordChecks({
-      length: value.length >= 8,
-      uppercase: /[A-Z]/.test(value),
-      lowercase: /[a-z]/.test(value),
-      number: /[0-9]/.test(value),
-      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value),
-    });
+  const newPasswordValue = watch('newPassword');
+  const confirmPasswordValue = watch('confirmPassword');
+
+  const passwordChecks = {
+    length: newPasswordValue.length >= 8,
+    uppercase: /[A-Z]/.test(newPasswordValue),
+    lowercase: /[a-z]/.test(newPasswordValue),
+    number: /[0-9]/.test(newPasswordValue),
+    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPasswordValue),
   };
 
   const allValid = Object.values(passwordChecks).every(Boolean);
-  const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
-
-  const portalPath = appSectionMap[portal];
-  const authPath = `${portalPath}/auth`;
+  const passwordsMatch = newPasswordValue === confirmPasswordValue && confirmPasswordValue.length > 0;
 
   const { execute, status } = useAction(resetPassword, {
     onSuccess: ({ data }) => {
@@ -70,9 +71,8 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
     },
   });
 
-  const handleSubmit = (e: React.SubmitEvent) => {
-    e.preventDefault();
-    execute({ token, newPassword, confirmPassword, portal });
+  const onSubmit = (values: z.infer<typeof resetPasswordInputSchema>) => {
+    execute(values);
   };
 
   if (!token) {
@@ -99,6 +99,8 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
     );
   }
 
+  const isExecuting = status === 'executing';
+
   return (
     <div className="space-y-8">
       <div className="space-y-1">
@@ -106,26 +108,20 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
         <p className="text-sm text-slate-400">{isSpanish ? 'Crea una contraseña segura' : 'Create a secure password'}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <input type="hidden" name="portal" value={portal} />
-        <input type="hidden" name="token" value={token} />
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-3">
           <Label htmlFor="newPassword" className="text-sm font-medium text-slate-300">
             {isSpanish ? 'Nueva contraseña' : 'New Password'}
           </Label>
           <Input
             id="newPassword"
-            name="newPassword"
             type="password"
             placeholder="••••••••"
-            value={newPassword}
-            onChange={handlePasswordChange}
-            required
-            disabled={status === 'executing'}
+            disabled={isExecuting}
+            {...register('newPassword')}
             className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
           />
-          {newPassword && (
+          {newPasswordValue && (
             <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-3">
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                 <PasswordCheckItem valid={passwordChecks.length} label={isSpanish ? '8+ caracteres' : '8+ chars'} />
@@ -136,6 +132,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
               </div>
             </div>
           )}
+          {errors.newPassword && <p className="text-xs text-red-400">{errors.newPassword.message}</p>}
         </div>
 
         <div className="space-y-3">
@@ -144,24 +141,24 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
           </Label>
           <Input
             id="confirmPassword"
-            name="confirmPassword"
             type="password"
             placeholder="••••••••"
-            required
-            disabled={status === 'executing'}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            disabled={isExecuting}
+            {...register('confirmPassword')}
             className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
           />
-          {confirmPassword && !passwordsMatch && <p className="text-xs text-red-400">{isSpanish ? 'No coinciden' : 'Do not match'}</p>}
+          {confirmPasswordValue && !passwordsMatch && (
+            <p className="text-xs text-red-400">{isSpanish ? 'No coinciden' : 'Do not match'}</p>
+          )}
+          {errors.confirmPassword && <p className="text-xs text-red-400">{errors.confirmPassword.message}</p>}
         </div>
 
         <Button
           type="submit"
           className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
-          disabled={status === 'executing' || !allValid || !passwordsMatch}
+          disabled={isExecuting || !allValid || !passwordsMatch}
         >
-          {status === 'executing' ? (
+          {isExecuting ? (
             <span className="flex items-center gap-1">
               <Spinner size="sm" className="text-white" />
               {isSpanish ? 'Restableciendo...' : 'Resetting...'}

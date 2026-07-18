@@ -11,12 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Wallet, Trash2, CheckCircle, Pencil, Copy } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
-import {
-  getPaymentMethod,
-  upsertPaymentMethod,
-  deletePaymentMethod,
-  listCoinsForSeller,
-} from '@/actions/seller/payment-method';
+import { getPaymentMethod, upsertPaymentMethod, deletePaymentMethod, listCoinsForSeller } from '@/actions/seller/payment-method';
 import type { CoinWithNetworks } from '@/types';
 
 interface PaymentMethodSectionProps {
@@ -28,7 +23,7 @@ export function PaymentMethodSection({ isSeller }: PaymentMethodSectionProps) {
   const [selectedCoinId, setSelectedCoinId] = useState('');
   const [selectedNetworkId, setSelectedNetworkId] = useState('');
   const [address, setAddress] = useState('');
-  const [isBinanceWallet, setIsBinanceWallet] = useState(false);
+  const [isBinanceWallet, setIsBinanceWallet] = useState(true);
   const [currentPm, setCurrentPm] = useState<{
     id: string;
     coinId: string;
@@ -101,22 +96,20 @@ export function PaymentMethodSection({ isSeller }: PaymentMethodSectionProps) {
   if (loading) return <Spinner />;
 
   const showForm = !currentPm || isEditing;
-  const maskedAddress = currentPm
-    ? `${currentPm.address.slice(0, 6)}...${currentPm.address.slice(-4)}`
-    : '';
+  const maskedAddress = currentPm ? `${currentPm.address.slice(0, 6)}...${currentPm.address.slice(-4)}` : '';
 
   return (
     <Card className="gap-0">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-1">
-          <div className={`flex h-7 w-7 items-center justify-center rounded-md md:h-9 md:w-9 ${currentPm ? 'bg-emerald-500/10' : 'bg-muted'}`}>
+          <div
+            className={`flex h-7 w-7 items-center justify-center rounded-md md:h-9 md:w-9 ${currentPm ? 'bg-emerald-500/10' : 'bg-muted'}`}
+          >
             <Wallet className={`h-3.5 w-3.5 md:h-4 md:w-4 ${currentPm ? 'text-emerald-400' : 'text-muted-foreground'}`} />
           </div>
           <div>
             <CardTitle className="text-sm md:text-lg">USDT Wallet</CardTitle>
-            <p className="text-muted-foreground hidden text-xs md:block md:text-sm">
-              Configure where to receive your payments
-            </p>
+            <p className="text-muted-foreground hidden text-xs md:block md:text-sm">Configure where to receive your payments</p>
           </div>
         </div>
         {currentPm && (
@@ -148,7 +141,7 @@ export function PaymentMethodSection({ isSeller }: PaymentMethodSectionProps) {
             <div className="space-y-1">
               <p className="text-muted-foreground text-xs">Address</p>
               <div className="flex items-center gap-2">
-                <code className="bg-muted rounded px-1.5 py-0.5 text-xs font-mono">{maskedAddress}</code>
+                <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">{maskedAddress}</code>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -166,9 +159,7 @@ export function PaymentMethodSection({ isSeller }: PaymentMethodSectionProps) {
               <div className="flex items-center gap-1.5 text-xs text-slate-400">
                 <span>{currentPm.isBinanceWallet ? '🏦' : '🔗'}</span>
                 <span>{currentPm.isBinanceWallet ? 'Binance' : 'External'} wallet</span>
-                {!currentPm.isBinanceWallet && (
-                  <span className="text-slate-500">· Min $10 payout</span>
-                )}
+                {!currentPm.isBinanceWallet && <span className="text-slate-500">· Min $10 payout</span>}
               </div>
               <p className="text-muted-foreground text-xs">
                 Updated {new Date(currentPm.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -237,22 +228,12 @@ export function PaymentMethodSection({ isSeller }: PaymentMethodSectionProps) {
                 placeholder={selectedNetwork ? `Enter ${selectedNetwork.name} address` : 'Select network first'}
                 disabled={!selectedNetworkId}
               />
-              {selectedNetwork && (
-                <p className="text-muted-foreground text-xs">
-                  Regex: <code className="bg-muted rounded px-1">{selectedNetwork.regex}</code>
-                </p>
-              )}
             </div>
 
             <div className="space-y-1">
               <Label>Wallet Type</Label>
               <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant={isBinanceWallet ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setIsBinanceWallet(true)}
-                >
+                <Button type="button" variant={isBinanceWallet ? 'default' : 'outline'} size="sm" onClick={() => setIsBinanceWallet(true)}>
                   🏦 Binance
                 </Button>
                 <Button
@@ -277,10 +258,7 @@ export function PaymentMethodSection({ isSeller }: PaymentMethodSectionProps) {
                 {currentPm ? 'Update' : 'Save'}
               </Button>
               {currentPm && (
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditing(false)}
-                >
+                <Button variant="outline" onClick={() => setIsEditing(false)}>
                   Cancel
                 </Button>
               )}

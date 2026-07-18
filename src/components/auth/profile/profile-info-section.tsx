@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +17,10 @@ import { useAction } from 'next-safe-action/hooks';
 import type { AppSection } from '@/types';
 import Link from 'next/link';
 import { useLocale } from '@/hooks/use-locale';
+
+const profileNameSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters'),
+});
 
 export interface ProfileInfoSectionProps {
   name: string;
@@ -45,8 +52,16 @@ export const ProfileInfoSection = ({
   telegramLinkUrl,
 }: ProfileInfoSectionProps) => {
   const { isSpanish } = useLocale();
-  const [nameValue, setNameValue] = useState(name);
   const [success, setSuccess] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<{ name: string }>({
+    resolver: zodResolver(profileNameSchema),
+    defaultValues: { name },
+  });
 
   const { execute, status } = useAction(updateProfile, {
     onSuccess: ({ data }) => {
@@ -64,10 +79,9 @@ export const ProfileInfoSection = ({
     },
   });
 
-  const handleSubmit = (e: React.SubmitEvent) => {
-    e.preventDefault();
+  const onSubmit = (values: { name: string }) => {
     setSuccess(false);
-    execute({ name: nameValue });
+    execute({ name: values.name });
   };
 
   const showTelegramLinkBanner = portal !== 'admin' && !telegramUser;
@@ -159,7 +173,7 @@ export const ProfileInfoSection = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             <div className="grid gap-1 md:grid-cols-2 md:gap-1">
               <div className="space-y-1">
                 <Label htmlFor="name" className="text-xs font-medium text-slate-300 md:text-sm">
@@ -167,13 +181,12 @@ export const ProfileInfoSection = ({
                 </Label>
                 <Input
                   id="name"
-                  name="name"
                   type="text"
-                  required
-                  disabled={status === 'executing'}
-                  value={nameValue}
-                  onChange={(e) => setNameValue(e.target.value)}
+                  disabled={isSubmitting}
+                  {...register('name')}
+                  className={errors.name ? 'border-destructive' : ''}
                 />
+                {errors.name && <p className="text-destructive text-xs">{errors.name.message}</p>}
               </div>
 
               <div className="space-y-1">
@@ -195,9 +208,9 @@ export const ProfileInfoSection = ({
               <Button
                 type="submit"
                 className="h-8 rounded-md bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 md:h-9 md:rounded-lg md:text-sm"
-                disabled={status === 'executing'}
+                disabled={isSubmitting}
               >
-                {status === 'executing' ? (
+                {isSubmitting ? (
                   <span className="flex items-center gap-1.5">
                     <Spinner size="sm" className="text-white" />
                   </span>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
 import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -18,26 +19,35 @@ export interface Verify2FAFormProps {
   portal: AppSection;
 }
 
+interface TwoFactorFormValues {
+  code: string;
+  trustDevice: boolean;
+}
+
 export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
-  const [code, setCode] = useState('');
-  const [trustDevice, setTrustDevice] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   const isSpanish = portal === 'buy' || portal === 'admin';
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
-    e.preventDefault();
-    if (!isRecoveryMode && code.length !== 6) return;
-    if (isRecoveryMode && !code) return;
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<TwoFactorFormValues>({
+    defaultValues: { code: '', trustDevice: false },
+  });
+
+  const codeValue = watch('code');
+  const trustDeviceValue = watch('trustDevice');
+
+  const onSubmit = async (values: TwoFactorFormValues) => {
+    if (!isRecoveryMode && values.code.length !== 6) return;
+    if (isRecoveryMode && !values.code) return;
 
     setIsPending(true);
 
     try {
       if (isRecoveryMode) {
         const { error: authError } = await authClient.twoFactor.verifyBackupCode({
-          code: code,
+          code: values.code,
         });
 
         if (authError) {
@@ -48,8 +58,8 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
         }
       } else {
         const { error: authError } = await authClient.twoFactor.verifyTotp({
-          code: code,
-          trustDevice: trustDevice,
+          code: values.code,
+          trustDevice: values.trustDevice,
         });
 
         if (authError) {
@@ -67,6 +77,11 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
       showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');
       setIsPending(false);
     }
+  };
+
+  const toggleRecoveryMode = () => {
+    setIsRecoveryMode(!isRecoveryMode);
+    setValue('code', '');
   };
 
   return (
@@ -95,19 +110,24 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="flex justify-center py-2">
           {isRecoveryMode ? (
             <Input
               placeholder={isSpanish ? 'Código de respaldo' : 'Backup code'}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="h-12 max-w-xs rounded-xl border border-slate-700/50 bg-slate-800/30 text-center font-mono tracking-widest uppercase placeholder:text-slate-500 focus:border-emerald-500/50"
               disabled={isPending}
               autoFocus
+              {...register('code', { required: true })}
+              className="h-12 max-w-xs rounded-xl border border-slate-700/50 bg-slate-800/30 text-center font-mono tracking-widest uppercase placeholder:text-slate-500 focus:border-emerald-500/50"
             />
           ) : (
-            <InputOTP maxLength={6} value={code} onChange={setCode} disabled={isPending} className="gap-1">
+            <InputOTP
+              maxLength={6}
+              value={codeValue}
+              onChange={(val) => setValue('code', val, { shouldValidate: true })}
+              disabled={isPending}
+              className="gap-1"
+            >
               <InputOTPGroup>
                 <InputOTPSlot index={0} className="rounded-lg border border-slate-700/50 bg-slate-800/30 focus:border-emerald-500/50" />
                 <InputOTPSlot index={1} className="rounded-lg border border-slate-700/50 bg-slate-800/30 focus:border-emerald-500/50" />
@@ -124,8 +144,8 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
           <div className="flex items-center gap-1 rounded-xl border border-slate-700/30 bg-slate-800/20 p-4">
             <Checkbox
               id="trust"
-              checked={trustDevice}
-              onCheckedChange={(checked) => setTrustDevice(checked as boolean)}
+              checked={trustDeviceValue}
+              onCheckedChange={(checked) => setValue('trustDevice', checked as boolean)}
               disabled={isPending}
               className="border-slate-600 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500"
             />
@@ -139,7 +159,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
         <Button
           type="submit"
           className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
-          disabled={isPending || (isRecoveryMode ? !code : code.length !== 6)}
+          disabled={isPending || (isRecoveryMode ? !codeValue : codeValue.length !== 6)}
         >
           {isPending ? (
             <span className="flex items-center gap-1">
@@ -160,10 +180,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
           variant="link"
           size="sm"
           className="h-auto p-0 text-sm font-medium text-emerald-400 hover:text-emerald-300"
-          onClick={() => {
-            setIsRecoveryMode(!isRecoveryMode);
-            setCode('');
-          }}
+          onClick={toggleRecoveryMode}
           disabled={isPending}
         >
           {isRecoveryMode

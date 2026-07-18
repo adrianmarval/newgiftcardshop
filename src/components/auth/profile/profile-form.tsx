@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ProfileInfoSection } from '@/components/auth/profile/profile-info-section';
-import { SecuritySection } from '@/components/auth/profile/security-section';
+import { PasswordSection } from '@/components/auth/profile/password-section';
+import { SessionsSection } from '@/components/auth/profile/sessions-section';
 import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
 import { PaymentMethodSection } from '@/components/sell/payment-method';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,17 +50,17 @@ export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUr
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
         <TabsList variant="line" className="w-full justify-start">
           <TabsTrigger value="profile" className="gap-1.5">
-            <User className="h-4 w-4" /> Profile
+            <User className="h-4 w-4" /> <span className="hidden sm:inline">Profile</span><span className="sm:hidden">Info</span>
           </TabsTrigger>
           <TabsTrigger value="security" className="gap-1.5">
-            <Lock className="h-4 w-4" /> Security
+            <Lock className="h-4 w-4" /> <span className="hidden sm:inline">Security</span><span className="sm:hidden">Seguridad</span>
           </TabsTrigger>
           <TabsTrigger value="2fa" className="gap-1.5">
             <ShieldCheck className="h-4 w-4" /> 2FA
           </TabsTrigger>
           {isSeller && (
             <TabsTrigger value="wallet" className="gap-1.5">
-              <Wallet className="h-4 w-4" /> Wallet
+              <Wallet className="h-4 w-4" /> <span className="hidden sm:inline">Wallet</span><span className="sm:hidden">Pay</span>
             </TabsTrigger>
           )}
         </TabsList>
@@ -80,7 +81,10 @@ export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUr
           </TabsContent>
 
           <TabsContent value="security">
-            <SecuritySection />
+            <div className="space-y-4">
+              <PasswordSection />
+              <SessionsSection />
+            </div>
           </TabsContent>
 
           <TabsContent value="2fa">
