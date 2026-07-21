@@ -51,6 +51,17 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     };
   });
 
+  // Validate claim code format (14-15 alphanumeric chars)
+  const INVALID_CODE_REGEX = /[^A-Z0-9]/i;
+  const invalidCodes = normalizedCards.filter(
+    (c) => c.claimCode.length < 14 || c.claimCode.length > 15 || INVALID_CODE_REGEX.test(c.claimCode),
+  );
+  if (invalidCodes.length > 0) {
+    throw new Error(
+      `${invalidCodes.length} code(s) have invalid format. Claim codes must be 14-15 alphanumeric characters.`,
+    );
+  }
+
   // Find brand-country
   const brandCountry = await prisma.brandCountry.findUnique({
     where: { brandId_countryId: { brandId, countryId } },
@@ -179,7 +190,9 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
   const initialTier = await getInitialTier(brandCountry.id);
 
   // Transaction: create batch + cards + images
-  const batch = await prisma.$transaction(async (tx) => {
+  let batch;
+  try {
+    batch = await prisma.$transaction(async (tx) => {
     const createdBatch = await tx.giftcardBatch.create({
       data: { userId, sellRate: sellRateSnapshot, isPaid: false },
     });
@@ -238,6 +251,14 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
 
     return createdBatch;
   });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      throw new Error(
+        'Some codes already exist in the system. This may have happened if you published from another session. Please check your batches and try again with only the new codes.',
+      );
+    }
+    throw err;
+  }
 
   // Non-blocking: notify buyers
   notifyBuyersStockAvailable(brandCountry.id, initialTier, batch.id)

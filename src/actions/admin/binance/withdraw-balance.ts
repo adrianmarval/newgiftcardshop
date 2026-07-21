@@ -22,26 +22,26 @@ export const withdrawBalance = adminActionClient
 
     const { amount } = parsedInput;
 
-    const existingPending = await prisma.payment.findFirst({
-      where: {
-        status: PaymentStatus.PENDING,
-        category: PaymentCategory.WITHDRAWAL,
-        direction: PaymentDirection.DEBIT,
-        notes: { contains: 'Binance' },
-      },
-    });
-
-    if (existingPending) {
-      throw new ActionError(
-        'Ya existe un retiro de Binance pendiente de sincronización. Por favor, usá el botón de "Sincronizar" antes de intentar uno nuevo para evitar duplicados.',
-      );
-    }
-
     const withdrawOrderId = `WD_${Date.now()}`;
 
     let paymentRecord;
     try {
       paymentRecord = await prisma.$transaction(async (tx) => {
+        const existingPending = await tx.payment.findFirst({
+          where: {
+            status: PaymentStatus.PENDING,
+            category: PaymentCategory.WITHDRAWAL,
+            direction: PaymentDirection.DEBIT,
+            notes: { contains: 'Binance' },
+          },
+        });
+
+        if (existingPending) {
+          throw new ActionError(
+            'Ya existe un retiro de Binance pendiente de sincronización. Por favor, usá el botón de "Sincronizar" antes de intentar uno nuevo para evitar duplicados.',
+          );
+        }
+
         const currentSettings = await tx.platformSettings.findUnique({ where: { key: 'platformBalance' } });
         const currentBalance = currentSettings?.balance || new Decimal(0);
 
@@ -59,6 +59,7 @@ export const withdrawBalance = adminActionClient
         });
       });
     } catch (error) {
+      if (error instanceof ActionError) throw error;
       console.error(error);
       throw new ActionError('No se pudo inicializar la transacción en la base de datos local.');
     }

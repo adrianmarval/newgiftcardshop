@@ -32,7 +32,14 @@ async function initEscalationService() {
     const intervalMs = config.durationMinutes * 60 * 1000;
     log.info(`[Escalation] Iniciado - intervalo: ${config.durationMinutes}min`);
 
+    let escalationRunning = false;
+
     setInterval(async () => {
+      if (escalationRunning) {
+        log.info('[Escalation] Skipping — previous run still active');
+        return;
+      }
+      escalationRunning = true;
       try {
         const result = await processEscalationTiers();
         if (result.processed > 0) {
@@ -57,6 +64,8 @@ async function initEscalationService() {
         log.error('[Escalation] Error en ciclo', {
           error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
         });
+      } finally {
+        escalationRunning = false;
       }
     }, intervalMs);
   } catch (err) {

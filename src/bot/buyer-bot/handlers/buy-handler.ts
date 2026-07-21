@@ -367,7 +367,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
         created.id,
       );
       return created;
-    });
+    }, { isolationLevel: 'Serializable' });
   } catch (error) {
     if (error instanceof GiftcardReservationError) {
       buyerLogger.warn('Reserva fallida en bot buy', {

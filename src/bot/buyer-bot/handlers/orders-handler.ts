@@ -217,7 +217,12 @@ export async function handleCancelOrder(ctx: BuyerContext) {
     return;
   }
 
-  await cancelOrder(orderId);
+  try {
+    await cancelOrder(orderId);
+  } catch (err: any) {
+    if (err?.code === 'P2025') return ctx.answerCallbackQuery('La orden ya no está pendiente');
+    throw err;
+  }
 
   buyerLogger.action('buy', 'bot-cancel-order', `Orden ${orderId} cancelada via bot`, {
     userId: ctx.user.id,
@@ -292,7 +297,7 @@ export async function handleConfirmUsageFinal(ctx: BuyerContext) {
   if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Estado inválido');
 
   try {
-    const { adjustedTotal } = await confirmOrderUsage(orderId, order.giftcards, order.buyRate);
+    const { adjustedTotal } = await confirmOrderUsage(orderId, order.buyRate);
 
     buyerLogger.action('buy', 'bot-confirm-usage', `Uso confirmado para orden ${orderId}`, {
       userId: ctx.user.id,

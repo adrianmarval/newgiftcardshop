@@ -112,7 +112,7 @@ export const createOrder = buyerActionClient
         await reserveGiftcards(tx, giftcardIds, createdOrder.id);
 
         return createdOrder;
-      });
+      }, { isolationLevel: 'Serializable' });
     } catch (error) {
       if (error instanceof GiftcardReservationError) {
         logger.warn('Error de reserva en creación de orden', {

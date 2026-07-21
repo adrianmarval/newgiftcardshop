@@ -33,7 +33,6 @@ export const checkCodes = sellerActionClient
     const existingInDb = await prisma.giftcard.findMany({
       where: {
         codeHash: { in: codeHashes },
-        brandCountryId: brandCountry.id,
       },
       select: { claimCode: true },
     });

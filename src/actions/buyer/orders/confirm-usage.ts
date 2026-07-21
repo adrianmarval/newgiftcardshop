@@ -15,6 +15,6 @@ export const confirmUsage = buyerActionClient
     return next({ ctx: { order } });
   })
   .action(async ({ ctx }) => {
-    const { adjustedTotal } = await confirmOrderUsage(ctx.order.id, ctx.order.giftcards, ctx.order.buyRate);
+    const { adjustedTotal } = await confirmOrderUsage(ctx.order.id, ctx.order.buyRate);
     return { success: true as const, adjustedTotal: adjustedTotal.toNumber() };
   });

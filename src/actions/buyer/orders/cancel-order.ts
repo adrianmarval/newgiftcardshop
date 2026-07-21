@@ -18,6 +18,11 @@ export const cancelOrder = buyerActionClient
     return next({ ctx: { order } });
   })
   .action(async ({ ctx }) => {
-    await cancelOrderService(ctx.order.id);
+    try {
+      await cancelOrderService(ctx.order.id);
+    } catch (err: any) {
+      if (err?.code === 'P2025') throw new ActionError('La orden ya no está pendiente');
+      throw err;
+    }
     return { success: true as const, message: '¡Orden cancelada con éxito!' };
   });

@@ -9,17 +9,20 @@ import { logger } from '@/lib/logger';
  * Cancels an order and marks all giftcards as confirmed.
  */
 export async function cancelOrder(orderId: string) {
-  return prisma.order.update({
-    where: { id: orderId },
-    data: {
-      status: 'CANCELLED',
-      giftcards: {
-        updateMany: {
-          where: {},
-          data: { isConfirmed: true },
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.update({
+      where: { id: orderId, status: 'PENDING' },
+      data: {
+        status: 'CANCELLED',
+        giftcards: {
+          updateMany: {
+            where: {},
+            data: { isConfirmed: true },
+          },
         },
       },
-    },
+    });
+    return order;
   });
 }
 
@@ -27,16 +30,20 @@ export async function cancelOrder(orderId: string) {
  * Confirms usage: transitions PENDING → AWAITING_PAYMENT, marks cards USED.
  * Returns adjustedTotal for the caller to use.
  */
-export async function confirmOrderUsage(orderId: string, giftcards: Prisma.GiftcardGetPayload<true>[], buyRate: Prisma.Decimal) {
-  const adjustedTotal = computeEffectiveTotalDecimal(giftcards, buyRate);
-
+export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal) {
   return prisma.$transaction(async (tx) => {
+    const freshCards = await tx.giftcard.findMany({
+      where: { orderId },
+    });
+
+    const adjustedTotal = computeEffectiveTotalDecimal(freshCards, buyRate);
+
     const updatedOrder = await tx.order.update({
       where: { id: orderId, status: 'PENDING' },
       data: { status: 'AWAITING_PAYMENT', adjustedTotal },
     });
 
-    for (const card of giftcards) {
+    for (const card of freshCards) {
       await tx.giftcard.update({
         where: { id: card.id },
         data: {
@@ -55,33 +62,24 @@ export async function confirmOrderUsage(orderId: string, giftcards: Prisma.Giftc
  * Throws OrderAlreadyProcessedError if order was already completed.
  */
 export async function completeOrderPayment(orderId: string, txId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order) {
-    logger.warn('OrderNotFoundError en completeOrderPayment', { flow: 'order', action: 'complete-payment', metadata: { orderId } });
-    throw new OrderNotFoundError();
-  }
-  if (order.status !== 'AWAITING_PAYMENT') {
-    logger.warn('InvalidOrderStateError en completeOrderPayment', { flow: 'order', action: 'complete-payment', userId: order.userId, metadata: { orderId, actualStatus: order.status } });
-    throw new InvalidOrderStateError('La orden debe estar en estado AWAITING_PAYMENT');
-  }
-
-  const paymentAmount = order.adjustedTotal ?? order.total;
-
-  // ── Verify TxID against Binance Pay API ──────────────────────────────────
-  const verification = await validateBuyerPayment(txId, paymentAmount.toString(), orderId);
-
-  if (!verification.isValid) {
-    logger.warn('Payment verification failed', {
-      flow: 'order',
-      action: 'complete-payment',
-      userId: order.userId,
-      metadata: { orderId, txId: txId.substring(0, 6) + '...', code: verification.code },
-    });
-    throw new PaymentVerificationError(verification.code, verification.message);
-  }
-
   try {
-    await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({ where: { id: orderId } });
+      if (!order) {
+        throw new OrderNotFoundError();
+      }
+      if (order.status !== 'AWAITING_PAYMENT') {
+        throw new InvalidOrderStateError('La orden debe estar en estado AWAITING_PAYMENT');
+      }
+
+      const paymentAmount = order.adjustedTotal ?? order.total;
+
+      // ── Verify TxID against Binance Pay API ──────────────────────────────
+      const verification = await validateBuyerPayment(txId, paymentAmount.toString(), orderId);
+      if (!verification.isValid) {
+        throw new PaymentVerificationError(verification.code, verification.message);
+      }
+
       const updatedSettings = await tx.platformSettings.upsert({
         where: { key: 'platformBalance' },
         update: { balance: { increment: paymentAmount } },
@@ -104,38 +102,46 @@ export async function completeOrderPayment(orderId: string, txId: string) {
         where: { id: order.id, status: 'AWAITING_PAYMENT' },
         data: { status: 'COMPLETED' },
       });
+
+      return { orderId: order.id, paymentAmount: paymentAmount.toNumber(), userId: order.userId };
     });
+
+    // ── Notify admin (fire-and-forget — outside tx) ──────────────────────────
+    const { notifyAdminPaymentReceived } = await import('@/lib/notifications/notification.service');
+    const buyer = await prisma.user.findUnique({
+      where: { id: result.userId },
+      select: { name: true, email: true },
+    });
+    const buyerName = buyer?.name || buyer?.email || 'Buyer';
+
+    notifyAdminPaymentReceived(result.orderId, buyerName, result.paymentAmount, txId).catch((err) =>
+      logger.error('Error notificando admin sobre pago recibido', {
+        flow: 'order',
+        action: 'complete-payment',
+        metadata: { orderId: result.orderId, userId: result.userId },
+        error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+      }),
+    );
+
+    return { orderId: result.orderId, paymentAmount: result.paymentAmount };
   } catch (err) {
+    if (err instanceof OrderNotFoundError || err instanceof InvalidOrderStateError || err instanceof PaymentVerificationError) {
+      throw err;
+    }
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      logger.warn('OrderAlreadyProcessedError en completeOrderPayment', { flow: 'order', action: 'complete-payment', userId: order.userId, metadata: { orderId, txId } });
+      logger.warn('OrderAlreadyProcessedError en completeOrderPayment', { flow: 'order', action: 'complete-payment', metadata: { orderId, txId } });
       throw new OrderAlreadyProcessedError('La orden ya fue procesada por otra solicitud.');
+    }
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      logger.warn('Duplicate binanceTxId en completeOrderPayment', { flow: 'order', action: 'complete-payment', metadata: { orderId, txId } });
+      throw new PaymentVerificationError('DUPLICATE', 'Este TxID ya fue utilizado para otro pago.');
     }
     logger.error('Error inesperado en transacción de completeOrderPayment', {
       flow: 'order',
       action: 'complete-payment',
-      userId: order.userId,
-      metadata: { orderId, txId, paymentAmount: paymentAmount.toString() },
+      metadata: { orderId, txId },
       error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown', stack: err instanceof Error ? err.stack : undefined },
     });
     throw err;
   }
-
-  // ── Notify admin (fire-and-forget — don't block payment flow) ─────────────
-  const { notifyAdminPaymentReceived } = await import('@/lib/notifications/notification.service');
-  const buyer = await prisma.user.findUnique({
-    where: { id: order.userId },
-    select: { name: true, email: true },
-  });
-  const buyerName = buyer?.name || buyer?.email || 'Buyer';
-
-  notifyAdminPaymentReceived(order.id, buyerName, paymentAmount.toNumber(), txId).catch((err) =>
-    logger.error('Error notificando admin sobre pago recibido', {
-      flow: 'order',
-      action: 'complete-payment',
-      metadata: { orderId, userId: order.userId },
-      error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
-    }),
-  );
-
-  return { orderId: order.id, paymentAmount: paymentAmount.toNumber() };
 }
