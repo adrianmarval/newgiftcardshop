@@ -144,9 +144,13 @@ export function createSellerBot() {
     const step = ctx.session.wizard.step;
     if (step === 'awaitingAddress' && ctx.message?.text) return handleWalletAddressInput(ctx, ctx.message.text);
     if (step === 'awaitingCodes') return handleCodesText(ctx);
+    await deleteUserInput(ctx);
     return next();
   });
-  bot.on(':photo', handleSellPhotos);
+  bot.on(':photo', async (ctx) => {
+    if (ctx.session.wizard.step === 'awaitingImages') return handleSellPhotos(ctx);
+    await deleteUserInput(ctx);
+  });
 
   // ── Error handler ─────────────────────────────────────────────────────────
   bot.catch((err) => {

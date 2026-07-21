@@ -13,13 +13,25 @@ import { validateAmountsAgainstRange, type AmountRangeViolation } from '@/lib/ut
 // ── Step 1: Elegir Brand ──────────────────────────────────────────────────────
 
 export async function startSellWizard(ctx: SellerContext) {
+  await deleteUserInput(ctx);
+
+  const paymentMethod = await prisma.paymentMethod.findUnique({
+    where: { userId: ctx.user.id },
+  });
+
+  if (!paymentMethod) {
+    const kb = new InlineKeyboard().text('💰 Configure Wallet', 'wallet').row().text('⬅️ Back', 'start');
+    return renderUI(ctx, '⚠️ You need to configure your USDT wallet before selling cards.\n\n' + 'Tap the button below to set it up:', {
+      parse_mode: 'HTML',
+      reply_markup: kb,
+    });
+  }
+
   const brands = await prisma.brand.findMany({
     where: { isActive: true },
     include: { countries: { where: { isActive: true }, include: { country: true } } },
     orderBy: { name: 'asc' },
   });
-
-  await deleteUserInput(ctx);
 
   const activeBrands = brands.filter((b) => b.countries.length > 0);
   if (activeBrands.length === 0) {

@@ -119,6 +119,8 @@ export async function handleWalletNetworkSelected(ctx: SellerContext, networkId:
 }
 
 export async function handleWalletAddressInput(ctx: SellerContext, address: string) {
+  await deleteUserInput(ctx);
+
   const coinId = ctx.session.wizard.regName;
   const networkId = ctx.session.wizard.regEmail;
 
@@ -141,9 +143,8 @@ export async function handleWalletAddressInput(ctx: SellerContext, address: stri
     const kb = new InlineKeyboard().text('❌ Cancel', 'wallet_cancel');
     await renderUI(
       ctx,
-      `❌ <b>Invalid address</b> for ${escapeHTML(network.name)}.\n\n` +
-        `Expected: <code>${escapeHTML(network.regex)}</code>\n\n` +
-        `Try again:`,
+      `❌ The address doesn't seem to be valid for <b>${escapeHTML(network.name)}</b>.\n\n` +
+        `Make sure you copied the full address correctly and try again:`,
       { parse_mode: 'HTML', reply_markup: kb },
     );
     return;

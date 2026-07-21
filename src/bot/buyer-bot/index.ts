@@ -138,11 +138,13 @@ export function createBuyerBot() {
     if (step === 'awaitingAmount') return handleAmountText(ctx);
     if (step === 'awaitingPaymentId') return handlePaymentText(ctx);
     if (step === 'awaitingReportAmount') return handleReportAmountText(ctx);
+    await deleteUserInput(ctx);
   });
 
   bot.on(':photo', async (ctx) => {
     const step = ctx.session.wizard.step;
     if (step === 'awaitingReportProof') return handleReportProofPhoto(ctx);
+    await deleteUserInput(ctx);
   });
 
   // ── Error handler ─────────────────────────────────────────────────────────
