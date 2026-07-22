@@ -112,7 +112,7 @@ Wizard de 5 pasos: **Search** (brand+country+monto) → **Results** (tarjetas en
 - Handler principal: `src/bot/seller-bot/handlers/sell-handler.ts`
 - Flujo: brand → country → codes (texto) → photos (opcional) → confirm → publish
 - Fotos: guarda `telegramFileId` (NO descarga ni cifra — deuda técnica)
-- NO usa `publish-batch.ts` — re-implementa la publicación inline (deuda: divergencia con web)
+- Publica vía servicio compartido `publish.service.ts` (mismo core que web). Lógica bot-específica: reasignación de fotos temp, sesión, UI
 - Sesión: grammy PrismaAdapter, `getSessionKey: seller:${from.id}`
 
 ### Buy Flow (Telegram Buyer Bot)
@@ -186,8 +186,7 @@ TelegramOtp {
 - Web sell no valida formato de claimCode server-side ni minAmount/maxAmount
 - Web sell back-navigation destruye el batch (useEffect wipe en mount)
 - Web sell sin persist (refresh = pérdida total)
-- Seller bot duplica lógica de publish-batch en vez de invocar el action
-- Seller bot fotos sin cifrar ni descargar
+- Seller bot fotos guardadas como `telegramFileId` sin cifrar ni descargar (vs web que cifra con AES-256-GCM)
 - `sendOtpEmail` swallowa errores (dead catch blocks)
 - Locks en memoria (`sequentialize`) inútiles en serverless multi-instancia
 - Refactor pendiente: extraer `OrderService`, `PaymentService` compartidos bot+web
