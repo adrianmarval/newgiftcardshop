@@ -14,6 +14,12 @@ export interface NotificationsPageClientProps {
   settingsProps: NotificationsSettingsProps;
 }
 
+const PAGE_TEXTS = {
+  seller: { notifications: 'Notifications', settings: 'Settings' },
+  buyer: { notifications: 'Notificaciones', settings: 'Configuración' },
+  admin: { notifications: 'Notificaciones', settings: 'Configuración' },
+} as const;
+
 export const NotificationsPageClient = ({
   portal,
   initialNotifications,
@@ -23,6 +29,7 @@ export const NotificationsPageClient = ({
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') === 'settings' ? 'settings' : 'notifications';
   const [activeTab, setActiveTab] = useState<'notifications' | 'settings'>(initialTab);
+  const pageTexts = PAGE_TEXTS[portal];
 
   return (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'notifications' | 'settings')}>
@@ -31,13 +38,13 @@ export const NotificationsPageClient = ({
           value="notifications"
           className="data-[state=active]:bg-background data-[state=active]:text-foreground rounded-lg text-xs font-semibold data-[state=active]:shadow-sm"
         >
-          Notificaciones
+          {pageTexts.notifications}
         </TabsTrigger>
         <TabsTrigger
           value="settings"
           className="data-[state=active]:bg-background data-[state=active]:text-foreground rounded-lg text-xs font-semibold data-[state=active]:shadow-sm"
         >
-          Configuración
+          {pageTexts.settings}
         </TabsTrigger>
       </TabsList>
 

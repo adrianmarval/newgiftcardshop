@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { AppLogItem } from '@/types';
+import { formatDateTime } from '@/lib/utils';
 
 const LEVEL_CONFIG: Record<string, { label: string; className: string }> = {
   info: { label: 'INFO', className: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' },
@@ -47,7 +48,7 @@ export const AdminLogDetailDialog = ({ log, onClose }: AdminLogDetailDialogProps
             {log.action && <span className="text-muted-foreground text-sm font-normal">/{log.action}</span>}
           </DialogTitle>
           <DialogDescription>
-            {new Date(log.timestamp).toLocaleString('es-ES')} {log.userName ? `· ${log.userName}` : ''} {log.ip ? `· IP: ${log.ip}` : ''}
+            {formatDateTime(log.timestamp, 'es-AR')} {log.userName ? `· ${log.userName}` : ''} {log.ip ? `· IP: ${log.ip}` : ''}
           </DialogDescription>
         </DialogHeader>
 

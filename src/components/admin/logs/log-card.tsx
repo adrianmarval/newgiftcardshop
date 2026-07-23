@@ -3,6 +3,7 @@
 import { RegistryCard } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import type { AppLogItem } from '@/types';
+import { formatDateTime } from '@/lib/utils';
 
 export type { AppLogItem };
 
@@ -53,13 +54,7 @@ export function LogCard({ log, isExpanded, isHighlighted, onToggle }: LogCardPro
     <span className="line-clamp-1">{log.message}</span>
   );
 
-  const date = new Date(log.timestamp).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
+  const date = formatDateTime(log.timestamp, 'es-AR');
 
   return (
     <RegistryCard

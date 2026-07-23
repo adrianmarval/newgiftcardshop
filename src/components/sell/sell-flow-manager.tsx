@@ -61,7 +61,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
         if (data.duplicates && data.duplicates.length > 0) {
           setDuplicates(data.duplicates);
           showAlert.toast.info(
-            `${data.duplicates.length} código${data.duplicates.length !== 1 ? 's' : ''} duplicado${data.duplicates.length !== 1 ? 's' : ''}. No fueron agregados al batch.`,
+            `${data.duplicates.length} duplicate code${data.duplicates.length !== 1 ? 's' : ''} were not added to the batch.`,
           );
         }
         setShowSuccessDialog(true);
@@ -69,7 +69,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
     },
     onError: ({ error }) => {
       const valError = error.validationErrors ? (Object.values(error.validationErrors).flat()[0] as string) : null;
-      showAlert.toast.error(error.serverError || valError || 'No se pudo publicar el batch');
+      showAlert.toast.error(error.serverError || valError || 'Failed to publish batch');
     },
   });
 
@@ -80,7 +80,7 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
         setSellRate(res.data.rate);
       } else {
         setSellRate(0);
-        setRateError(res?.data?.error || 'No tienes tarifa asignada para vender en esta marca y país. Contactá al administrador.');
+        setRateError(res?.data?.error || 'You don\'t have an assigned rate to sell this brand and country. Contact the administrator.');
       }
     });
   };

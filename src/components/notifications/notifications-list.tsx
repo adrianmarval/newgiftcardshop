@@ -18,9 +18,16 @@ export interface NotificationsListProps {
   initialUnreadCount: number;
 }
 
+const LIST_TEXTS = {
+  seller: { empty: 'No notifications', unread: 'unread', markRead: 'Mark all read' },
+  buyer: { empty: 'Sin Notificaciones', unread: 'sin leer', markRead: 'Marcar leídas' },
+  admin: { empty: 'Sin Notificaciones', unread: 'sin leer', markRead: 'Marcar leídas' },
+} as const;
+
 export function NotificationsList({ portal, initialNotifications, initialUnreadCount: _initialUnreadCount }: NotificationsListProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const { setUnreadCount } = useNotifications();
+  const texts = LIST_TEXTS[portal];
 
   // Sync with server props when parent re-renders (auto-refresh)
   useEffect(() => {
@@ -53,7 +60,7 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
         <div className="border-border bg-muted/40 mb-2 rounded-full border p-5">
           <Bell className="text-muted-foreground/40 h-8 w-8" />
         </div>
-        <p className="text-muted-foreground text-sm">Sin Notificaciones</p>
+        <p className="text-muted-foreground text-sm">{texts.empty}</p>
       </div>
     );
   }
@@ -64,10 +71,10 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
         <div className="border-border flex items-center justify-between border-b px-4 py-2">
           <Badge variant="secondary" className="gap-1">
             <span className="bg-primary inline-flex h-1.5 w-1.5 rounded-full" />
-            {unreadCount} sin leer
+            {unreadCount} {texts.unread}
           </Badge>
           <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="h-7 text-xs">
-            Marcar leídas
+            {texts.markRead}
           </Button>
         </div>
       )}

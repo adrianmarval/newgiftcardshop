@@ -57,10 +57,7 @@ async function getEligibleBuyers(brandCountryId: string): Promise<EligibleBuyer[
   }));
 }
 
-function shouldNotifyBySubscription(
-  preference: EligibleBuyer['notificationPreference'],
-  brandCountryId: string,
-): boolean {
+function shouldNotifyBySubscription(preference: EligibleBuyer['notificationPreference'], brandCountryId: string): boolean {
   if (!preference) return true;
   const subs = preference.subscriptions;
   if (subs.length === 0) return true;
@@ -128,21 +125,14 @@ async function batchRecordNotificationLogs(
 
 // ── Public functions ────────────────────────────────────────────────────────
 
-export async function notifyBuyersStockAvailable(
-  brandCountryId: string,
-  initialTier: number | null,
-  batchId: number,
-): Promise<void> {
+export async function notifyBuyersStockAvailable(brandCountryId: string, initialTier: number | null, batchId: number): Promise<void> {
   const info = await getBrandCountryInfo(brandCountryId);
   if (!info) return;
 
   const effectiveTier = initialTier ?? 85;
   const refId = batchId.toString();
 
-  const [eligibleBuyers, allCards] = await Promise.all([
-    getEligibleBuyers(brandCountryId),
-    getAllStockCards(brandCountryId),
-  ]);
+  const [eligibleBuyers, allCards] = await Promise.all([getEligibleBuyers(brandCountryId), getAllStockCards(brandCountryId)]);
 
   const buyerIds = eligibleBuyers.map((b) => b.userId);
   const alreadyNotified = await batchHasBeenNotified(buyerIds, 'STOCK_AVAILABLE', 'BATCH', refId);
@@ -208,10 +198,7 @@ export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<voi
     }
     if (!info) continue;
 
-    const [eligibleBuyers, allCards] = await Promise.all([
-      getEligibleBuyers(brandCountryId),
-      getAllStockCards(brandCountryId),
-    ]);
+    const [eligibleBuyers, allCards] = await Promise.all([getEligibleBuyers(brandCountryId), getAllStockCards(brandCountryId)]);
 
     const notifiedBuyers = new Set<string>();
 
@@ -278,8 +265,8 @@ export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<voi
 export async function notifySellerBatchPaid(sellerId: string, batchId: number, amount: number): Promise<void> {
   const message: NotificationMessage = {
     type: 'BATCH_PAID',
-    title: `Lote #${batchId} liquidado`,
-    description: `${amount.toFixed(2)} USDT transferidos a tu cuenta`,
+    title: `Batch #${batchId} paid`,
+    description: `${amount.toFixed(2)} USDT transferred to your account`,
     actionUrl: '/sell/dashboard/cards',
     metadata: { batchId, amount },
   };
@@ -287,12 +274,7 @@ export async function notifySellerBatchPaid(sellerId: string, batchId: number, a
   await notificationDispatcher.dispatch(sellerId, message);
 }
 
-export async function notifyAdminPaymentReceived(
-  orderId: string,
-  buyerName: string,
-  amount: number,
-  txId: string,
-): Promise<void> {
+export async function notifyAdminPaymentReceived(orderId: string, buyerName: string, amount: number, txId: string): Promise<void> {
   const admin = await prisma.user.findFirst({
     where: { role: 'ADMIN' },
     select: { id: true },

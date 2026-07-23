@@ -19,10 +19,10 @@ interface NotificationDropdownProps {
   className?: string;
 }
 
-const PORTAL_LABELS: Record<AppSection, { all: string; settings: string; empty: string }> = {
-  buy: { all: 'Ver todas', settings: 'Configuración', empty: 'Sin notificaciones' },
-  sell: { all: 'View all', settings: 'Settings', empty: 'No notifications' },
-  admin: { all: 'Ver todas', settings: 'Configuración', empty: 'Sin notificaciones' },
+const PORTAL_LABELS: Record<AppSection, { all: string; settings: string; empty: string; header: string; markRead: string }> = {
+  buy: { all: 'Ver todas', settings: 'Configuración', empty: 'Sin notificaciones', header: 'Notificaciones', markRead: 'Marcar leídas' },
+  sell: { all: 'View all', settings: 'Settings', empty: 'No notifications', header: 'Notifications', markRead: 'Mark all read' },
+  admin: { all: 'Ver todas', settings: 'Configuración', empty: 'Sin notificaciones', header: 'Notificaciones', markRead: 'Marcar leídas' },
 };
 
 const PORTAL_ROUTES: Record<AppSection, { notifications: string; settings: string }> = {
@@ -113,10 +113,10 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
         <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-lg border bg-popover shadow-md sm:w-80 max-sm:fixed max-sm:left-2 max-sm:right-2 max-sm:top-14 max-sm:w-auto">
           {/* Header */}
           <div className="flex items-center justify-between border-b px-3 py-2">
-            <span className="text-sm font-semibold">Notificaciones</span>
+            <span className="text-sm font-semibold">{labels.header}</span>
             {notifications.some((n) => !n.read) && (
               <button onClick={handleMarkAllRead} className="text-primary text-xs hover:underline">
-                Marcar leídas
+                {labels.markRead}
               </button>
             )}
           </div>

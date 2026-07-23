@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Payment } from '@/types/domain';
 import { showAlert } from '@/lib/ui';
+import { formatDateTime } from '@/lib/utils';
 import { paymentCategoryConfig, paymentDirectionConfig, paymentStatusConfig } from '@/lib/config/ui-config';
 
 interface AdminPaymentsListProps {
@@ -50,12 +51,7 @@ export const AdminPaymentsList = ({ payments, totalPages: _totalPages }: AdminPa
                 return (
                   <tr key={payment.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 text-sm whitespace-nowrap">
-                      {new Date(payment.createdAt).toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatDateTime(payment.createdAt, 'es-AR')}
                     </td>
                     <td className="px-4 py-3">
                       {(() => {

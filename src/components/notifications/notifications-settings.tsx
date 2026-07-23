@@ -15,6 +15,60 @@ import { updateNotificationPreferences } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
 import type { SubscribedBrandCountry } from '@/types';
 
+const SETTINGS_TEXTS = {
+  seller: {
+    saved: 'Saved',
+    errorSaving: 'Error saving',
+    howToReceive: 'How to receive Notifications',
+    telegramDesc: 'Messages to bot chat',
+    linkTelegram: 'Link Telegram from your profile',
+    whatsappDesc: 'Direct messages to your number',
+    phoneLabel: 'Phone number',
+    phoneHint: 'E.164 with country code',
+    whichBrands: 'Which brands',
+    filter: 'Filter',
+    enableAll: 'Enable all',
+    receivingAll: (n: number) => `Receiving from all your brands (${n})`,
+    receivingSome: (n: number, total: number) => `Receiving from ${n} of ${total} brands`,
+    brandsHint: 'Brands where you have an assigned rate',
+    save: 'Save',
+  },
+  buyer: {
+    saved: 'Guardado',
+    errorSaving: 'Error al guardar',
+    howToReceive: 'Cómo recibir Notificaciones',
+    telegramDesc: 'Mensajes al chat del bot',
+    linkTelegram: 'Vinculá Telegram desde tu perfil',
+    whatsappDesc: 'Mensajes directos a tu número',
+    phoneLabel: 'Número',
+    phoneHint: 'E.164 con código de país',
+    whichBrands: 'De qué marcas',
+    filter: 'Filtrar',
+    enableAll: 'Activar todas',
+    receivingAll: (n: number) => `Recibiendo de todas tus marcas (${n})`,
+    receivingSome: (n: number, total: number) => `Recibiendo de ${n} de ${total} marcas`,
+    brandsHint: 'Marcas donde tenés tarifa asignada',
+    save: 'Guardar',
+  },
+  admin: {
+    saved: 'Guardado',
+    errorSaving: 'Error al guardar',
+    howToReceive: 'Cómo recibir Notificaciones',
+    telegramDesc: 'Mensajes al chat del bot',
+    linkTelegram: 'Vinculá Telegram desde tu perfil',
+    whatsappDesc: 'Mensajes directos a tu número',
+    phoneLabel: 'Número',
+    phoneHint: 'E.164 con código de país',
+    whichBrands: 'De qué marcas',
+    filter: 'Filtrar',
+    enableAll: 'Activar todas',
+    receivingAll: (n: number) => `Recibiendo de todas tus marcas (${n})`,
+    receivingSome: (n: number, total: number) => `Recibiendo de ${n} de ${total} marcas`,
+    brandsHint: 'Marcas donde tenés tarifa asignada',
+    save: 'Guardar',
+  },
+} as const;
+
 export interface NotificationsSettingsProps {
   portal: 'buyer' | 'seller' | 'admin';
   telegramLinked: boolean;
@@ -28,6 +82,7 @@ export interface NotificationsSettingsProps {
 }
 
 export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileUrl, initialPreferences, brandCountries }: NotificationsSettingsProps) => {
+  const texts = SETTINGS_TEXTS[portal];
   const [telegramEnabled, setTelegramEnabled] = useState(initialPreferences?.telegramEnabled ?? true);
   const [telegramTouched, setTelegramTouched] = useState(false);
   const [whatsappEnabled, setWhatsappEnabled] = useState(initialPreferences?.whatsappEnabled ?? false);
@@ -42,14 +97,14 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
     onSuccess: ({ data }) => {
       const result = data as { success?: boolean; error?: string } | undefined;
       if (result?.success) {
-        setAlert({ variant: 'success', title: 'Guardado' });
+        setAlert({ variant: 'success', title: texts.saved });
         setTimeout(() => setAlert(null), 3000);
       } else {
-        setAlert({ variant: 'error', title: result?.error || 'Error al guardar' });
+        setAlert({ variant: 'error', title: result?.error || texts.errorSaving });
       }
     },
     onError: ({ error }) => {
-      setAlert({ variant: 'error', title: error.serverError || 'Error al guardar' });
+      setAlert({ variant: 'error', title: error.serverError || texts.errorSaving });
     },
   });
 
@@ -95,7 +150,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
         <section className="space-y-3">
           <div className="flex items-center gap-2">
             <Send className="text-muted-foreground h-4 w-4" />
-            <h3 className="text-sm font-semibold">Cómo recibir Notificaciones</h3>
+            <h3 className="text-sm font-semibold">{texts.howToReceive}</h3>
           </div>
 
           {/* Telegram */}
@@ -113,7 +168,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
             <MessageCircle className="h-5 w-5 shrink-0 text-blue-400" />
             <div className="flex-1">
               <p className="text-sm font-medium">Telegram</p>
-              <p className="text-muted-foreground text-xs">Mensajes al chat del bot</p>
+              <p className="text-muted-foreground text-xs">{texts.telegramDesc}</p>
             </div>
           </label>
 
@@ -123,7 +178,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
               className="flex items-center gap-1.5 pl-10 text-xs text-amber-300 hover:text-amber-200 hover:underline"
             >
               <Link2 className="h-3 w-3 shrink-0 text-amber-400" />
-              Vinculá Telegram desde tu perfil
+              {texts.linkTelegram}
             </Link>
           )}
 
@@ -141,14 +196,14 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">WhatsApp</p>
-              <p className="text-muted-foreground text-xs">Mensajes directos a tu número</p>
+              <p className="text-muted-foreground text-xs">{texts.whatsappDesc}</p>
             </div>
           </label>
 
           {whatsappEnabled && (
             <div className="pl-10">
               <Label htmlFor="whatsapp-phone" className="mb-1 block text-xs">
-                Número
+                {texts.phoneLabel}
               </Label>
               <Input
                 id="whatsapp-phone"
@@ -158,7 +213,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
                 onChange={(e) => setWhatsappPhone(e.target.value)}
                 className="h-9 text-sm"
               />
-              <p className="text-muted-foreground mt-1 text-[10px]">E.164 con código de país</p>
+              <p className="text-muted-foreground mt-1 text-[10px]">{texts.phoneHint}</p>
             </div>
           )}
         </section>
@@ -169,17 +224,17 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Package className="text-muted-foreground h-4 w-4" />
-                <h3 className="text-sm font-semibold">De qué marcas</h3>
+                <h3 className="text-sm font-semibold">{texts.whichBrands}</h3>
               </div>
               <button onClick={allSelected ? clearAll : selectAll} className="text-primary text-xs font-medium hover:underline">
-                {allSelected ? 'Filtrar' : 'Activar todas'}
+                {allSelected ? texts.filter : texts.enableAll}
               </button>
             </div>
 
             <p className="text-muted-foreground text-xs">
               {allSelected
-                ? `Recibiendo de todas tus marcas (${brandCountries.length})`
-                : `Recibiendo de ${subscribedIds.size} de ${brandCountries.length} marcas`}
+                ? texts.receivingAll(brandCountries.length)
+                : texts.receivingSome(subscribedIds.size, brandCountries.length)}
             </p>
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -214,14 +269,14 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
               })}
             </div>
 
-            <p className="text-muted-foreground/60 text-[10px]">Marcas donde tenés tarifa asignada</p>
+            <p className="text-muted-foreground/60 text-[10px]">{texts.brandsHint}</p>
           </section>
         )}
 
         {/* ── Guardar ── */}
         <div className="flex justify-end pt-1">
           <Button onClick={handleSave} disabled={isSaving} className="h-9 px-6 text-sm">
-            {isSaving ? <Spinner size="sm" className="text-white" /> : 'Guardar'}
+            {isSaving ? <Spinner size="sm" className="text-white" /> : texts.save}
           </Button>
         </div>
       </CardContent>
