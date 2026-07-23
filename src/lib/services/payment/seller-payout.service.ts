@@ -28,7 +28,6 @@ export interface PayoutResult {
   paymentId: string;
   amount: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
-  binanceTxId?: string;
   error?: string;
 }
 
@@ -156,6 +155,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
             transactionId: withdrawOrderId,
             batchId: batchId,
             relatedUserId: batch.userId ?? undefined,
+            isBinanceWallet: batch.user?.paymentMethod?.isBinanceWallet ?? false,
             referenceType: PaymentReferenceType.BATCH,
             referenceId: String(batchId),
             notes: `Pago a seller por lote #${batchId} — pendiente de confirmación Binance`,
@@ -229,15 +229,16 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
   // ── Step 3: Handle response ─────────────────────────────────────────────
 
   if (response.success) {
-    // Binance accepted the withdrawal
-    const binanceTxId = response.data.id;
+    // Binance accepted the withdrawal — but we only have the internal Binance ID (response.data.id).
+    // The real blockchain TxID (record.txId) will be available in withdraw/history AFTER on-chain confirmation.
+    // The sync job (syncPendingSellerPayments) will fill binanceTxId with the blockchain txId.
+    const binanceRef = response.data.id;
 
     try {
       await prisma.payment.update({
         where: { id: paymentRecord.id },
         data: {
-          binanceTxId,
-          notes: `Pago a seller por lote #${batchId} — enviado a Binance (TxID: ${binanceTxId})`,
+          notes: `Pago a seller por lote #${batchId} — enviado a Binance (Ref: ${binanceRef})`,
         },
       });
     } catch (dbError) {
@@ -246,7 +247,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
       logger.error('[CRITICAL] Binance payout succeeded but DB update failed', {
         flow: 'payment',
         action: 'execute-seller-payout',
-        metadata: { batchId, paymentId: paymentRecord.id, binanceTxId },
+        metadata: { batchId, paymentId: paymentRecord.id, binanceRef },
         error: { name: (dbError as Error).name, message: (dbError as Error).message },
       });
     }
@@ -258,7 +259,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
         batchId,
         paymentId: paymentRecord.id,
         amount: payoutAmount.toNumber(),
-        binanceTxId,
+        binanceRef,
         sellerId,
       },
     });
@@ -268,7 +269,6 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
       paymentId: paymentRecord.id,
       amount: payoutAmount.toNumber(),
       status: 'PENDING',
-      binanceTxId,
     };
   }
 
@@ -399,8 +399,8 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
             where: { id: payment.id },
             data: {
               status: PaymentStatus.COMPLETED,
-              binanceTxId: record.id,
-              notes: `Pago a seller completado vía Binance (TxID: ${record.id})`,
+              binanceTxId: record.txId,
+              notes: `Pago a seller completado vía Binance (TxID: ${record.txId})`,
             },
           });
 

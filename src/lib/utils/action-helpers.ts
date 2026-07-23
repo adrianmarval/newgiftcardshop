@@ -101,6 +101,7 @@ export function serializePayment(payment: {
   direction: string;
   category: string;
   status: string;
+  isBinanceWallet: boolean;
   createdAt: Date;
 }): Payment {
   return {
@@ -110,6 +111,7 @@ export function serializePayment(payment: {
     direction: payment.direction as PaymentDirection,
     category: payment.category as PaymentCategory,
     status: payment.status as PaymentStatus,
+    isBinanceWallet: payment.isBinanceWallet,
     createdAt: payment.createdAt.toISOString(),
   };
 }

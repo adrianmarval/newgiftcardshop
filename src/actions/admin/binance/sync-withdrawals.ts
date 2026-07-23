@@ -66,12 +66,21 @@ export const syncPendingWithdrawals = adminActionClient
             }
 
             if ([1, 3, 5].includes(record.status)) {
-              await prisma.payment.update({
-                where: { id: payment.id },
-                data: {
-                  status: PaymentStatus.FAILED,
-                  notes: `Retiro sincronizado automáticamente (Falló en Binance con estado: ${record.status})`,
-                },
+              await prisma.$transaction(async (tx) => {
+                const revertedSettings = await tx.platformSettings.upsert({
+                  where: { key: 'platformBalance' },
+                  update: { balance: { increment: payment.amount } },
+                  create: { key: 'platformBalance', value: '0', balance: payment.amount },
+                });
+
+                await tx.payment.update({
+                  where: { id: payment.id },
+                  data: {
+                    status: PaymentStatus.FAILED,
+                    balanceAfter: revertedSettings.balance,
+                    notes: `Retiro sincronizado automáticamente (Falló en Binance con estado: ${record.status})`,
+                  },
+                });
               });
               return { type: 'failed' };
             }

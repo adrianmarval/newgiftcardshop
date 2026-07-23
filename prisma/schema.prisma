@@ -279,14 +279,15 @@ model ProvenanceImage {
 }
 
 model Payment {
-  id            String           @id @default(cuid())
-  amount        Decimal          @db.Decimal(10, 2)
-  balanceAfter  Decimal          @default(0) @db.Decimal(10, 2)
-  direction     PaymentDirection
-  category      PaymentCategory
-  status        PaymentStatus    @default(COMPLETED)
-  transactionId String?
-  binanceTxId   String?  @unique
+  id              String           @id @default(cuid())
+  amount          Decimal          @db.Decimal(10, 2)
+  balanceAfter    Decimal          @default(0) @db.Decimal(10, 2)
+  direction       PaymentDirection
+  category        PaymentCategory
+  status          PaymentStatus    @default(COMPLETED)
+  transactionId   String?
+  binanceTxId     String?  @unique
+  isBinanceWallet Boolean  @default(false)
 
   orderId String?
   order   Order?  @relation(fields: [orderId], references: [id])

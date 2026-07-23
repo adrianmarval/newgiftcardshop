@@ -88,6 +88,7 @@ export const listPayments = adminActionClient
             category: p.category,
             status: p.status,
             binanceTxId: p.binanceTxId ?? null,
+            isBinanceWallet: p.isBinanceWallet,
             relatedUserId,
             relatedUserName,
             relatedUserEmail,

@@ -169,6 +169,7 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
       direction: p.direction,
       category: p.category,
       binanceTxId: p.binanceTxId ?? null,
+      isBinanceWallet: p.isBinanceWallet,
       relatedUserId: p.relatedUserId ?? null,
       notes: p.notes ?? null,
       referenceType: p.referenceType ?? null,

@@ -53,6 +53,7 @@ export const withdrawBalance = adminActionClient
             category: PaymentCategory.WITHDRAWAL,
             transactionId: withdrawOrderId,
             status: PaymentStatus.PENDING,
+            isBinanceWallet: true,
             referenceType: PaymentReferenceType.MANUAL,
             notes: 'Retiro desde Binance hacia wallet de ahorro del Admin',
           },
@@ -88,7 +89,7 @@ export const withdrawBalance = adminActionClient
       }
     }
 
-    const binanceTxId = response.data.id;
+    const binanceRef = response.data.id;
     try {
       await prisma.$transaction(async (tx) => {
         const platformSettings = await tx.platformSettings.upsert({
@@ -102,18 +103,17 @@ export const withdrawBalance = adminActionClient
           data: {
             status: PaymentStatus.COMPLETED,
             balanceAfter: platformSettings.balance,
-            binanceTxId,
-            notes: 'Retiro desde Binance hacia la plataforma (Completado)',
+            notes: `Retiro desde Binance hacia la plataforma (Completado — Ref: ${binanceRef})`,
           },
         });
       });
     } catch (error) {
       console.error(
-        `[CRITICAL] Binance withdrawal succeeded but DB completion failed. TxID: ${binanceTxId}. Payment ID: ${paymentRecord.id}`,
+        `[CRITICAL] Binance withdrawal succeeded but DB completion failed. Ref: ${binanceRef}. Payment ID: ${paymentRecord.id}`,
         error,
       );
       throw new ActionError(
-        `El retiro en Binance fue exitoso (TxID: ${binanceTxId}) pero falló la sincronización local. Se resolverá en la próxima verificación automática.`,
+        `El retiro en Binance fue exitoso (Ref: ${binanceRef}) pero falló la sincronización local. Se resolverá en la próxima verificación automática.`,
       );
     }
 

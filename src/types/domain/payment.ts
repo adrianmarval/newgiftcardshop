@@ -18,6 +18,7 @@ export interface Payment {
   category: PaymentCategory;
   status: PaymentStatus;
   binanceTxId?: string | null;
+  isBinanceWallet: boolean;
   relatedUserId?: string | null;
   relatedUserName?: string | null;
   relatedUserEmail?: string | null;
@@ -47,6 +48,7 @@ export const paymentDetailListItemSchema = z.object({
   direction: z.enum(PaymentDirectionEnum),
   category: z.enum(PaymentCategoryEnum),
   binanceTxId: z.string().nullable().optional(),
+  isBinanceWallet: z.boolean(),
   relatedUserId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   referenceType: z.enum(PaymentReferenceTypeEnum).nullable().optional(),
