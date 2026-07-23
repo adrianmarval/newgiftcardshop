@@ -96,7 +96,7 @@ export async function main() {
         userId: user.id,
         coinId: usdt.id,
         networkId: avaxcNetwork.id,
-        address: '0x0000000000000000000000000000000000000000',
+        address: '0xe994a75e73920f912326bb70632c4774223caa5b',
         isBinanceWallet: false,
       },
     });

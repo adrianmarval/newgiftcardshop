@@ -86,6 +86,7 @@ export const listPayments = adminActionClient
             balanceAfter: Number(p.balanceAfter),
             direction: p.direction,
             category: p.category,
+            status: p.status,
             binanceTxId: p.binanceTxId ?? null,
             relatedUserId,
             relatedUserName,

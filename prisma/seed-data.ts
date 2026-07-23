@@ -9,13 +9,19 @@ interface SeedData {
   brandData: Prisma.BrandCreateInput[];
   brandCountryData: Prisma.BrandCountryCreateInput[];
   platformSettingData: Prisma.PlatformSettingsCreateInput[];
-  aiProviderData: { name: string; label: string; model: string; baseUrl: string | null; apiKey: string; isActive: boolean; isDefault: boolean }[];
+  aiProviderData: {
+    name: string;
+    label: string;
+    model: string;
+    baseUrl: string | null;
+    apiKey: string;
+    isActive: boolean;
+    isDefault: boolean;
+  }[];
 }
 
 export const seedData: SeedData = {
-  coinData: [
-    { name: 'Tether', symbol: 'USDT', decimals: 6 },
-  ],
+  coinData: [{ name: 'Tether', symbol: 'USDT', decimals: 6 }],
   networkData: [
     { name: 'BSC', description: 'BNB Smart Chain BEP20', regex: '^(0x)[0-9A-Fa-f]{40}$' },
     { name: 'TRX', description: 'Tron TRC20', regex: '^T[1-9A-HJ-NP-Za-km-z]{33}$' },
@@ -101,29 +107,29 @@ export const seedData: SeedData = {
     { slug: 'walmart', name: 'Walmart', icon: '🛒', image: '/images/walmartlogo.svg' },
   ],
   brandCountryData: [
-    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500, isActive: true },
-    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'CA' } }, minAmount: 5, maxAmount: 200, isActive: false },
-    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'GB' } }, minAmount: 5, maxAmount: 500, isActive: false },
-    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 1000, isActive: true },
-    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'CA' } }, isActive: false },
-    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'GB' } }, isActive: false },
-    { brand: { connect: { slug: 'best-buy' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500, isActive: false },
-    { brand: { connect: { slug: 'best-buy' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 500, isActive: false },
+    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500, isActive: true, claimCodePattern: '^[A-Z0-9]{14}$' },
+    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'CA' } }, minAmount: 5, maxAmount: 200, isActive: false, claimCodePattern: '^[A-Z0-9]{14}$' },
+    { brand: { connect: { slug: 'amazon' } }, country: { connect: { code: 'GB' } }, minAmount: 5, maxAmount: 500, isActive: false, claimCodePattern: '^[A-Z0-9]{14}$' },
+    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 1000, isActive: true, claimCodePattern: '^[A-Z0-9]{12,16}$' },
+    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'CA' } }, isActive: false, claimCodePattern: '^[A-Z0-9]{12,16}$' },
+    { brand: { connect: { slug: 'apple' } }, country: { connect: { code: 'GB' } }, isActive: false, claimCodePattern: '^[A-Z0-9]{12,16}$' },
+    { brand: { connect: { slug: 'best-buy' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500, isActive: false, claimCodePattern: '^[A-Z0-9]{15,16}$' },
+    { brand: { connect: { slug: 'best-buy' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 500, isActive: false, claimCodePattern: '^[A-Z0-9]{15,16}$' },
     { brand: { connect: { slug: 'gamestop' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 200, isActive: false },
     { brand: { connect: { slug: 'gamestop' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 200, isActive: false },
-    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'US' } }, isActive: false },
-    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'CA' } }, isActive: false },
-    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'GB' } }, isActive: false },
+    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'US' } }, isActive: false, claimCodePattern: '^[A-Z0-9]{14,18}$' },
+    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'CA' } }, isActive: false, claimCodePattern: '^[A-Z0-9]{14,18}$' },
+    { brand: { connect: { slug: 'google-play' } }, country: { connect: { code: 'GB' } }, isActive: false, claimCodePattern: '^[A-Z0-9]{14,18}$' },
     { brand: { connect: { slug: 'home-depot' } }, country: { connect: { code: 'US' } }, minAmount: 25, maxAmount: 500, isActive: false },
     { brand: { connect: { slug: 'home-depot' } }, country: { connect: { code: 'CA' } }, minAmount: 25, maxAmount: 500, isActive: false },
     { brand: { connect: { slug: 'macys' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500, isActive: false },
-    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500, isActive: false },
-    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'CA' } }, isActive: false },
-    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'GB' } }, isActive: false },
+    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500, isActive: false, claimCodePattern: '^[A-Z0-9]{16}$' },
+    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'CA' } }, isActive: false, claimCodePattern: '^[A-Z0-9]{16}$' },
+    { brand: { connect: { slug: 'nike' } }, country: { connect: { code: 'GB' } }, isActive: false, claimCodePattern: '^[A-Z0-9]{16}$' },
     { brand: { connect: { slug: 'sephora' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500, isActive: false },
     { brand: { connect: { slug: 'sephora' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 500, isActive: false },
-    { brand: { connect: { slug: 'starbucks' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 200, isActive: false },
-    { brand: { connect: { slug: 'starbucks' } }, country: { connect: { code: 'CA' } }, minAmount: 5, maxAmount: 200, isActive: false },
+    { brand: { connect: { slug: 'starbucks' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 200, isActive: false, claimCodePattern: '^[A-Z0-9]{12}$' },
+    { brand: { connect: { slug: 'starbucks' } }, country: { connect: { code: 'CA' } }, minAmount: 5, maxAmount: 200, isActive: false, claimCodePattern: '^[A-Z0-9]{12}$' },
     { brand: { connect: { slug: 'target' } }, country: { connect: { code: 'US' } }, minAmount: 10, maxAmount: 500, isActive: false },
     { brand: { connect: { slug: 'target' } }, country: { connect: { code: 'CA' } }, minAmount: 10, maxAmount: 500, isActive: false },
     { brand: { connect: { slug: 'walmart' } }, country: { connect: { code: 'US' } }, minAmount: 5, maxAmount: 500, isActive: false },

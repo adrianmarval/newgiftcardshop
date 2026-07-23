@@ -70,19 +70,21 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
         ))}
       </div>
 
-      {batch.payments && batch.payments.length > 0 && (
+      {batch.payments && batch.payments.filter((p) => p.status !== 'FAILED').length > 0 && (
         <div className="mt-3 space-y-1">
-          {batch.payments.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2 py-2"
-            >
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-emerald-500">Pago #{p.id.slice(-6).toUpperCase()}</span>
+          {batch.payments
+            .filter((p) => p.status !== 'FAILED')
+            .map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2 py-2"
+              >
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-emerald-500">Pago #{p.id.slice(-6).toUpperCase()}</span>
+                </div>
+                <span className="text-xs font-semibold text-emerald-500">+{formatCurrency(p.amount, { currency: 'USD' })}</span>
               </div>
-              <span className="text-xs font-semibold text-emerald-500">+{formatCurrency(p.amount, { currency: 'USD' })}</span>
-            </div>
-          ))}
+            ))}
         </div>
       )}
     </div>

@@ -61,6 +61,7 @@ export const listBrandsOutputSchema = z.object({
           minAmount: z.number().nullable(),
           maxAmount: z.number().nullable(),
           isActive: z.boolean(),
+          claimCodePattern: z.string().nullable(),
         }),
       ),
     })
@@ -85,6 +86,7 @@ export const addCountryInputSchema = z.object({
   minAmount: z.number().nullable().optional(),
   maxAmount: z.number().nullable().optional(),
   isActive: z.boolean().default(true),
+  claimCodePattern: z.string().nullable().optional(),
 });
 
 export const addCountryToBrandOutputSchema = z.object({ success: z.literal(true) });
@@ -113,6 +115,7 @@ export const updateBrandCountryLimitsInputSchema = z.object({
   minAmount: z.number().nullable().optional(),
   maxAmount: z.number().nullable().optional(),
   isActive: z.boolean().optional(),
+  claimCodePattern: z.string().nullable().optional(),
 });
 
 export const updateBrandCountryLimitsOutputSchema = z.object({ success: z.literal(true) });

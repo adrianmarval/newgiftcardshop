@@ -5,7 +5,7 @@
 import { Prisma } from '@/generated/prisma/client';
 import { decrypt } from '@/lib/encryption';
 import type { Giftcard, GiftcardStatus } from '@/types';
-import type { Payment, PaymentDirection, PaymentCategory } from '@/types';
+import type { Payment, PaymentDirection, PaymentCategory, PaymentStatus } from '@/types';
 
 /**
  * Decrypts claimCode and pinCode from a giftcard record.
@@ -100,6 +100,7 @@ export function serializePayment(payment: {
   balanceAfter: Prisma.Decimal;
   direction: string;
   category: string;
+  status: string;
   createdAt: Date;
 }): Payment {
   return {
@@ -108,6 +109,7 @@ export function serializePayment(payment: {
     balanceAfter: Number(payment.balanceAfter),
     direction: payment.direction as PaymentDirection,
     category: payment.category as PaymentCategory,
+    status: payment.status as PaymentStatus,
     createdAt: payment.createdAt.toISOString(),
   };
 }

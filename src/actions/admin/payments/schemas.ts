@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';
-import { PaymentDirection, PaymentCategory, PaymentReferenceType } from '@/generated/prisma/enums';
+import { PaymentDirection, PaymentCategory, PaymentStatus, PaymentReferenceType } from '@/generated/prisma/enums';
 import { paginatedOutputSchema } from '@/types';
 
 export const listPaymentsInputSchema = z.object({
@@ -28,6 +28,7 @@ export const listPaymentsOutputSchema = paginatedOutputSchema(
       balanceAfter: z.number(),
       direction: z.enum(PaymentDirection),
       category: z.enum(PaymentCategory),
+      status: z.enum(PaymentStatus),
       binanceTxId: z.string().nullable(),
       relatedUserId: z.string().nullable(),
       relatedUserName: z.string().nullable(),

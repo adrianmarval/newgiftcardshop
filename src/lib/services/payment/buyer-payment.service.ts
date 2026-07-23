@@ -65,11 +65,7 @@ function getStartTime(): number {
  * Step 1: Local validation (regex + duplicate check)
  * Step 2: Binance API verification (currency + amount match)
  */
-export async function validateBuyerPayment(
-  txId: string,
-  expectedAmount: string,
-  excludeOrderId?: string,
-): Promise<ValidationResult> {
+export async function validateBuyerPayment(txId: string, expectedAmount: string, excludeOrderId?: string): Promise<ValidationResult> {
   // ── Step 1a: Format validation ───────────────────────────────────────────
   if (!TXID_REGEX.test(txId)) {
     logger.warn('Invalid Binance TxID format', {

@@ -66,6 +66,7 @@ export interface BrandCountrySummary {
   minAmount: number | null;
   maxAmount: number | null;
   isActive: boolean;
+  claimCodePattern: string | null;
 }
 
 // ── Brand with nested countries (admin catalog list) ─────────────────────────

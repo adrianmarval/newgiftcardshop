@@ -51,17 +51,6 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     };
   });
 
-  // Validate claim code format (14-15 alphanumeric chars)
-  const INVALID_CODE_REGEX = /[^A-Z0-9]/i;
-  const invalidCodes = normalizedCards.filter(
-    (c) => c.claimCode.length < 14 || c.claimCode.length > 15 || INVALID_CODE_REGEX.test(c.claimCode),
-  );
-  if (invalidCodes.length > 0) {
-    throw new Error(
-      `${invalidCodes.length} code(s) have invalid format. Claim codes must be 14-15 alphanumeric characters.`,
-    );
-  }
-
   // Find brand-country
   const brandCountry = await prisma.brandCountry.findUnique({
     where: { brandId_countryId: { brandId, countryId } },
@@ -69,6 +58,20 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
   if (!brandCountry) {
     logger.warn('publishBatch: combinación brand-country inválida', { flow: 'sell', action: 'publish-batch', userId, metadata: { brandId, countryId } });
     throw new Error('Invalid brand-country combination');
+  }
+
+  // Validate claim code format using brand-country pattern (or default 14-15 alphanumeric)
+  const codeRegex = brandCountry.claimCodePattern
+    ? new RegExp(brandCountry.claimCodePattern)
+    : /^[A-Z0-9]{14,15}$/;
+  const invalidCodes = normalizedCards.filter((c) => {
+    const raw = c.claimCode.replace(/[- ]/g, '');
+    return !codeRegex.test(raw);
+  });
+  if (invalidCodes.length > 0) {
+    throw new Error(
+      `${invalidCodes.length} code(s) have invalid format. Claim codes must match pattern: ${codeRegex.source}`,
+    );
   }
 
   // Validate card amounts against brand-country limits

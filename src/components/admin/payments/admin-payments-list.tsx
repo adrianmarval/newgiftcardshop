@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Payment } from '@/types/domain';
 import { showAlert } from '@/lib/ui';
-import { paymentCategoryConfig, paymentDirectionConfig } from '@/lib/config/ui-config';
+import { paymentCategoryConfig, paymentDirectionConfig, paymentStatusConfig } from '@/lib/config/ui-config';
 
 interface AdminPaymentsListProps {
   payments: Payment[];
@@ -37,6 +37,7 @@ export const AdminPaymentsList = ({ payments, totalPages: _totalPages }: AdminPa
               <tr className="bg-muted/50 border-b">
                 <th className="text-muted-foreground px-4 py-3 text-left text-xs font-medium">Fecha</th>
                 <th className="text-muted-foreground px-4 py-3 text-left text-xs font-medium">Tipo</th>
+                <th className="text-muted-foreground px-4 py-3 text-left text-xs font-medium">Status</th>
                 <th className="text-muted-foreground px-4 py-3 text-left text-xs font-medium">Usuario</th>
                 <th className="text-muted-foreground px-4 py-3 text-right text-xs font-medium">Monto</th>
                 <th className="text-muted-foreground px-4 py-3 text-left text-xs font-medium">Ref</th>
@@ -65,6 +66,16 @@ export const AdminPaymentsList = ({ payments, totalPages: _totalPages }: AdminPa
                             <CatIcon className="h-3 w-3" />
                             {cat.label}
                           </div>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const st = paymentStatusConfig[payment.status] ?? paymentStatusConfig.COMPLETED;
+                        return (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${st.color}`}>
+                            {st.label}
+                          </span>
                         );
                       })()}
                     </td>

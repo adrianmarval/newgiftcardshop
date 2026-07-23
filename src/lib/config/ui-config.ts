@@ -3,7 +3,7 @@
 // Centralized UI configs used across admin and buyer/seller portals
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { OrderStatus, PaymentCategory, PaymentDirection } from '@/generated/prisma/enums';
+import type { OrderStatus, PaymentCategory, PaymentDirection, PaymentStatus } from '@/generated/prisma/enums';
 import type { ValidationState } from '@/types';
 import { ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle2, HelpCircle, ImageIcon, MinusCircle } from 'lucide-react';
 
@@ -56,6 +56,23 @@ export const paymentCategoryConfig: Record<PaymentCategory, { label: string; ico
     label: 'Retiro',
     icon: ArrowDownRight,
     badge: 'text-red-700 bg-red-600/10 dark:text-red-400 dark:bg-red-400/10',
+  },
+};
+
+// ── Payment Status ──────────────────────────────────────────────────────────
+
+export const paymentStatusConfig: Record<PaymentStatus, { label: string; color: string }> = {
+  COMPLETED: {
+    label: 'COMPLETADO',
+    color: 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30',
+  },
+  PENDING: {
+    label: 'PENDIENTE',
+    color: 'bg-amber-500/20 text-amber-500 border-amber-500/30',
+  },
+  FAILED: {
+    label: 'FALLIDO',
+    color: 'bg-red-500/20 text-red-500 border-red-500/30',
   },
 };
 

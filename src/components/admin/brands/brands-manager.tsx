@@ -39,10 +39,11 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
   const [editingCountryId, setEditingCountryId] = useState<string | null>(null);
 
   const [newBrand, setNewBrand] = useState({ name: '', slug: '', icon: '📦', image: '' });
-  const [newCountry, setNewCountry] = useState({ countryId: '', minAmount: '', maxAmount: '' });
-  const [countryLimits, setCountryLimits] = useState<{ minAmount: string; maxAmount: string }>({
+  const [newCountry, setNewCountry] = useState({ countryId: '', minAmount: '', maxAmount: '', claimCodePattern: '' });
+  const [countryLimits, setCountryLimits] = useState<{ minAmount: string; maxAmount: string; claimCodePattern: string }>({
     minAmount: '',
     maxAmount: '',
+    claimCodePattern: '',
   });
 
   const { execute: executeCreate, status: createStatus } = useAction(createBrand, {
@@ -68,7 +69,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
     onSuccess: () => {
       showAlert.toast.success('Country added');
       setIsAddCountryDialogOpen(false);
-      setNewCountry({ countryId: '', minAmount: '', maxAmount: '' });
+      setNewCountry({ countryId: '', minAmount: '', maxAmount: '', claimCodePattern: '' });
       refreshBrands();
     },
     onError: (e) => showAlert.toast.error('Error adding country: ' + (e.error?.serverError || 'Unknown error')),
@@ -139,6 +140,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       countryId: newCountry.countryId,
       minAmount: newCountry.minAmount ? parseFloat(newCountry.minAmount) : null,
       maxAmount: newCountry.maxAmount ? parseFloat(newCountry.maxAmount) : null,
+      claimCodePattern: newCountry.claimCodePattern || null,
     });
   };
 
@@ -149,6 +151,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       countryId: bc.countryId,
       minAmount: countryLimits.minAmount ? parseFloat(countryLimits.minAmount) : null,
       maxAmount: countryLimits.maxAmount ? parseFloat(countryLimits.maxAmount) : null,
+      claimCodePattern: countryLimits.claimCodePattern || null,
     });
   };
 
@@ -351,6 +354,17 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                           />
                         </div>
                       </div>
+                      <div>
+                        <Label>Claim Code Pattern (optional)</Label>
+                        <Input
+                          value={newCountry.claimCodePattern}
+                          onChange={(e) => setNewCountry((p) => ({ ...p, claimCodePattern: e.target.value }))}
+                          placeholder="^[A-Z0-9]{14,15}$"
+                        />
+                        <p className="text-muted-foreground mt-1 text-[10px]">
+                          Regex applied to normalized code (no hyphens/spaces). Default: ^[A-Z0-9]&#123;14,15&#125;$
+                        </p>
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsAddCountryDialogOpen(false)}>
@@ -386,6 +400,11 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                       <span className="text-muted-foreground block text-xs">
                         Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'}
                       </span>
+                      {bc.claimCodePattern && (
+                        <span className="text-muted-foreground block text-[10px]">
+                          Code pattern: {bc.claimCodePattern}
+                        </span>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       {editingCountryId === bc.id ? (
@@ -408,6 +427,15 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                               value={countryLimits.maxAmount}
                               onChange={(e) => setCountryLimits((p) => ({ ...p, maxAmount: e.target.value }))}
                               className="h-8 w-16"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground text-[9px]">Code Pattern</span>
+                            <Input
+                              placeholder="^[A-Z0-9]{14,15}$"
+                              value={countryLimits.claimCodePattern}
+                              onChange={(e) => setCountryLimits((p) => ({ ...p, claimCodePattern: e.target.value }))}
+                              className="h-8 w-40"
                             />
                           </div>
                           <div className="mt-4 flex items-end gap-1">
@@ -433,6 +461,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                               setCountryLimits({
                                 minAmount: bc.minAmount?.toString() || '',
                                 maxAmount: bc.maxAmount?.toString() || '',
+                                claimCodePattern: bc.claimCodePattern || '',
                               });
                             }}
                           >

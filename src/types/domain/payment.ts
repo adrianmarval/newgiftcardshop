@@ -3,10 +3,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';
-import type { PaymentDirection, PaymentCategory, PaymentReferenceType } from '@/generated/prisma/enums';
-import { PaymentDirection as PaymentDirectionEnum, PaymentCategory as PaymentCategoryEnum, PaymentReferenceType as PaymentReferenceTypeEnum } from '@/generated/prisma/enums';
+import type { PaymentDirection, PaymentCategory, PaymentStatus, PaymentReferenceType } from '@/generated/prisma/enums';
+import { PaymentDirection as PaymentDirectionEnum, PaymentCategory as PaymentCategoryEnum, PaymentStatus as PaymentStatusEnum, PaymentReferenceType as PaymentReferenceTypeEnum } from '@/generated/prisma/enums';
 
-export { PaymentDirection, PaymentCategory };
+export { PaymentDirection, PaymentCategory, PaymentStatus };
 
 // ── Payment ─────────────────────────────────────────────────────────────────
 
@@ -16,6 +16,7 @@ export interface Payment {
   balanceAfter: number;
   direction: PaymentDirection;
   category: PaymentCategory;
+  status: PaymentStatus;
   binanceTxId?: string | null;
   relatedUserId?: string | null;
   relatedUserName?: string | null;

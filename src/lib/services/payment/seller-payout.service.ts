@@ -18,12 +18,7 @@ import prisma from '@/lib/prisma';
 import binance from '@/lib/services/payment/binance.service';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { logger } from '@/lib/logger';
-import {
-  PaymentDirection,
-  PaymentCategory,
-  PaymentStatus,
-  PaymentReferenceType,
-} from '@/generated/prisma/client';
+import { PaymentDirection, PaymentCategory, PaymentStatus, PaymentReferenceType } from '@/generated/prisma/client';
 import type { Asset, Network } from '@/types';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -75,118 +70,115 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
   let isBinanceWallet: boolean;
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 1a. Load batch with giftcards and seller info
-      const batch = await tx.giftcardBatch.findUnique({
-        where: { id: batchId },
-        include: {
-          giftcards: true,
-          user: {
-            select: {
-              id: true,
-              paymentMethod: {
-                select: {
-                  address: true,
-                  coin: { select: { symbol: true } },
-                  network: { select: { name: true } },
-                  isBinanceWallet: true,
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // 1a. Load batch with giftcards and seller info
+        const batch = await tx.giftcardBatch.findUnique({
+          where: { id: batchId },
+          include: {
+            giftcards: true,
+            user: {
+              select: {
+                id: true,
+                paymentMethod: {
+                  select: {
+                    address: true,
+                    coin: { select: { symbol: true } },
+                    network: { select: { name: true } },
+                    isBinanceWallet: true,
+                  },
                 },
               },
             },
           },
-        },
-      });
+        });
 
-      if (!batch) {
-        throw new PayoutError(`Lote #${batchId} no encontrado.`);
-      }
+        if (!batch) {
+          throw new PayoutError(`Lote #${batchId} no encontrado.`);
+        }
 
-      if (batch.isPaid) {
-        throw new PayoutError(`Lote #${batchId} ya fue pagado.`);
-      }
+        if (batch.isPaid) {
+          throw new PayoutError(`Lote #${batchId} ya fue pagado.`);
+        }
 
-      if (batch.giftcards.length === 0) {
-        throw new PayoutError(`Lote #${batchId} no tiene tarjetas.`);
-      }
+        if (batch.giftcards.length === 0) {
+          throw new PayoutError(`Lote #${batchId} no tiene tarjetas.`);
+        }
 
-      const allConfirmed = batch.giftcards.every((g) => g.isConfirmed);
-      if (!allConfirmed) {
-        throw new PayoutError(`Lote #${batchId} tiene tarjetas sin confirmar.`);
-      }
+        const allConfirmed = batch.giftcards.every((g) => g.isConfirmed);
+        if (!allConfirmed) {
+          throw new PayoutError(`Lote #${batchId} tiene tarjetas sin confirmar.`);
+        }
 
-      if (!batch.user?.paymentMethod) {
-        throw new PayoutError(
-          `El vendedor del lote #${batchId} no tiene método de pago configurado.`,
-        );
-      }
+        if (!batch.user?.paymentMethod) {
+          throw new PayoutError(`El vendedor del lote #${batchId} no tiene método de pago configurado.`);
+        }
 
-      // 1b. Compute payout amount
-      const faceValueTotal = computeFaceValueTotal(batch.giftcards);
-      payoutAmount = faceValueTotal.mul(batch.sellRate);
+        // 1b. Compute payout amount (rounded to 2dp to match DB Decimal(10,2) precision)
+        const faceValueTotal = computeFaceValueTotal(batch.giftcards);
+        payoutAmount = faceValueTotal.mul(batch.sellRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
-      if (payoutAmount.lte(0)) {
-        throw new PayoutError(
-          `El monto a pagar del lote #${batchId} es cero o negativo.`,
-        );
-      }
+        if (payoutAmount.lte(0)) {
+          throw new PayoutError(`El monto a pagar del lote #${batchId} es cero o negativo.`);
+        }
 
-      // 1c. Check for existing payment on this batch (belt-and-suspenders)
-      const existingPayment = await tx.payment.findFirst({
-        where: {
-          batchId: batchId,
-          category: PaymentCategory.BATCH,
-          direction: PaymentDirection.DEBIT,
-          status: { not: PaymentStatus.FAILED },
-        },
-      });
+        // 1c. Check for existing payment on this batch (belt-and-suspenders)
+        const existingPayment = await tx.payment.findFirst({
+          where: {
+            batchId: batchId,
+            category: PaymentCategory.BATCH,
+            direction: PaymentDirection.DEBIT,
+            status: { not: PaymentStatus.FAILED },
+          },
+        });
 
-      if (existingPayment) {
-        throw new PayoutError(
-          `Ya existe un pago activo para el lote #${batchId} (ref: ${existingPayment.id}).`,
-        );
-      }
+        if (existingPayment) {
+          throw new PayoutError(`Ya existe un pago activo para el lote #${batchId} (ref: ${existingPayment.id}).`);
+        }
 
-      // 1d. Decrement platform balance
-      const updatedSettings = await tx.platformSettings.upsert({
-        where: { key: 'platformBalance' },
-        update: { balance: { decrement: payoutAmount } },
-        create: { key: 'platformBalance', value: '', description: 'Balance General', balance: payoutAmount.negated() },
-      });
+        // 1d. Decrement platform balance
+        const updatedSettings = await tx.platformSettings.upsert({
+          where: { key: 'platformBalance' },
+          update: { balance: { decrement: payoutAmount } },
+          create: { key: 'platformBalance', value: '', description: 'Balance General', balance: payoutAmount.negated() },
+        });
 
-      // 1e. Create Payment(PENDING) + mark batch.isPaid
-      const withdrawOrderId = `${WITHDRAW_ORDER_PREFIX}${batchId}`;
+        // 1e. Create Payment(PENDING) + mark batch.isPaid
+        const withdrawOrderId = `${WITHDRAW_ORDER_PREFIX}${batchId}`;
 
-      const payment = await tx.payment.create({
-        data: {
-          amount: payoutAmount,
-          balanceAfter: updatedSettings.balance,
-          direction: PaymentDirection.DEBIT,
-          category: PaymentCategory.BATCH,
-          status: PaymentStatus.PENDING,
-          transactionId: withdrawOrderId,
-          batchId: batchId,
-          relatedUserId: batch.userId ?? undefined,
-          referenceType: PaymentReferenceType.BATCH,
-          referenceId: String(batchId),
-          notes: `Pago a seller por lote #${batchId} — pendiente de confirmación Binance`,
-        },
-      });
+        const payment = await tx.payment.create({
+          data: {
+            amount: payoutAmount,
+            balanceAfter: updatedSettings.balance,
+            direction: PaymentDirection.DEBIT,
+            category: PaymentCategory.BATCH,
+            status: PaymentStatus.PENDING,
+            transactionId: withdrawOrderId,
+            batchId: batchId,
+            relatedUserId: batch.userId ?? undefined,
+            referenceType: PaymentReferenceType.BATCH,
+            referenceId: String(batchId),
+            notes: `Pago a seller por lote #${batchId} — pendiente de confirmación Binance`,
+          },
+        });
 
-      await tx.giftcardBatch.update({
-        where: { id: batchId },
-        data: { isPaid: true },
-      });
+        await tx.giftcardBatch.update({
+          where: { id: batchId },
+          data: { isPaid: true },
+        });
 
-      return {
-        payment,
-        payoutAmount,
-        sellerId: batch.userId,
-        walletAddress: batch.user.paymentMethod.address,
-        coinSymbol: batch.user.paymentMethod.coin.symbol as Asset,
-        networkName: batch.user.paymentMethod.network.name as Network,
-        isBinanceWallet: batch.user.paymentMethod.isBinanceWallet,
-      };
-    }, { isolationLevel: 'Serializable' });
+        return {
+          payment,
+          payoutAmount,
+          sellerId: batch.userId,
+          walletAddress: batch.user.paymentMethod.address,
+          coinSymbol: batch.user.paymentMethod.coin.symbol as Asset,
+          networkName: batch.user.paymentMethod.network.name as Network,
+          isBinanceWallet: batch.user.paymentMethod.isBinanceWallet,
+        };
+      },
+      { isolationLevel: 'Serializable' },
+    );
 
     paymentRecord = result.payment;
     payoutAmount = result.payoutAmount;
@@ -231,7 +223,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
     amount: payoutAmount.toFixed(2),
     withdrawOrderId,
     walletType: 1, // Funding wallet
-    name: `Pago lote #${batchId}`,
+    transactionFeeFlag: true, // Platform absorbs internal transfer fee — seller receives full amount
   });
 
   // ── Step 3: Handle response ─────────────────────────────────────────────
@@ -415,11 +407,7 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
           // Notify seller
           if (payment.batch?.userId) {
             const { notifySellerBatchPaid } = await import('@/lib/notifications');
-            notifySellerBatchPaid(
-              payment.batch.userId,
-              payment.batchId!,
-              Number(payment.amount),
-            ).catch((err) =>
+            notifySellerBatchPaid(payment.batch.userId, payment.batchId!, Number(payment.amount)).catch((err) =>
               logger.error('Error notificando seller post-sync', {
                 flow: 'payment',
                 action: 'sync-seller-payments',

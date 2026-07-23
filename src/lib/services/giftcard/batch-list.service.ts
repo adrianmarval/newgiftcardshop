@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Prisma } from '@/generated/prisma/client';
+import { Decimal } from '@prisma/client/runtime/client';
 import prisma from '@/lib/prisma';
 import { hashCode } from '@/lib/encryption';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
@@ -205,7 +206,7 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
     const hasIssues = batch.giftcards.some((g) => g.issues.length > 0);
     const effectiveTotalDecimal = computeFaceValueTotal(batch.giftcards);
     const effectiveTotal = effectiveTotalDecimal.toNumber();
-    const estimatedPayout = effectiveTotalDecimal.mul(batch.sellRate).toNumber();
+    const estimatedPayout = effectiveTotalDecimal.mul(batch.sellRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
     const cardsCount = batch.giftcards.length;
 
     const giftcards = batch.giftcards.map((card) =>

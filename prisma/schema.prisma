@@ -207,6 +207,8 @@ model BrandCountry {
   minAmount Decimal? @db.Decimal(10, 2)
   maxAmount Decimal? @db.Decimal(10, 2)
 
+  claimCodePattern String?  // Regex to validate claim codes (tested against normalized code without hyphens/spaces)
+
   orders    Order[]
   giftcards Giftcard[]
   userRates UserBrandCountryRate[]

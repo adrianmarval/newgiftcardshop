@@ -33,6 +33,7 @@ export const listBrands = adminActionClient.outputSchema(listBrandsOutputSchema)
         minAmount: bc.minAmount ? Number(bc.minAmount) : null,
         maxAmount: bc.maxAmount ? Number(bc.maxAmount) : null,
         isActive: bc.isActive,
+        claimCodePattern: bc.claimCodePattern ?? null,
       })),
     })),
   };

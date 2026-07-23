@@ -8,7 +8,7 @@ export const addCountryToBrand = adminActionClient
   .inputSchema(addCountryInputSchema)
   .outputSchema(addCountryToBrandOutputSchema)
   .action(async ({ parsedInput }) => {
-    const { brandId, countryId, minAmount, maxAmount, isActive } = parsedInput;
+    const { brandId, countryId, minAmount, maxAmount, isActive, claimCodePattern } = parsedInput;
 
     const existing = await prisma.brandCountry.findUnique({
       where: {
@@ -27,6 +27,7 @@ export const addCountryToBrand = adminActionClient
         minAmount: minAmount ?? null,
         maxAmount: maxAmount ?? null,
         isActive,
+        claimCodePattern: claimCodePattern ?? null,
       },
     });
 
