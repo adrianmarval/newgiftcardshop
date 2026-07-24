@@ -13,7 +13,7 @@ import type { OrderStatus } from '@/generated/prisma/enums';
 import { showAlert } from '@/lib/ui';
 import { orderStatusConfig } from '@/lib/config/ui-config';
 import { cancelOrder } from '@/actions/admin/orders';
-import { deleteBatch } from '@/actions/admin/batches';
+import { deleteBatch, cancelBatch } from '@/actions/admin/batches';
 import Image from 'next/image';
 import type { AdminBatch, Giftcard, SellerBatch } from '@/types';
 
@@ -200,6 +200,31 @@ export function useDeleteBatchAction() {
   return { remove, isDeleting };
 }
 
+export function useCancelBatchAction() {
+  const router = useRouter();
+  const [isCancelling, setIsCancelling] = useState(false);
+  const cancel = async (batchId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const confirmed = await showAlert.confirm('¿Cancelar lote?', 'El lote se marcará como cancelado. El seller será notificado. Esta acción no se puede deshacer.');
+    if (!confirmed) return;
+    setIsCancelling(true);
+    try {
+      const result = await cancelBatch({ batchId });
+      if (result.serverError || result.validationErrors) {
+        showAlert.error('Error al cancelar el lote');
+      } else {
+        showAlert.toast.success('Lote cancelado con éxito');
+        router.refresh();
+      }
+    } catch {
+      showAlert.error('Error al cancelar');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+  return { cancel, isCancelling };
+}
+
 // ── Order config helpers ─────────────────────────────────────────────────────
 
 export function getOrderProgressConfig(status: OrderStatus, progressPercentage: number) {
@@ -224,17 +249,20 @@ export function getOrderHasReports(giftcards: Giftcard[]): boolean {
 
 export function getBatchProgressConfig(batch: AdminBatch | SellerBatch) {
   const isPaid = 'isPaid' in batch ? batch.isPaid : false;
+  const isCancelled = 'cancelledAt' in batch ? Boolean(batch.cancelledAt) : false;
   const allConfirmed = batch.confirmedCount !== undefined && batch.cardsCount !== undefined && batch.confirmedCount === batch.cardsCount;
   return {
     percentage: ((batch.confirmedCount ?? 0) / (batch.cardsCount || 1)) * 100,
     colorClass: 'bg-blue-500',
-    fullColorClass: isPaid ? 'bg-emerald-500' : allConfirmed ? 'bg-blue-500' : 'bg-amber-500',
+    fullColorClass: isCancelled ? 'bg-destructive' : isPaid ? 'bg-emerald-500' : allConfirmed ? 'bg-blue-500' : 'bg-amber-500',
   };
 }
 
 export function getBatchActiveBg(batch: AdminBatch | SellerBatch): string {
   const isPaid = batch.isPaid;
+  const isCancelled = 'cancelledAt' in batch ? Boolean(batch.cancelledAt) : false;
   const allConfirmed = batch.confirmedCount !== undefined && batch.cardsCount !== undefined && batch.confirmedCount === batch.cardsCount;
+  if (isCancelled) return 'bg-destructive/10 dark:bg-destructive/15';
   if (isPaid) return 'bg-emerald-500/10 dark:bg-emerald-500/15';
   if (allConfirmed) return 'bg-blue-500/10 dark:bg-blue-500/15';
   return 'bg-amber-500/10 dark:bg-amber-500/15';

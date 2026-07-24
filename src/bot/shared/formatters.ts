@@ -41,7 +41,8 @@ export function fmtOrderStatus(status: OrderStatus, lang: Lang = 'es'): string {
   return labels[lang][status] ?? status;
 }
 
-export function fmtBatchStatus(isPaid: boolean, lang: Lang = 'es'): string {
+export function fmtBatchStatus(isPaid: boolean, lang: Lang = 'es', cancelledAt?: Date | string | null): string {
+  if (cancelledAt) return lang === 'en' ? '❌ Cancelled' : '❌ Cancelado';
   if (lang === 'en') return isPaid ? '✅ Paid' : '⏳ Awaiting Payment';
   return isPaid ? '✅ Pagado' : '⏳ Pendiente de pago';
 }

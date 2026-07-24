@@ -31,7 +31,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [sellerDialog, setSellerDialog] = useState<{ seller: AdminBatch['seller'] | null }>({ seller: null });
 
-  const selectedBatches = batches.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount);
+  const selectedBatches = batches.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount && b.estimatedPayout > 0);
   const showFloatingBar = useMemo(() => selectedBatches.length > 0, [selectedBatches.length]);
 
   const handleSelect = (id: number, selected: boolean) => {
@@ -80,6 +80,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
               { value: 'PROCESSING', label: 'En proceso' },
               { value: 'CONFIRMED', label: 'Confirmado' },
               { value: 'PAID', label: 'Pagado' },
+              { value: 'CANCELLED', label: 'Cancelado' },
               { value: 'WITH_ISSUES', label: 'Con problemas' },
             ],
           },

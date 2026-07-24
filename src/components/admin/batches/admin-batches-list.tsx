@@ -14,7 +14,7 @@ interface AdminBatchesListProps {
 }
 
 export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, onViewSeller }: AdminBatchesListProps) {
-  const payableBatches = batches.filter((b) => !b.isPaid && b.confirmedCount === b.cardsCount && b.cardsCount > 0);
+  const payableBatches = batches.filter((b) => !b.isPaid && b.confirmedCount === b.cardsCount && b.cardsCount > 0 && b.estimatedPayout > 0);
   const allPayableSelected = payableBatches.length > 0 && payableBatches.every((b) => selectedIds.has(b.id));
 
   const handleSelectAll = () => {

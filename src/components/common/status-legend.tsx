@@ -13,6 +13,10 @@ export function StatusLegend({ language = 'es' }: { language?: 'en' | 'es' }) {
         <div className="h-3 w-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
         <span>{language === 'en' ? 'Paid' : 'Pagado'}</span>
       </div>
+      <div className="text-muted-foreground/80 flex items-center gap-1 text-[10px] font-black tracking-widest uppercase">
+        <div className="h-3 w-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+        <span>{language === 'en' ? 'Cancelled' : 'Cancelado'}</span>
+      </div>
     </div>
   );
 }

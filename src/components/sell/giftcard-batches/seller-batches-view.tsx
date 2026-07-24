@@ -35,6 +35,7 @@ export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProp
               { value: 'PROCESSING', label: 'Processing' },
               { value: 'CONFIRMED', label: 'Confirmed' },
               { value: 'PAID', label: 'Paid' },
+              { value: 'CANCELLED', label: 'Cancelled' },
               { value: 'REPORTED', label: 'Reported' },
             ],
           },

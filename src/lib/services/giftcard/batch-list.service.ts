@@ -254,6 +254,7 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
         id: batch.id,
         sellRate: Number(batch.sellRate),
         isPaid: batch.isPaid,
+        cancelledAt: batch.cancelledAt?.toISOString() ?? null,
         createdAt: batch.createdAt.toISOString(),
         updatedAt: batch.updatedAt?.toISOString(),
         seller,
@@ -275,6 +276,7 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
       userId: batch.userId,
       sellRate: Number(batch.sellRate),
       isPaid: batch.isPaid,
+      cancelledAt: batch.cancelledAt?.toISOString() ?? null,
       createdAt: batch.createdAt.toISOString(),
       giftcards,
       payments: payments.map((p) => ({
@@ -303,20 +305,23 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
     filtered = filtered.filter((b) => {
       const batch = b as {
         isPaid: boolean;
+        cancelledAt: string | null;
         confirmedCount: number;
         cardsCount: number;
         hasIssues: boolean;
       };
       switch (input.status) {
         case 'PROCESSING':
-          return !batch.isPaid && batch.confirmedCount < batch.cardsCount;
+          return !batch.isPaid && !batch.cancelledAt && batch.confirmedCount < batch.cardsCount;
         case 'CONFIRMED':
           if (input.scope === 'admin') {
-            return !batch.isPaid && batch.confirmedCount === batch.cardsCount;
+            return !batch.isPaid && !batch.cancelledAt && batch.confirmedCount === batch.cardsCount;
           }
-          return !batch.isPaid && batch.confirmedCount === batch.cardsCount && !batch.hasIssues;
+          return !batch.isPaid && !batch.cancelledAt && batch.confirmedCount === batch.cardsCount && !batch.hasIssues;
         case 'PAID':
-          return batch.isPaid;
+          return batch.isPaid && !batch.cancelledAt;
+        case 'CANCELLED':
+          return Boolean(batch.cancelledAt);
         case 'REPORTED':
         case 'WITH_ISSUES':
           return batch.hasIssues;

@@ -13,6 +13,7 @@ export interface SellerBatch {
   userId: string | null;
   sellRate: number;
   isPaid: boolean;
+  cancelledAt?: string | null;
   createdAt: string;
   updatedAt?: string;
   giftcards: Giftcard[];
@@ -45,6 +46,7 @@ export interface AdminBatch {
   id: number;
   sellRate: number;
   isPaid: boolean;
+  cancelledAt?: string | null;
   createdAt: string;
   updatedAt?: string;
   seller: {

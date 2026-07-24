@@ -1,3 +1,4 @@
+export { cancelBatchAction as cancelBatch } from './cancel-batch';
 export { deleteBatch } from './delete-batch';
 export { deleteCard } from './delete-card';
 export { getBatchImages } from './get-batch-images';

@@ -23,6 +23,7 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
 
   // Override getBatchActiveBg to use seller-specific status (PROCESSING/CONFIRMED/PAID)
   const getSellerBg = (): string => {
+    if (batch.cancelledAt) return 'bg-red-500/10 dark:bg-red-500/15';
     if (isPaid) return 'bg-emerald-500/10 dark:bg-emerald-500/15';
     if (allConfirmed) return 'bg-blue-500/10 dark:bg-blue-500/15';
     return 'bg-amber-500/10 dark:bg-amber-500/15';

@@ -45,7 +45,7 @@ export const publishBatchOutputSchema = z.object({
 export const listBatchesInputSchema = z.object({
   page: z.number().int().positive().optional().default(1),
   limit: z.number().int().positive().max(100).optional().default(10),
-  status: z.enum(['ALL', 'PROCESSING', 'CONFIRMED', 'PAID', 'REPORTED'] as const).optional().default('ALL'),
+  status: z.enum(['ALL', 'PROCESSING', 'CONFIRMED', 'PAID', 'CANCELLED', 'REPORTED'] as const).optional().default('ALL'),
   search: z.string().optional(),
   sort: z.enum(['newest', 'oldest']).optional().default('newest'),
 });

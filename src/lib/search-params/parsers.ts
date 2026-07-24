@@ -29,7 +29,7 @@ export const adminOrdersSearchParamsParsers = {
 
 export const sellerBatchesSearchParamsParsers = {
   page: parseAsInteger.withDefault(1),
-  status: parseAsStringLiteral(['ALL', 'PROCESSING', 'CONFIRMED', 'PAID', 'REPORTED'] as const).withDefault('ALL'),
+  status: parseAsStringLiteral(['ALL', 'PROCESSING', 'CONFIRMED', 'PAID', 'CANCELLED', 'REPORTED'] as const).withDefault('ALL'),
   search: parseAsString.withDefault(''),
   sort: parseAsStringLiteral(['newest', 'oldest'] as const).withDefault('newest'),
 } as const;
@@ -38,7 +38,7 @@ export const adminBatchesSearchParamsParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(10),
   sellerId: parseAsString.withDefault(''),
-  status: parseAsStringLiteral(['ALL', 'PROCESSING', 'CONFIRMED', 'PAID', 'WITH_ISSUES'] as const).withDefault('ALL'),
+  status: parseAsStringLiteral(['ALL', 'PROCESSING', 'CONFIRMED', 'PAID', 'CANCELLED', 'WITH_ISSUES'] as const).withDefault('ALL'),
   search: parseAsString.withDefault(''),
   sort: parseAsStringLiteral(['newest', 'oldest', 'amount_high', 'amount_low'] as const).withDefault('newest'),
   dateFrom: parseAsString.withDefault(''),

@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
 import { decrypt } from '@/lib/encryption';
 import type { SellerContext } from '@/bot/shared/types.js';
-import { fmt$, fmtDate, fmtRate } from '@/bot/shared/formatters.js';
+import { fmt$, fmtDate, fmtRate, fmtBatchStatus } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { strike } from '@/bot/shared/formatters';
 
@@ -23,7 +23,11 @@ export async function handleBatches(ctx: SellerContext) {
       orderBy: { createdAt: 'desc' },
       skip,
       take: PAGE_SIZE,
-      include: {
+      select: {
+        id: true,
+        isPaid: true,
+        cancelledAt: true,
+        createdAt: true,
         giftcards: {
           select: { isConfirmed: true },
         },
@@ -43,7 +47,7 @@ export async function handleBatches(ctx: SellerContext) {
 
   let msg = `📊 <b>Your Batches</b> (Page ${page}/${totalPages})\n\n`;
   msg += `<b>Legend:</b>\n`;
-  msg += `🟡 Processing\n🔵 Confirmed\n🟢 Paid\n\n`;
+  msg += `🟡 Processing\n🔵 Confirmed\n🟢 Paid\n🔴 Cancelled\n\n`;
   msg += '👇Select a batch to see detailed information:';
   const kb = new InlineKeyboard();
 
@@ -53,7 +57,9 @@ export async function handleBatches(ctx: SellerContext) {
     const allConfirmed = totalItems > 0 && confirmedCount === totalItems;
 
     let icon = '🟡'; // PROCESSING (Amber)
-    if (batch.isPaid) {
+    if (batch.cancelledAt) {
+      icon = '🔴'; // CANCELLED (Red)
+    } else if (batch.isPaid) {
       icon = '🟢'; // PAID (Emerald)
     } else if (allConfirmed) {
       icon = '🔵'; // CONFIRMED (Blue)
@@ -108,6 +114,16 @@ export async function handleViewBatch(ctx: SellerContext) {
           },
         },
         orderBy: { createdAt: 'asc' },
+      },
+      payments: {
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          binanceTxId: true,
+          isBinanceWallet: true,
+        },
+        orderBy: { createdAt: 'desc' },
       },
     },
   });
@@ -201,13 +217,28 @@ export async function handleViewBatch(ctx: SellerContext) {
 
   const table = `<pre><code>${header}\n${separator}\n${rows.join('\n')}</code></pre>`;
 
+  const completedPayments = batch.payments.filter((p) => p.status === 'COMPLETED');
+  const successfulPayment = completedPayments.length > 0 ? completedPayments[0] : null;
+
   const msg = [
     `📦 <b>Batch: ${batch.id}</b>`,
+    `<b>Status:</b> ${fmtBatchStatus(batch.isPaid, 'en', batch.cancelledAt)}`,
     `<b>Brand:</b> ${brandIcon} ${escapeHTML(brandName)} (${escapeHTML(countryName)})`,
     `<b>Date:</b> <code>${fmtDate(batch.createdAt, 'en')}</code>`,
     `<b>Total Face Value:</b> <code>${fmt$(faceValueTotal, countryCurrency)}</code>`,
     `<b>Sell Rate:</b> <code>${fmtRate(sellRate)}</code>`,
     `<b>You Earn:</b> <code>${fmt$(pendingPayment, 'USD')}</code>`,
+    ...(successfulPayment
+      ? [
+          `━━━━━━━━━━━━━━`,
+          `<b>Payment:</b> ✅ <code>${fmt$(successfulPayment.amount, 'USD')}</code>`,
+          ...(successfulPayment.binanceTxId
+            ? [
+                `<b>${successfulPayment.isBinanceWallet ? 'Ref' : 'Tx ID'}:</b> <code>${successfulPayment.isBinanceWallet ? successfulPayment.binanceTxId : `${successfulPayment.binanceTxId.slice(0, 10)}...${successfulPayment.binanceTxId.slice(-4)}`}</code>`,
+              ]
+            : []),
+        ]
+      : []),
     `━━━━━━━━━━━━━━`,
     `<b>Giftcards:</b>`,
     table,

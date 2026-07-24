@@ -274,6 +274,18 @@ export async function notifySellerBatchPaid(sellerId: string, batchId: number, a
   await notificationDispatcher.dispatch(sellerId, message);
 }
 
+export async function notifySellerBatchCancelled(sellerId: string, batchId: number): Promise<void> {
+  const message: NotificationMessage = {
+    type: 'BATCH_CANCELLED',
+    title: `Batch #${batchId} cancelled`,
+    description: `Your batch was cancelled because all cards were reported with no balance.`,
+    actionUrl: '/sell/dashboard/cards',
+    metadata: { batchId },
+  };
+
+  await notificationDispatcher.dispatch(sellerId, message);
+}
+
 export async function notifyAdminPaymentReceived(orderId: string, buyerName: string, amount: number, txId: string): Promise<void> {
   const admin = await prisma.user.findFirst({
     where: { role: 'ADMIN' },

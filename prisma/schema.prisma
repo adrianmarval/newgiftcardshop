@@ -248,9 +248,10 @@ model Order {
 }
 
 model GiftcardBatch {
-  id       Int     @id @default(autoincrement())
-  sellRate Decimal @db.Decimal(10, 4)
-  isPaid   Boolean @default(false)
+  id          Int        @id @default(autoincrement())
+  sellRate    Decimal    @db.Decimal(10, 4)
+  isPaid      Boolean    @default(false)
+  cancelledAt DateTime?
 
   // Relaciones
   user      User?      @relation(fields: [userId], references: [id])
@@ -665,6 +666,7 @@ enum NotificationType {
   PAYMENT_PENDING
   ORDER_COMPLETED
   BATCH_PAID
+  BATCH_CANCELLED
   BATCH_STATUS
   BATCH_UNDER_REVIEW
   RATE_UPDATE

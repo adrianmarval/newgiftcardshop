@@ -57,11 +57,8 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
 
   const { execute: executeMarkAsRead } = useAction(markAsRead, {
     onSuccess: () => {
-      setNotifications((prev) => {
-        const unread = prev.filter((n) => !n.read).length;
-        setUnreadCount(portal, unread);
-        return prev;
-      });
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(portal, 0);
     },
   });
 

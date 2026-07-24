@@ -11,6 +11,7 @@ export {
   useCopyId,
   useCancelOrderAction,
   useDeleteBatchAction,
+  useCancelBatchAction,
   getOrderProgressConfig,
   getOrderActiveBg,
   getOrderHasReports,

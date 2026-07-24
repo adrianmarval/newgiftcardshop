@@ -46,7 +46,7 @@ export const adminBatchSellerSchema = z.object({
 
 export const adminBatchListInputSchema = z.object({
   sellerId: z.string().nullable().optional(),
-  status: z.enum(['ALL', 'PROCESSING', 'CONFIRMED', 'PAID', 'WITH_ISSUES'] as const).optional().default('ALL'),
+  status: z.enum(['ALL', 'PROCESSING', 'CONFIRMED', 'PAID', 'CANCELLED', 'WITH_ISSUES'] as const).optional().default('ALL'),
   dateFrom: z.string().nullable().optional(),
   dateTo: z.string().nullable().optional(),
   amountMin: z.number().nullable().optional(),
@@ -129,3 +129,12 @@ export const unlinkImageFromCardOutputSchema = z.union([
   z.object({ success: z.literal(true) }),
   z.object({ success: z.literal(false), error: z.string() }),
 ]);
+
+export const cancelBatchInputSchema = z.object({
+  batchId: z.number().int().positive(),
+});
+
+export const cancelBatchOutputSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+});
