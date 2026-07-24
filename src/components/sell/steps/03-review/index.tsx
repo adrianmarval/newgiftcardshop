@@ -33,7 +33,7 @@ export interface ReviewStepProps {
 }
 
 export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, backStep }: ReviewStepProps) {
-  const { giftcards, images, setStep, resolveAmountMismatch } = useSellFlow();
+  const { giftcards, images, setStep, resolveAmountMismatch, setCardImage } = useSellFlow();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [processingCardId, setProcessingCardId] = useState<string | null>(null);
@@ -69,7 +69,30 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         const previewUrl = extractionContext.current?.previewUrl;
 
         if (imgId && compressedData && previewUrl) {
-          showAlert.toast.success('OCR extraction completed');
+          const image: SellFlowImage = { id: imgId, compressedData, previewUrl };
+
+          const declaredAmount = parseFloat(card.amount) || null;
+          const extractedAmount = extracted.amount ? parseFloat(extracted.amount) || null : null;
+
+          let status: 'verified' | 'amount_mismatch' | 'amount_required' = 'verified';
+          if (extractedAmount !== null) {
+            if (declaredAmount === null || declaredAmount !== extractedAmount) {
+              status = 'amount_mismatch';
+            }
+          } else if (declaredAmount === null) {
+            status = 'amount_required';
+          }
+
+          setCardImage(processingCardId, image, {
+            status,
+            extractedAmount: extracted.amount ?? undefined,
+          });
+
+          if (status === 'amount_mismatch') {
+            showAlert.toast.warning('Amount mismatch: The screenshot amount differs from declared amount.');
+          } else {
+            showAlert.toast.success('Screenshot linked to card');
+          }
         }
       } else {
         showAlert.toast.error('Could not read code: Try a clearer screenshot.');

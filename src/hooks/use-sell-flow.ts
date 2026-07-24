@@ -32,6 +32,7 @@ export interface SellFlowState {
   keepDeclaredAmount: (cardId: string) => void;
   resolveAmountMismatch: (cardId: string, choice: 'accept-extracted' | 'keep-declared' | 'remove') => void;
   addImage: (image: SellFlowImage) => void;
+  setCardImage: (cardId: string, image: SellFlowImage, evidence?: { status?: 'verified' | 'amount_mismatch' | 'amount_required'; extractedAmount?: string }) => void;
   removeImage: (id: string) => void;
   clearImages: () => void;
   setUnmatchedImages: (images: SellFlowUnmatchedImage[]) => void;
@@ -256,6 +257,23 @@ export const useSellFlow = create<SellFlowState>((set, get) => ({
   },
 
   addImage: (image: SellFlowImage) => set((state) => ({ images: [...state.images, image] })),
+
+  setCardImage: (cardId: string, image: SellFlowImage, evidence?: { status?: 'verified' | 'amount_mismatch' | 'amount_required'; extractedAmount?: string }) =>
+    set((state) => ({
+      images: [...state.images, image],
+      giftcards: state.giftcards.map((g) =>
+        g.id === cardId
+          ? {
+              ...g,
+              evidence: {
+                status: evidence?.status ?? 'verified',
+                matchedImageId: image.id,
+                extractedAmount: evidence?.extractedAmount,
+              },
+            }
+          : g,
+      ),
+    })),
 
   removeImage: (id: string) =>
     set((state) => ({
