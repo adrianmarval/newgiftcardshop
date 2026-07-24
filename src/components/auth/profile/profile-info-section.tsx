@@ -184,7 +184,7 @@ export const ProfileInfoSection = ({
                   type="text"
                   disabled={isSubmitting}
                   {...register('name')}
-                  className={errors.name ? 'border-destructive' : ''}
+                  className={`h-9 md:h-10 ${errors.name ? 'border-destructive' : ''}`}
                 />
                 {errors.name && <p className="text-destructive text-xs">{errors.name.message}</p>}
               </div>

@@ -26,7 +26,6 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     <UsersManager
       initialUsers={result.data.items}
       pagination={result.data.pagination}
-      searchParams={{ search: parsed.search, role: parsed.role }}
     />
   );
 }

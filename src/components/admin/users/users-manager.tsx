@@ -11,12 +11,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { FiltersBar } from '@/components/common';
 import { cn } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
 import { updateUser, getUserRates, updateUserRates, deleteUserRates } from '@/actions/admin/users/';
 import { listBrands } from '@/actions/admin/catalog';
 import { UrlPagination } from '@/components/ui/url-pagination';
+import { adminUsersSearchParamsParsers } from '@/lib/search-params';
 import { MoreVertical, Edit2, Power, Loader2, ChevronsUpDown, Check } from 'lucide-react';
 import type { BrandCountrySummary, BrandWithCountries } from '@/types';
 import type { User, UserRate } from '@/types';
@@ -28,16 +30,10 @@ interface UsersManagerProps {
     totalPages: number;
     totalCount: number;
   };
-  searchParams?: {
-    search: string;
-    role: string;
-  };
 }
 
-export function UsersManager({ initialUsers, pagination, searchParams }: UsersManagerProps) {
+export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const router = useRouter();
-  const [search, setSearch] = useState(searchParams?.search || '');
-  const [role, setRole] = useState(searchParams?.role || 'ALL');
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({
     role: '',
@@ -195,46 +191,27 @@ export function UsersManager({ initialUsers, pagination, searchParams }: UsersMa
     });
   };
 
-  const handleApplyFilters = () => {
-    const query = new URLSearchParams();
-    query.set('page', '1');
-    if (search) query.set('search', search);
-    if (role !== 'ALL') query.set('role', role);
-    router.push(`/admin/dashboard/users?${query.toString()}`);
-  };
-
-  useEffect(() => {
-    setSearch(searchParams?.search || '');
-    setRole(searchParams?.role || 'ALL');
-  }, [searchParams?.search, searchParams?.role]);
-
   const isUpdating = updateStatus === 'executing' || toggleStatus === 'executing';
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
-      <div className="flex flex-col gap-1 md:flex-row">
-        <div className="relative flex-1">
-          <Input
-            placeholder="Buscar por nombre o email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
-            className="h-10"
-          />
-        </div>
-        <Select value={role} onValueChange={(r) => setRole(r)}>
-          <SelectTrigger className="w-45">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Todos</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-            <SelectItem value="SELLER">Seller</SelectItem>
-            <SelectItem value="BUYER">Buyer</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button onClick={handleApplyFilters}>Buscar</Button>
-      </div>
+      <FiltersBar
+        parsers={adminUsersSearchParamsParsers}
+        defaults={{ search: '', role: 'ALL' }}
+        config={{
+          search: { placeholder: 'Buscar por nombre o email...', paramKey: 'search' },
+          status: {
+            label: 'Rol',
+            paramKey: 'role',
+            options: [
+              { value: 'ALL', label: 'Todos' },
+              { value: 'ADMIN', label: 'Admin' },
+              { value: 'SELLER', label: 'Seller' },
+              { value: 'BUYER', label: 'Buyer' },
+            ],
+          },
+        }}
+      />
 
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         {initialUsers.map((user) => (
