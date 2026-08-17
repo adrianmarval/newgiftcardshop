@@ -54,6 +54,7 @@ model User {
   notificationPreference NotificationPreference?
   notifications          Notification[]
   notificationLogs       NotificationLog[]
+  pushSubscriptions      PushSubscription[]
 
   // Logs de aplicación
   logs AppLog[]
@@ -578,6 +579,7 @@ model NotificationPreference {
   telegramEnabled Boolean  @default(true)
   whatsappEnabled Boolean  @default(false)
   whatsappPhone   String?  // E.164 (+1234567890)
+  pushEnabled     Boolean  @default(false) // Web Push (navegador)
 
   // Suscripciones explícitas a brand-countries (buyers que quieren Notificaciones de stock nuevo)
   subscriptions BrandCountrySubscription[]
@@ -617,6 +619,23 @@ model Notification {
 
   @@index([userId, read])
   @@map("notification")
+}
+
+// Suscripciones Web Push (Push API) — un usuario puede tener varios dispositivos
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("push_subscription")
 }
 
 // Tracking anti-spam: evita re-notificar el mismo evento al mismo usuario

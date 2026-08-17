@@ -8,11 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { Spinner } from '@/components/ui/spinner';
-import { Send, MessageCircle, Link2, Package, Check } from 'lucide-react';
+import { Send, MessageCircle, Link2, Package, Check, Bell } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { updateNotificationPreferences } from '@/actions/notifications';
+import { updateNotificationPreferences, sendTestPush } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
+import { usePushSubscription } from '@/hooks/use-push-subscription';
 import type { SubscribedBrandCountry } from '@/types';
 
 const SETTINGS_TEXTS = {
@@ -23,6 +24,16 @@ const SETTINGS_TEXTS = {
     telegramDesc: 'Messages to bot chat',
     linkTelegram: 'Link Telegram from your profile',
     whatsappDesc: 'Direct messages to your number',
+    pushDesc: 'Notifications in this browser',
+    pushBlocked: 'Blocked by the browser — enable it in the site settings',
+    pushUnsupported: 'This browser does not support push notifications',
+    pushNotConfigured: 'Push is not configured on the server (missing VAPID keys)',
+    pushBraveHint: 'Brave: enable "Use Google services for push messaging" in brave://settings/privacy',
+    testPush: 'Send test notification',
+    testPushSent: 'Test sent — check your browser notifications',
+    testPushNoSubs: 'No push subscriptions found for this browser',
+    testPushTitle: '🔔 Test notification',
+    testPushBody: 'If you see this, the Web Push channel works correctly.',
     phoneLabel: 'Phone number',
     phoneHint: 'E.164 with country code',
     whichBrands: 'Which brands',
@@ -40,6 +51,16 @@ const SETTINGS_TEXTS = {
     telegramDesc: 'Mensajes al chat del bot',
     linkTelegram: 'Vinculá Telegram desde tu perfil',
     whatsappDesc: 'Mensajes directos a tu número',
+    pushDesc: 'Notificaciones en este navegador',
+    pushBlocked: 'Bloqueado por el navegador — habilitalo en la configuración del sitio',
+    pushUnsupported: 'Este navegador no soporta notificaciones push',
+    pushNotConfigured: 'Push no está configurado en el servidor (faltan claves VAPID)',
+    pushBraveHint: 'Brave: activá "Usar servicios de Google para mensajería push" en brave://settings/privacy',
+    testPush: 'Enviar notificación de prueba',
+    testPushSent: 'Prueba enviada — revisá las notificaciones del navegador',
+    testPushNoSubs: 'No se encontraron suscripciones push en este navegador',
+    testPushTitle: '🔔 Notificación de prueba',
+    testPushBody: 'Si ves esto, el canal Web Push funciona correctamente.',
     phoneLabel: 'Número',
     phoneHint: 'E.164 con código de país',
     whichBrands: 'De qué marcas',
@@ -57,6 +78,16 @@ const SETTINGS_TEXTS = {
     telegramDesc: 'Mensajes al chat del bot',
     linkTelegram: 'Vinculá Telegram desde tu perfil',
     whatsappDesc: 'Mensajes directos a tu número',
+    pushDesc: 'Notificaciones en este navegador',
+    pushBlocked: 'Bloqueado por el navegador — habilitalo en la configuración del sitio',
+    pushUnsupported: 'Este navegador no soporta notificaciones push',
+    pushNotConfigured: 'Push no está configurado en el servidor (faltan claves VAPID)',
+    pushBraveHint: 'Brave: activá "Usar servicios de Google para mensajería push" en brave://settings/privacy',
+    testPush: 'Enviar notificación de prueba',
+    testPushSent: 'Prueba enviada — revisá las notificaciones del navegador',
+    testPushNoSubs: 'No se encontraron suscripciones push en este navegador',
+    testPushTitle: '🔔 Notificación de prueba',
+    testPushBody: 'Si ves esto, el canal Web Push funciona correctamente.',
     phoneLabel: 'Número',
     phoneHint: 'E.164 con código de país',
     whichBrands: 'De qué marcas',
@@ -77,6 +108,7 @@ export interface NotificationsSettingsProps {
     telegramEnabled: boolean;
     whatsappEnabled: boolean;
     whatsappPhone: string | null;
+    pushEnabled: boolean;
   };
   brandCountries?: SubscribedBrandCountry[];
 }
@@ -92,6 +124,51 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
   const [subscribedIds, setSubscribedIds] = useState<Set<string>>(initialSubscribed);
 
   const [alert, setAlert] = useState<{ variant: 'success' | 'error'; title: string } | null>(null);
+
+  const push = usePushSubscription(initialPreferences?.pushEnabled ?? false);
+
+  const [testPushLoading, setTestPushLoading] = useState(false);
+
+  const handleTestPush = async () => {
+    setAlert(null);
+    setTestPushLoading(true);
+    try {
+      const res = await sendTestPush({ title: texts.testPushTitle, description: texts.testPushBody });
+      const data = res?.data;
+      if (data?.status === 'sent') {
+        setAlert({ variant: 'success', title: texts.testPushSent });
+      } else if (data?.status === 'skipped') {
+        setAlert({ variant: 'error', title: data.reason === 'no_push_subscriptions' ? texts.testPushNoSubs : texts.pushNotConfigured });
+      } else {
+        setAlert({ variant: 'error', title: data?.error || res?.serverError || texts.errorSaving });
+      }
+    } finally {
+      setTestPushLoading(false);
+    }
+  };
+
+  const handleTogglePush = async (enabled: boolean) => {
+    setAlert(null);
+    if (enabled) {
+      const result = await push.enable();
+      if (!result.ok) {
+        console.error('[Push] Error al habilitar:', result.error);
+        setAlert({
+          variant: 'error',
+          title:
+            result.error === 'permission_denied'
+              ? texts.pushBlocked
+              : result.error === 'vapid_not_configured'
+                ? texts.pushNotConfigured
+                : result.error === 'brave_push_service_disabled'
+                  ? texts.pushBraveHint
+                  : texts.errorSaving,
+        });
+      }
+    } else {
+      await push.disable();
+    }
+  };
 
   const { execute, status } = useAction(updateNotificationPreferences, {
     onSuccess: ({ data }) => {
@@ -215,6 +292,46 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
               />
               <p className="text-muted-foreground mt-1 text-[10px]">{texts.phoneHint}</p>
             </div>
+          )}
+
+          {/* Web Push — se aplica de inmediato (requiere permiso del navegador) */}
+          <label
+            className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors ${
+              push.subscribed ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20'
+            } ${!push.supported || push.permission === 'denied' ? 'cursor-not-allowed opacity-50' : ''}`}
+          >
+            <Checkbox
+              checked={push.subscribed}
+              disabled={!push.supported || push.permission === 'denied' || push.loading}
+              onCheckedChange={(v) => handleTogglePush(v === true)}
+              className="h-5 w-5"
+            />
+            <Bell className="h-5 w-5 shrink-0 text-violet-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Push</p>
+              <p className="text-muted-foreground text-xs">{texts.pushDesc}</p>
+            </div>
+            {push.loading && <Spinner size="sm" />}
+          </label>
+
+          {push.subscribed && (
+            <div className="pl-10">
+              <button
+                onClick={handleTestPush}
+                disabled={testPushLoading}
+                className="text-primary flex items-center gap-1.5 text-xs font-medium hover:underline disabled:opacity-50"
+              >
+                {testPushLoading && <Spinner size="sm" />}
+                {texts.testPush}
+              </button>
+            </div>
+          )}
+
+          {push.supported && push.permission === 'denied' && (
+            <p className="pl-10 text-xs text-amber-300">{texts.pushBlocked}</p>
+          )}
+          {!push.supported && (
+            <p className="text-muted-foreground pl-10 text-xs">{texts.pushUnsupported}</p>
           )}
         </section>
 

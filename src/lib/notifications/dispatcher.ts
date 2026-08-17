@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import type { NotificationChannelResult, NotificationContext, NotificationMessage } from './types';
 import { TelegramChannel } from './channels/telegram.channel';
 import { WhatsAppChannel } from './channels/whatsapp.channel';
+import { WebPushChannel } from './channels/webpush.channel';
 import type { Prisma } from '@/generated/prisma/client';
 import { logger } from '@/lib/logger';
 
@@ -63,6 +64,17 @@ export class NotificationDispatcher {
 
       if (result.status === 'failed') {
         logger.warn(`[Notifications] WhatsApp falló para user ${userId}: ${result.error}`);
+      }
+    }
+
+    if (preference.pushEnabled) {
+      const result = await WebPushChannel.send(ctx, message).catch((err): NotificationChannelResult => ({
+        status: 'failed',
+        error: err?.message || String(err),
+      }));
+
+      if (result.status === 'failed') {
+        logger.warn(`[Notifications] WebPush falló para user ${userId}: ${result.error}`);
       }
     }
   }

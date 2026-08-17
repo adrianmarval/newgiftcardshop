@@ -57,3 +57,30 @@ export const updateNotificationPreferencesOutputSchema = z.object({
 });
 
 export const getUnreadCountOutputSchema = z.object({ success: z.literal(true), count: z.number() });
+
+export const savePushSubscriptionInputSchema = z.object({
+  endpoint: z.url(),
+  p256dh: z.string().min(1),
+  auth: z.string().min(1),
+  userAgent: z.string().max(300).optional(),
+});
+
+export const savePushSubscriptionOutputSchema = z.object({ success: z.literal(true) });
+
+export const deletePushSubscriptionInputSchema = z.object({
+  endpoint: z.url(),
+});
+
+export const deletePushSubscriptionOutputSchema = z.object({ success: z.literal(true) });
+
+export const sendTestPushInputSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+});
+
+export const sendTestPushOutputSchema = z.object({
+  success: z.literal(true),
+  status: z.enum(['sent', 'skipped', 'failed']),
+  reason: z.string().optional(),
+  error: z.string().optional(),
+});

@@ -180,6 +180,15 @@ TelegramOtp {
 - `src/lib/services/giftcard-escalation.service.ts` — cron que baja `escalationTier` de cards inactivas
 - `src/lib/settings/settings.service.ts` — `SettingsService` con `getPlatformBalance()`, `updatePlatformBalance()`, escalation config
 
+## Notificaciones — canales
+
+El `NotificationDispatcher` (`src/lib/notifications/dispatcher.ts`) despacha por `userId` a estos canales:
+
+- **In-app**: persiste en `Notification`; el dashboard hace polling con `router.refresh()` cada 15s (`AutoRefreshProvider`)
+- **Telegram**: elige bot por rol (BUYER/ADMIN → buyer-bot, resto → seller-bot)
+- **WhatsApp**: Baileys, requiere `whatsappPhone` E.164
+- **Web Push**: `WebPushChannel` (`channels/webpush.channel.ts`) con Push API + VAPID. Suscripciones en `PushSubscription` (endpoint `@unique`, varios dispositivos por user), toggle `pushEnabled` en `NotificationPreference`. SW en `public/sw.js`, registrado silenciosamente por `NotificationProvider`. Hook `src/hooks/use-push-subscription.ts` + server actions `save-push-subscription`/`delete-push-subscription`/`send-test-push` (botón "Probar" en settings — bypass del dispatcher, solo canal push). El canal loguea `sent` (con counts) y `skipped` (con reason) a `app_log`; el dispatcher solo loguea `failed`. Endpoints muertos (404/410) se auto-eliminan. Env: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`. En iOS requiere la PWA instalada (16.4+). Brave requiere "Google services for push messaging" habilitado (el hook detecta el fallo y devuelve `brave_push_service_disabled`).
+
 ## Deuda técnica conocida (P2 — no urgente)
 
 - Web sell `addImageToCard` es no-op (feature de evidencia en Review no funciona)

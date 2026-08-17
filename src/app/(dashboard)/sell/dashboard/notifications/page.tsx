@@ -32,6 +32,7 @@ export default async function SellerNotificationsPage() {
                   telegramEnabled: preference.telegramEnabled,
                   whatsappEnabled: preference.whatsappEnabled,
                   whatsappPhone: preference.whatsappPhone,
+                  pushEnabled: preference.pushEnabled,
                 }
               : undefined,
           }}

@@ -38,6 +38,7 @@ export default async function BuyerNotificationsPage() {
                   telegramEnabled: preference.telegramEnabled,
                   whatsappEnabled: preference.whatsappEnabled,
                   whatsappPhone: preference.whatsappPhone,
+                  pushEnabled: preference.pushEnabled,
                 }
               : undefined,
             brandCountries,

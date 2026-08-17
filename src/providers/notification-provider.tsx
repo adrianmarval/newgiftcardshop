@@ -19,6 +19,13 @@ export function NotificationProvider({ children, initialUnreadCounts }: Notifica
     initialUnreadCounts ?? { buyer: 0, seller: 0, admin: 0 },
   );
 
+  // Registrar el service worker de Web Push (sin pedir permiso — eso se hace desde Settings)
+  React.useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  }, []);
+
   // Sync with server-provided counts when auto-refresh re-renders the parent
   React.useEffect(() => {
     if (initialUnreadCounts) {
