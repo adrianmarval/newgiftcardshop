@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import { PrismaClient } from '@/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -7,8 +9,13 @@ const globalForPrisma = global as unknown as {
 };
 
 const createPrismaClient = () => {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not set. Ensure .env is loaded before the app starts.');
+  }
+
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL!,
+    connectionString,
     max: 20,
     idleTimeoutMillis: 30000,
   });

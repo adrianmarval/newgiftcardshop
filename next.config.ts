@@ -2,13 +2,14 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['@whiskeysockets/baileys'],
+
   experimental: {
     authInterrupts: true,
     serverActions: {
       bodySizeLimit: '4mb',
     },
   },
-  allowedDevOrigins: ['192.168.1.173', '*.trycloudflare.com'],
+  allowedDevOrigins: ['dev.giftcardshop.app', '*.trycloudflare.com'],
   images: {
     remotePatterns: [
       {

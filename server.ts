@@ -78,18 +78,6 @@ async function initEscalationService() {
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
-// ── Next.js ────────────────────────────────────────────────────────────────────
-const app = next({ dev: !isProd, hostname, port });
-const handleNextRequest = app.getRequestHandler();
-
-console.log('[Server] Preparando Next.js...');
-await app.prepare();
-const log = await getServerLogger();
-log.info('Next.js preparado');
-
-// ── Giftcard Escalation ───────────────────────────────────────────────────────
-await initEscalationService();
-
 // ── Bots (opcionales — Next.js arranca igual si faltan los tokens) ─────────────
 type BotEntry = { bot: any; webhookPath: string; name: string };
 
@@ -176,9 +164,27 @@ const httpServer = createServer(async (req, res) => {
   }
 });
 
+// ── Next.js ────────────────────────────────────────────────────────────────────
+const app = next({ dev: !isProd, hostname, port });
+const handleNextRequest = app.getRequestHandler();
+
+console.log('[Server] Preparando Next.js...');
+await app.prepare();
+const handleUpgrade = app.getUpgradeHandler();
+const log = await getServerLogger();
+log.info('Next.js preparado');
+
+// ── Giftcard Escalation ───────────────────────────────────────────────────────
+await initEscalationService();
+
 httpServer.listen(port, () => {
   console.log(`\n> Ready on http://${hostname}:${port}`);
   console.log(`> Modo: ${isProd ? 'producción (webhook)' : 'desarrollo (long polling)'}`);
+});
+
+// ── WebSocket Upgrade (HMR en dev mode) ──────────────────────────────────────
+httpServer.on('upgrade', (req, socket, head) => {
+  handleUpgrade(req, socket, head);
 });
 
 // ── Bot startup ────────────────────────────────────────────────────────────────

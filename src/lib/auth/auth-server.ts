@@ -8,8 +8,6 @@ import { render } from '@react-email/components';
 import { VerifyEmailTemplate, ResetPasswordTemplate } from '@/components/emails/';
 
 // ── Auth client helpers ─────────────────────────────────────────────────────────
-// Typed wrappers for better-auth API calls that need custom typing
-
 export const authApi = {
   async signUpEmail(params: {
     body: { name: string; email: string; password: string; role: string; isActive?: boolean; callbackURL?: string };
@@ -23,7 +21,7 @@ export const authApi = {
 } as const;
 
 export const auth = betterAuth({
-  appName: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop', // Added appName
+  appName: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop',
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
@@ -68,6 +66,19 @@ export const auth = betterAuth({
       },
     },
   },
+
+  // ── Configuración para permitir Iframe / Cross-Domain ──────────────────────────
+  advanced: {
+    crossSubdomainCookies: {
+      enabled: true,
+    },
+    defaultCookieAttributes: {
+      sameSite: 'none', // Permite que la cookie sea leída dentro de un Iframe
+      secure: true, // Requerido obligatoriamente cuando SameSite es 'none'
+      httpOnly: true,
+    },
+  },
+
   plugins: [
     customSession(async ({ user }) => {
       const telegramUser = await prisma.telegramUser.findUnique({
