@@ -1,5 +1,6 @@
 import { DashboardSidebar } from './dashboard-sidebar';
 import { AppTopBar } from '@/components/layout';
+import { PushPromptToast } from '@/components/notifications/push-prompt-toast';
 import { authorizeByRequiredRole } from '@/lib/auth/authorization';
 import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';
 import { NotificationProvider } from '@/providers/notification-provider';
@@ -63,6 +64,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
               notificationHref={`${dashboardMap[portal]}/notifications`}
               notificationBadgeKey={PORTAL_BADGE_KEY[portal]}
             />
+            <PushPromptToast portal={portal} />
             <div className="flex h-full flex-col overflow-hidden p-1">
               <div className="custom-scrollbar min-h-0 flex-1 overflow-hidden overflow-y-auto">{children}</div>
             </div>

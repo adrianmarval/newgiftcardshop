@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Aldrich, Lora, IBM_Plex_Mono } from 'next/font/google';
+import { Toaster } from 'sonner';
 import './globals.css';
 import { Providers } from '@/components/providers';
 import { getServerTheme } from '@/lib/ui/theme-utils';
@@ -48,6 +49,13 @@ export default async function RootLayout({
     <html lang="en" className={theme} suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
         <Providers>{children}</Providers>
+        <Toaster
+          position="top-center"
+          richColors={false}
+          closeButton={false}
+          duration={Infinity}
+          swipeDirections={['left', 'right']}
+        />
       </body>
     </html>
   );
