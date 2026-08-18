@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { startRegistration } from '@/bot/shared/registration.js';
-import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
+import { renderUI, deleteUserInput, escapeHTML, resolveFlowThreadId } from '@/bot/shared/ui.js';
 
 export async function startBuyer(ctx: BuyerContext) {
   const telegramId = ctx.from?.id.toString();
@@ -78,6 +78,13 @@ export async function startBuyer(ctx: BuyerContext) {
     await cleanupOldMessage();
     await deleteUserInput(ctx);
   } catch (_err: any) {
-    await ctx.reply('❌ Ocurrió un error al iniciar el bot. Por favor, intentá de nuevo más tarde.').catch(() => {});
+    const threadId = await resolveFlowThreadId(ctx).catch(() => undefined);
+    const errorMsg = '❌ Ocurrió un error al iniciar el bot. Por favor, intentá de nuevo más tarde.';
+    // Si el thread está stale (topic borrado/cerrado), reintentar como mensaje plano
+    await ctx
+      .reply(errorMsg, {
+        ...(threadId != null ? { message_thread_id: threadId } : {}),
+      })
+      .catch(() => ctx.reply(errorMsg).catch(() => {}));
   }
 }

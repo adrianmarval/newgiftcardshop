@@ -16,6 +16,11 @@ export interface User {
   allowSearchPreferences: boolean;
   allowBuyRateAdjustment: boolean;
   createdAt: Date;
+  telegramUser?: {
+    telegramId: string;
+    username: string | null;
+    firstName: string | null;
+  } | null;
 }
 
 export interface UserRate {

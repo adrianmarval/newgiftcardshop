@@ -26,6 +26,13 @@ export const listUsersOutputSchema = paginatedOutputSchema(
       allowSearchPreferences: z.boolean(),
       allowBuyRateAdjustment: z.boolean(),
       createdAt: z.date(),
+      telegramUser: z
+        .object({
+          telegramId: z.string(),
+          username: z.string().nullable(),
+          firstName: z.string().nullable(),
+        })
+        .nullable(),
     })
     .array(),
 );
@@ -88,3 +95,10 @@ export const deleteUserRatesInputSchema = z.object({
 });
 
 export const deleteUserRatesOutputSchema = z.object({ success: z.literal(true) });
+
+export const unlinkTelegramInputSchema = z.object({ userId: z.string() });
+
+export const unlinkTelegramOutputSchema = z.object({
+  success: z.literal(true),
+  unlinked: z.literal(true),
+});

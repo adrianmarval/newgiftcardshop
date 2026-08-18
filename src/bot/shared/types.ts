@@ -3,13 +3,13 @@ import type { User, GiftcardIssueType } from '@/generated/prisma/client';
 
 // ── Wizard steps ─────────────────────────────────────────────────────────────
 
+/** Steps de wizard de registro — el usuario aún no tiene TelegramUser, auth se skipea. */
+export const REG_WIZARD_STEPS = ['awaitingName', 'awaitingEmail', 'awaitingOtp', 'awaitingPassword'] as const;
+export type RegWizardStep = (typeof REG_WIZARD_STEPS)[number];
+
 export type SellerWizardStep =
   | 'idle'
-  // Registro inicial (sin cuenta)
-  | 'awaitingName'
-  | 'awaitingEmail'
-  | 'awaitingOtp'
-  | 'awaitingPassword'
+  | RegWizardStep
   // Flujo de venta
   | 'awaitingCodes'
   | 'awaitingImages'
@@ -22,11 +22,7 @@ export type SellerWizardStep =
 
 export type BuyerWizardStep =
   | 'idle'
-  // Registro inicial (sin cuenta)
-  | 'awaitingName'
-  | 'awaitingEmail'
-  | 'awaitingOtp'
-  | 'awaitingPassword'
+  | RegWizardStep
   // Flujo de compra
   | 'awaitingAmount'
   | 'awaitingPaymentId'
@@ -55,6 +51,10 @@ export interface SellerSessionData {
   };
   uiMessageId?: number;
   lastChatId?: number;
+  // message_thread_id del topic "🤖 Menú" (cache de sesión; durable en TelegramUser.flowTopicId)
+  flowTopicId?: number;
+  // chat.id donde se creó flowTopicId — los topic ids son por (bot, chat)
+  flowChatId?: string;
   storedMessageIds: number[];
 }
 
@@ -80,6 +80,10 @@ export interface BuyerSessionData {
   };
   uiMessageId?: number;
   lastChatId?: number;
+  // message_thread_id del topic "🤖 Menú" (cache de sesión; durable en TelegramUser.flowTopicId)
+  flowTopicId?: number;
+  // chat.id donde se creó flowTopicId — los topic ids son por (bot, chat)
+  flowChatId?: string;
   storedMessageIds: number[];
 }
 

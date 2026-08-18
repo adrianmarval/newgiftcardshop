@@ -310,6 +310,10 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
         lastName,
         username,
         languageCode,
+        // Preservar el topic "🤖 Menú" creado durante el registro (si existe en sesión)
+        ...(ctx.session.flowTopicId != null
+          ? { flowTopicId: ctx.session.flowTopicId, flowChatId: ctx.session.flowChatId ?? null }
+          : {}),
         ...(photoResult ? { photoData: new Uint8Array(photoResult.data), photoMimeType: photoResult.mimeType } : {}),
       },
       create: {
@@ -318,6 +322,9 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
         lastName,
         username,
         languageCode,
+        // Preservar el topic "🤖 Menú" creado durante el registro (si existe en sesión)
+        flowTopicId: ctx.session.flowTopicId ?? undefined,
+        flowChatId: ctx.session.flowChatId ?? undefined,
         photoData: photoResult ? new Uint8Array(photoResult.data) : undefined,
         photoMimeType: photoResult?.mimeType,
         userId: existingUser.id,
@@ -410,6 +417,9 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
         lastName,
         username,
         languageCode,
+        // Preservar el topic "🤖 Menú" creado durante el registro (si existe en sesión)
+        flowTopicId: ctx.session.flowTopicId ?? undefined,
+        flowChatId: ctx.session.flowChatId ?? undefined,
         photoData: photoResult ? new Uint8Array(photoResult.data) : undefined,
         photoMimeType: photoResult?.mimeType,
         userId: result.user.id,

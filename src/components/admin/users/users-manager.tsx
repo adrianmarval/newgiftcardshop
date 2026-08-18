@@ -6,6 +6,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,11 +25,11 @@ import { FiltersBar } from '@/components/common';
 import { cn } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
-import { updateUser, getUserRates, updateUserRates, deleteUserRates } from '@/actions/admin/users/';
+import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTelegram } from '@/actions/admin/users/';
 import { listBrands } from '@/actions/admin/catalog';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { adminUsersSearchParamsParsers } from '@/lib/search-params';
-import { MoreVertical, Edit2, Power, Loader2, ChevronsUpDown, Check } from 'lucide-react';
+import { MoreVertical, Edit2, Power, Loader2, ChevronsUpDown, Check, Link2Off } from 'lucide-react';
 import type { BrandCountrySummary, BrandWithCountries } from '@/types';
 import type { User, UserRate } from '@/types';
 
@@ -49,6 +59,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const [selectedBrandCountryId, setSelectedBrandCountryId] = useState('');
   const [openBrandCountry, setOpenBrandCountry] = useState(false);
   const [rateForm, setRateForm] = useState({ buyRate: '', sellRate: '' });
+  const [unlinkTarget, setUnlinkTarget] = useState<User | null>(null);
 
   const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
     onSuccess: () => {
@@ -65,6 +76,15 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
       router.refresh();
     },
     onError: (e) => showAlert.toast.error('Error actualizando usuario: ' + (e.error?.serverError || 'Unknown error')),
+  });
+
+  const { execute: executeUnlink, status: unlinkStatus } = useAction(unlinkTelegram, {
+    onSuccess: () => {
+      showAlert.toast.success('Telegram desvinculado');
+      router.refresh();
+      setUnlinkTarget(null);
+    },
+    onError: (e) => showAlert.toast.error('Error desvinculando: ' + (e.error?.serverError || 'Unknown error')),
   });
 
   const openEditDialog = (user: User) => {
@@ -227,6 +247,14 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
                   )}
                 </div>
                 <p className="text-muted-foreground truncate text-sm">{user.email}</p>
+                {user.telegramUser ? (
+                  <p className="text-muted-foreground flex items-center gap-1 text-xs">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky-500" />
+                    @{user.telegramUser.username || user.telegramUser.firstName || user.telegramUser.telegramId}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground/60 text-xs">Sin Telegram</p>
+                )}
               </div>
               <Badge variant="outline">{user.role}</Badge>
               <DropdownMenu>
@@ -247,6 +275,15 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
                     <Power className="mr-2 h-4 w-4" />
                     {user.isActive ? 'Desactivar' : 'Activar'}
                   </DropdownMenuItem>
+                  {user.telegramUser && (
+                    <DropdownMenuItem
+                      onClick={() => setUnlinkTarget(user)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Link2Off className="mr-2 h-4 w-4" />
+                      Desvincular Telegram
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </CardContent>
@@ -490,6 +527,29 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!unlinkTarget} onOpenChange={(open) => !open && setUnlinkTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desvincular Telegram</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará la vinculación con Telegram{unlinkTarget?.telegramUser?.username ? ` (@${unlinkTarget.telegramUser.username})` : ''}. El usuario no podrá usar el bot hasta que vuelva a vincular.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (unlinkTarget) executeUnlink({ userId: unlinkTarget.id });
+              }}
+              disabled={unlinkStatus === 'executing'}
+            >
+              {unlinkStatus === 'executing' ? 'Desvinculando...' : 'Desvincular'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

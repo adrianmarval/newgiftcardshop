@@ -518,6 +518,18 @@ model TelegramUser {
   photoData     Bytes? // AES-256-GCM encrypted image buffer
   photoMimeType String? // "image/jpeg"
 
+  // message_thread_id del topic "🔔 Notificaciones" en el chat privado del bot (forum topic mode, Bot API 10.x)
+  // INVARIANTE: los topic ids son por (bot, chat) — siempre validar notificationChatId antes de usar notificationTopicId
+  notificationTopicId Int?
+  // chat.id donde se creó notificationTopicId (String porque los chat ids de Telegram exceden Int32)
+  notificationChatId  String?
+
+  // message_thread_id del topic "🤖 Menú" (interacción del bot) en el chat privado
+  // INVARIANTE: los topic ids son por (bot, chat) — siempre validar flowChatId antes de usar flowTopicId
+  flowTopicId Int?
+  // chat.id donde se creó flowTopicId (String porque los chat ids de Telegram exceden Int32)
+  flowChatId  String?
+
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 

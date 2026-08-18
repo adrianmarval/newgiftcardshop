@@ -31,6 +31,11 @@ export const listUsers = adminActionClient
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        include: {
+          telegramUser: {
+            select: { telegramId: true, username: true, firstName: true },
+          },
+        },
       });
       const totalCount = await prisma.user.count({ where });
 
@@ -48,6 +53,7 @@ export const listUsers = adminActionClient
         allowSearchPreferences: user.allowSearchPreferences,
         allowBuyRateAdjustment: user.allowBuyRateAdjustment,
         createdAt: user.createdAt,
+        telegramUser: user.telegramUser ?? null,
       }));
 
       return {
