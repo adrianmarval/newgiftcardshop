@@ -51,6 +51,11 @@ export function createBuyerBot() {
 
   // ── Middlewares globales ───────────────────────────────────────────────────
   bot.use(
+    // Set botRole for topic name resolution in shared UI
+    (ctx: BuyerContext, next) => {
+      ctx.botRole = 'BUYER';
+      return next();
+    },
     limit({
       timeFrame: 3000,
       limit: 30,

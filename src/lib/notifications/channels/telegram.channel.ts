@@ -3,6 +3,7 @@ import type { NotificationChannel, NotificationChannelResult, NotificationContex
 import { BotRegistry } from '../bot-registry';
 import {
   NOTIFICATIONS_TOPIC_NAME,
+  getTopicName,
   getOrCreateTopicId,
   isTopicGoneError,
   tryReopenTopic,
@@ -56,7 +57,7 @@ export const TelegramChannel: NotificationChannel = {
       topicId = await getOrCreateTopicId({
         api: bot.api,
         chatId,
-        name: NOTIFICATIONS_TOPIC_NAME,
+        name: getTopicName('notifications', ctx.userRole),
         field: 'notificationTopicId',
         userId: ctx.userId,
         storedTopicId: telegramUser.notificationTopicId,
@@ -88,7 +89,7 @@ export const TelegramChannel: NotificationChannel = {
             topicId = await getOrCreateTopicId({
               api: bot.api,
               chatId,
-              name: NOTIFICATIONS_TOPIC_NAME,
+              name: getTopicName('notifications', ctx.userRole),
               field: 'notificationTopicId',
               userId: ctx.userId,
               storedTopicId: null,

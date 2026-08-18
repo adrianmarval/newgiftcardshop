@@ -3,7 +3,16 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
 export const NOTIFICATIONS_TOPIC_NAME = '🔔 Notificaciones';
+export const NOTIFICATIONS_TOPIC_NAME_EN = '🔔 Notifications';
 export const FLOW_TOPIC_NAME = '🤖 Menú';
+export const FLOW_TOPIC_NAME_EN = '🤖 Menu';
+
+type TopicRole = 'SELLER' | 'BUYER' | 'ADMIN';
+
+export function getTopicName(type: 'notifications' | 'flow', role?: TopicRole): string {
+  if (type === 'notifications') return role === 'SELLER' ? NOTIFICATIONS_TOPIC_NAME_EN : NOTIFICATIONS_TOPIC_NAME;
+  return role === 'SELLER' ? FLOW_TOPIC_NAME_EN : FLOW_TOPIC_NAME;
+}
 
 type TopicField = 'notificationTopicId' | 'flowTopicId';
 type ChatField = 'notificationChatId' | 'flowChatId';

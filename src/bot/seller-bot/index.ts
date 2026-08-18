@@ -53,6 +53,11 @@ export function createSellerBot() {
 
   // ── Middlewares globales ───────────────────────────────────────────────────
   bot.use(
+    // Set botRole for topic name resolution in shared UI
+    (ctx: SellerContext, next) => {
+      ctx.botRole = 'SELLER';
+      return next();
+    },
     limit({ timeFrame: 3000, limit: 30 }),
     sequentialize((ctx) => (ctx.from ? `seller:${ctx.from.id}` : undefined)),
     session<SellerSessionData, SellerContext>({

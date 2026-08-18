@@ -91,10 +91,12 @@ export interface BuyerSessionData {
 
 export interface SellerContext extends Context, SessionFlavor<SellerSessionData> {
   user: User;
+  botRole: 'SELLER';
 }
 
 export interface BuyerContext extends Context, SessionFlavor<BuyerSessionData> {
   user: User;
+  botRole: 'BUYER';
 }
 
 // ── Shared bot types ─────────────────────────────────────────────────────────

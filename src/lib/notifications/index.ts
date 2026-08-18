@@ -4,11 +4,14 @@ export { TelegramChannel } from './channels/telegram.channel';
 export { WhatsAppChannel } from './channels/whatsapp.channel';
 export { WebPushChannel } from './channels/webpush.channel';
 export { NotificationDispatcher, notificationDispatcher } from './dispatcher';
-export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid, notifySellerBatchCancelled } from './notification.service';
+export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid, notifySellerBatchCancelled, notifySellerBatchDeleted } from './notification.service';
 export { getSubscribedBrandCountries } from './get-subscribed-brand-countries';
 export {
   NOTIFICATIONS_TOPIC_NAME,
+  NOTIFICATIONS_TOPIC_NAME_EN,
   FLOW_TOPIC_NAME,
+  FLOW_TOPIC_NAME_EN,
+  getTopicName,
   createTopic,
   persistTopicId,
   getOrCreateTopicId,

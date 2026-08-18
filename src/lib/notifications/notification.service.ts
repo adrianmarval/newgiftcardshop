@@ -278,7 +278,19 @@ export async function notifySellerBatchCancelled(sellerId: string, batchId: numb
   const message: NotificationMessage = {
     type: 'BATCH_CANCELLED',
     title: `Batch #${batchId} cancelled`,
-    description: `Your batch was cancelled because all cards were reported with no balance.`,
+    description: `Your batch was cancelled because all cards were reported with no balance. If you believe this is an error, please contact support.`,
+    actionUrl: '/sell/dashboard/cards',
+    metadata: { batchId },
+  };
+
+  await notificationDispatcher.dispatch(sellerId, message);
+}
+
+export async function notifySellerBatchDeleted(sellerId: string, batchId: number): Promise<void> {
+  const message: NotificationMessage = {
+    type: 'BATCH_DELETED',
+    title: `Batch #${batchId} has been deleted`,
+    description: `Your batch was permanently removed by an administrator. Please contact us if you have any questions.`,
     actionUrl: '/sell/dashboard/cards',
     metadata: { batchId },
   };

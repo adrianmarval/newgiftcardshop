@@ -2,7 +2,7 @@ import { InlineKeyboard } from 'grammy';
 import type { BotContext } from './types.js';
 import { truncateForTelegram } from '@/lib/utils/html';
 import prisma from '@/lib/prisma';
-import { FLOW_TOPIC_NAME, getOrCreateTopicId, isTopicGoneError, tryReopenTopic, resetFlowTopicId } from '@/lib/notifications';
+import { getTopicName, getOrCreateTopicId, isTopicGoneError, tryReopenTopic, resetFlowTopicId } from '@/lib/notifications';
 import { logger } from '@/lib/logger';
 
 // Re-export for bot consumers
@@ -83,7 +83,7 @@ export async function resolveFlowThreadId(ctx: BotContext): Promise<number | und
   const topicId = await getOrCreateTopicId({
     api: ctx.api,
     chatId,
-    name: FLOW_TOPIC_NAME,
+    name: getTopicName('flow', ctx.botRole),
     field: 'flowTopicId',
     userId: resolvedUserId,
     storedTopicId,
