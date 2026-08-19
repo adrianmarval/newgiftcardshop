@@ -1,4 +1,5 @@
 export { forgotPassword } from './forgot-password';
+export { generateTelegramLink } from './generate-telegram-link';
 export { login } from './login';
 export { logout } from './logout';
 export { register } from './register';

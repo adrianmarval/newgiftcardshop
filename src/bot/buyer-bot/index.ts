@@ -49,8 +49,14 @@ export function createBuyerBot() {
     ])
     .catch((err) => console.warn('[BuyerBot] setMyCommands falló (no crítico):', err.message));
 
+  const botId = Number(token.split(':')[0]);
+
   // ── Middlewares globales ───────────────────────────────────────────────────
   bot.use(
+    // Ignora updates cuya autoría es el propio bot (service messages como
+    // forum_topic_created al crear topics — Telegram los entrega al bot).
+    // Guard ANTES de session para no persistir filas basura en bot_session.
+    (ctx: BuyerContext, next) => (ctx.from?.id === botId ? undefined : next()),
     // Set botRole for topic name resolution in shared UI
     (ctx: BuyerContext, next) => {
       ctx.botRole = 'BUYER';

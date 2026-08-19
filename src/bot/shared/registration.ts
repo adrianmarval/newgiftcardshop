@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import { InlineKeyboard } from 'grammy';
 import { resend, EMAIL_FROM } from '@/lib/resend';
 import { authApi } from '@/lib/auth/auth-server';
 import type { BotContext, BotRole, Lang } from './types.js';
@@ -129,9 +130,128 @@ function isValidPassword(password: string): boolean {
   return password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
 }
 
-export async function startRegistration(ctx: RegContext, role: BotRole): Promise<void> {
+export async function startRegistration(ctx: RegContext, role: BotRole, startParam?: string): Promise<void> {
   const telegramId = ctx.from!.id.toString();
   const lang = getLang(role);
+
+  // Handle deep link token (lt_*)
+  if (startParam?.startsWith('lt_')) {
+    const token = startParam;
+    const telegramUser = await prisma.telegramUser.findUnique({
+      where: { telegramId },
+      include: { user: { select: { role: true } } },
+    });
+
+    if (telegramUser) {
+      await renderUI(ctx, i18n[lang].accountLinkedActive.replace('{name}', escapeHTML(telegramUser.user.role)).replace('{email}', ''), {
+        parse_mode: 'HTML',
+      });
+      return;
+    }
+
+    const linkToken = await prisma.telegramLinkToken.findUnique({
+      where: { token },
+      include: { user: { select: { id: true, name: true, email: true, role: true, isActive: true } } },
+    });
+
+    if (!linkToken) {
+      await renderUI(ctx, lang === 'en'
+        ? '❌ Invalid or expired link. Please try again from the web dashboard.'
+        : '❌ Enlace inválido o expirado. Intentá de nuevo desde el panel web.', { parse_mode: 'HTML' });
+      return;
+    }
+
+    if (linkToken.usedAt) {
+      await renderUI(ctx, lang === 'en'
+        ? '❌ This link has already been used.'
+        : '❌ Este enlace ya fue utilizado.', { parse_mode: 'HTML' });
+      return;
+    }
+
+    if (linkToken.expiresAt < new Date()) {
+      await prisma.telegramLinkToken.delete({ where: { token } });
+      await renderUI(ctx, lang === 'en'
+        ? '❌ This link has expired. Please generate a new one from the web dashboard.'
+        : '❌ Este enlace expiró. Generá uno nuevo desde el panel web.', { parse_mode: 'HTML' });
+      return;
+    }
+
+    if (linkToken.user.role !== role) {
+      const errorMsg = role === 'SELLER'
+        ? '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot.'
+        : '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot.';
+      await renderUI(ctx, errorMsg, { parse_mode: 'HTML' });
+      return;
+    }
+
+    const botToken = role === 'SELLER' ? process.env.SELLER_BOT_TOKEN! : process.env.BUYER_BOT_TOKEN!;
+    const photoResult = await fetchAndEncryptTelegramPhoto(ctx, telegramId, botToken);
+
+    const { first_name: firstName, last_name: lastName, username, language_code: languageCode } = ctx.from!;
+
+    await prisma.telegramUser.create({
+      data: {
+        telegramId,
+        firstName,
+        lastName,
+        username,
+        languageCode,
+        flowTopicId: ctx.session.flowTopicId ?? undefined,
+        flowChatId: ctx.session.flowChatId ?? undefined,
+        photoData: photoResult ? new Uint8Array(photoResult.data) : undefined,
+        photoMimeType: photoResult?.mimeType,
+        userId: linkToken.user.id,
+      },
+    });
+
+    await prisma.telegramLinkToken.update({
+      where: { token },
+      data: { usedAt: new Date() },
+    });
+
+    await prisma.user.update({
+      where: { id: linkToken.user.id },
+      data: { emailVerified: true },
+    });
+
+    ctx.session.wizard = { step: 'idle' };
+
+    if (linkToken.user.isActive) {
+      const kb = role === 'SELLER'
+        ? new InlineKeyboard()
+            .text('📦 View My Batches', 'my_batches')
+            .row()
+            .text('➕ Sell Giftcards', 'sell_start')
+            .row()
+            .text('💰 Wallet', 'wallet')
+        : new InlineKeyboard()
+            .text('📋 Ver Mis órdenes', 'my_orders')
+            .row()
+            .text('🛒 Comprar tarjetas', 'buy_start');
+
+      await renderUI(
+        ctx,
+        i18n[lang].accountLinkedActive
+          .replace('{name}', escapeHTML(linkToken.user.name))
+          .replace('{email}', escapeHTML(linkToken.user.email)),
+        { parse_mode: 'HTML', reply_markup: kb },
+      );
+    } else {
+      await renderUI(
+        ctx,
+        i18n[lang].accountLinked
+          .replace('{name}', escapeHTML(linkToken.user.name))
+          .replace('{email}', escapeHTML(linkToken.user.email)),
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
+          },
+        },
+      );
+    }
+    return;
+  }
 
   const existing = await prisma.telegramUser.findUnique({
     where: { telegramId },

@@ -56,6 +56,9 @@ model User {
   notificationLogs       NotificationLog[]
   pushSubscriptions      PushSubscription[]
 
+  // Deep link tokens para vinculación Telegram
+  telegramLinkTokens TelegramLinkToken[]
+
   // Logs de aplicación
   logs AppLog[]
 
@@ -562,7 +565,21 @@ model TelegramOtp {
   @@map("telegram_otp")
 }
 
-model   UserBrandCountryRate {
+// Deep link token para vincular Telegram desde la web (one-time use, 24h expiry)
+model TelegramLinkToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@map("telegram_link_token")
+}
+
+model UserBrandCountryRate {
   id             String       @id @default(cuid())
   userId         String
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)

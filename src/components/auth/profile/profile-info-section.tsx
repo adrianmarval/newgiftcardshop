@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { TelegramAvatar } from '@/components/common';
 import { CheckCircle, MessageCircle, Link2, Calendar, CreditCard } from 'lucide-react';
 import { updateProfile } from '@/actions/auth/update-profile';
+import { generateTelegramLink } from '@/actions/auth/generate-telegram-link';
 import { useAction } from 'next-safe-action/hooks';
 import type { AppSection } from '@/types';
 import Link from 'next/link';
@@ -79,6 +80,19 @@ export const ProfileInfoSection = ({
     },
   });
 
+  const { execute: executeGenerateLink, status: generateLinkStatus } = useAction(generateTelegramLink, {
+    onSuccess: ({ data }) => {
+      if (data && 'deepLink' in data && data.deepLink) {
+        window.open(data.deepLink, '_blank');
+      } else if (data && 'error' in data) {
+        showAlert.error('Error', data.error || 'Failed to generate link');
+      }
+    },
+    onError: ({ error }) => {
+      showAlert.error('Error', error.serverError || 'Failed to generate link');
+    },
+  });
+
   const onSubmit = (values: { name: string }) => {
     setSuccess(false);
     execute({ name: values.name });
@@ -121,14 +135,17 @@ export const ProfileInfoSection = ({
                 </p>
               </div>
               {emailVerified ? (
-                <Link
-                  href={telegramLinkUrl || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Button
+                  onClick={() => executeGenerateLink()}
+                  disabled={generateLinkStatus === 'executing'}
                   className="rounded-md bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black hover:bg-amber-400"
                 >
-                  {isSpanish ? 'Vincular' : 'Link'}
-                </Link>
+                  {generateLinkStatus === 'executing' ? (
+                    <Spinner size="sm" className="text-black" />
+                  ) : (
+                    isSpanish ? 'Vincular' : 'Link'
+                  )}
+                </Button>
               ) : (
                 <span className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-400">
                   {isSpanish ? 'Verificar email' : 'Verify email'}

@@ -8,6 +8,10 @@ export async function startSeller(ctx: SellerContext) {
   const telegramId = ctx.from?.id.toString();
   if (!telegramId) return;
 
+  // Extract deep link param from /start <param>
+  const text = ctx.message?.text ?? '';
+  const startParam = text.startsWith('/start ') ? text.slice(7).trim() : undefined;
+
   // Limpiar uiMessageId cuando /start se ejecuta como comando directo
   // (no como callback query) — el usuario pudo haber borrado los mensajes del chat
   const chatId = ctx.chat?.id || ctx.from?.id;
@@ -78,8 +82,8 @@ export async function startSeller(ctx: SellerContext) {
     return deleteUserInput(ctx);
   }
 
-  // Sin cuenta → iniciar wizard de registro
-  await startRegistration(ctx, 'SELLER');
+  // Sin cuenta → iniciar wizard de registro (con deep link si existe)
+  await startRegistration(ctx, 'SELLER', startParam);
   await cleanupOldMessage();
   await deleteUserInput(ctx);
 }
