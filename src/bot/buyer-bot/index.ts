@@ -31,7 +31,7 @@ import {
   handleBuyConfirm,
   handleBuyCancel,
 } from './handlers/buy-handler.js';
-import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
+import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword, handleLinkConfirmation } from '@/bot/shared/registration.js';
 
 export function createBuyerBot() {
   const token = process.env.BUYER_BOT_TOKEN;
@@ -94,6 +94,7 @@ export function createBuyerBot() {
     if (step === 'awaitingEmail') return handleRegEmail(ctx, 'BUYER');
     if (step === 'awaitingOtp') return handleRegOtp(ctx, 'BUYER', () => startBuyer(ctx));
     if (step === 'awaitingPassword') return handleRegPassword(ctx, 'BUYER');
+    if (step === 'awaitingLinkConfirmation') return; // Ignorar texto durante confirmación (usa callbacks)
     return next();
   });
 
@@ -116,6 +117,10 @@ export function createBuyerBot() {
   });
 
   // ── Callback queries ──────────────────────────────────────────────────────
+
+  // Confirmación de vinculación (deep link)
+  bot.callbackQuery('link_confirm', (ctx) => handleLinkConfirmation(ctx, 'BUYER', true, () => startBuyer(ctx)));
+  bot.callbackQuery('link_cancel', (ctx) => handleLinkConfirmation(ctx, 'BUYER', false));
 
   // Menú
   bot.callbackQuery('start', startBuyer);

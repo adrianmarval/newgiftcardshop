@@ -33,5 +33,10 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Pr
 
   const users = usersResult.data?.success ? usersResult.data.users : [];
 
-  return <AdminLogsView logs={logsResult.data.items} pagination={logsResult.data.pagination} users={users} />;
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Logs</h1>
+      <AdminLogsView logs={logsResult.data.items} pagination={logsResult.data.pagination} users={users} />
+    </div>
+  );
 }

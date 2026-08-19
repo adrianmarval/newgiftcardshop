@@ -31,7 +31,7 @@ import {
   handleWalletDelete,
   handleWalletCancel,
 } from './handlers/wallet-handler.js';
-import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword } from '@/bot/shared/registration.js';
+import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword, handleLinkConfirmation } from '@/bot/shared/registration.js';
 
 export function createSellerBot() {
   const token = process.env.SELLER_BOT_TOKEN;
@@ -88,6 +88,7 @@ export function createSellerBot() {
     if (step === 'awaitingEmail') return handleRegEmail(ctx, 'SELLER');
     if (step === 'awaitingOtp') return handleRegOtp(ctx, 'SELLER', () => startSeller(ctx));
     if (step === 'awaitingPassword') return handleRegPassword(ctx, 'SELLER');
+    if (step === 'awaitingLinkConfirmation') return; // Ignorar texto durante confirmación (usa callbacks)
     // Resto de steps → pasan al siguiente handler (que ya requiere auth)
     return next();
   });
@@ -115,6 +116,10 @@ export function createSellerBot() {
   });
 
   // ── Callback queries ──────────────────────────────────────────────────────
+
+  // Confirmación de vinculación (deep link)
+  bot.callbackQuery('link_confirm', (ctx) => handleLinkConfirmation(ctx, 'SELLER', true, () => startSeller(ctx)));
+  bot.callbackQuery('link_cancel', (ctx) => handleLinkConfirmation(ctx, 'SELLER', false));
 
   // Menú principal
   bot.callbackQuery('start', startSeller);

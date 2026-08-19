@@ -22,8 +22,8 @@ export default async function BuyerDashboardPage() {
   };
 
   return (
-    <div className="w-full space-y-1">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">BUYER DASHBOARD</h1>
+    <div className="w-full">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Buyer Dashboard</h1>
 
       <BuyerDashboard stats={stats} />
     </div>

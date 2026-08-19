@@ -17,34 +17,27 @@ export default async function BuyerNotificationsPage() {
   ]);
 
   return (
-    <div className="w-full space-y-1 p-1 md:p-4">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-foreground text-2xl font-bold tracking-tight md:text-3xl">Notificaciones</h1>
-        <p className="text-muted-foreground text-sm">
-          Seguí el estado de tus compras y Notificaciones de marcas disponibles en tiempo real.
-        </p>
-      </div>
-      <div className="mt-4">
-        <NotificationsPageClient
-          portal="buyer"
-          initialNotifications={notifications}
-          initialUnreadCount={unreadCount}
-          settingsProps={{
-            portal: 'buyer',
-            telegramLinked: !!session.user.telegramUser,
-            telegramProfileUrl: '/store/dashboard/account',
-            initialPreferences: preference
-              ? {
-                  telegramEnabled: preference.telegramEnabled,
-                  whatsappEnabled: preference.whatsappEnabled,
-                  whatsappPhone: preference.whatsappPhone,
-                  pushEnabled: preference.pushEnabled,
-                }
-              : undefined,
-            brandCountries,
-          }}
-        />
-      </div>
+    <div className="flex min-h-0 flex-col gap-4">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Notifications</h1>
+      <NotificationsPageClient
+        portal="buyer"
+        initialNotifications={notifications}
+        initialUnreadCount={unreadCount}
+        settingsProps={{
+          portal: 'buyer',
+          telegramLinked: !!session.user.telegramUser,
+          telegramProfileUrl: '/store/dashboard/account',
+          initialPreferences: preference
+            ? {
+                telegramEnabled: preference.telegramEnabled,
+                whatsappEnabled: preference.whatsappEnabled,
+                whatsappPhone: preference.whatsappPhone,
+                pushEnabled: preference.pushEnabled,
+              }
+            : undefined,
+          brandCountries,
+        }}
+      />
     </div>
   );
 }

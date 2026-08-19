@@ -2,7 +2,6 @@
 
 import prisma from '@/lib/prisma';
 import { sellerActionClient, ActionError } from '@/lib/safe-action';
-import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { recentBatchesOutputSchema } from './schemas';
 
 export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutputSchema).action(async ({ ctx }) => {
@@ -14,6 +13,7 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutput
       orderBy: { createdAt: 'desc' },
       take: 3,
       include: {
+        _count: { select: { giftcards: true } },
         giftcards: {
           take: 2,
           include: { brandCountry: { include: { brand: true } } },
@@ -21,20 +21,31 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutput
       },
     });
 
-    return batches.map((batch) => {
-      const giftcards = batch.giftcards.map((card) => {
-        return {
-          id: card.id,
-          amount: Number(card.amount),
-          brand: {
-            name: card.brandCountry.brand.name,
-            icon: card.brandCountry.brand.icon,
-            image: card.brandCountry.brand.image,
-          },
-        };
-      });
+    const batchIds = batches.map((b) => b.id);
 
-      const effectiveTotal = computeFaceValueTotal(batch.giftcards);
+    const aggregates = await prisma.giftcard.groupBy({
+      by: ['batchId'],
+      where: { batchId: { in: batchIds } },
+      _sum: { amount: true },
+      _count: { id: true },
+    });
+
+    const aggregateMap = new Map(aggregates.map((a) => [a.batchId, { totalFaceValue: Number(a._sum.amount ?? 0), totalCards: a._count.id }]));
+
+    return batches.map((batch) => {
+      const giftcards = batch.giftcards.map((card) => ({
+        id: card.id,
+        amount: Number(card.amount),
+        brand: {
+          name: card.brandCountry.brand.name,
+          icon: card.brandCountry.brand.icon,
+          image: card.brandCountry.brand.image,
+        },
+      }));
+
+      const agg = aggregateMap.get(batch.id);
+      const realCardsCount = agg?.totalCards ?? batch._count.giftcards;
+      const effectiveTotal = (agg?.totalFaceValue ?? 0) * Number(batch.sellRate);
 
       return {
         id: batch.id,
@@ -42,8 +53,8 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutput
         isPaid: batch.isPaid,
         createdAt: batch.createdAt.toISOString(),
         giftcards,
-        cardsCount: batch.giftcards.length,
-        effectiveTotal: effectiveTotal.toNumber(),
+        cardsCount: realCardsCount,
+        effectiveTotal,
       };
     });
   } catch (error) {

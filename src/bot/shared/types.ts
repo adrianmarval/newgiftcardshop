@@ -4,7 +4,7 @@ import type { User, GiftcardIssueType } from '@/generated/prisma/client';
 // ── Wizard steps ─────────────────────────────────────────────────────────────
 
 /** Steps de wizard de registro — el usuario aún no tiene TelegramUser, auth se skipea. */
-export const REG_WIZARD_STEPS = ['awaitingName', 'awaitingEmail', 'awaitingOtp', 'awaitingPassword'] as const;
+export const REG_WIZARD_STEPS = ['awaitingName', 'awaitingEmail', 'awaitingOtp', 'awaitingPassword', 'awaitingLinkConfirmation'] as const;
 export type RegWizardStep = (typeof REG_WIZARD_STEPS)[number];
 
 export type SellerWizardStep =
@@ -38,6 +38,10 @@ export interface SellerSessionData {
     regName?: string;
     regEmail?: string;
     isLinking?: boolean;
+    // Confirmación de vinculación (deep link)
+    linkToken?: string;
+    linkUserName?: string;
+    linkUserEmail?: string;
     // Sell wizard
     brandId?: string;
     brandName?: string;
@@ -65,6 +69,10 @@ export interface BuyerSessionData {
     regName?: string;
     regEmail?: string;
     isLinking?: boolean;
+    // Confirmación de vinculación (deep link)
+    linkToken?: string;
+    linkUserName?: string;
+    linkUserEmail?: string;
     // Buy wizard
     brandId?: string;
     brandName?: string;

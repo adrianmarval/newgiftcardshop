@@ -54,7 +54,7 @@ export function BuyerDashboard({ stats }: BuyerDashboardProps) {
   const { orderBook } = stats;
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-2">
       <section>
         <div className="grid grid-cols-1 gap-1 md:grid-cols-2">
           <Card size="sm">

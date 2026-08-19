@@ -31,5 +31,10 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
   const buyers = buyersResult.data?.success ? buyersResult.data.users : [];
 
-  return <AdminOrdersView orders={ordersResult.data.items} buyers={buyers} pagination={ordersResult.data.pagination} />;
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Orders</h1>
+      <AdminOrdersView orders={ordersResult.data.items} buyers={buyers} pagination={ordersResult.data.pagination} />
+    </div>
+  );
 }

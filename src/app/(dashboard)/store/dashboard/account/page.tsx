@@ -35,20 +35,23 @@ export default async function BuyerAccountPage() {
   });
 
   return (
-    <ProfileForm
-      user={{
-        name: session.user.name,
-        email: session.user.email,
-        emailVerified: session.user.emailVerified,
-        image: null,
-        twoFactorEnabled: !!session.user.twoFactorEnabled,
-        createdAt: session.user.createdAt,
-        creditLimit: user?.creditLimit ? Number(user.creditLimit) : null,
-        telegramUser,
-      }}
-      telegramPhotoDataUrl={telegramPhotoDataUrl}
-      portal="buy"
-      telegramLinkUrl={telegramLinkUrl}
-    />
+    <div className="flex min-h-0 flex-col gap-4">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Account</h1>
+      <ProfileForm
+        user={{
+          name: session.user.name,
+          email: session.user.email,
+          emailVerified: session.user.emailVerified,
+          image: null,
+          twoFactorEnabled: !!session.user.twoFactorEnabled,
+          createdAt: session.user.createdAt,
+          creditLimit: user?.creditLimit ? Number(user.creditLimit) : null,
+          telegramUser,
+        }}
+        telegramPhotoDataUrl={telegramPhotoDataUrl}
+        portal="buy"
+        telegramLinkUrl={telegramLinkUrl}
+      />
+    </div>
   );
 }

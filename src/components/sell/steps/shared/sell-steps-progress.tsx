@@ -8,7 +8,7 @@ export const SellStepsProgress = () => {
   return (
     <div className="flex items-center justify-between gap-1.5 rounded-none p-1 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
       <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Sell Gift Cards</h1>
+        <h1 className="mb-0 text-lg font-bold md:mb-1 md:text-3xl">Steps</h1>
         <p className="text-muted-foreground hidden text-xs md:block md:text-base">Complete the batch in this session.</p>
       </motion.div>
       <motion.div

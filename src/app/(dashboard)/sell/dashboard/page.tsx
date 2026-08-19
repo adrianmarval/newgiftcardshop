@@ -22,10 +22,10 @@ export default async function SellerDashboardPage() {
   }
 
   const stats: SellerStats = {
-    totalCards: statsResult.data.totalCards,
-    totalBatches: statsResult.data.totalBatches,
-    paidBatches: statsResult.data.paidBatches,
-    unpaidBatches: statsResult.data.unpaidBatches,
+    pendingPayout: statsResult.data.pendingPayout,
+    totalEarned: statsResult.data.totalEarned,
+    inStockValue: statsResult.data.inStockValue,
+    problemCards: statsResult.data.problemCards,
   };
 
   const recentBatchesList: RecentBatch[] = batchesResult.data.map((batch) => ({
@@ -39,8 +39,8 @@ export default async function SellerDashboardPage() {
   }));
 
   return (
-    <div className="w-full space-y-1">
-      <h1 className="flex justify-center text-4xl font-black tracking-tighter italic md:text-5xl">SELLER DASHBOARD</h1>
+    <div className="w-full">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Seller Dashboard</h1>
 
       <SellerDashboardClient stats={stats} recentBatches={recentBatchesList} />
     </div>

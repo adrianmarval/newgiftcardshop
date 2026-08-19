@@ -32,7 +32,8 @@ export default async function AdminDashboardPage() {
   const diffColor = differential.greaterThan(0) ? 'text-green-400' : differential.lessThan(0) ? 'text-red-400' : 'text-white/80';
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Admin Dashboard</h1>
       <div className="grid auto-rows-min gap-1 md:grid-cols-3">
         <Card className="bg-muted/50 flex flex-col justify-between gap-1">
           <CardHeader>

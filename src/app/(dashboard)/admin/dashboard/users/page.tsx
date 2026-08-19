@@ -23,9 +23,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <UsersManager
-      initialUsers={result.data.items}
-      pagination={result.data.pagination}
-    />
+    <div className="flex h-full min-h-0 flex-col">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Users</h1>
+      <UsersManager initialUsers={result.data.items} pagination={result.data.pagination} />
+    </div>
   );
 }

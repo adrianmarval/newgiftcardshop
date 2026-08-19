@@ -36,6 +36,11 @@ const i18n = {
     accountLinkedActive:
       '🎉 <b>Account linked!</b>\n\nWelcome back, <b>{name}</b>!\nYour Telegram is now linked to <b>{email}</b>.\n\nYou can now use the bot.',
     contactAdmin: 'Contact Admin',
+    linkConfirmation:
+      '🔗 <b>Link account</b>\n\nName: <b>{name}</b>\nEmail: <b>{email}</b>\n\nIs this correct?',
+    linkConfirm: '✅ Confirm',
+    linkCancel: '❌ Cancel',
+    linkCancelled: '❌ Link cancelled. You can start again with /start.',
     emailError: '❌ The email is already in use. Contact the administrator.',
     genericError: '❌ Error creating account. Try again or contact the administrator.',
   },
@@ -63,6 +68,11 @@ const i18n = {
     accountLinkedActive:
       '🎉 <b>¡Cuenta vinculada!</b>\n\n¡Bienvenido de nuevo, <b>{name}</b>!\nTu Telegram ahora está vinculado a <b>{email}</b>.',
     contactAdmin: 'Contactar administrador',
+    linkConfirmation:
+      '🔗 <b>Vincular cuenta</b>\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n¿Es correcto?',
+    linkConfirm: '✅ Confirmar',
+    linkCancel: '❌ Cancelar',
+    linkCancelled: '❌ Vinculación cancelada. Podés empezar de nuevo con /start.',
     emailError: '❌ El email ya está en uso. Contactá al administrador.',
     genericError: '❌ Error al crear la cuenta. Intentá de nuevo o contactá al administrador.',
   },
@@ -185,71 +195,25 @@ export async function startRegistration(ctx: RegContext, role: BotRole, startPar
     }
 
     const botToken = role === 'SELLER' ? process.env.SELLER_BOT_TOKEN! : process.env.BUYER_BOT_TOKEN!;
-    const photoResult = await fetchAndEncryptTelegramPhoto(ctx, telegramId, botToken);
 
-    const { first_name: firstName, last_name: lastName, username, language_code: languageCode } = ctx.from!;
+    // Guardar datos en sesión para confirmación
+    ctx.session.wizard.step = 'awaitingLinkConfirmation';
+    ctx.session.wizard.linkToken = token;
+    ctx.session.wizard.linkUserName = linkToken.user.name;
+    ctx.session.wizard.linkUserEmail = linkToken.user.email;
 
-    await prisma.telegramUser.create({
-      data: {
-        telegramId,
-        firstName,
-        lastName,
-        username,
-        languageCode,
-        flowTopicId: ctx.session.flowTopicId ?? undefined,
-        flowChatId: ctx.session.flowChatId ?? undefined,
-        photoData: photoResult ? new Uint8Array(photoResult.data) : undefined,
-        photoMimeType: photoResult?.mimeType,
-        userId: linkToken.user.id,
-      },
-    });
+    const kb = new InlineKeyboard()
+      .text(i18n[lang].linkConfirm, 'link_confirm')
+      .row()
+      .text(i18n[lang].linkCancel, 'link_cancel');
 
-    await prisma.telegramLinkToken.update({
-      where: { token },
-      data: { usedAt: new Date() },
-    });
-
-    await prisma.user.update({
-      where: { id: linkToken.user.id },
-      data: { emailVerified: true },
-    });
-
-    ctx.session.wizard = { step: 'idle' };
-
-    if (linkToken.user.isActive) {
-      const kb = role === 'SELLER'
-        ? new InlineKeyboard()
-            .text('📦 View My Batches', 'my_batches')
-            .row()
-            .text('➕ Sell Giftcards', 'sell_start')
-            .row()
-            .text('💰 Wallet', 'wallet')
-        : new InlineKeyboard()
-            .text('📋 Ver Mis órdenes', 'my_orders')
-            .row()
-            .text('🛒 Comprar tarjetas', 'buy_start');
-
-      await renderUI(
-        ctx,
-        i18n[lang].accountLinkedActive
-          .replace('{name}', escapeHTML(linkToken.user.name))
-          .replace('{email}', escapeHTML(linkToken.user.email)),
-        { parse_mode: 'HTML', reply_markup: kb },
-      );
-    } else {
-      await renderUI(
-        ctx,
-        i18n[lang].accountLinked
-          .replace('{name}', escapeHTML(linkToken.user.name))
-          .replace('{email}', escapeHTML(linkToken.user.email)),
-        {
-          parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
-          },
-        },
-      );
-    }
+    await renderUI(
+      ctx,
+      i18n[lang].linkConfirmation
+        .replace('{name}', escapeHTML(linkToken.user.name))
+        .replace('{email}', escapeHTML(linkToken.user.email)),
+      { parse_mode: 'HTML', reply_markup: kb },
+    );
     return;
   }
 
@@ -566,5 +530,110 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
     } else {
       await renderUI(ctx, i18n[lang].genericError);
     }
+  }
+}
+
+export async function handleLinkConfirmation(
+  ctx: RegContext,
+  role: BotRole,
+  confirmed: boolean,
+  onFinish?: () => Promise<any>,
+): Promise<void> {
+  const lang = getLang(role);
+  const telegramId = ctx.from!.id.toString();
+  const { linkToken: token, linkUserName: name, linkUserEmail: email } = ctx.session.wizard;
+
+  if (!token || !name || !email) {
+    ctx.session.wizard = { step: 'idle' };
+    await renderUI(ctx, i18n[lang].sessionIncomplete);
+    return;
+  }
+
+  if (!confirmed) {
+    ctx.session.wizard = { step: 'idle' };
+    await renderUI(ctx, i18n[lang].linkCancelled);
+    return;
+  }
+
+  const linkToken = await prisma.telegramLinkToken.findUnique({
+    where: { token },
+    include: { user: { select: { id: true, role: true, isActive: true } } },
+  });
+
+  if (!linkToken || linkToken.usedAt || linkToken.expiresAt < new Date() || linkToken.user.role !== role) {
+    ctx.session.wizard = { step: 'idle' };
+    await renderUI(ctx, lang === 'en'
+      ? '❌ This link is no longer valid. Please generate a new one from the web dashboard.'
+      : '❌ Este enlace ya no es válido. Generá uno nuevo desde el panel web.', { parse_mode: 'HTML' });
+    return;
+  }
+
+  const botToken = role === 'SELLER' ? process.env.SELLER_BOT_TOKEN! : process.env.BUYER_BOT_TOKEN!;
+  const photoResult = await fetchAndEncryptTelegramPhoto(ctx, telegramId, botToken);
+  const { first_name: firstName, last_name: lastName, username, language_code: languageCode } = ctx.from!;
+
+  await prisma.telegramUser.create({
+    data: {
+      telegramId,
+      firstName,
+      lastName,
+      username,
+      languageCode,
+      flowTopicId: ctx.session.flowTopicId ?? undefined,
+      flowChatId: ctx.session.flowChatId ?? undefined,
+      photoData: photoResult ? new Uint8Array(photoResult.data) : undefined,
+      photoMimeType: photoResult?.mimeType,
+      userId: linkToken.user.id,
+    },
+  });
+
+  await prisma.telegramLinkToken.update({
+    where: { token },
+    data: { usedAt: new Date() },
+  });
+
+  await prisma.user.update({
+    where: { id: linkToken.user.id },
+    data: { emailVerified: true },
+  });
+
+  ctx.session.wizard = { step: 'idle' };
+
+  if (linkToken.user.isActive) {
+    const kb = role === 'SELLER'
+      ? new InlineKeyboard()
+          .text('📦 View My Batches', 'my_batches')
+          .row()
+          .text('➕ Sell Giftcards', 'sell_start')
+          .row()
+          .text('💰 Wallet', 'wallet')
+      : new InlineKeyboard()
+          .text('📋 Ver Mis órdenes', 'my_orders')
+          .row()
+          .text('🛒 Comprar tarjetas', 'buy_start');
+
+    await renderUI(
+      ctx,
+      i18n[lang].accountLinkedActive
+        .replace('{name}', escapeHTML(name))
+        .replace('{email}', escapeHTML(email)),
+      { parse_mode: 'HTML', reply_markup: kb },
+    );
+    if (onFinish) {
+      await onFinish();
+    }
+  } else {
+    await renderUI(
+      ctx,
+      i18n[lang].accountLinked
+        .replace('{name}', escapeHTML(name))
+        .replace('{email}', escapeHTML(email)),
+      {
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [[{ text: i18n[lang].contactAdmin, url: `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}` }]],
+        },
+      },
+    );
   }
 }

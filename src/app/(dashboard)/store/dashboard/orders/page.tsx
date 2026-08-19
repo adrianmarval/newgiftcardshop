@@ -27,5 +27,10 @@ export default async function BuyerOrdersPage({ searchParams }: { searchParams: 
 
   const { items, pagination } = result.data;
 
-  return <BuyerOrdersView orders={items} pagination={pagination} />;
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">My Orders</h1>
+      <BuyerOrdersView orders={items} pagination={pagination} />
+    </div>
+  );
 }

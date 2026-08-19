@@ -26,8 +26,8 @@ export interface BuyerStats {
 }
 
 export interface SellerStats {
-  totalCards: number;
-  totalBatches: number;
-  paidBatches: number;
-  unpaidBatches: number;
+  pendingPayout: number;
+  totalEarned: number;
+  inStockValue: number;
+  problemCards: number;
 }

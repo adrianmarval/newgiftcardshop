@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { IconPlus, IconGift, IconCreditCard, IconPackage, IconCircleCheck, IconClock } from '@tabler/icons-react';
+import { IconPlus, IconGift, IconCurrencyDollar, IconCircleCheck, IconPackage, IconAlertTriangle } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { SellerStats, RecentBatch } from '@/types';
 import { StatCard } from '@/components/common';
@@ -15,60 +15,40 @@ interface SellerDashboardClientProps {
 
 export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardClientProps) {
   return (
-    <div className="w-full space-y-4">
-      <section className="space-y-1">
+    <div className="w-full space-y-2">
+      <section className="space-y-2">
         <h2 className="text-xl font-semibold">Statistics</h2>
         <div className="grid grid-cols-2 gap-1 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Total Cards"
-            value={stats.totalCards.toString()}
-            icon={<IconCreditCard className="text-muted-foreground h-6 w-6" />}
+            title="Pending Payout"
+            value={formatCurrency(stats.pendingPayout)}
+            icon={<IconCurrencyDollar className="h-6 w-6 text-amber-500" />}
+            description="Batches awaiting payment"
           />
           <StatCard
-            title="Total Batches"
-            value={stats.totalBatches.toString()}
-            icon={<IconPackage className="text-muted-foreground h-6 w-6" />}
-          />
-          <StatCard
-            title="Total Paid Amount"
-            value={stats.paidBatches.toString()}
+            title="Total Earned"
+            value={formatCurrency(stats.totalEarned)}
             icon={<IconCircleCheck className="h-6 w-6 text-green-500" />}
+            description="All-time paid batches"
           />
           <StatCard
-            title="Pending Batches"
-            value={stats.unpaidBatches.toString()}
-            icon={<IconClock className="h-6 w-6 text-yellow-500" />}
+            title="In-Stock Value"
+            value={formatCurrency(stats.inStockValue)}
+            icon={<IconPackage className="h-6 w-6 text-blue-500" />}
+            description="Capital at work"
+          />
+          <StatCard
+            title="Problem Cards"
+            value={stats.problemCards.toString()}
+            icon={<IconAlertTriangle className={`h-6 w-6 ${stats.problemCards > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />}
+            description="Invalid / Already used / Wrong amount"
           />
         </div>
       </section>
 
-      <section>
-        <h2 className="text-xl font-semibold">Quick Actions</h2>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Sell Gift Cards</CardTitle>
-                <CardDescription>Create a new batch and start selling</CardDescription>
-              </div>
-              <Link
-                href="/sell/dashboard/sell-cards"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-lg px-4 py-2 font-medium"
-              >
-                <IconPlus className="h-4 w-4" />
-                Sell Cards
-              </Link>
-            </div>
-          </CardHeader>
-        </Card>
-      </section>
-
-      <section>
+      <section className='space-y-2'>
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Recent Batches</h2>
-          <Link href="/sell/dashboard/cards" className="text-primary text-sm hover:underline">
-            View all →
-          </Link>
         </div>
         <div className="grid grid-cols-1 gap-1 md:grid-cols-2 lg:grid-cols-3">
           {recentBatches.length > 0 ? (
@@ -84,16 +64,16 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
                   )}
                   <div>
                     <CardTitle className="text-base">Batch #{batch.id}</CardTitle>
-                    <CardDescription>{batch.cardsCount} cards</CardDescription>
+                    <CardDescription>
+                      {batch.cardsCount} cards · {new Date(batch.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-semibold">{formatCurrency(batch.effectiveTotal, { currency: 'USD' })}</p>
+                    <p className="text-lg font-semibold">{formatCurrency(batch.effectiveTotal)}</p>
                     <span
-                      className={`rounded px-2 py-1 text-xs font-medium ${
-                        batch.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}
+                      className={`rounded px-2 py-1 text-xs font-medium ${batch.isPaid ? 'border border-emerald-500/30 bg-emerald-500/20 text-emerald-500' : 'border border-amber-500/30 bg-amber-500/20 text-amber-500'}`}
                     >
                       {batch.isPaid ? 'Paid' : 'Pending'}
                     </span>
@@ -111,6 +91,18 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
               </CardHeader>
             </Card>
           )}
+        </div>
+        <div className="flex items-center justify-end gap-3">
+          <Link
+            href="/sell/dashboard/sell-cards"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium"
+          >
+            <IconPlus className="h-4 w-4" />
+            Sell Cards
+          </Link>
+          <Link href="/sell/dashboard/cards" className="text-primary text-sm hover:underline">
+            View all
+          </Link>
         </div>
       </section>
     </div>

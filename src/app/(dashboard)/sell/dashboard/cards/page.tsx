@@ -4,7 +4,7 @@ import { sellerBatchesSearchParamsCache } from '@/lib/search-params';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: `My Cards History | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  title: `Batch History | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
   description: 'View and track your gift card batches, sales, and payments.',
 };
 
@@ -21,5 +21,10 @@ export default async function SellerCardsPage({ searchParams }: { searchParams: 
 
   const { items, pagination } = result.data;
 
-  return <SellerBatchesView batches={items} pagination={pagination} />;
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Batch History</h1>
+      <SellerBatchesView batches={items} pagination={pagination} />
+    </div>
+  );
 }

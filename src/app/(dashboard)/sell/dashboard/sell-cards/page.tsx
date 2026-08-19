@@ -12,5 +12,12 @@ export default async function SellBatchPage() {
 
   if (!brandCountriesResult.data?.success) throw new Error('Failed to get brand countries');
 
-  return <SellBatchManager brandCountries={brandCountriesResult.data.brandCountries} />;
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Sell Gift Cards</h1>
+      <div className="min-h-0 flex-1">
+        <SellBatchManager brandCountries={brandCountriesResult.data.brandCountries} />
+      </div>
+    </div>
+  );
 }

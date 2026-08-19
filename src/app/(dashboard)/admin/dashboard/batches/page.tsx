@@ -32,5 +32,10 @@ export default async function AdminBatchesPage({ searchParams }: { searchParams:
 
   const sellers = sellersResult.data?.success ? sellersResult.data.users : [];
 
-  return <AdminBatchesView batches={batchesResult.data.items} sellers={sellers} pagination={batchesResult.data.pagination} />;
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Batches</h1>
+      <AdminBatchesView batches={batchesResult.data.items} sellers={sellers} pagination={batchesResult.data.pagination} />
+    </div>
+  );
 }
