@@ -57,10 +57,10 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
   if (initialNotifications.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="border-border bg-muted/40 mb-2 rounded-full border p-5">
-          <Bell className="text-muted-foreground/40 h-8 w-8" />
+        <div className="border-border bg-muted/40 mb-3 rounded-full border p-5">
+          <Bell className="text-muted-foreground/40 h-10 w-10" />
         </div>
-        <p className="text-muted-foreground text-sm">{texts.empty}</p>
+        <p className="text-muted-foreground text-base">{texts.empty}</p>
       </div>
     );
   }
@@ -68,37 +68,37 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
   return (
     <Card className="flex h-full min-h-[400px] flex-col">
       {unreadCount > 0 && (
-        <div className="border-border flex items-center justify-between border-b px-4 py-2">
-          <Badge variant="secondary" className="gap-1">
-            <span className="bg-primary inline-flex h-1.5 w-1.5 rounded-full" />
+        <div className="border-border flex items-center justify-between border-b px-4 py-3">
+          <Badge variant="secondary" className="gap-1.5 text-sm">
+            <span className="bg-primary inline-flex h-2 w-2 rounded-full" />
             {unreadCount} {texts.unread}
           </Badge>
-          <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="h-7 text-xs">
+          <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="h-8 text-sm">
             {texts.markRead}
           </Button>
         </div>
       )}
 
-      <CardContent className="flex-1 space-y-1 overflow-y-auto p-2">
+      <CardContent className="flex-1 space-y-1.5 overflow-y-auto p-3">
         {notifications.map((item) => (
           <button
             key={item.id}
             onClick={() => handleClick(item)}
-            className={`group flex w-full items-start gap-2.5 rounded-xl border p-3 text-left transition-colors ${
-              item.read ? 'border-transparent opacity-50' : 'border-border bg-muted/30 hover:bg-muted/50'
+            className={`group flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
+              item.read ? 'border-transparent opacity-100' : 'border-border bg-muted/30 hover:bg-muted/50'
             }`}
           >
-            <div className="mt-0.5 shrink-0"><NotificationIcon type={item.type} /></div>
+            <div className="mt-0.5 shrink-0"><NotificationIcon type={item.type} size="h-5 w-5" /></div>
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <span className={`truncate text-sm ${item.read ? 'text-muted-foreground font-normal' : 'font-medium'}`}>{item.title}</span>
-                <span className="text-muted-foreground shrink-0 text-[10px]">{timeAgo(item.createdAt)}</span>
+                <span className={`truncate text-base ${item.read ? 'text-muted-foreground/80 font-normal' : 'font-medium'}`}>{item.title}</span>
+                <span className="text-muted-foreground shrink-0 text-xs">{timeAgo(item.createdAt)}</span>
               </div>
-              <p className="text-muted-foreground truncate text-xs">{item.description}</p>
+              <p className="text-muted-foreground text-sm leading-snug">{item.description}</p>
             </div>
 
-            {!item.read && <span className="bg-primary mt-1 h-2 w-2 shrink-0 rounded-full" />}
+            {!item.read && <span className="bg-primary mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" />}
           </button>
         ))}
       </CardContent>

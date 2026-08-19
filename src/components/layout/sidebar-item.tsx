@@ -80,7 +80,7 @@ export const SidebarItem = ({ item }: SidebarItemProps) => {
       <div className="relative">
         <IconComponent className="h-6 w-6 lg:h-12 lg:w-12" />
         {badgeCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground animate-pulse">
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground animate-pulse">
             {badgeCount > 9 ? '9+' : badgeCount}
           </span>
         )}

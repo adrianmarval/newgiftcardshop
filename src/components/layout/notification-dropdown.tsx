@@ -100,7 +100,7 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
       <button onClick={handleToggle} className={className}>
         <Bell className="h-5 w-5" />
         {count > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground animate-pulse">
+          <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-destructive-foreground animate-pulse">
             {count > 99 ? '99+' : count}
           </span>
         )}
@@ -109,10 +109,10 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-lg border bg-popover shadow-md sm:w-80 max-sm:fixed max-sm:left-2 max-sm:right-2 max-sm:top-14 max-sm:w-auto">
           {/* Header */}
-          <div className="flex items-center justify-between border-b px-3 py-2">
-            <span className="text-sm font-semibold">{labels.header}</span>
+          <div className="flex items-center justify-between border-b px-4 py-2.5">
+            <span className="text-base font-semibold">{labels.header}</span>
             {notifications.some((n) => !n.read) && (
-              <button onClick={handleMarkAllRead} className="text-primary text-xs hover:underline">
+              <button onClick={handleMarkAllRead} className="text-primary text-sm hover:underline">
                 {labels.markRead}
               </button>
             )}
@@ -127,49 +127,49 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center py-8 text-center">
                 <Bell className="text-muted-foreground/30 mb-1 h-6 w-6" />
-                <p className="text-muted-foreground text-xs">{labels.empty}</p>
+                <p className="text-muted-foreground text-sm">{labels.empty}</p>
               </div>
             ) : (
               notifications.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleClick(item)}
-                  className={`flex w-full items-start gap-2 px-3 py-2.5 text-left transition-colors hover:bg-muted/50 ${
-                    item.read ? 'opacity-50' : ''
+                  className={`flex w-full items-start gap-2.5 px-4 py-3 text-left transition-colors hover:bg-muted/50 ${
+                    item.read ? 'opacity-100' : ''
                   }`}
                 >
-                  <div className="mt-0.5 shrink-0"><NotificationIcon type={item.type} size="h-3.5 w-3.5" /></div>
+                  <div className="mt-0.5 shrink-0"><NotificationIcon type={item.type} size="h-4 w-4" /></div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className={`truncate text-xs ${item.read ? 'text-muted-foreground' : 'font-medium'}`}>
+                      <span className={`truncate text-sm ${item.read ? 'text-muted-foreground/80' : 'font-medium'}`}>
                         {item.title}
                       </span>
-                      <span className="text-muted-foreground shrink-0 text-[10px]">{timeAgo(item.createdAt)}</span>
+                      <span className="text-muted-foreground shrink-0 text-xs">{timeAgo(item.createdAt)}</span>
                     </div>
-                    <p className="text-muted-foreground truncate text-[11px]">{item.description}</p>
+                    <p className="text-muted-foreground text-sm leading-snug">{item.description}</p>
                   </div>
-                  {!item.read && <span className="bg-primary mt-1 h-1.5 w-1.5 shrink-0 rounded-full" />}
+                  {!item.read && <span className="bg-primary mt-1.5 h-2 w-2 shrink-0 rounded-full" />}
                 </button>
               ))
             )}
           </div>
 
           {/* Footer */}
-          <div className="border-t px-3 py-2 flex items-center justify-between">
+          <div className="border-t px-4 py-2.5 flex items-center justify-between">
             <Link
               href={routes.notifications}
               onClick={() => setOpen(false)}
-              className="text-primary flex items-center gap-1 text-xs font-medium hover:underline"
+              className="text-primary flex items-center gap-1.5 text-sm font-medium hover:underline"
             >
               {labels.all}
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="h-3.5 w-3.5" />
             </Link>
             <Link
               href={`${routes.settings}?tab=settings`}
               onClick={() => setOpen(false)}
-              className="text-muted-foreground flex items-center gap-1 text-xs hover:text-foreground hover:underline"
+              className="text-muted-foreground flex items-center gap-1.5 text-sm hover:text-foreground hover:underline"
             >
-              <Settings className="h-3 w-3" />
+              <Settings className="h-3.5 w-3.5" />
               {labels.settings}
             </Link>
           </div>
