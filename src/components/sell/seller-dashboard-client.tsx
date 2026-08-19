@@ -46,9 +46,21 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
         </div>
       </section>
 
-      <section className='space-y-2'>
-        <div className="flex items-center justify-between">
+      <section className="space-y-2">
+        <div className="flex items-center justify-between p-1">
           <h2 className="text-xl font-semibold">Recent Batches</h2>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/sell/dashboard/sell-cards"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium"
+            >
+              <IconPlus className="h-4 w-4" />
+              Sell Cards
+            </Link>
+            <Link href="/sell/dashboard/cards" className="text-primary text-sm hover:underline">
+              View all
+            </Link>
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-1 md:grid-cols-2 lg:grid-cols-3">
           {recentBatches.length > 0 ? (
@@ -91,18 +103,6 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
               </CardHeader>
             </Card>
           )}
-        </div>
-        <div className="flex items-center justify-end gap-3">
-          <Link
-            href="/sell/dashboard/sell-cards"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium"
-          >
-            <IconPlus className="h-4 w-4" />
-            Sell Cards
-          </Link>
-          <Link href="/sell/dashboard/cards" className="text-primary text-sm hover:underline">
-            View all
-          </Link>
         </div>
       </section>
     </div>

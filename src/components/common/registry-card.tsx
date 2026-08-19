@@ -152,11 +152,12 @@ export function useCardCurrency(giftcards: { country?: { currency: string | null
   return giftcards[0]?.country?.currency || 'USD';
 }
 
-export function useCopyId(id: string | number) {
+export function useCopyId(id: string | number, shareText?: string) {
   return (e: MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(String(id));
-    showAlert.toast.success('ID copiado');
+    const textToCopy = shareText || String(id);
+    navigator.clipboard.writeText(textToCopy);
+    showAlert.toast.success(shareText ? 'Copiado para compartir' : 'ID copiado');
   };
 }
 
@@ -336,15 +337,15 @@ export function BrandIcon({
   return <span className="text-3xl">{fallbackIcon ?? '📦'}</span>;
 }
 
-export function CopyableId({ id, prefix = '#', className }: { id: string | number; prefix?: string; className?: string }) {
-  const handleCopy = useCopyId(id);
+export function CopyableId({ id, prefix = '#', className, shareText }: { id: string | number; prefix?: string; className?: string; shareText?: string }) {
+  const handleCopy = useCopyId(id, shareText);
   return (
     <div className={`flex min-w-0 items-center gap-1.5 ${className ?? ''}`}>
       <span className="truncate">
         {prefix}
         {typeof id === 'string' ? id.slice(-8).toUpperCase() : id}
       </span>
-      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={handleCopy}>
+      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={handleCopy} title={shareText ? 'Copy full info to share' : 'Copy ID'}>
         <Copy className="h-3 w-3" />
       </Button>
     </div>

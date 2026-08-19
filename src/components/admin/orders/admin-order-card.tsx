@@ -3,7 +3,7 @@
 import { MouseEvent } from 'react';
 import { motion } from 'framer-motion';
 import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderHasReports, getOrderStatusLabel, CopyableId, BrandIcon, OrderTopRight } from '@/components/common';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, formatOrderShareText } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useLongPress } from '@/hooks/use-long-press';
@@ -42,7 +42,7 @@ export const AdminOrderCard = ({
   return (
     <RegistryCard
       id={order.id}
-      title={<CopyableId id={order.id} prefix="Orden #" />}
+      title={<CopyableId id={order.id} prefix="Orden #" shareText={formatOrderShareText(order)} />}
       subtitle={
         <motion.button
           {...useLongPress({

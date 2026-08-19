@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { MouseEvent } from 'react';
 import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderStatusLabel, CopyableId, BrandIcon, OrderTopRight } from '@/components/common';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, formatOrderShareText } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { OrderDetails } from '@/components/buy/giftcard-orders/order-details';
@@ -34,7 +34,7 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
   return (
     <RegistryCard
       id={order.id}
-      title={<CopyableId id={order.id} prefix="Orden #" />}
+      title={<CopyableId id={order.id} prefix="Orden #" shareText={formatOrderShareText(order)} />}
       icon={
         <BrandIcon
           image={order.giftcards?.[0]?.brand?.image}

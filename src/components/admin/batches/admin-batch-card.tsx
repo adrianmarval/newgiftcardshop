@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { RegistryCard, useDeleteBatchAction, useCancelBatchAction, useCardCurrency, getBatchProgressConfig, getBatchActiveBg, getBatchStatusLabel, CopyableId, DeleteIcon, BatchTopRight } from '@/components/common';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, formatBatchShareText } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useLongPress } from '@/hooks/use-long-press';
 import { AdminBatchDetails } from './admin-batch-details';
@@ -41,7 +41,7 @@ export function AdminBatchCard({
   return (
     <RegistryCard
       id={batch.id}
-      title={<CopyableId id={batch.id} prefix="Lote #" />}
+      title={<CopyableId id={batch.id} prefix="Lote #" shareText={formatBatchShareText(batch)} />}
       subtitle={
         <motion.button
           {...useLongPress({

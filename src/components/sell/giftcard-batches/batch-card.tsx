@@ -1,7 +1,7 @@
 'use client';
 
 import { RegistryCard, useCardProgress, useCardCurrency, getBatchProgressConfig, getBatchStatusLabel, CopyableId, BrandIcon, BatchTopRight } from '@/components/common';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, formatBatchShareText } from '@/lib/utils';
 import { BatchDetails } from './batch-details';
 import type { SellerBatch } from '@/types';
 
@@ -33,7 +33,7 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
   return (
     <RegistryCard
       id={batch.id}
-      title={<CopyableId id={batch.id} prefix="Batch #" />}
+      title={<CopyableId id={batch.id} prefix="Batch #" shareText={formatBatchShareText(batch)} />}
       icon={
         <BrandIcon
           image={batch.giftcards[0]?.brand?.image}
