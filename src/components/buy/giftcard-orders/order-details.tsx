@@ -11,7 +11,11 @@ export function OrderDetails({ order }: OrderDetailsProps) {
   return (
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-muted-foreground text-xs font-medium md:text-base">{order.giftcards.length} cards confirmed</span>
+        {order.status === 'CANCELLED' ? (
+          <span className="text-destructive text-xs font-medium md:text-base">Cancelled</span>
+        ) : (
+          <span className="text-muted-foreground text-xs font-medium md:text-base">{order.giftcards.length} cards confirmed</span>
+        )}
         <span className="text-muted-foreground text-xs font-medium md:text-base">Order Rate: {order.buyRate * 100}%</span>
       </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { RegistryCard, useCardProgress, useCardCurrency, getBatchProgressConfig, CopyableId, BrandIcon, BatchTopRight } from '@/components/common';
+import { RegistryCard, useCardProgress, useCardCurrency, getBatchProgressConfig, getBatchStatusLabel, CopyableId, BrandIcon, BatchTopRight } from '@/components/common';
 import { formatDateTime } from '@/lib/utils';
 import { BatchDetails } from './batch-details';
 import type { SellerBatch } from '@/types';
@@ -15,6 +15,7 @@ export interface BatchCardProps {
 export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchCardProps) {
   useCardProgress(batch);
   const currency = useCardCurrency(batch.giftcards);
+  const statusLabel = getBatchStatusLabel(batch, 'en');
   const isPaid = batch.isPaid || batch.payments.length > 0;
   const allConfirmed =
     batch.confirmedCount !== undefined &&
@@ -55,6 +56,7 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
       hasReport={batch.giftcards.some((g) => g.status === 'WRONG_AMOUNT')}
       activeBgClass={getSellerBg()}
       progress={getBatchProgressConfig(batch)}
+      statusLabel={statusLabel}
     >
       <BatchDetails batch={batch} />
     </RegistryCard>

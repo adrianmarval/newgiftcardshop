@@ -40,8 +40,14 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
         <div className="text-muted-foreground flex items-center gap-1 text-xs md:text-sm">
-          <span>{batch.cardsCount} tarjetas</span>
-          <span>Confirmadas: {batch.confirmedCount}</span>
+          {batch.cancelledAt ? (
+            <span className="text-destructive">Cancelado</span>
+          ) : (
+            <>
+              <span>{batch.cardsCount} tarjetas</span>
+              <span>Confirmadas: {batch.confirmedCount}</span>
+            </>
+          )}
           <span>Tasa: {(batch.sellRate * 100).toFixed(1)}%</span>
         </div>
         <AdminBatchGallery batchId={batch.id.toString()} giftcards={batch.giftcards} />

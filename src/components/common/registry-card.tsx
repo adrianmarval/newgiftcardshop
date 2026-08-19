@@ -36,6 +36,7 @@ export interface RegistryCardProps {
     fullColorClass?: string;
   };
   activeBgClass?: string;
+  statusLabel?: { text: string; colorClass: string };
   actions?: ReactNode;
   children?: ReactNode;
   className?: string;
@@ -54,6 +55,7 @@ export function RegistryCard({
   hasReport,
   progress,
   activeBgClass,
+  statusLabel,
   actions,
   children,
   className = '',
@@ -66,13 +68,6 @@ export function RegistryCard({
         isExpanded || isHighlighted ? `${activeBgClass || 'bg-primary/10 dark:bg-primary/15'} shadow-sm` : ''
       } ${isHighlighted ? 'border-primary/50 ring-primary/20 ring-1' : ''} ${className}`}
     >
-      {hasReport && !isExpanded && (
-        <div className="text-muted-foreground/80 absolute right-1 bottom-4 z-20 mr-10 mb-1.5 flex items-center justify-center gap-1 text-[10px] font-black tracking-widest uppercase">
-          <AlertTriangle className="text-destructive fill-destructive/20 h-4 w-4 drop-shadow-md" />
-          <span>With Reports</span>
-        </div>
-      )}
-
       <CardHeader className="px-2">
         <CardTitle className="text-inherit">
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-1 md:gap-1">
@@ -88,12 +83,19 @@ export function RegistryCard({
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex items-center justify-between px-4 py-2">
+      <CardContent className="flex items-center justify-between px-2">
         <div className="flex items-center gap-1">
           {date && <span className="text-muted-foreground text-sm">{date instanceof Date ? formatDateTime(date, 'es-AR') : date}</span>}
         </div>
         <ChevronDown className={`text-muted-foreground h-5 w-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
       </CardContent>
+
+      {/* Status Label */}
+      {statusLabel && (
+        <div className="px-2 py-1">
+          <span className={`text-[11px] font-semibold tracking-wide uppercase ${statusLabel.colorClass}`}>{statusLabel.text}</span>
+        </div>
+      )}
 
       {/* Progress Bar */}
       {progress && (
@@ -103,6 +105,14 @@ export function RegistryCard({
           ) : (
             <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className={`h-full ${progress.colorClass}`} />
           )}
+        </div>
+      )}
+
+      {/* Badge with Reports for closed cards (only if not expanded) */}
+      {hasReport && !isExpanded && (
+        <div className="text-muted-foreground/80 absolute right-2 bottom-4 z-20 flex items-center justify-center gap-1 text-[10px] font-black tracking-widest uppercase">
+          <AlertTriangle className="text-destructive fill-destructive/20 h-4 w-4 drop-shadow-md" />
+          <span>With Reports</span>
         </div>
       )}
 
@@ -205,13 +215,16 @@ export function useCancelBatchAction() {
   const [isCancelling, setIsCancelling] = useState(false);
   const cancel = async (batchId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    const confirmed = await showAlert.confirm('¿Cancelar lote?', 'El lote se marcará como cancelado. El seller será notificado. Esta acción no se puede deshacer.');
+    const confirmed = await showAlert.confirm(
+      '¿Cancelar lote?',
+      'El lote se marcará como cancelado. El seller será notificado. Esta acción no se puede deshacer.',
+    );
     if (!confirmed) return;
     setIsCancelling(true);
     try {
       const result = await cancelBatch({ batchId });
       if (result.serverError || result.validationErrors) {
-        showAlert.error('Error al cancelar el lote');
+        showAlert.error(result.serverError || 'Error al cancelar el lote');
       } else {
         showAlert.toast.success('Lote cancelado con éxito');
         router.refresh();
@@ -266,6 +279,33 @@ export function getBatchActiveBg(batch: AdminBatch | SellerBatch): string {
   if (isPaid) return 'bg-emerald-500/10 dark:bg-emerald-500/15';
   if (allConfirmed) return 'bg-blue-500/10 dark:bg-blue-500/15';
   return 'bg-amber-500/10 dark:bg-amber-500/15';
+}
+
+export function getBatchStatusLabel(batch: AdminBatch | SellerBatch, lang: 'en' | 'es' = 'es'): { text: string; colorClass: string } {
+  const isPaid = 'isPaid' in batch ? batch.isPaid : false;
+  const isCancelled = 'cancelledAt' in batch ? Boolean(batch.cancelledAt) : false;
+  const allConfirmed = batch.confirmedCount !== undefined && batch.cardsCount !== undefined && batch.confirmedCount === batch.cardsCount;
+
+  if (isCancelled) return { text: lang === 'en' ? 'Cancelled' : 'Cancelado', colorClass: 'text-destructive' };
+  if (isPaid) return { text: lang === 'en' ? 'Paid' : 'Pagado', colorClass: 'text-emerald-500' };
+  if (allConfirmed) return { text: lang === 'en' ? 'Confirmed' : 'Confirmado', colorClass: 'text-blue-500' };
+  return { text: lang === 'en' ? 'Processing' : 'En proceso', colorClass: 'text-amber-500' };
+}
+
+export function getOrderStatusLabel(status: OrderStatus, lang: 'en' | 'es' = 'es'): { text: string; colorClass: string } {
+  const labels: Record<OrderStatus, string> = {
+    PENDING: lang === 'en' ? 'Pending' : 'Pendiente',
+    AWAITING_PAYMENT: lang === 'en' ? 'Awaiting Payment' : 'Esperando pago',
+    COMPLETED: lang === 'en' ? 'Completed' : 'Completada',
+    CANCELLED: lang === 'en' ? 'Cancelled' : 'Cancelada',
+  };
+  const colors: Record<OrderStatus, string> = {
+    PENDING: 'text-amber-500',
+    AWAITING_PAYMENT: 'text-blue-500',
+    COMPLETED: 'text-emerald-500',
+    CANCELLED: 'text-destructive',
+  };
+  return { text: labels[status] ?? status, colorClass: colors[status] ?? 'text-muted-foreground' };
 }
 
 // ── Shared presentational components used by all 4 cards ─────────────────────

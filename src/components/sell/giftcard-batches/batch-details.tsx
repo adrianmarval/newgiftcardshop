@@ -18,7 +18,11 @@ export function BatchDetails({ batch }: BatchDetailsProps) {
   return (
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-muted-foreground text-xs font-medium md:text-base">{batch.giftcards.length} cards confirmed</span>
+        {batch.cancelledAt ? (
+          <span className="text-destructive text-xs font-medium md:text-base">Cancelled</span>
+        ) : (
+          <span className="text-muted-foreground text-xs font-medium md:text-base">{batch.giftcards.length} cards confirmed</span>
+        )}
         <span className="text-muted-foreground text-xs font-medium md:text-base">Batch Rate: {(batch.sellRate * 100).toFixed(1)}%</span>
       </div>
 

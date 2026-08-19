@@ -2,7 +2,7 @@
 
 import { MouseEvent } from 'react';
 import { motion } from 'framer-motion';
-import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderHasReports, CopyableId, BrandIcon, OrderTopRight } from '@/components/common';
+import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderHasReports, getOrderStatusLabel, CopyableId, BrandIcon, OrderTopRight } from '@/components/common';
 import { formatDateTime } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -37,6 +37,7 @@ export const AdminOrderCard = ({
   const isActionable = order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT';
   const hasReports = getOrderHasReports(order.giftcards);
   const currency = useCardCurrency(order.giftcards);
+  const statusLabel = getOrderStatusLabel(order.status, 'es');
 
   return (
     <RegistryCard
@@ -76,6 +77,7 @@ export const AdminOrderCard = ({
       hasReport={hasReports}
       activeBgClass={getOrderActiveBg(order.status)}
       progress={getOrderProgressConfig(order.status, progressPercentage)}
+      statusLabel={statusLabel}
       actions={
         isActionable && canCancel ? (
           <Button

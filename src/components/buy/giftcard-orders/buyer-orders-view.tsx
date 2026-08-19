@@ -2,7 +2,7 @@
 
 import { OrdersList } from './orders-list';
 import { UrlPagination } from '@/components/ui/url-pagination';
-import { FiltersBar, StatusLegend } from '@/components/common';
+import { FiltersBar } from '@/components/common';
 import { orderSearchParamsParsers } from '@/lib/search-params';
 import type { BuyerOrder, PaginationMeta } from '@/types';
 
@@ -20,7 +20,6 @@ const FILTERS_DEFAULTS = {
 export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) => {
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
-      <StatusLegend />
       <FiltersBar
         parsers={orderSearchParamsParsers}
         defaults={FILTERS_DEFAULTS}

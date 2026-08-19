@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { MouseEvent } from 'react';
-import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, CopyableId, BrandIcon, OrderTopRight } from '@/components/common';
+import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderStatusLabel, CopyableId, BrandIcon, OrderTopRight } from '@/components/common';
 import { formatDateTime } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -24,6 +24,7 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
   const isActionable = order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT';
   const currency = useCardCurrency(order.giftcards);
   const hasReport = order.giftcards.some((g) => g.isConfirmed && g.status !== 'USED');
+  const statusLabel = getOrderStatusLabel(order.status, 'es');
 
   const handleResumeOrder = (e: MouseEvent) => {
     e.stopPropagation();
@@ -56,6 +57,7 @@ export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, on
       hasReport={hasReport}
       activeBgClass={getOrderActiveBg(order.status)}
       progress={getOrderProgressConfig(order.status, progressPercentage)}
+      statusLabel={statusLabel}
       actions={
         isActionable ? (
           <>

@@ -3,7 +3,7 @@
 import type { PaginationMeta, SellerBatch } from '@/types';
 import { BatchesList } from './batches-list';
 import { UrlPagination } from '@/components/ui/url-pagination';
-import { FiltersBar, StatusLegend } from '@/components/common';
+import { FiltersBar } from '@/components/common';
 import { sellerBatchesSearchParamsParsers } from '@/lib/search-params';
 
 export interface SellerBatchesViewProps {
@@ -20,7 +20,6 @@ const FILTERS_DEFAULTS = {
 export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProps) {
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
-      <StatusLegend language="en" />
       <FiltersBar
         parsers={sellerBatchesSearchParamsParsers}
         defaults={FILTERS_DEFAULTS}

@@ -6,7 +6,7 @@ import { AdminOrdersList } from './admin-orders-list';
 import { AdminReportDialog } from './admin-report-dialog';
 import { AdminBuyerDialog } from './admin-buyer-dialog';
 import { UrlPagination } from '@/components/ui/url-pagination';
-import { FiltersBar, StatusLegend } from '@/components/common';
+import { FiltersBar } from '@/components/common';
 import { adminOrdersSearchParamsParsers } from '@/lib/search-params';
 import type { Giftcard, AdminOrder, PaginationMeta } from '@/types';
 
@@ -63,7 +63,6 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
-      <StatusLegend />
       <FiltersBar
         parsers={adminOrdersSearchParamsParsers}
         defaults={FILTERS_DEFAULTS}

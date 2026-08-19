@@ -15,8 +15,10 @@ export {
   getOrderProgressConfig,
   getOrderActiveBg,
   getOrderHasReports,
+  getOrderStatusLabel,
   getBatchProgressConfig,
   getBatchActiveBg,
+  getBatchStatusLabel,
   BrandIcon,
   CopyableId,
   DeleteIcon,
@@ -29,6 +31,5 @@ export { FiltersBar } from './filters-bar';
 export type { FiltersBarProps, FiltersBarConfig, SelectOption, ComboboxOption } from './filters-bar';
 export { StatCard } from './stat-card';
 export type { StatCardProps } from './stat-card';
-export { StatusLegend } from './status-legend';
 export { TelegramAvatar } from './telegram-avatar';
 export type { AvatarProps } from './telegram-avatar';

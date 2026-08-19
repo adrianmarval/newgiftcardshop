@@ -58,7 +58,11 @@ export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteRe
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-muted-foreground text-xs font-medium md:text-sm">
-          {confirmedCount}/{order.giftcards.length} tarjetas confirmadas
+          {order.status === 'CANCELLED' ? (
+            <span className="text-destructive">Cancelada</span>
+          ) : (
+            `${confirmedCount}/${order.giftcards.length} tarjetas confirmadas`
+          )}
         </span>
         <span className="text-muted-foreground text-xs font-medium md:text-sm">Tasa: {(order.buyRate * 100).toFixed(1)}%</span>
       </div>

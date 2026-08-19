@@ -9,7 +9,7 @@ import { AdminPayDialog } from './admin-pay-dialog';
 import { AdminSellerDialog } from './admin-seller-dialog';
 import type { AdminBatch, PaginationMeta } from '@/types';
 import { IconCurrencyDollar } from '@tabler/icons-react';
-import { FiltersBar, StatusLegend } from '@/components/common';
+import { FiltersBar } from '@/components/common';
 import { adminBatchesSearchParamsParsers } from '@/lib/search-params';
 
 interface AdminBatchesViewProps {
@@ -58,8 +58,6 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
-      <StatusLegend />
-
       <FiltersBar
         parsers={adminBatchesSearchParamsParsers}
         defaults={FILTERS_DEFAULTS}

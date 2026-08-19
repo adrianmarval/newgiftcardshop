@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { RegistryCard, useDeleteBatchAction, useCancelBatchAction, useCardCurrency, getBatchProgressConfig, getBatchActiveBg, CopyableId, DeleteIcon, BatchTopRight } from '@/components/common';
+import { RegistryCard, useDeleteBatchAction, useCancelBatchAction, useCardCurrency, getBatchProgressConfig, getBatchActiveBg, getBatchStatusLabel, CopyableId, DeleteIcon, BatchTopRight } from '@/components/common';
 import { formatDateTime } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useLongPress } from '@/hooks/use-long-press';
@@ -36,6 +36,7 @@ export function AdminBatchCard({
   const canDelete = !isCancelled && batch.giftcards.every((c) => !c.orderId);
   const canCancel = !batch.isPaid && !isCancelled && batch.giftcards.length > 0;
   const currency = useCardCurrency(batch.giftcards);
+  const statusLabel = getBatchStatusLabel(batch, 'es');
 
   return (
     <RegistryCard
@@ -107,6 +108,7 @@ export function AdminBatchCard({
       hasReport={batch.hasIssues}
       activeBgClass={getBatchActiveBg(batch)}
       progress={getBatchProgressConfig(batch)}
+      statusLabel={statusLabel}
     >
       <AdminBatchDetails batch={batch} onDeleted={onDeleted} />
     </RegistryCard>
