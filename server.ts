@@ -76,6 +76,62 @@ async function initEscalationService() {
     });
   }
 }
+// ── Batch Auto-Cancel (safety net) ───────────────────────────────────────────
+
+async function initBatchAutoCancelService() {
+  try {
+    const { sweepCancellableBatches } = await import('./src/lib/services/giftcard/batch-cancel.service');
+    const log = await getServerLogger();
+
+    const INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+    log.info('[BatchAutoCancel] Iniciado - intervalo: 15min');
+
+    let sweepRunning = false;
+
+    setInterval(async () => {
+      if (sweepRunning) {
+        log.info('[BatchAutoCancel] Skipping — previous sweep still active');
+        return;
+      }
+      sweepRunning = true;
+      try {
+        const cancelled = await sweepCancellableBatches();
+
+        if (cancelled.length > 0) {
+          log.action('batch', 'auto-cancel-cron', `${cancelled.length} lote(s) auto-cancelado(s)`, {
+            metadata: { cancelled: cancelled.map((c) => c.batchId) },
+          });
+
+          const { notifySellerBatchCancelled } = await import('./src/lib/notifications/notification.service');
+          for (const { batchId, sellerId } of cancelled) {
+            if (sellerId) {
+              notifySellerBatchCancelled(sellerId, batchId).catch((err) =>
+                log.error('Error notificando seller post-sweep-cancel', {
+                  flow: 'batch',
+                  action: 'auto-cancel-cron',
+                  metadata: { batchId, sellerId },
+                  error: { name: err.name, message: err.message },
+                }),
+              );
+            }
+          }
+        }
+      } catch (err) {
+        log.error('[BatchAutoCancel] Error en sweep', {
+          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+        });
+      } finally {
+        sweepRunning = false;
+      }
+    }, INTERVAL_MS);
+  } catch (err) {
+    const log = await getServerLogger();
+    log.error('[BatchAutoCancel] Error al iniciar', {
+      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+    });
+  }
+}
+
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
@@ -177,6 +233,9 @@ log.info('Next.js preparado');
 
 // ── Giftcard Escalation ───────────────────────────────────────────────────────
 await initEscalationService();
+
+// ── Batch Auto-Cancel ─────────────────────────────────────────────────────────
+await initBatchAutoCancelService();
 
 httpServer.listen(port, () => {
   console.log(`\n> Ready on http://${hostname}:${port}`);

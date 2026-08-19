@@ -1,15 +1,17 @@
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { computeEffectiveTotalDecimal } from '@/lib/services/pricing';
+import { autoCancelEligibleBatchesForOrder } from '@/lib/services/giftcard/batch-cancel.service';
 import { OrderNotFoundError, InvalidOrderStateError, OrderAlreadyProcessedError, PaymentVerificationError } from './order-errors';
 import { validateBuyerPayment } from '@/lib/services/payment/buyer-payment.service';
 import { logger } from '@/lib/logger';
 
 /**
  * Cancels an order and marks all giftcards as confirmed.
+ * Auto-cancels eligible batches (payable = 0, all cards confirmed).
  */
 export async function cancelOrder(orderId: string) {
-  return prisma.$transaction(async (tx) => {
+  const { cancelledBatches } = await prisma.$transaction(async (tx) => {
     const order = await tx.order.update({
       where: { id: orderId, status: 'PENDING' },
       data: {
@@ -22,16 +24,37 @@ export async function cancelOrder(orderId: string) {
         },
       },
     });
-    return order;
+
+    const cancelledBatches = await autoCancelEligibleBatchesForOrder(tx, orderId);
+
+    return { order, cancelledBatches };
   });
+
+  // Notify sellers outside tx (fire-and-forget)
+  if (cancelledBatches.length > 0) {
+    const { notifySellerBatchCancelled } = await import('@/lib/notifications');
+    for (const { batchId, sellerId } of cancelledBatches) {
+      if (sellerId) {
+        notifySellerBatchCancelled(sellerId, batchId).catch((err) =>
+          logger.error('Error notificando seller post-auto-cancel', {
+            flow: 'batch',
+            action: 'auto-cancel',
+            metadata: { batchId, sellerId },
+            error: { name: err.name, message: err.message },
+          }),
+        );
+      }
+    }
+  }
 }
 
 /**
  * Confirms usage: transitions PENDING → AWAITING_PAYMENT, marks cards USED.
- * Returns adjustedTotal for the caller to use.
+ * Auto-cancels eligible batches (payable = 0, all cards confirmed).
+ * Returns adjustedTotal + cancelled batches for post-commit notifications.
  */
 export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal) {
-  return prisma.$transaction(async (tx) => {
+  const { order, adjustedTotal, cancelledBatches } = await prisma.$transaction(async (tx) => {
     const freshCards = await tx.giftcard.findMany({
       where: { orderId },
     });
@@ -53,8 +76,29 @@ export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal
       });
     }
 
-    return { order: updatedOrder, adjustedTotal };
+    const cancelledBatches = await autoCancelEligibleBatchesForOrder(tx, orderId);
+
+    return { order: updatedOrder, adjustedTotal, cancelledBatches };
   });
+
+  // Notify sellers outside tx (fire-and-forget)
+  if (cancelledBatches.length > 0) {
+    const { notifySellerBatchCancelled } = await import('@/lib/notifications');
+    for (const { batchId, sellerId } of cancelledBatches) {
+      if (sellerId) {
+        notifySellerBatchCancelled(sellerId, batchId).catch((err) =>
+          logger.error('Error notificando seller post-auto-cancel', {
+            flow: 'batch',
+            action: 'auto-cancel',
+            metadata: { batchId, sellerId },
+            error: { name: err.name, message: err.message },
+          }),
+        );
+      }
+    }
+  }
+
+  return { order, adjustedTotal };
 }
 
 /**

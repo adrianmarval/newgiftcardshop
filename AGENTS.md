@@ -105,6 +105,7 @@ Wizard de 5 pasos: **Search** (brand+country+monto) → **Results** (tarjetas en
 - Pago: `src/actions/buyer/orders/complete-order.ts` (buyer reporta TxID, sin verificación automática aún)
 - Crédito: buyer tiene `creditLimit`, se revalida dentro de la transacción de create-order
 - Tiers: giftcards tienen `escalationTier` que baja con el tiempo (cron en server.ts) — buyer solo puede tomar cards con tier ≤ su buyRate
+- Cancelación auto: `confirmOrderUsage` y `cancelOrder` en `order-lifecycle.service.ts` auto-cancelan batches elegibles (payable=0, all confirmed) + notifican al seller
 
 ### Sell Flow (Telegram Seller Bot)
 
@@ -160,7 +161,7 @@ TelegramOtp {
 
 1. **Pago sin verificación automática**: El buyer escribe un TxID y la orden pasa a COMPLETED. La verificación con API de Binance se implementará a futuro. El buyer pasa por un filtro manual del admin, se confía en él.
 2. **Codes antes del pago**: Los claim codes se entregan inmediatamente al crear la orden (PENDING). El buyer los redime y paga después. Modelo de crédito.
-3. **Cancelación NO restaura stock**: Solo se puede cancelar si todas las tarjetas están reportadas con saldo cero (INVALID, ALREADY_USED, DEACTIVATED, WRONG_AMOUNT=0). Las tarjetas malas no vuelven al stock.
+3. **Cancelación automática de batches**: Un batch se auto-cancela cuando su monto a pagar es 0 (todas las tarjetas reportadas con saldo cero) Y todas sus cards están confirmadas (`isConfirmed`). Trigger: evento (`confirmOrderUsage`/`cancelOrder` en `order-lifecycle.service.ts`) + cron safety net (15min en `server.ts`). La guarda `isConfirmed` garantiza que los reportes son irreversibles antes de cancelar. Reutiliza `notifySellerBatchCancelled` existente.
 4. **codeHash unique global**: Un claim code no debe existir en múltiples brand-countries. Si existe en US, no puede existir en UK.
 5. **Fotos de evidencia del bot**: Se guarda solo `telegramFileId` (sin cifrar/descargar). Deuda técnica conocida.
 
@@ -175,6 +176,7 @@ TelegramOtp {
 
 ## Servicios compartidos
 
+- `src/lib/services/giftcard/batch-cancel.service.ts` — `canCancelBatch`, `cancelBatch`, `autoCancelEligibleBatchesForOrder(tx, orderId)` (evento), `sweepCancellableBatches()` (cron). Guards: `isPaid=false`, `cancelledAt=null`, todas las cards `isConfirmed`, `canCancelBatch`.
 - `src/lib/services/giftcard-reservation.service.ts` — `reserveGiftcards(tx, ids, orderId)` con `updateMany` guardado por `inStock/status/orderId` + verificación de `count`. Usado por web y bot.
 - `src/lib/services/pricing.service.ts` — `getUserRates(userId, { brandCountryId? | brandId+countryId })` retorna `{ buyRate, sellRate }`
 - `src/lib/services/giftcard-escalation.service.ts` — cron que baja `escalationTier` de cards inactivas
