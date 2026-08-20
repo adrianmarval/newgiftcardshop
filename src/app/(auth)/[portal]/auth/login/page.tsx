@@ -11,13 +11,14 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { portal } = await params;
   if (!isAppSection(portal)) return {};
-  const config = PORTAL_AUTH_CONFIG[portal];
-  const isBuy = portal === 'buy';
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop';
+  const labels: Record<string, string> = {
+    admin: 'Admin',
+    buy: 'Comprador',
+    sell: 'Vendedor',
+  };
   return {
-    title: `${config.login.title} | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
-    description: isBuy
-      ? `Inicia sesión en tu cuenta de comprador de ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`
-      : `${config.login.subtitle} | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+    title: `Iniciar Sesión — ${labels[portal]} | ${appName}`,
   };
 }
 
@@ -31,8 +32,6 @@ export default async function DynamicLoginPage({ params }: PageProps) {
     <Suspense fallback={<div>{portal === 'sell' ? 'Loading...' : 'Cargando...'}</div>}>
       <LoginForm
         portal={portal}
-        title={config.login.title}
-        subtitle={config.login.subtitle}
         forgotPasswordUrl={`${basePath}/forgot-password`}
         emailPlaceholder={config.login.emailPlaceholder}
         registerUrl={config.hasRegister ? `${basePath}/register` : undefined}

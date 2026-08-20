@@ -75,10 +75,10 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
 
   if (!token) {
     return (
-      <div className="space-y-6 text-center">
+      <div className="space-y-3 text-center">
         <div className="flex justify-center">
-          <div className="rounded-full bg-red-500/10 p-4">
-            <AlertCircle className="h-8 w-8 text-red-400" />
+          <div className="rounded-full bg-red-500/10 p-3">
+            <AlertCircle className="h-6 w-6 text-red-400" />
           </div>
         </div>
         <div className="space-y-1">
@@ -89,7 +89,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
         </div>
         <Link
           href={`${authPath}/forgot-password`}
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-500 px-6 text-sm font-semibold hover:bg-emerald-400"
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-500 px-6 text-xs font-semibold hover:bg-emerald-400 sm:h-11 sm:text-sm"
         >
           {isSpanish ? 'Solicitar nuevo enlace' : 'Request new link'}
         </Link>
@@ -100,15 +100,15 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
   const isExecuting = status === 'executing';
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="space-y-1">
-        <h1 className="text-2xl font-medium tracking-tight text-white">{isSpanish ? 'Nueva Contraseña' : 'New Password'}</h1>
-        <p className="text-sm text-slate-400">{isSpanish ? 'Crea una contraseña segura' : 'Create a secure password'}</p>
+        <h1 className="text-lg font-medium tracking-tight text-white sm:text-xl">{isSpanish ? 'Nueva Contraseña' : 'New Password'}</h1>
+        <p className="text-xs text-slate-400 sm:text-sm">{isSpanish ? 'Crea una contraseña segura' : 'Create a secure password'}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-3">
-          <Label htmlFor="newPassword" className="text-sm font-medium text-slate-300">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <div className="space-y-2">
+          <Label htmlFor="newPassword" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Nueva contraseña' : 'New Password'}
           </Label>
           <Input
@@ -117,11 +117,11 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
             placeholder="••••••••"
             disabled={isExecuting}
             {...register('newPassword')}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {newPasswordValue && (
-            <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-3">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-1.5 sm:p-2">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0 sm:gap-y-0.5">
                 <PasswordCheckItem valid={passwordChecks.length} label={isSpanish ? '8+ caracteres' : '8+ chars'} />
                 <PasswordCheckItem valid={passwordChecks.uppercase} label={isSpanish ? 'Mayúscula' : 'Uppercase'} />
                 <PasswordCheckItem valid={passwordChecks.lowercase} label={isSpanish ? 'Minúscula' : 'Lowercase'} />
@@ -133,8 +133,8 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
           {errors.newPassword && <p className="text-xs text-red-400">{errors.newPassword.message}</p>}
         </div>
 
-        <div className="space-y-3">
-          <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-300">
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Confirmar contraseña' : 'Confirm Password'}
           </Label>
           <Input
@@ -143,7 +143,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
             placeholder="••••••••"
             disabled={isExecuting}
             {...register('confirmPassword')}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {confirmPasswordValue && !passwordsMatch && (
             <p className="text-xs text-red-400">{isSpanish ? 'No coinciden' : 'Do not match'}</p>
@@ -153,7 +153,7 @@ const ResetPasswordFormContent = ({ portal = 'buy' }: ResetPasswordFormProps) =>
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
+          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50 sm:h-11 sm:text-sm"
           disabled={isExecuting || !allValid || !passwordsMatch}
         >
           {isExecuting ? (

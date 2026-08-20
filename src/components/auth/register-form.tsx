@@ -21,11 +21,9 @@ export interface RegisterFormProps {
   portal: AppSection;
   redirectTo: string;
   loginUrl: string;
-  title: string;
-  subtitle: string;
 }
 
-export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterFormProps) => {
+export const RegisterForm = ({ portal, loginUrl }: RegisterFormProps) => {
   const router = useRouter();
   const isSpanish = portal === 'buy';
   const portalValue = portal;
@@ -82,13 +80,8 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
   const isExecuting = status === 'executing';
 
   return (
-    <div className="space-y-5 sm:space-y-8">
-      <div className="space-y-1">
-        <h1 className="text-xl font-medium tracking-tight text-white sm:text-2xl">{title}</h1>
-        <p className="text-xs text-slate-400 sm:text-sm">{subtitle}</p>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         {serverError && (
           <InlineAlert
             variant="error"
@@ -98,7 +91,7 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
             onDismiss={() => setServerError(null)}
           />
         )}
-        <div className="space-y-2 sm:space-y-3">
+        <div className="space-y-2">
           <Label htmlFor="fullName" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Nombre completo' : 'Full Name'}
           </Label>
@@ -107,12 +100,12 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
             placeholder="John Doe"
             disabled={isExecuting}
             {...registerField('fullName')}
-            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {errors.fullName && <p className="text-xs text-red-400">{errors.fullName.message}</p>}
         </div>
 
-        <div className="space-y-2 sm:space-y-3">
+        <div className="space-y-2">
           <Label htmlFor="email" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Correo electrónico' : 'Email'}
           </Label>
@@ -122,12 +115,12 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
             placeholder="you@example.com"
             disabled={isExecuting}
             {...registerField('email')}
-            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
         </div>
 
-        <div className="space-y-2 sm:space-y-3">
+        <div className="space-y-2">
           <Label htmlFor="password" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Contraseña' : 'Password'}
           </Label>
@@ -137,12 +130,12 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
             placeholder="••••••••"
             disabled={isExecuting}
             {...registerField('password')}
-            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {passwordValue && (
-            <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-2 sm:p-3">
-              <p className="mb-1.5 text-[10px] font-medium uppercase text-slate-500 sm:mb-2 sm:text-xs">{isSpanish ? 'Requisitos' : 'Requirements'}</p>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 sm:gap-x-4 sm:gap-y-1">
+            <div className="rounded-lg border border-slate-700/30 bg-slate-800/20 p-1.5 sm:p-2">
+              <p className="mb-1 text-[10px] font-medium uppercase text-slate-500 sm:text-xs">{isSpanish ? 'Requisitos' : 'Requirements'}</p>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0 sm:gap-x-4 sm:gap-y-0.5">
                 <PasswordCheckItem valid={checks.length} label={isSpanish ? '8+ caracteres' : '8+ chars'} />
                 <PasswordCheckItem valid={checks.uppercase} label={isSpanish ? 'Mayúscula' : 'Uppercase'} />
                 <PasswordCheckItem valid={checks.lowercase} label={isSpanish ? 'Minúscula' : 'Lowercase'} />
@@ -154,7 +147,7 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
           {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
         </div>
 
-        <div className="space-y-2 sm:space-y-3">
+        <div className="space-y-2">
           <Label htmlFor="confirmPassword" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Confirmar contraseña' : 'Confirm Password'}
           </Label>
@@ -164,7 +157,7 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
             placeholder="••••••••"
             disabled={isExecuting}
             {...registerField('confirmPassword')}
-            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {confirmPasswordValue && !passwordsMatch && (
             <p className="text-xs text-red-400">{isSpanish ? 'Las contraseñas no coinciden' : 'Passwords do not match'}</p>
@@ -174,7 +167,7 @@ export const RegisterForm = ({ portal, loginUrl, title, subtitle }: RegisterForm
 
         <Button
           type="submit"
-          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50 sm:h-12 sm:text-sm"
+          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50 sm:h-11 sm:text-sm"
           disabled={isExecuting || !passwordValid || !passwordsMatch}
         >
           {isExecuting ? (

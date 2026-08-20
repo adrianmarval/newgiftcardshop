@@ -86,12 +86,12 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="space-y-1 text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-          {isRecoveryMode ? <KeyRound className="h-8 w-8 text-emerald-400" /> : <ShieldCheck className="h-8 w-8 text-emerald-400" />}
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
+          {isRecoveryMode ? <KeyRound className="h-6 w-6 text-emerald-400" /> : <ShieldCheck className="h-6 w-6 text-emerald-400" />}
         </div>
-        <h1 className="text-xl font-medium tracking-tight text-white">
+        <h1 className="text-lg font-medium tracking-tight text-white sm:text-xl">
           {isRecoveryMode
             ? isSpanish
               ? 'Código de Respaldo'
@@ -100,7 +100,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
               ? 'Verificación en Dos Pasos'
               : 'Two-Factor Verification'}
         </h1>
-        <p className="text-sm text-slate-400">
+        <p className="text-xs text-slate-400 sm:text-sm">
           {isRecoveryMode
             ? isSpanish
               ? 'Ingresa un código de respaldo'
@@ -111,15 +111,15 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex justify-center py-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <div className="flex justify-center py-1.5">
           {isRecoveryMode ? (
             <Input
               placeholder={isSpanish ? 'Código de respaldo' : 'Backup code'}
               disabled={isPending}
               autoFocus
               {...register('code', { required: true })}
-              className="h-12 max-w-xs rounded-xl border border-slate-700/50 bg-slate-800/30 text-center font-mono tracking-widest uppercase placeholder:text-slate-500 focus:border-emerald-500/50"
+              className="h-10 max-w-xs rounded-xl border border-slate-700/50 bg-slate-800/30 text-center font-mono tracking-widest uppercase placeholder:text-slate-500 focus:border-emerald-500/50 sm:h-11"
             />
           ) : (
             <InputOTP
@@ -142,7 +142,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
         </div>
 
         {!isRecoveryMode && (
-          <div className="flex items-center gap-1 rounded-xl border border-slate-700/30 bg-slate-800/20 p-4">
+          <div className="flex items-center gap-1 rounded-xl border border-slate-700/30 bg-slate-800/20 p-3">
             <Checkbox
               id="trust"
               checked={trustDeviceValue}
@@ -159,7 +159,7 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
+          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50 sm:h-11 sm:text-sm"
           disabled={isPending || (isRecoveryMode ? !codeValue : codeValue.length !== 6)}
         >
           {isPending ? (

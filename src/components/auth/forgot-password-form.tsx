@@ -58,26 +58,26 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: ForgotPasswordFormProps) 
   const isExecuting = status === 'executing';
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="space-y-1">
-        <h1 className="text-2xl font-medium tracking-tight text-white">{isSpanish ? 'Recuperar Contraseña' : 'Reset Password'}</h1>
-        <p className="text-sm text-slate-400">
+        <h1 className="text-lg font-medium tracking-tight text-white sm:text-xl">{isSpanish ? 'Recuperar Contraseña' : 'Reset Password'}</h1>
+        <p className="text-xs text-slate-400 sm:text-sm">
           {isSpanish ? 'Ingresa tu correo para recibir un enlace de recuperación' : 'Enter your email to receive a reset link'}
         </p>
       </div>
 
       {success && (
-        <div className="flex items-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-          <CheckCircle className="h-5 w-5 shrink-0 text-emerald-400" />
-          <p className="text-sm text-emerald-300">
+        <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
+          <CheckCircle className="h-4 w-4 shrink-0 text-emerald-400" />
+          <p className="text-xs text-emerald-300 sm:text-sm">
             {isSpanish ? 'Si existe una cuenta, recibirás un enlace en tu correo.' : 'If an account exists, you will receive a reset link.'}
           </p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-3">
-          <Label htmlFor="email" className="text-sm font-medium text-slate-300">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Correo electrónico' : 'Email'}
           </Label>
           <Input
@@ -86,14 +86,14 @@ export const ForgotPasswordForm = ({ portal = 'buy' }: ForgotPasswordFormProps) 
             placeholder="you@example.com"
             disabled={isExecuting || success}
             {...register('email')}
-            className="h-12 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
         </div>
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50"
+          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50 sm:h-11 sm:text-sm"
           disabled={isExecuting || success}
         >
           {isExecuting ? (

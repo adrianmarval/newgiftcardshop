@@ -29,7 +29,7 @@ export function PasskeySignInButton({ portal, isSpanish, disabled }: PasskeySign
   if (!supported) return null;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3">
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-slate-700/50" />
         <span className="text-[11px] text-slate-500 sm:text-xs">{isSpanish ? 'o' : 'or'}</span>
@@ -39,7 +39,7 @@ export function PasskeySignInButton({ portal, isSpanish, disabled }: PasskeySign
       <Button
         type="button"
         variant="outline"
-        className="h-10 w-full rounded-xl border-slate-700/50 bg-slate-800/30 text-xs font-semibold text-slate-200 hover:bg-slate-800/60 hover:text-white sm:h-12 sm:text-sm"
+        className="h-10 w-full rounded-xl border-slate-700/50 bg-slate-800/30 text-xs font-semibold text-slate-200 hover:bg-slate-800/60 hover:text-white sm:h-11 sm:text-sm"
         disabled={disabled || isPending}
         onClick={() => void signInWithPasskey()}
       >

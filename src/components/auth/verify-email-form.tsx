@@ -40,13 +40,13 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
 
   if (status === 'success') {
     return (
-      <div className="space-y-8">
+      <div className="space-y-4">
         <div className="space-y-1 text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-            <CheckCircle className="h-8 w-8 text-emerald-400" />
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
+            <CheckCircle className="h-6 w-6 text-emerald-400" />
           </div>
-          <h1 className="text-xl font-medium tracking-tight text-white">{isSpanish ? '¡Correo Verificado!' : 'Email Verified!'}</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-lg font-medium tracking-tight text-white sm:text-xl">{isSpanish ? '¡Correo Verificado!' : 'Email Verified!'}</h1>
+          <p className="text-xs text-slate-400 sm:text-sm">
             {isSpanish ? 'Tu email ha sido confirmado exitosamente.' : 'Your email has been confirmed successfully.'}
           </p>
         </div>
@@ -54,7 +54,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
         <Button
           type="button"
           onClick={() => router.push(targetDashboard)}
-          className="h-12 w-full rounded-xl bg-emerald-500 text-sm font-semibold hover:bg-emerald-400"
+          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 sm:h-11 sm:text-sm"
         >
           <span className="flex items-center gap-1">
             {isSpanish ? 'Ir al Dashboard' : 'Go to Dashboard'}
@@ -67,13 +67,13 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
 
   if (status === 'error') {
     return (
-      <div className="space-y-8">
+      <div className="space-y-4">
         <div className="space-y-1 text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
-            <XCircle className="h-8 w-8 text-red-400" />
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
+            <XCircle className="h-6 w-6 text-red-400" />
           </div>
-          <h1 className="text-xl font-medium tracking-tight text-white">{isSpanish ? 'Verificación Fallida' : 'Verification Failed'}</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-lg font-medium tracking-tight text-white sm:text-xl">{isSpanish ? 'Verificación Fallida' : 'Verification Failed'}</h1>
+          <p className="text-xs text-slate-400 sm:text-sm">
             {isSpanish
               ? 'El enlace expiró o es inválido. Contacta a soporte para más ayuda.'
               : 'The link expired or is invalid. Contact support for help.'}
@@ -84,7 +84,7 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
           type="button"
           variant="ghost"
           onClick={() => router.push(`/${portal}/auth/login`)}
-          className="h-12 w-full text-sm text-slate-400 hover:text-white"
+          className="h-10 w-full text-xs text-slate-400 hover:text-white sm:h-11 sm:text-sm"
         >
           {isSpanish ? 'Volver al Login' : 'Back to Login'}
         </Button>
@@ -93,13 +93,13 @@ const VerifyEmailFormContent = ({ portal = 'buy' }: { portal?: AppSection }) => 
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="space-y-1 text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-          <Mail className="h-8 w-8 text-emerald-400" />
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
+          <Mail className="h-6 w-6 text-emerald-400" />
         </div>
-        <h1 className="text-xl font-medium tracking-tight text-white">{isSpanish ? 'Revisa tu Correo' : 'Check Your Email'}</h1>
-        <p className="text-sm text-slate-400">
+        <h1 className="text-lg font-medium tracking-tight text-white sm:text-xl">{isSpanish ? 'Revisa tu Correo' : 'Check Your Email'}</h1>
+        <p className="text-xs text-slate-400 sm:text-sm">
           {isSpanish
             ? 'Te enviamos un enlace de verificación. Revisa tu bandeja de entrada.'
             : 'We sent you a verification link. Check your inbox.'}

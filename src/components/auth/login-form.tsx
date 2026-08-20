@@ -19,8 +19,6 @@ import type { z } from 'zod';
 
 export interface LoginFormProps {
   portal: AppSection;
-  title: string;
-  subtitle: string;
   forgotPasswordUrl: string;
   emailPlaceholder?: string;
   registerUrl?: string;
@@ -30,8 +28,6 @@ export interface LoginFormProps {
 
 export const LoginForm = ({
   portal,
-  title,
-  subtitle,
   forgotPasswordUrl,
   emailPlaceholder = 'you@example.com',
   registerUrl,
@@ -118,14 +114,9 @@ export const LoginForm = ({
   const isExecuting = status === 'executing';
 
   return (
-    <div className="space-y-5 sm:space-y-8">
-      <div className="space-y-1">
-        <h1 className="text-xl font-medium tracking-tight text-white sm:text-2xl">{title}</h1>
-        <p className="text-xs text-slate-400 sm:text-sm">{subtitle}</p>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-        <div className="space-y-2 sm:space-y-3">
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <div className="space-y-2">
           <Label htmlFor="email" className="text-xs font-medium text-slate-300 sm:text-sm">
             {isSpanish ? 'Correo electrónico' : 'Email'}
           </Label>
@@ -136,12 +127,12 @@ export const LoginForm = ({
             autoComplete="username webauthn"
             disabled={isExecuting}
             {...register('email')}
-            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
         </div>
 
-        <div className="space-y-2 sm:space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password" className="text-xs font-medium text-slate-300 sm:text-sm">
               {isSpanish ? 'Contraseña' : 'Password'}
@@ -156,14 +147,14 @@ export const LoginForm = ({
             placeholder="••••••••"
             disabled={isExecuting}
             {...register('password')}
-            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
+            className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-11"
           />
           {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
         </div>
 
         <Button
           type="submit"
-          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50 sm:h-12 sm:text-sm"
+          className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-semibold hover:bg-emerald-400 focus:ring-emerald-500/50 sm:h-11 sm:text-sm"
           disabled={isExecuting}
         >
           {isExecuting ? (

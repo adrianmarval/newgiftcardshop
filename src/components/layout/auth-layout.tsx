@@ -19,11 +19,11 @@ export function AuthLayout({ children, bgColor, gradientFrom, gradientVia, blobB
       <div className={`absolute top-0 right-0 h-64 w-64 rounded-full ${blobBg} blur-3xl`} />
 
       <div className="relative z-10 w-full max-w-sm">
-        <div className="mb-6 text-center sm:mb-12">
+        <div className="mb-3 text-center sm:mb-5">
           <h2 className="text-2xl font-light tracking-tight text-white sm:text-3xl">
             <span className={`font-semibold ${accentText}`}>{process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}</span> {title}
           </h2>
-          <p className="mt-1 text-xs text-slate-400 sm:mt-2 sm:text-sm">{subtitle}</p>
+          {subtitle && <p className="mt-1 text-xs text-slate-400 sm:mt-1.5 sm:text-sm">{subtitle}</p>}
         </div>
         {children}
       </div>

@@ -58,16 +58,11 @@ export interface PortalAuthConfig {
     subtitle: string;
   };
   login: {
-    title: string;
-    subtitle: string;
     emailPlaceholder?: string;
     registerPrompt?: string;
     registerLinkText?: string;
   };
-  register?: {
-    title: string;
-    subtitle: string;
-  };
+  register?: object;
   verify2faTitle: string;
   forgotPasswordTitle: string;
   resetPasswordTitle: string;
@@ -86,8 +81,6 @@ export const PORTAL_AUTH_CONFIG: Record<AppSection, PortalAuthConfig> = {
       subtitle: 'Portal de Administración',
     },
     login: {
-      title: 'Portal de Admin',
-      subtitle: 'Acceso restringido — solo administradores',
       emailPlaceholder: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'admin@example.com',
     },
     verify2faTitle: 'Verificar 2FA Admin',
@@ -106,15 +99,10 @@ export const PORTAL_AUTH_CONFIG: Record<AppSection, PortalAuthConfig> = {
       subtitle: 'Mercado de Tarjetas de Regalo',
     },
     login: {
-      title: 'Inicio de Sesión Comprador',
-      subtitle: 'Accede a tu cuenta para explorar y comprar tarjetas de regalo',
       registerPrompt: '¿No tienes una cuenta?',
       registerLinkText: 'Regístrate',
     },
-    register: {
-      title: 'Crear Cuenta',
-      subtitle: 'Regístrate para empezar a comprar tarjetas de regalo a excelentes precios',
-    },
+    register: {},
     verify2faTitle: 'Verificar 2FA',
     forgotPasswordTitle: 'Olvidé mi Contraseña',
     resetPasswordTitle: 'Restablecer Contraseña',
@@ -131,15 +119,10 @@ export const PORTAL_AUTH_CONFIG: Record<AppSection, PortalAuthConfig> = {
       subtitle: 'Gift Card Seller Portal',
     },
     login: {
-      title: 'Seller Sign In',
-      subtitle: 'Access your seller dashboard to manage gift cards',
       registerPrompt: "Don't have a seller account?",
       registerLinkText: 'Create one',
     },
-    register: {
-      title: 'Become a Seller',
-      subtitle: 'Create your seller account to start listing gift cards',
-    },
+    register: {},
     verify2faTitle: 'Verify 2FA',
     forgotPasswordTitle: 'Forgot Password',
     resetPasswordTitle: 'Reset Password',

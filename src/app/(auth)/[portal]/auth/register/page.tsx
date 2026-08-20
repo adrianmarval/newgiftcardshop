@@ -11,15 +11,13 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { portal } = await params;
   if (!isAppSection(portal)) return {};
-  const _config = PORTAL_AUTH_CONFIG[portal];
-  const isBuy = portal === 'buy';
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop';
+  const labels: Record<string, string> = {
+    buy: 'Regístrate',
+    sell: 'Become a Seller',
+  };
   return {
-    title: isBuy
-      ? `Regístrate | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`
-      : `Become a Seller | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
-    description: isBuy
-      ? `Crea tu cuenta de comprador de ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`
-      : `Create a seller account on ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+    title: `${labels[portal] || 'Register'} | ${appName}`,
   };
 }
 
@@ -37,8 +35,6 @@ export default async function DynamicRegisterPage({ params }: PageProps) {
         portal={portal}
         redirectTo={`/${portal}/auth/login`}
         loginUrl={`${basePath}/login`}
-        title={config.register.title}
-        subtitle={config.register.subtitle}
       />
     </Suspense>
   );
