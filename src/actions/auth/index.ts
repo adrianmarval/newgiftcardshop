@@ -1,3 +1,4 @@
+export { completePasskeyLogin } from './complete-passkey-login';
 export { forgotPassword } from './forgot-password';
 export { generateTelegramLink } from './generate-telegram-link';
 export { login } from './login';

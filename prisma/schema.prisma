@@ -49,6 +49,7 @@ model User {
 
   twoFactor        TwoFactor?
   twoFactorEnabled Boolean    @default(false)
+  passkeys         Passkey[]
 
   // Notificaciones
   notificationPreference NotificationPreference?
@@ -509,6 +510,27 @@ model TwoFactor {
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("twoFactor")
+}
+
+// Requerido por el plugin passkey de Better Auth (WebAuthn)
+model Passkey {
+  id           String  @id @default(cuid())
+  name         String?
+  publicKey    String
+  credentialID String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  aaguid       String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("passkey")
 }
 
 model TelegramUser {

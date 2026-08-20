@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { ProfileInfoSection } from '@/components/auth/profile/profile-info-section';
 import { PasswordSection } from '@/components/auth/profile/password-section';
 import { SessionsSection } from '@/components/auth/profile/sessions-section';
+import { PasskeysSection } from '@/components/auth/profile/passkeys-section';
 import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
 import { PaymentMethodSection } from '@/components/sell/payment-method';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -83,6 +84,7 @@ export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUr
           <TabsContent value="security">
             <div className="space-y-4">
               <PasswordSection />
+              <PasskeysSection />
               <SessionsSection />
             </div>
           </TabsContent>

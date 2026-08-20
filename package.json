@@ -16,6 +16,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@better-auth/passkey": "^1.5.6",
     "@grammyjs/ratelimiter": "^1.2.1",
     "@grammyjs/storage-prisma": "^2.5.1",
     "@hookform/resolvers": "^5.4.0",
@@ -23,6 +24,7 @@
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@react-email/components": "^1.0.10",
+    "@simplewebauthn/browser": "13.3.0",
     "@tabler/icons-react": "^3.41.0",
     "@whiskeysockets/baileys": "7.0.0-rc13",
     "bcryptjs": "^3.0.3",

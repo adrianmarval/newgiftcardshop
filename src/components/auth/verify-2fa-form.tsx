@@ -13,7 +13,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import type { AppSection } from '@/types';
-import { dashboardMap } from '@/types';
 
 export interface Verify2FAFormProps {
   portal: AppSection;
@@ -70,7 +69,9 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
         }
       }
 
-      router.push(dashboardMap[portal]);
+      // La página de setup-passkey es self-guarding: si el usuario ya tiene
+      // passkeys o la dismissió, redirige al dashboard sin renderizar.
+      router.push(`/${portal}/auth/setup-passkey`);
       router.refresh();
     } catch (err) {
       console.error('2FA verification error:', err);

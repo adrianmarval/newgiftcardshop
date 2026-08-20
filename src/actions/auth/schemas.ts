@@ -25,6 +25,12 @@ export const loginOutputSchema = z.union([
   z.object({ success: z.literal(false), error: z.string().optional(), needsVerification: z.boolean().optional() }),
 ]);
 
+export const passkeyLoginInputSchema = z.object({
+  portal: portalSchema,
+});
+
+export const passkeyLoginOutputSchema = loginOutputSchema;
+
 export const registerInputSchema = z
   .object({
     fullName: z.string().trim().min(1, 'Full name is required'),

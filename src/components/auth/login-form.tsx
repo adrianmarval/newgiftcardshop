@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/actions/auth/login';
 import { resendVerification } from '@/actions/auth/resend-verification';
+import { PasskeySignInButton } from '@/components/auth/passkey/passkey-sign-in-button';
 import { useAction } from 'next-safe-action/hooks';
 import { loginInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';
@@ -132,6 +133,7 @@ export const LoginForm = ({
             id="email"
             type="email"
             placeholder={emailPlaceholder}
+            autoComplete="username webauthn"
             disabled={isExecuting}
             {...register('email')}
             className="h-10 rounded-xl border border-slate-700/50 bg-slate-800/30 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 sm:h-12"
@@ -176,6 +178,8 @@ export const LoginForm = ({
           )}
         </Button>
       </form>
+
+      <PasskeySignInButton portal={portal} isSpanish={isSpanish} disabled={isExecuting} />
 
       {registerUrl && (
         <p className="text-center text-xs text-slate-400 sm:text-sm">

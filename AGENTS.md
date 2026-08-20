@@ -4,7 +4,7 @@
 
 - **Framework**: Next.js 15 (App Router) + TypeScript
 - **DB**: PostgreSQL 17 + Prisma 7 (adapter-pg)
-- **Auth**: Better Auth (email/password + Telegram linking)
+- **Auth**: Better Auth (email/password + passkeys/WebAuthn + Telegram linking)
 - **Bots**: grammy (seller-bot + buyer-bot, webhooks en prod / polling en dev)
 - **AI/OCR**: OpenRouter/Gemini para extracción de claim codes desde screenshots
 - **Payments**: Binance Pay (integración pendiente — el buyer reporta TxID manualmente)
@@ -19,7 +19,7 @@ src/
 │   ├── buyer/           # orders, giftcards, issues, preferences, stats
 │   ├── seller/          # batches (publish, list, check-codes), ocr, rates, stats
 │   ├── admin/           # payments, orders, batches, binance, users, catalog, whatsapp, stats
-│   ├── auth/            # login, register, logout, forgot/reset password, verify email
+│   ├── auth/            # login, register, logout, forgot/reset password, verify email, passkey login guard
 │   ├── catalog/         # brands, countries (público, read-only)
 │   ├── notifications/   # notification CRUD
 │   ├── platform/        # settings (balance, binance pay id)
@@ -30,7 +30,7 @@ src/
 │   └── shared/          # middleware, ui, registration, formatters, types
 ├── components/
 │   ├── admin/           # Dashboard admin (batches, orders, payments, brands, users, config, charts, whatsapp)
-│   ├── auth/            # Cross-cutting auth (login, register, profile, 2FA)
+│   ├── auth/            # Cross-cutting auth (login, register, profile, 2FA, passkey/)
 │   ├── buy/             # Wizard de compra web (5 steps) + giftcard-orders
 │   ├── common/          # Shared presentational components (stat-card, giftcard-item, etc.)
 │   ├── emails/          # Resend email templates
@@ -164,6 +164,8 @@ TelegramOtp {
 3. **Cancelación automática de batches**: Un batch se auto-cancela cuando su monto a pagar es 0 (todas las tarjetas reportadas con saldo cero) Y todas sus cards están confirmadas (`isConfirmed`). Trigger: evento (`confirmOrderUsage`/`cancelOrder` en `order-lifecycle.service.ts`) + cron safety net (15min en `server.ts`). La guarda `isConfirmed` garantiza que los reportes son irreversibles antes de cancelar. Reutiliza `notifySellerBatchCancelled` existente.
 4. **codeHash unique global**: Un claim code no debe existir en múltiples brand-countries. Si existe en US, no puede existir en UK.
 5. **Fotos de evidencia del bot**: Se guarda solo `telegramFileId` (sin cifrar/descargar). Deuda técnica conocida.
+6. **Passkeys**: Plugin `@better-auth/passkey` (pineado a 1.5.6, matchea better-auth core — NO usar `^` en la versión, un minor más nuevo exige core más nuevo). `signIn.passkey` bypasea la action `login`, por eso existe `actions/auth/complete-passkey-login.ts` que revalida la guarda rol/portal server-side (sin ella, un BUYER con passkey entraría al portal sell). El sign-in con passkey NO pide TOTP aunque el usuario tenga 2FA activo (comportamiento del plugin — la passkey ya es factor fuerte: posesión + biometría). Prompt de registro post-login: vista intersticial dedicada `/[portal]/auth/setup-passkey` (page server self-guarding: sin sesión/con passkeys/dismissed → redirect; `PasskeySetupView` client). La action `login` decide el redirect (passkey count + cookie `passkey_setup_done`, definida en `lib/constants.ts`, seteada client-side vía `markPasskeySetupDone`); el flujo 2FA aterriza ahí siempre y la página rebota al dashboard si no aplica. Conditional UI (autofill) activa en el campo email del login (`autocomplete="username webauthn"`). WebAuthn no funciona en iframes cross-origin (Telegram WebView) — la UI de passkey se auto-oculta si `PublicKeyCredential` no está disponible.
+   - **Ceremonia de autenticación propia**: NO usamos `authClient.signIn.passkey()` — el wrapper del plugin hace `console.error` incondicional en cualquier excepción, incluida la cancelación del usuario (ruido rojo en consola al cancelar). `use-passkey-sign-in.ts` implementa la ceremonia con `@simplewebauthn/browser` directo (mismos endpoints `/passkey/generate-authenticate-options` + `/passkey/verify-authentication` vía `authClient.$fetch` — el atomListener `$sessionSignal` refresca la sesión igual). Cancelaciones (`ERROR_CEREMONY_ABORTED`, `ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`/NotAllowedError) se tragan en silencio. El lado de registro (`addPasskey`) SÍ es limpio y se usa el wrapper del plugin.
 
 ## Seguridad
 

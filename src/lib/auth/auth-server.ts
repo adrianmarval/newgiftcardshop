@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
 import { twoFactor, customSession } from 'better-auth/plugins';
+import { passkey } from '@better-auth/passkey';
 import prisma from '@/lib/prisma';
 import { resend, EMAIL_FROM } from '@/lib/resend';
 import { render } from '@react-email/components';
@@ -104,6 +105,7 @@ export const auth = betterAuth({
       issuer: process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop',
       skipVerificationOnEnable: false,
     }),
+    passkey(),
     nextCookies(),
   ],
 });
