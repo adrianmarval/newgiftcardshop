@@ -7,6 +7,7 @@ import { startAuthentication, WebAuthnError } from '@simplewebauthn/browser';
 import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser';
 import { authClient } from '@/lib/auth/auth-client';
 import { completePasskeyLogin } from '@/actions/auth/complete-passkey-login';
+import { resendVerification } from '@/actions/auth/resend-verification';
 import { showSwal } from '@/lib/ui';
 import { isWebAuthnSupported } from './passkey-utils';
 import type { AppSection } from '@/types';
@@ -41,7 +42,26 @@ export function usePasskeySignIn(portal: AppSection, isSpanish: boolean) {
       if ('redirectTo' in data && data.redirectTo) {
         router.push(data.redirectTo);
       } else if ('error' in data && data.error) {
-        showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+        const needsVerification = 'needsVerification' in data && data.needsVerification;
+        if (needsVerification) {
+          const email = 'email' in data ? data.email : undefined;
+          showSwal
+            .fire({
+              icon: 'error',
+              title: isSpanish ? 'Email no verificado' : 'Email not verified',
+              text: data.error,
+              confirmButtonText: isSpanish ? 'Reenviar email' : 'Resend email',
+              cancelButtonText: isSpanish ? 'Cancelar' : 'Cancel',
+              showCancelButton: true,
+            })
+            .then((result) => {
+              if (result.isConfirmed && email) {
+                resendExecute({ portal, email });
+              }
+            });
+        } else {
+          showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+        }
       }
     },
     onError: ({ error }) => {
@@ -49,6 +69,27 @@ export function usePasskeySignIn(portal: AppSection, isSpanish: boolean) {
         icon: 'error',
         title: 'Error',
         text: error.serverError || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'),
+      });
+    },
+  });
+
+  const { execute: resendExecute } = useAction(resendVerification, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        showSwal.fire({
+          icon: 'success',
+          title: isSpanish ? 'Email reenviado' : 'Email resent',
+          text: isSpanish ? 'Revisa tu bandeja de entrada' : 'Check your inbox',
+        });
+      } else if (data?.error) {
+        showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+      }
+    },
+    onError: ({ error }) => {
+      showSwal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.serverError || (isSpanish ? 'Error al reenviar' : 'Failed to resend'),
       });
     },
   });

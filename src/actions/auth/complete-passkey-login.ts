@@ -33,7 +33,7 @@ export const completePasskeyLogin = actionClient
         return { success: false as const, error: 'Passkey authentication failed' };
       }
 
-      const user = session.user as { id: string; email: string; role?: string };
+      const user = session.user as { id: string; email: string; role?: string; emailVerified?: boolean | null };
 
       if (user.role !== requiredRole && user.role !== 'ADMIN') {
         await auth.api.signOut({ headers: hdrs });
@@ -44,6 +44,22 @@ export const completePasskeyLogin = actionClient
           ip,
         });
         return { success: false as const, error: `Your account does not have ${requiredRole.toLowerCase()} access` };
+      }
+
+      if (!user.emailVerified) {
+        await auth.api.signOut({ headers: hdrs });
+        logger.warn('Login con passkey con email no verificado', {
+          flow: 'auth',
+          action: 'login',
+          metadata: { email: user.email, portal },
+          ip,
+        });
+        return {
+          success: false as const,
+          error: 'Your email has not been verified. Please check your inbox or resend the verification email.',
+          needsVerification: true,
+          email: user.email,
+        };
       }
 
       logger.action('auth', 'login', `Login con passkey exitoso: ${user.email}`, {

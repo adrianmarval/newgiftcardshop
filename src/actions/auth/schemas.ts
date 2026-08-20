@@ -29,7 +29,15 @@ export const passkeyLoginInputSchema = z.object({
   portal: portalSchema,
 });
 
-export const passkeyLoginOutputSchema = loginOutputSchema;
+export const passkeyLoginOutputSchema = z.union([
+  z.object({ success: z.literal(true), redirectTo: z.string() }),
+  z.object({
+    success: z.literal(false),
+    error: z.string().optional(),
+    needsVerification: z.boolean().optional(),
+    email: z.string().optional(),
+  }),
+]);
 
 export const registerInputSchema = z
   .object({

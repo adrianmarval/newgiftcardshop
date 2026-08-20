@@ -35,6 +35,9 @@ export default async function SetupPasskeyPage({ params }: PageProps) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) redirect(`/${portal}/auth/login`);
 
+  const user = session.user as { id: string; emailVerified: boolean | null };
+  if (!user.emailVerified) redirect(`/${portal}/auth/login`);
+
   const passkeyCount = await prisma.passkey.count({ where: { userId: session.user.id } });
   if (passkeyCount > 0) redirect(dashboard);
 
