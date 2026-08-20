@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ArrowLeft, XCircle, Ban, Info } from 'lucide-react';
+import { Check, XCircle, Ban, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
 import { getOrderCards } from '@/actions/buyer/giftcards/get-order-cards';
 import { confirmUsage } from '@/actions/buyer/orders/confirm-usage';
@@ -16,6 +17,7 @@ import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
 import { formatCurrency } from '@/lib/utils';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
+import { StepFooter } from '@/components/common';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -136,6 +138,24 @@ export const ConfirmUsageStep = () => {
 
   const allCardsWorthless = totalAmount === 0 && foundGiftcards.length > 0;
 
+  const blockers = useMemo(() => {
+    if (!orderId) return ['No hay orden activa'];
+    return [];
+  }, [orderId]);
+
+  const handleContinue = () => {
+    if (allCardsWorthless) {
+      handleCancelOrder();
+    } else {
+      handleConfirmUsage();
+    }
+  };
+
+  useStepHotkeys({
+    onContinue: handleContinue,
+    enabled: blockers.length === 0 && confirmStatus !== 'executing' && cancelStatus !== 'executing',
+  });
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <BuyStepsProgress />
@@ -200,35 +220,21 @@ export const ConfirmUsageStep = () => {
         {errorMessage && <p className="text-destructive text-xs font-medium md:text-sm">{errorMessage}</p>}
       </Card>
 
-      <div className="flex items-center justify-center-safe gap-1">
-        <Button
-          variant="ghost"
-          onClick={() => setStep(3)}
-          className="text-muted-foreground hover:bg-muted h-9 text-xs font-bold md:h-10 md:text-sm"
-          disabled={confirmStatus === 'executing' || cancelStatus === 'executing'}
-        >
-          <ArrowLeft className="mr-1 h-3 w-3 md:mr-2 md:h-4 md:w-4" /> Volver
-        </Button>
+      {blockers.length > 0 && (
+        <div className="flex flex-col items-center gap-0.5">
+          {blockers.map((w, i) => (
+            <p key={i} className="text-destructive text-center text-xs font-medium md:text-sm">{w}</p>
+          ))}
+        </div>
+      )}
 
-        {allCardsWorthless ? (
-          <Button
-            variant={'destructive'}
-            onClick={handleCancelOrder}
-            disabled={cancelStatus === 'executing' || !orderId}
-            className="h-9 text-xs md:h-10 md:text-sm"
-          >
-            {cancelStatus === 'executing' ? <Spinner size="sm" /> : 'Cancelar Orden'}
-          </Button>
-        ) : (
-          <Button
-            onClick={handleConfirmUsage}
-            disabled={confirmStatus === 'executing' || !orderId}
-            className="bg-primary text-primary-foreground h-9 text-xs font-bold md:h-10 md:text-sm"
-          >
-            {confirmStatus === 'executing' ? <Spinner size="sm" /> : 'Confirmar y Pagar'}
-          </Button>
-        )}
-      </div>
+      <StepFooter
+        ctaLabel={allCardsWorthless ? 'Cancelar Orden' : 'Confirmar y Pagar'}
+        ctaLoading={confirmStatus === 'executing' || cancelStatus === 'executing'}
+        ctaDisabled={!orderId || confirmStatus === 'executing' || cancelStatus === 'executing'}
+        onContinue={handleContinue}
+        back={{ label: 'Volver', onClick: () => setStep(3), disabled: confirmStatus === 'executing' || cancelStatus === 'executing' }}
+      />
 
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>

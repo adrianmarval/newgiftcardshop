@@ -32,9 +32,11 @@ export default async function SellerDashboardPage() {
     id: batch.id,
     sellRate: batch.sellRate,
     isPaid: batch.isPaid,
+    cancelledAt: batch.cancelledAt,
     createdAt: batch.createdAt,
     giftcards: batch.giftcards,
     cardsCount: batch.cardsCount,
+    confirmedCount: batch.confirmedCount,
     effectiveTotal: batch.effectiveTotal,
   }));
 

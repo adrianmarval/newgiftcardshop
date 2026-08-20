@@ -8,13 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { completeOrder } from '@/actions/buyer/orders/complete-order';
 import { getBinancePayPaymentId } from '@/actions/platform';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
-import { Spinner } from '@/components/ui/spinner';
 import { copyToClipboard } from '@/lib/utils/clipboard';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
+import { StepFooter, FieldError } from '@/components/common';
 import { useRouter } from 'next/navigation';
 
 export const PaymentStep = () => {
@@ -74,6 +75,13 @@ export const PaymentStep = () => {
     setErrorMessage(null);
     completeExecute({ orderId: storedOrderId, _transactionId: transactionId });
   };
+
+  const orderWarning = !storedOrderId ? 'No hay orden activa' : null;
+
+  useStepHotkeys({
+    onContinue: handleNotify,
+    enabled: !orderWarning && completeStatus !== 'executing',
+  });
 
   if (notified) {
     return (
@@ -160,11 +168,12 @@ export const PaymentStep = () => {
               placeholder="ID de transacción"
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
+              autoFocus
               className="border-border text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 h-8 text-center font-mono text-sm md:h-9 md:text-base"
             />
           </div>
 
-          {errorMessage && <p className="text-destructive text-center text-xs font-medium">{errorMessage}</p>}
+          <FieldError message={errorMessage} />
 
           <div className="border-primary/20 bg-primary/5 flex w-full max-w-xs gap-1 rounded-xl border p-1.5 text-left md:max-w-sm md:p-2">
             <Info className="text-primary mt-0.5 h-3 w-3 md:h-3.5 md:w-3.5" />
@@ -173,22 +182,16 @@ export const PaymentStep = () => {
         </div>
       </Card>
 
-      <div className="flex items-center justify-center-safe gap-1">
-        <Button
-          onClick={handleNotify}
-          disabled={!storedOrderId || completeStatus === 'executing'}
-          className="bg-primary text-primary-foreground h-9 text-xs font-bold md:h-10 md:text-sm"
-        >
-          {completeStatus === 'executing' ? (
-            <>
-              <Spinner size="sm" className="mr-1.5 h-3.5 w-3.5" />
-              Notificando...
-            </>
-          ) : (
-            'Notificar Pago'
-          )}
-        </Button>
-      </div>
+      {orderWarning && (
+        <p className="text-destructive text-center text-xs font-medium md:text-sm">{orderWarning}</p>
+      )}
+
+      <StepFooter
+        ctaLabel="Notificar Pago"
+        ctaLoading={completeStatus === 'executing'}
+        ctaDisabled={!storedOrderId || completeStatus === 'executing'}
+        onContinue={handleNotify}
+      />
     </div>
   );
 };

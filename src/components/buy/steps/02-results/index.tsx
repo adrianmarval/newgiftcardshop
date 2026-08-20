@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, ChevronRight } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { getBrandById } from '@/actions/catalog/get-brand-by-id';
 import { createOrder } from '@/actions/buyer/orders/create-order';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
@@ -27,6 +28,7 @@ import type { Brand } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { showAlert } from '@/lib/ui';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
+import { StepFooter } from '@/components/common';
 
 export const ResultsStep = () => {
   const {
@@ -131,6 +133,20 @@ export const ResultsStep = () => {
 
   const rawTotal = useMemo(() => foundGiftcards.reduce((sum, card) => sum + card.amount, 0), [foundGiftcards]);
   const discountedTotal = useMemo(() => rawTotal * resultsState.buyRate, [rawTotal, resultsState.buyRate]);
+
+  const openConfirmDialog = () => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }));
+
+  const blockers = useMemo(() => {
+    const list: string[] = [];
+    if (foundGiftcards.length === 0) list.push('No hay tarjetas para procesar');
+    if (resultsState.buyRate === 0) list.push('No se pudo obtener la tasa de compra');
+    return list;
+  }, [foundGiftcards.length, resultsState.buyRate]);
+
+  useStepHotkeys({
+    onContinue: openConfirmDialog,
+    enabled: blockers.length === 0 && createOrderStatus !== 'executing',
+  });
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
@@ -248,22 +264,21 @@ export const ResultsStep = () => {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-center-safe gap-1">
-        <Button
-          onClick={() => setStep(1)}
-          variant="outline"
-          className="border-border text-muted-foreground hover:bg-muted h-9 flex-1 text-xs font-bold md:h-10 md:text-sm"
-        >
-          Ajustar
-        </Button>
-        <Button
-          onClick={() => setResultsState((prev) => ({ ...prev, showConfirmDialog: true }))}
-          disabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === 'executing'}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 flex-1 text-xs font-bold md:h-10 md:text-sm"
-        >
-          Realizar Pedido <ChevronRight className="ml-1 h-3 w-3 md:ml-2 md:h-4 md:w-4" />
-        </Button>
-      </div>
+      {blockers.length > 0 && (
+        <div className="flex flex-col items-center gap-0.5">
+          {blockers.map((w, i) => (
+            <p key={i} className="text-destructive text-center text-xs font-medium md:text-sm">{w}</p>
+          ))}
+        </div>
+      )}
+
+      <StepFooter
+        ctaLabel="Realizar Pedido"
+        ctaLoading={createOrderStatus === 'executing'}
+        ctaDisabled={foundGiftcards.length === 0 || resultsState.buyRate === 0 || createOrderStatus === 'executing'}
+        onContinue={openConfirmDialog}
+        back={{ label: 'Ajustar', onClick: () => setStep(1) }}
+      />
 
       {/* Confirmation Dialog */}
       <AlertDialog

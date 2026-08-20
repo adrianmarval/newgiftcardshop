@@ -32,9 +32,11 @@ export interface RecentBatch {
   id: number;
   sellRate: number;
   isPaid: boolean;
+  cancelledAt: string | null;
   createdAt: string;
   giftcards: Array<{ id: string; amount: number; brand: { name: string; icon: string; image: string | null } }>;
   cardsCount: number;
+  confirmedCount: number;
   effectiveTotal: number;
 }
 

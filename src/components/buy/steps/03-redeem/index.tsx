@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clipboard, ClipboardCheck, ChevronRight, X } from 'lucide-react';
+import { Clipboard, ClipboardCheck, X } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
 import { getOrderCards } from '@/actions/buyer/giftcards/get-order-cards';
 import { reportIssue as reportIssueAction } from '@/actions/buyer/giftcards/issues/report-issue';
@@ -20,6 +21,7 @@ import { useAction } from 'next-safe-action/hooks';
 import { formatCurrency } from '@/lib/utils';
 import { copyToClipboard } from '@/lib/utils/clipboard';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
+import { StepFooter } from '@/components/common';
 
 export const RedeemStep = () => {
   const { foundGiftcards, setFoundGiftcards, orderStatus, orderBuyRate, reportIssue, setStep, setOrderStatus, orderId, selectedBrand, selectedCountry, selectedCurrency } = useBuyFlow();
@@ -193,6 +195,8 @@ export const RedeemStep = () => {
     }
     setStep(4);
   };
+
+  useStepHotkeys({ onContinue: handleAdvanceToConfirm });
 
   // Calculate totals based on status and apply buyRate
   const rawTotal = useMemo(() => foundGiftcards.reduce((sum, card) => {
@@ -438,14 +442,10 @@ export const RedeemStep = () => {
         </Card>
       </div>
 
-      <div className="flex items-center justify-center-safe gap-1">
-        <Button
-          onClick={handleAdvanceToConfirm}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 text-xs font-bold md:h-10 md:text-sm"
-        >
-          Confirmar uso/reportes <ChevronRight className="ml-1 h-3 w-3 md:ml-2 md:h-4 md:w-4" />
-        </Button>
-      </div>
+      <StepFooter
+        ctaLabel="Confirmar uso/reportes"
+        onContinue={handleAdvanceToConfirm}
+      />
     </div>
   );
 };

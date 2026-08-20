@@ -13,6 +13,20 @@ interface SellerDashboardClientProps {
   recentBatches: RecentBatch[];
 }
 
+function getBatchStatus(batch: RecentBatch): { label: string; className: string } {
+  if (batch.cancelledAt) {
+    return { label: 'Cancelled', className: 'border border-red-500/30 bg-red-500/20 text-red-500' };
+  }
+  if (batch.isPaid) {
+    return { label: 'Paid', className: 'border border-emerald-500/30 bg-emerald-500/20 text-emerald-500' };
+  }
+  const allConfirmed = batch.cardsCount > 0 && batch.confirmedCount === batch.cardsCount;
+  if (allConfirmed) {
+    return { label: 'Confirmed', className: 'border border-blue-500/30 bg-blue-500/20 text-blue-500' };
+  }
+  return { label: 'Pending', className: 'border border-amber-500/30 bg-amber-500/20 text-amber-500' };
+}
+
 export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardClientProps) {
   return (
     <div className="w-full space-y-2">
@@ -84,11 +98,14 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <p className="text-lg font-semibold">{formatCurrency(batch.effectiveTotal)}</p>
-                    <span
-                      className={`rounded px-2 py-1 text-xs font-medium ${batch.isPaid ? 'border border-emerald-500/30 bg-emerald-500/20 text-emerald-500' : 'border border-amber-500/30 bg-amber-500/20 text-amber-500'}`}
-                    >
-                      {batch.isPaid ? 'Paid' : 'Pending'}
-                    </span>
+                    {(() => {
+                      const status = getBatchStatus(batch);
+                      return (
+                        <span className={`rounded px-2 py-1 text-xs font-medium ${status.className}`}>
+                          {status.label}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>

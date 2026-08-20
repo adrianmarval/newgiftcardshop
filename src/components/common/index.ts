@@ -33,3 +33,5 @@ export { StatCard } from './stat-card';
 export type { StatCardProps } from './stat-card';
 export { TelegramAvatar } from './telegram-avatar';
 export type { AvatarProps } from './telegram-avatar';
+export { StepFooter } from './step-footer';
+export { FieldError } from './field-error';

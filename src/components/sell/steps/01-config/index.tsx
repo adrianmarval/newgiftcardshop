@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { useSellFlow } from '@/hooks/use-sell-flow';
+import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
+import { cn } from '@/lib/ui';
 import type { BrandCountry } from '@/types';
 import { SellStepsProgress } from '../shared/sell-steps-progress';
-import { BrandCountryGrid } from '@/components/common';
+import { BrandCountryGrid, StepFooter, FieldError } from '@/components/common';
 
 export interface BrandStepProps {
   brandCountries: BrandCountry[];
@@ -23,6 +24,7 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
 
   const [searchBrand, setSearchBrand] = useState('');
   const [selectedCountryId, setSelectedCountryId] = useState('');
+  const [attempted, setAttempted] = useState(false);
 
   const countries = useMemo(() => {
     const unique = new Map<string, { id: string; name: string; code: string }>();
@@ -49,6 +51,25 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
 
   const isStep1Valid = selectedBrandCountry !== '' && !rateError;
 
+  // Browser-style validation: el error solo aparece tras intentar continuar,
+  // nunca en el mount inicial. Cada campo se marca en SU lugar:
+  // - Sin país → el Select de país es el ofensor (el grid todavía no es usable)
+  // - Con país pero sin marca → el grid de marcas es el ofensor
+  const countryError = !selectedCountryId ? 'Select a country' : null;
+  const brandError = selectedCountryId && !selectedBrandCountry ? 'Select a brand' : null;
+  const showCountryError = attempted ? countryError : null;
+  const showBrandError = attempted ? brandError : null;
+
+  const handleContinue = () => {
+    if (!isStep1Valid) {
+      setAttempted(true);
+      return;
+    }
+    setStep(2);
+  };
+
+  useStepHotkeys({ onContinue: handleContinue, enabled: true });
+
   return (
     <div className="flex h-full flex-col gap-1">
       <SellStepsProgress />
@@ -62,7 +83,13 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
               </Label>
               <div className="w-44 md:w-full">
                 <Select value={selectedCountryId} onValueChange={handleCountryChange}>
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger
+                    aria-invalid={!!showCountryError}
+                    className={cn(
+                      'h-9 w-full',
+                      showCountryError && 'border-destructive/50 ring-destructive/30 ring-1',
+                    )}
+                  >
                     <SelectValue placeholder="Select Country" />
                   </SelectTrigger>
                   <SelectContent>
@@ -73,6 +100,7 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
                     ))}
                   </SelectContent>
                 </Select>
+                <FieldError message={showCountryError} className="mt-1" />
               </div>
             </div>
 
@@ -94,7 +122,12 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
           </div>
         </Card>
 
-        <Card className="flex min-h-0 flex-1 flex-col border py-0 backdrop-blur-sm md:col-span-8 md:row-span-11 md:h-full">
+        <Card
+          className={cn(
+            'flex min-h-0 flex-1 flex-col border py-0 backdrop-blur-sm md:col-span-8 md:row-span-11 md:h-full',
+            showBrandError && 'border-destructive/50 ring-destructive/30 ring-1',
+          )}
+        >
           <CardContent className="custom-scrollbar grid flex-1 auto-rows-max grid-cols-3 gap-1.5 overflow-y-auto p-1.5 sm:grid-cols-3 md:gap-1 md:p-2">
             <BrandCountryGrid
               brandCountries={brandCountries}
@@ -105,15 +138,20 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
               emptyMessage="Select a country first"
             />
           </CardContent>
+          <div className="px-2 pb-1 md:px-2">
+            <FieldError message={showBrandError} />
+          </div>
         </Card>
       </div>
 
-      <div className="flex flex-col items-center gap-1">
-        {rateError && selectedBrandCountry && <p className="text-destructive text-center text-xs font-medium md:text-sm">{rateError}</p>}
-        <Button onClick={() => setStep(2)} disabled={!isStep1Valid} className="flex shrink-0 items-center justify-center p-4">
-          Continuar <ChevronRight className="h-4 md:ml-2" />
-        </Button>
-      </div>
+      {rateError && selectedBrandCountry && (
+        <p className="text-destructive text-center text-xs font-medium md:text-sm">{rateError}</p>
+      )}
+
+      <StepFooter
+        ctaLabel="Continue"
+        onContinue={handleContinue}
+      />
     </div>
   );
 }

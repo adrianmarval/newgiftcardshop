@@ -75,6 +75,7 @@ export const recentBatchesOutputSchema = z
     id: z.number(),
     sellRate: z.number(),
     isPaid: z.boolean(),
+    cancelledAt: z.string().nullable(),
     createdAt: z.string(),
     giftcards: z.array(
       z.object({
@@ -84,6 +85,7 @@ export const recentBatchesOutputSchema = z
       }),
     ),
     cardsCount: z.number(),
+    confirmedCount: z.number(),
     effectiveTotal: z.number(),
   })
   .array();

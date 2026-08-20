@@ -2,21 +2,20 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useSession } from '@/lib/auth/auth-client';
-import { ChevronRight, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useBuyFlow, type BuyFlowTierInfo } from '@/hooks/use-buy-flow';
+import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { searchGiftcards } from '@/actions/buyer/giftcards/search-giftcards';
 import { useAction } from 'next-safe-action/hooks';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/buyer/preferences';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
-import { showAlert, showSwal } from '@/lib/ui';
+import { showAlert, showSwal, cn } from '@/lib/ui';
 import Swal from 'sweetalert2';
 import type { BrandCountry } from '@/types';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
 import { CompactSearchBar } from './compact-search-bar';
 import { AdvancedSettingsSheet } from './advanced-settings-sheet';
-import { BrandCountryGrid } from '@/components/common';
+import { BrandCountryGrid, StepFooter, FieldError } from '@/components/common';
 
 export interface SearchStepProps {
   brandCountries: BrandCountry[];
@@ -38,7 +37,6 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   } = useBuyFlow();
 
   const [searchBrand, setSearchBrand] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [prefMin, setPrefMin] = useState('');
   const [prefMax, setPrefMax] = useState('');
   const [savedMin, setSavedMin] = useState('');
@@ -48,6 +46,8 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
   const [prefBuyRate, setPrefBuyRate] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [rateError, setRateError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
+  const [amountTouched, setAmountTouched] = useState(false);
 
   const { execute: executeGetPrefs } = useAction(getUserSearchPreferences, {
     onSuccess: ({ data }) => {
@@ -231,24 +231,29 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
       } else {
         showAlert.warning('Sin stock', 'No se encontraron tarjetas disponibles con los criterios seleccionados.');
       }
-      setIsSearching(false);
     },
     onError: ({ error }) => {
       showAlert.error(
         'Error al buscar',
         error.serverError || error.validationErrors?._errors?.[0] || 'Ocurrio un error al buscar las tarjetas',
       );
-      setIsSearching(false);
     },
   });
 
   const handleSearch = () => {
-    if (!selectedBrand || !targetAmount) return;
+    if (!selectedBrand || !targetAmount || parseFloat(targetAmount) <= 0 || rateError) {
+      setAttempted(true);
+      return;
+    }
 
-    setIsSearching(true);
     const amount = parseFloat(targetAmount);
     const [brandId, countryId] = selectedBrand.split('|');
     execute({ brandId, countryId, amount });
+  };
+
+  const handleAmountChange = (value: string) => {
+    setAmountTouched(true);
+    setTargetAmount(value);
   };
 
   const handleCountryChange = (val: string) => {
@@ -260,7 +265,18 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     setSelectedBrand(`${bc.brandId}|${bc.countryId}`);
   };
 
-  const isValid = selectedBrand && targetAmount && parseFloat(targetAmount) > 0 && !rateError;
+  const brandError = !selectedBrand ? 'Seleccioná una marca y país' : null;
+  const amountError = !targetAmount || parseFloat(targetAmount) <= 0 ? 'Ingresá un monto válido' : null;
+
+  // Browser-style validation: solo mostrar después de interactuar (touched)
+  // o de intentar continuar (attempted). Nunca en el mount inicial.
+  const showBrandError = attempted ? brandError : null;
+  const showAmountError = attempted || amountTouched ? amountError : null;
+
+  useStepHotkeys({
+    onContinue: handleSearch,
+    enabled: status !== 'executing' && !advancedOpen,
+  });
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
@@ -272,13 +288,20 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         targetAmount={targetAmount}
         searchBrand={searchBrand}
         onCountryChange={handleCountryChange}
-        onAmountChange={setTargetAmount}
+        onAmountChange={handleAmountChange}
         onSearchChange={setSearchBrand}
         onOpenAdvanced={() => setAdvancedOpen(true)}
         showAdvancedButton={allowSearchPreferences || allowBuyRateAdjustment}
+        autoFocusAmount
+        amountError={showAmountError}
       />
 
-      <Card className="flex min-h-0 flex-1 flex-col border py-0 backdrop-blur-sm md:col-span-8 md:row-span-11 md:h-full">
+      <Card
+        className={cn(
+          'flex min-h-0 flex-1 flex-col border py-0 backdrop-blur-sm md:col-span-8 md:row-span-11 md:h-full',
+          showBrandError && 'border-destructive/50 ring-destructive/30 ring-1',
+        )}
+      >
         <CardContent className="custom-scrollbar grid flex-1 auto-rows-max grid-cols-3 gap-1.5 overflow-y-auto p-1.5 sm:grid-cols-3 md:gap-1 md:p-2">
           <BrandCountryGrid
             brandCountries={brandCountries}
@@ -289,29 +312,23 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
             showStock
           />
         </CardContent>
+        <div className="px-2 pb-1 md:px-2">
+          <FieldError message={showBrandError} />
+        </div>
       </Card>
 
-      {/* CTA - Sticky on mobile */}
-      <div className="shrink-0">
-        {rateError && selectedBrand && <p className="text-destructive mb-1 animate-pulse text-center text-lg font-medium">{rateError}</p>}
-        <Button
-          onClick={handleSearch}
-          disabled={!isValid || status === 'executing'}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-full text-sm font-bold md:h-11 md:text-base"
-        >
-          {isSearching ? (
-            <>
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              Consultando...
-            </>
-          ) : (
-            <>
-              Consultar Disponibilidad
-              <ChevronRight className="ml-1.5 h-4 w-4 md:ml-2" />
-            </>
-          )}
-        </Button>
-      </div>
+      {/* Rate error (API-level, not field-level) */}
+      {rateError && selectedBrand && (
+        <p className="text-destructive mb-1 animate-pulse text-center text-lg font-medium">{rateError}</p>
+      )}
+
+      {/* CTA */}
+      <StepFooter
+        ctaLabel="Consultar Disponibilidad"
+        ctaLoading={status === 'executing'}
+        ctaDisabled={status === 'executing'}
+        onContinue={handleSearch}
+      />
 
       {/* Advanced Settings Sheet */}
       <AdvancedSettingsSheet

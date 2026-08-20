@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/ui';
+import { FieldError } from '@/components/common';
 import type { BrandCountry } from '@/types';
 
 interface CompactSearchBarProps {
@@ -18,6 +19,8 @@ interface CompactSearchBarProps {
   onSearchChange: (search: string) => void;
   onOpenAdvanced: () => void;
   showAdvancedButton: boolean;
+  autoFocusAmount?: boolean;
+  amountError?: string | null;
   className?: string;
 }
 
@@ -37,6 +40,8 @@ export function CompactSearchBar({
   onSearchChange,
   onOpenAdvanced,
   showAdvancedButton,
+  autoFocusAmount,
+  amountError,
   className,
 }: CompactSearchBarProps) {
   const countries = useMemo(() => {
@@ -72,15 +77,23 @@ export function CompactSearchBar({
           </SelectContent>
         </Select>
 
-        <div className="relative flex items-center">
-          <DollarSign className="text-muted-foreground/50 absolute left-2 h-3 w-3 shrink-0 md:h-3.5 md:w-3.5" />
-          <Input
-            type="number"
-            placeholder="Monto"
-            value={targetAmount}
-            onChange={(e) => onAmountChange(e.target.value)}
-            className="bg-muted/40 placeholder:text-muted-foreground/50 h-8 w-20 shrink-0 border-0 pl-6 text-xs font-medium focus:ring-0 md:h-9 md:w-24 md:pl-8 md:text-sm"
-          />
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex items-center">
+            <DollarSign className="text-muted-foreground/50 absolute left-2 h-3 w-3 shrink-0 md:h-3.5 md:w-3.5" />
+            <Input
+              type="number"
+              placeholder="Monto"
+              value={targetAmount}
+              onChange={(e) => onAmountChange(e.target.value)}
+              autoFocus={autoFocusAmount}
+              aria-invalid={!!amountError}
+              className={cn(
+                'bg-muted/40 placeholder:text-muted-foreground/50 h-8 w-20 shrink-0 border-0 pl-6 text-xs font-medium focus:ring-0 md:h-9 md:w-24 md:pl-8 md:text-sm',
+                amountError && 'ring-destructive/50 focus:ring-destructive/50 ring-2 focus:ring-2',
+              )}
+            />
+          </div>
+          <FieldError message={amountError} className="w-20 md:w-24" />
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useSellFlow } from '@/hooks/use-sell-flow';
+import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { isBlockingEvidenceState, type ValidationState, type SellFlowImage } from '@/types';
 
 import { cn } from '@/lib/ui';
@@ -21,8 +22,8 @@ import { validateAmountsAgainstRange, type AmountRangeViolation } from '@/lib/ut
 import { validationStatusConfig } from '@/lib/config/ui-config';
 import type { BrandCountry } from '@/types';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
-import Image from 'next/image';
 import { SellStepsProgress } from '../shared/sell-steps-progress';
+import { StepFooter } from '@/components/common';
 
 export interface ReviewStepProps {
   onPublish: () => void;
@@ -166,6 +167,22 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
   const noEvidenceCount = giftcards.length - withCaptureCount;
   const handleBack = () => setStep(backStep ?? 2);
+
+  const blockers = useMemo(() => {
+    const list: string[] = [];
+    if (giftcards.length > MAX_BATCH_SIZE) list.push(`Too many cards (max ${MAX_BATCH_SIZE})`);
+    if (giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status))) list.push('Resolve evidence issues before publishing');
+    if (hasRangeViolations) list.push('Some amounts are out of range');
+    return list;
+  }, [giftcards, hasRangeViolations]);
+
+  const isPublishDisabled =
+    isPublishing ||
+    giftcards.length > MAX_BATCH_SIZE ||
+    giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status)) ||
+    hasRangeViolations;
+
+  useStepHotkeys({ onContinue: onPublish, enabled: !isPublishDisabled });
 
   return (
     // Ajustado h-screen/h-full dinámico para asegurar que flex-1 y min-h-0 confinen la UI perfectamente en mobile
@@ -433,25 +450,23 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
         </Card>
       </div>
 
-      {/* Barra de Botones de Acción (Fija abajo en ambos layouts) */}
-      <div className="flex shrink-0 items-center justify-between gap-1">
-        <Button onClick={handleBack} variant="outline" size="sm" className="h-9 flex-1 text-xs font-bold md:h-10">
-          Back
-        </Button>
-        <Button
-          onClick={onPublish}
-          disabled={
-            isPublishing ||
-            giftcards.length > MAX_BATCH_SIZE ||
-            giftcards.some((c) => isBlockingEvidenceState(c.evidence?.status)) ||
-            hasRangeViolations
-          }
-          size="sm"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 flex-1 text-xs font-bold md:h-10"
-        >
-          {isPublishing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : 'Publish Batch'}
-        </Button>
-      </div>
+      {/* Warnings */}
+      {blockers.length > 0 && (
+        <div className="flex flex-col items-center gap-0.5">
+          {blockers.map((w, i) => (
+            <p key={i} className="text-destructive text-center text-xs font-medium md:text-sm">{w}</p>
+          ))}
+        </div>
+      )}
+
+      {/* Action bar */}
+      <StepFooter
+        ctaLabel="Publish Batch"
+        ctaLoading={isPublishing}
+        ctaDisabled={isPublishDisabled}
+        onContinue={onPublish}
+        back={{ label: 'Back', onClick: handleBack }}
+      />
 
       {/* Modal Preview Imagen */}
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>

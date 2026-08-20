@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, Sparkles, Loader2, Code, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useSellFlow } from '@/hooks/use-sell-flow';
+import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
+import { FieldError } from '@/components/common';
 import { useDataEntryPipeline } from '@/hooks/use-data-entry-pipeline';
 import { FileDropZone } from './file-drop-zone';
 import { ProcessingProgress } from './processing-progress';
@@ -24,6 +26,7 @@ export function DataEntryStep() {
   const [localImages, setLocalImages] = useState<LocalImage[]>([]);
   const [showFormatHelp, setShowFormatHelp] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   const {
     stage,
@@ -46,6 +49,23 @@ export function DataEntryStep() {
   });
 
   const hasExistingCards = giftcards.length > 0;
+
+  // Browser-style validation: el error solo aparece tras intentar procesar,
+  // nunca en el mount inicial.
+  const contentError = attempted && !hasContent && !isProcessing ? 'Paste at least one code or attach screenshots' : null;
+
+  const handleProcessClick = () => {
+    if (!hasContent) {
+      setAttempted(true);
+      return;
+    }
+    handleProcessCards();
+  };
+
+  useStepHotkeys({
+    onContinue: handleProcessClick,
+    enabled: !isProcessing,
+  });
 
   // ── Drag & Drop ───────────────────────────────────────────────────────────
 
@@ -158,12 +178,13 @@ export function DataEntryStep() {
             className={cn(
               'border-border bg-muted/20 focus-visible:ring-primary h-full w-full flex-1 resize-none rounded-xl p-3 font-mono text-sm transition-all md:text-sm',
               isDragOver && 'border-primary',
-              validationErrors.length > 0 &&
+              (validationErrors.length > 0 || contentError) &&
                 'border-destructive/50 ring-destructive/20 ring-1',
             )}
+            aria-invalid={!!contentError || validationErrors.length > 0}
           />
 
-          {/* Error box */}
+          <FieldError message={contentError} />
           <AnimatePresence>
             {validationErrors.length > 0 && (
               <motion.div
@@ -232,8 +253,8 @@ export function DataEntryStep() {
         </Button>
 
         <Button
-          onClick={handleProcessCards}
-          disabled={isProcessing || !hasContent}
+          onClick={handleProcessClick}
+          disabled={isProcessing}
           size="sm"
           className="bg-primary text-primary-foreground h-9 text-xs font-bold md:h-10 md:text-sm"
         >
@@ -246,6 +267,9 @@ export function DataEntryStep() {
             <>
               <Sparkles className="mr-1.5 h-3.5 w-3.5" />
               Process Cards
+              <kbd className="bg-primary-foreground/20 text-primary-foreground/70 ml-1 rounded px-1 py-0.5 font-mono text-[10px]">
+                ⌘⏎
+              </kbd>
             </>
           )}
         </Button>
