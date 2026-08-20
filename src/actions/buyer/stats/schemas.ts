@@ -21,4 +21,14 @@ export const buyerStatsOutputSchema = z.object({
       }),
     ),
   }),
+  personal: z.object({
+    creditLimit: z.number(),
+    unpaidTotal: z.number(),
+    availableCredit: z.number(),
+    pendingOrdersCount: z.number(),
+    totalSaved: z.number(),
+    monthSpend: z.number(),
+    monthOrdersCount: z.number(),
+    reportedIssues: z.number(),
+  }),
 });

@@ -25,6 +25,20 @@ export interface BuyerOrder {
   brandCountryId?: string;
 }
 
+// ── RecentOrder (for dashboard) ────────────────────────────────────────────────
+
+export interface RecentOrder {
+  id: string;
+  status: OrderStatus;
+  total: number;
+  adjustedTotal: number | null;
+  createdAt: string;
+  cardsCount: number;
+  faceValueTotal: number;
+  effectiveTotal: number;
+  giftcards: Array<{ id: string; amount: number; brand: { name: string; icon: string; image: string | null } }>;
+}
+
 // --- AdminOrder ──────────────────────────────────────────────────────────────
 
 export interface AdminOrder {

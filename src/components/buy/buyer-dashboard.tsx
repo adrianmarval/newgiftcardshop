@@ -1,13 +1,28 @@
 'use client';
 
 import Link from 'next/link';
-import { IconSearch, IconShoppingBag, IconClock } from '@tabler/icons-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import {
+  IconSearch,
+  IconShoppingBag,
+  IconClock,
+  IconCreditCard,
+  IconCircleCheck,
+  IconAlertTriangle,
+  IconChevronRight,
+  IconArrowRight,
+} from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import type { BuyerStats, OrderBookEntry } from '@/types';
+import { StatCard } from '@/components/common';
+import { orderStatusConfig } from '@/lib/config';
+import { formatCurrency } from '@/lib/utils';
+import type { BuyerStats, OrderBookEntry, RecentOrder } from '@/types';
 import { timeAgo } from '@/lib/utils';
 
 interface BuyerDashboardProps {
   stats: BuyerStats;
+  recentOrders: RecentOrder[];
 }
 
 function UserAvatar({ email }: { email: string }) {
@@ -50,31 +65,136 @@ function OrderBookRow({ entry }: { entry: OrderBookEntry }) {
   );
 }
 
-export function BuyerDashboard({ stats }: BuyerDashboardProps) {
-  const { orderBook } = stats;
+function RecentOrderRow({ order, onClick }: { order: RecentOrder; onClick: () => void }) {
+  const status = orderStatusConfig[order.status];
+
+  return (
+    <button
+      onClick={onClick}
+      className="hover:bg-muted/50 flex w-full items-center gap-3 px-4 py-3 text-left transition-colors"
+    >
+      {order.giftcards[0]?.brand.image ? (
+        <div className="relative h-8 w-8 shrink-0">
+          <Image src={order.giftcards[0].brand.image} alt={order.giftcards[0].brand.name} fill className="object-contain" />
+        </div>
+      ) : (
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center text-lg">{order.giftcards[0]?.brand.icon || '🎁'}</span>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Orden #{order.id.slice(-8)}</span>
+          <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${status.color}`}>
+            {status.label}
+          </span>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          {order.cardsCount} card{order.cardsCount !== 1 ? 's' : ''} · {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+        </p>
+      </div>
+      <span className="text-sm font-semibold">{formatCurrency(order.effectiveTotal)}</span>
+      <IconChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+    </button>
+  );
+}
+
+export function BuyerDashboard({ stats, recentOrders }: BuyerDashboardProps) {
+  const router = useRouter();
+  const { personal, orderBook } = stats;
 
   return (
     <div className="w-full space-y-2">
       <section>
+        <Link
+          href="/store/dashboard/browse-cards"
+          className="bg-primary/10 hover:bg-primary/15 group flex items-center gap-4 rounded-xl border border-dashed p-4 transition-colors"
+        >
+          <div className="bg-primary/20 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
+            <IconSearch className="text-primary h-6 w-6" />
+          </div>
+          <div className="flex-1">
+            <p className="text-base font-semibold group-hover:underline">Disponibles</p>
+            <p className="text-muted-foreground text-sm">
+              {stats.availableCards.toLocaleString()} cards · {formatCurrency(stats.availableAmount)}
+            </p>
+          </div>
+          <div className="bg-primary text-primary-foreground flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium">
+            Explorar
+            <IconArrowRight className="h-4 w-4" />
+          </div>
+        </Link>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-xl font-semibold">Mis Estadísticas</h2>
+        <div className="grid grid-cols-2 gap-1 lg:grid-cols-4">
+          <StatCard
+            title="Crédito Disponible"
+            value={formatCurrency(personal.availableCredit)}
+            icon={<IconCreditCard className={`h-6 w-6 ${personal.unpaidTotal > 0 ? 'text-amber-500' : 'text-muted-foreground'}`} />}
+            description={`Límite ${formatCurrency(personal.creditLimit)} · Deuda ${formatCurrency(personal.unpaidTotal)}`}
+          />
+          <StatCard
+            title="Total Ahorrado"
+            value={formatCurrency(personal.totalSaved)}
+            icon={<IconCircleCheck className="h-6 w-6 text-emerald-500" />}
+            description="All-time en órdenes completadas"
+          />
+          <StatCard
+            title="Compras del Mes"
+            value={formatCurrency(personal.monthSpend)}
+            icon={<IconShoppingBag className="h-6 w-6 text-blue-500" />}
+            description={`${personal.monthOrdersCount} orden${personal.monthOrdersCount !== 1 ? 'es' : ''} este mes`}
+          />
+          <StatCard
+            title="Issues Reportados"
+            value={personal.reportedIssues.toString()}
+            icon={<IconAlertTriangle className={`h-6 w-6 ${personal.reportedIssues > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />}
+            description="Tarjetas con problemas"
+          />
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <div className="flex items-center gap-2">
+          <IconClock className="text-muted-foreground h-5 w-5" />
+          <h2 className="text-xl font-semibold">Órdenes Recientes</h2>
+        </div>
+
+        {recentOrders.length > 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {recentOrders.map((order) => (
+                  <RecentOrderRow
+                    key={order.id}
+                    order={order}
+                    onClick={() => router.push(`/store/dashboard/orders?search=${order.id}`)}
+                  />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardDescription>No tenés órdenes aún. Explorá las tarjetas disponibles para empezar.</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+      </section>
+
+      <section className="space-y-2">
+        <div className="flex items-center justify-between p-1">
+          <h2 className="text-xl font-semibold">Marketplace</h2>
+          <Link href="/store/dashboard/browse-cards" className="text-primary text-sm hover:underline">
+            Ver todas
+          </Link>
+        </div>
+
         <div className="grid grid-cols-1 gap-1 md:grid-cols-2">
           <Card size="sm">
             <CardHeader className="flex flex-row items-center gap-1">
-              <Link href="/store/dashboard/browse-cards" className="group inline-flex items-center gap-1">
-                <IconSearch className="text-muted-foreground h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
-                <CardTitle className="text-base group-hover:underline">Disponibles</CardTitle>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">
-                ${stats.availableAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
-              </p>
-              <p className="text-muted-foreground text-sm">{stats.availableCards.toLocaleString()} cards en inventario</p>
-            </CardContent>
-          </Card>
-
-          <Card size="sm">
-            <CardHeader className="flex flex-row items-center gap-1">
-              <IconShoppingBag className="h-6 w-6 text-blue-500" />
+              <IconSearch className="text-muted-foreground h-6 w-6" />
               <CardTitle className="text-base">Total Vendido HOY</CardTitle>
             </CardHeader>
             <CardContent>
@@ -94,7 +214,7 @@ export function BuyerDashboard({ stats }: BuyerDashboardProps) {
           <IconClock className="text-muted-foreground h-5 w-5" />
           <h2 className="text-xl font-semibold">Libro de Órdenes</h2>
         </div>
-        <p className="text-muted-foreground mb-2 text-sm">Órdenes Recientes</p>
+        <p className="text-muted-foreground mb-2 text-sm">Órdenes Recientes de la Plataforma</p>
 
         {orderBook.entries.length > 0 ? (
           <div className="space-y-1">

@@ -7,14 +7,19 @@ import type { BuyerOrder } from '@/types';
 export interface OrdersListProps {
   orders: BuyerOrder[];
   totalPages: number;
+  search?: string;
 }
 
-export const OrdersList = ({ orders }: OrdersListProps) => {
+export const OrdersList = ({ orders, search }: OrdersListProps) => {
   return (
     <RegistryList
       items={orders}
       getId={(o) => o.id}
-      getMatch={(o) => o.giftcards.some((g) => g.isSearchMatch) ? o.id : null}
+      getMatch={(o) => {
+        if (o.giftcards.some((g) => g.isSearchMatch)) return o.id;
+        if (search && o.id === search) return o.id;
+        return null;
+      }}
       renderItem={(order, { isExpanded, isHighlighted, onToggle }) => (
         <OrderCard
           order={order}

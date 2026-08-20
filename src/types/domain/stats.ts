@@ -19,10 +19,22 @@ export interface OrderBookData {
   entries: OrderBookEntry[];
 }
 
+export interface BuyerPersonalStats {
+  creditLimit: number;
+  unpaidTotal: number;
+  availableCredit: number;
+  pendingOrdersCount: number;
+  totalSaved: number;
+  monthSpend: number;
+  monthOrdersCount: number;
+  reportedIssues: number;
+}
+
 export interface BuyerStats {
   availableCards: number;
   availableAmount: number;
   orderBook: OrderBookData;
+  personal: BuyerPersonalStats;
 }
 
 export interface SellerStats {

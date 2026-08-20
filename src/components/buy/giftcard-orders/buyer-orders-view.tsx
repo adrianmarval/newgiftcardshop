@@ -9,6 +9,7 @@ import type { BuyerOrder, PaginationMeta } from '@/types';
 export interface BuyerOrdersViewProps {
   orders: BuyerOrder[];
   pagination: PaginationMeta;
+  search?: string;
 }
 
 const FILTERS_DEFAULTS = {
@@ -17,7 +18,7 @@ const FILTERS_DEFAULTS = {
   sort: 'newest',
 };
 
-export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) => {
+export const BuyerOrdersView = ({ orders, pagination, search }: BuyerOrdersViewProps) => {
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <FiltersBar
@@ -47,7 +48,7 @@ export const BuyerOrdersView = ({ orders, pagination }: BuyerOrdersViewProps) =>
         }}
       />
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-        <OrdersList orders={orders} totalPages={pagination.totalPages} />
+        <OrdersList orders={orders} totalPages={pagination.totalPages} search={search} />
       </div>
       <div className="shrink-0">
         <UrlPagination totalPages={pagination.totalPages} />

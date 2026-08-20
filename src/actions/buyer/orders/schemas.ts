@@ -99,3 +99,23 @@ export const getUserBuyRateOutputSchema = z.object({
   success: z.literal(true),
   rate: z.number(),
 });
+
+export const recentOrdersOutputSchema = z
+  .object({
+    id: z.string(),
+    status: z.enum(OrderStatus),
+    total: z.number(),
+    adjustedTotal: z.number().nullable(),
+    createdAt: z.string(),
+    cardsCount: z.number(),
+    faceValueTotal: z.number(),
+    effectiveTotal: z.number(),
+    giftcards: z.array(
+      z.object({
+        id: z.string(),
+        amount: z.number(),
+        brand: z.object({ name: z.string(), icon: z.string(), image: z.string().nullable() }),
+      }),
+    ),
+  })
+  .array();
