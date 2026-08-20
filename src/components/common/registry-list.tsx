@@ -12,6 +12,7 @@ export function useRegistryAutoExpand<T>(items: T[], getMatch: (item: T) => stri
   const [lastExpandedId, setLastExpandedId] = useState<string | number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const userInteractingRef = useRef(false);
+  const prevMatchIdRef = useRef<string | number | null>(null);
 
   // Scroll to top when expanding
   useEffect(() => {
@@ -29,11 +30,18 @@ export function useRegistryAutoExpand<T>(items: T[], getMatch: (item: T) => stri
     return item ? getMatch(item) : null;
   }, [items, getMatch]);
 
-  // Auto-expand when target changes and user isn't interacting
+  // Auto-expand when a match appears; auto-collapse when the match disappears
+  // (e.g. filters cleared) so the full list is shown again. Manual toggles
+  // (user interacting) are never overridden.
   useEffect(() => {
-    if (matchId !== null && !userInteractingRef.current) {
-      setExpandedId(matchId);
+    if (!userInteractingRef.current) {
+      if (matchId !== null) {
+        setExpandedId(matchId);
+      } else if (prevMatchIdRef.current !== null) {
+        setExpandedId(null);
+      }
     }
+    prevMatchIdRef.current = matchId;
   }, [matchId]);
 
   const handleToggle = useCallback((id: string | number) => {

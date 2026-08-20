@@ -274,8 +274,14 @@ export function FiltersBar({
       </Popover>
 
       {active && (
-        <Button variant="ghost" size="icon" onClick={handleClear} className="h-9 w-9 md:hidden">
-          <X className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleClear}
+          className="text-muted-foreground hover:text-foreground h-8 gap-1 px-2 text-xs md:h-10"
+        >
+          <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
+          <span className="hidden md:inline">{clearLabel}</span>
         </Button>
       )}
     </div>
