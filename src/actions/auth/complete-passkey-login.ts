@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
 import { dashboardMap, roleMap } from '@/types';
 import { logger } from '@/lib/logger';
+import prisma from '@/lib/prisma';
 import { passkeyLoginInputSchema, passkeyLoginOutputSchema } from './schemas';
 
 /**
@@ -13,6 +14,9 @@ import { passkeyLoginInputSchema, passkeyLoginOutputSchema } from './schemas';
  * `signIn.passkey` hits the auth handler directly from the client, bypassing
  * the `login` server action — so the portal/role guard MUST be re-validated
  * here, after the WebAuthn ceremony, before letting the user into the portal.
+ *
+ * También redirige a la vista intersticial de setup-passkey si el usuario
+ * no tiene passkeys registradas y no dismissió la vista antes (cookie).
  */
 export const completePasskeyLogin = actionClient
   .inputSchema(passkeyLoginInputSchema)
@@ -47,7 +51,10 @@ export const completePasskeyLogin = actionClient
         metadata: { email: user.email, portal },
         ip,
       });
-      return { success: true as const, redirectTo: dashboardMap[portal] };
+
+      const passkeyCount = await prisma.passkey.count({ where: { userId: user.id } });
+      const redirectTo = passkeyCount === 0 ? `/${portal}/auth/setup-passkey` : dashboardMap[portal];
+      return { success: true as const, redirectTo };
     } catch {
       logger.warn('Login con passkey fallido', { flow: 'auth', action: 'login', metadata: { portal }, ip });
       return { success: false as const, error: 'Login failed' };

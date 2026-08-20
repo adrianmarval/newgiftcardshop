@@ -1,9 +1,8 @@
 import { redirect, notFound } from 'next/navigation';
-import { headers, cookies } from 'next/headers';
+import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import { auth } from '@/lib/auth/auth-server';
 import prisma from '@/lib/prisma';
-import { PASSKEY_SETUP_COOKIE } from '@/lib/constants';
 import { PasskeySetupView } from '@/components/auth/passkey/passkey-setup-view';
 import { isAppSection, dashboardMap } from '@/types';
 
@@ -23,9 +22,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 /**
  * Vista intersticial post-login para registrar una passkey.
  *
- * Self-guarding: cualquier entrada indebida (sin sesión, con passkeys ya
- * registradas, o con la vista ya dismissida) redirige sin renderizar — esto
- * permite que el flujo de 2FA también aterrice aquí sin checks extra.
+ * Self-guarding: cualquier entrada indebida (sin sesión o con passkeys ya
+ * registradas) redirige sin renderizar — esto permite que el flujo de 2FA
+ * también aterrice aquí sin checks extra.
  */
 export default async function SetupPasskeyPage({ params }: PageProps) {
   const { portal } = await params;
@@ -38,9 +37,6 @@ export default async function SetupPasskeyPage({ params }: PageProps) {
 
   const passkeyCount = await prisma.passkey.count({ where: { userId: session.user.id } });
   if (passkeyCount > 0) redirect(dashboard);
-
-  const setupDone = (await cookies()).get(PASSKEY_SETUP_COOKIE)?.value === '1';
-  if (setupDone) redirect(dashboard);
 
   return <PasskeySetupView portal={portal} />;
 }

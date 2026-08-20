@@ -1,5 +1,3 @@
-import { PASSKEY_SETUP_COOKIE } from '@/lib/constants';
-
 /**
  * Nombre legible para una passkey basado en la plataforma del dispositivo.
  * Se usa al registrar passkeys para que el usuario las identifique en ajustes.
@@ -29,14 +27,6 @@ export async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-/**
- * Marca (cliente) que el usuario ya pasó por la vista de setup de passkey.
- * El server action `login` lee esta cookie para no volver a redirigir a la vista.
- */
-export function markPasskeySetupDone(): void {
-  document.cookie = `${PASSKEY_SETUP_COOKIE}=1; max-age=31536000; path=/; samesite=lax`;
 }
 
 /**

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { authClient } from '@/lib/auth/auth-client';
 import { showSwal } from '@/lib/ui';
-import { getDeviceName, isPasskeyCancellation, isPlatformAuthenticatorAvailable, markPasskeySetupDone } from './passkey-utils';
+import { getDeviceName, isPasskeyCancellation, isPlatformAuthenticatorAvailable } from './passkey-utils';
 import { dashboardMap } from '@/types';
 import type { AppSection } from '@/types';
 
@@ -18,7 +18,7 @@ interface PasskeySetupViewProps {
 /**
  * Vista intersticial post-login para registrar una passkey.
  *
- * La página server ya garantiza: sesión válida + sin passkeys + sin dismissal.
+ * La página server ya garantiza: sesión válida + sin passkeys.
  * Aquí solo queda verificar soporte de WebAuthn (si no hay autenticador de
  * plataforma, auto-redirect — nadie ve una vista que no puede usar) y
  * ejecutar la ceremonia de registro.
@@ -48,7 +48,6 @@ export function PasskeySetupView({ portal }: PasskeySetupViewProps) {
   }, [router, dashboard]);
 
   const goToDashboard = () => {
-    markPasskeySetupDone();
     router.push(dashboard);
   };
 

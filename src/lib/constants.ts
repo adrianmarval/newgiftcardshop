@@ -3,13 +3,6 @@ import type { Prisma } from '@/generated/prisma/client';
 export const MAX_BATCH_SIZE = 50;
 
 /**
- * Cookie que marca que el usuario ya pasó por la vista de setup de passkey
- * (configuró una o eligió "Ahora no"). La lee el server action `login` para
- * decidir si redirige a la vista intersticial post-login.
- */
-export const PASSKEY_SETUP_COOKIE = 'passkey_setup_done';
-
-/**
  * Minimum estimated payout (USD) required for external wallets.
  * Binance wallets are exempt from this restriction.
  */

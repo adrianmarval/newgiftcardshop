@@ -51,7 +51,7 @@ export function PasskeySignInButton({ portal, isSpanish, disabled }: PasskeySign
         ) : (
           <span className="flex items-center gap-2">
             <Fingerprint className="h-4 w-4 text-emerald-400" />
-            {isSpanish ? 'Continuar con passkey' : 'Continue with passkey'}
+            {isSpanish ? 'Continuar con Huella (Passkey)' : 'Continue with Fingerprint (Passkey)'}
           </span>
         )}
       </Button>

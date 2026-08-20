@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -17,6 +18,7 @@ import { getDeviceName, isPasskeyCancellation } from '@/components/auth/passkey/
  */
 export const PasskeysSection = () => {
   const { isSpanish } = useLocale();
+  const router = useRouter();
   const { data: passkeys, isPending } = authClient.useListPasskeys();
   const [isAdding, setIsAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -62,13 +64,20 @@ export const PasskeysSection = () => {
 
     setDeletingId(id);
     try {
-      const { error } = await authClient.$fetch('/passkey/delete-passkey', { method: 'POST', body: { id } });
+      const wasLast = passkeys?.length === 1;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      const { error } = await (authClient as any).passkey.deletePasskey({ id }) as { error: unknown };
       if (error) {
         showSwal.fire({
           icon: 'error',
           title: 'Error',
-          text: error.message || (isSpanish ? 'No se pudo eliminar la passkey' : 'Failed to delete passkey'),
+          text: (error as { message?: string }).message ||
+            (isSpanish ? 'No se pudo eliminar la passkey' : 'Failed to delete passkey'),
         });
+        return;
+      }
+      if (wasLast) {
+        router.refresh();
       }
     } finally {
       setDeletingId(null);

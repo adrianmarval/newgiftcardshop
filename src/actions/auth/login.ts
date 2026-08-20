@@ -1,12 +1,11 @@
 'use server';
 
 import { auth } from '@/lib/auth/auth-server';
-import { headers, cookies } from 'next/headers';
+import { headers } from 'next/headers';
 import { actionClient } from '@/lib/safe-action';
 import { dashboardMap, roleMap } from '@/types';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
-import { PASSKEY_SETUP_COOKIE } from '@/lib/constants';
 import { loginInputSchema, loginOutputSchema } from './schemas';
 
 export const login = actionClient
@@ -60,11 +59,10 @@ export const login = actionClient
           ip,
         });
 
-        // Vista intersticial de setup de passkey: solo si el usuario no tiene
-        // passkeys registradas y no la dismissió antes (cookie).
+        // Vista intersticial de setup de passkey: si el usuario no tiene
+        // passkeys registradas, ofrecer configurar una antes de entrar al dashboard.
         const passkeyCount = await prisma.passkey.count({ where: { userId: user.id } });
-        const setupDone = (await cookies()).get(PASSKEY_SETUP_COOKIE)?.value === '1';
-        const redirectTo = passkeyCount === 0 && !setupDone ? `/${portal}/auth/setup-passkey` : callbackURL;
+        const redirectTo = passkeyCount === 0 ? `/${portal}/auth/setup-passkey` : callbackURL;
         return { success: true as const, redirectTo };
       }
 
