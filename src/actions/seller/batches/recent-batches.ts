@@ -11,7 +11,7 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutput
     const batches = await prisma.giftcardBatch.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      take: 3,
+      take: 5,
       include: {
         _count: { select: { giftcards: true } },
         giftcards: {

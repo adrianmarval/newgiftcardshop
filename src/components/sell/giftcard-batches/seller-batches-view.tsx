@@ -9,6 +9,7 @@ import { sellerBatchesSearchParamsParsers } from '@/lib/search-params';
 export interface SellerBatchesViewProps {
   batches: SellerBatch[];
   pagination?: PaginationMeta;
+  search?: string;
 }
 
 const FILTERS_DEFAULTS = {
@@ -17,7 +18,7 @@ const FILTERS_DEFAULTS = {
   sort: 'newest',
 };
 
-export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProps) {
+export function SellerBatchesView({ batches, pagination, search }: SellerBatchesViewProps) {
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <FiltersBar
@@ -49,7 +50,7 @@ export function SellerBatchesView({ batches, pagination }: SellerBatchesViewProp
         }}
       />
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-        <BatchesList batches={batches} totalPages={pagination?.totalPages} />
+        <BatchesList batches={batches} totalPages={pagination?.totalPages} search={search} />
       </div>
       <div className="shrink-0">
         <UrlPagination totalPages={pagination?.totalPages ?? 1} />

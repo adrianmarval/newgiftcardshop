@@ -24,7 +24,7 @@ export default async function SellerCardsPage({ searchParams }: { searchParams: 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Batch History</h1>
-      <SellerBatchesView batches={items} pagination={pagination} />
+      <SellerBatchesView batches={items} pagination={pagination} search={search} />
     </div>
   );
 }

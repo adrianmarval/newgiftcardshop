@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { IconPlus, IconGift, IconCurrencyDollar, IconCircleCheck, IconPackage, IconAlertTriangle } from '@tabler/icons-react';
+import { useRouter } from 'next/navigation';
+import { IconPlus, IconGift, IconCurrencyDollar, IconCircleCheck, IconPackage, IconAlertTriangle, IconChevronRight } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { SellerStats, RecentBatch } from '@/types';
 import { StatCard } from '@/components/common';
@@ -28,6 +29,8 @@ function getBatchStatus(batch: RecentBatch): { label: string; className: string 
 }
 
 export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardClientProps) {
+  const router = useRouter();
+
   return (
     <div className="w-full space-y-2">
       <section className="space-y-2">
@@ -76,51 +79,54 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
             </Link>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-1 md:grid-cols-2 lg:grid-cols-3">
-          {recentBatches.length > 0 ? (
-            recentBatches.map((batch) => (
-              <Card key={batch.id}>
-                <CardHeader className="flex flex-row items-center gap-1">
-                  {batch.giftcards[0]?.brand.image ? (
-                    <div className="relative h-10 w-10">
-                      <Image src={batch.giftcards[0].brand.image} alt={batch.giftcards[0].brand.name} fill className="object-contain" />
-                    </div>
-                  ) : (
-                    <span className="text-2xl">{batch.giftcards[0]?.brand.icon || '🎁'}</span>
-                  )}
-                  <div>
-                    <CardTitle className="text-base">Batch #{batch.id}</CardTitle>
-                    <CardDescription>
-                      {batch.cardsCount} cards · {new Date(batch.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <p className="text-lg font-semibold">{formatCurrency(batch.effectiveTotal)}</p>
-                    {(() => {
-                      const status = getBatchStatus(batch);
-                      return (
-                        <span className={`rounded px-2 py-1 text-xs font-medium ${status.className}`}>
-                          {status.label}
-                        </span>
-                      );
-                    })()}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card className="col-span-full">
-              <CardHeader>
-                <div className="flex items-center gap-1">
-                  <IconGift className="text-muted-foreground h-6 w-6" />
-                  <CardDescription>No batches yet. Start selling cards to see them here.</CardDescription>
-                </div>
-              </CardHeader>
-            </Card>
-          )}
-        </div>
+        {recentBatches.length > 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {recentBatches.map((batch) => {
+                  const status = getBatchStatus(batch);
+                  return (
+                    <button
+                      key={batch.id}
+                      onClick={() => router.push(`/sell/dashboard/cards?search=${batch.id}`)}
+                      className="hover:bg-muted/50 flex w-full items-center gap-3 px-4 py-3 text-left transition-colors"
+                    >
+                      {batch.giftcards[0]?.brand.image ? (
+                        <div className="relative h-8 w-8 shrink-0">
+                          <Image src={batch.giftcards[0].brand.image} alt={batch.giftcards[0].brand.name} fill className="object-contain" />
+                        </div>
+                      ) : (
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center text-lg">{batch.giftcards[0]?.brand.icon || '🎁'}</span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">Batch #{batch.id}</span>
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${status.className}`}>
+                            {status.label}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground text-xs">
+                          {batch.cardsCount} cards · {new Date(batch.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                      <span className="text-sm font-semibold">{formatCurrency(batch.effectiveTotal)}</span>
+                      <IconChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-1">
+                <IconGift className="text-muted-foreground h-6 w-6" />
+                <CardDescription>No batches yet. Start selling cards to see them here.</CardDescription>
+              </div>
+            </CardHeader>
+          </Card>
+        )}
       </section>
     </div>
   );
