@@ -177,20 +177,26 @@ export function UnlockGate({
   const pinValid = /^\d{4,6}$/.test(pin);
 
   return (
-    <div className="border-border bg-card/50 flex flex-col items-center justify-center gap-4 rounded-xl border p-6 text-center backdrop-blur-sm">
-      <div className="bg-primary/10 flex h-14 w-14 items-center justify-center rounded-full">
-        {mode === 'setup' ? <ShieldCheck className="text-primary h-7 w-7" /> : <Lock className="text-primary h-7 w-7" />}
+    <div className="border-border bg-card/50 flex flex-col justify-center gap-3 rounded-xl p-4 backdrop-blur-sm md:items-center md:p-5 md:text-center">
+      <div className="mx-auto flex w-full max-w-xs flex-col items-center justify-center gap-2.5 text-center">
+        <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full md:h-12 md:w-12">
+          {mode === 'setup' ? (
+            <ShieldCheck className="text-primary h-5 w-5 md:h-6 md:w-6" />
+          ) : (
+            <Lock className="text-primary h-5 w-5 md:h-6 md:w-6" />
+          )}
+        </div>
+
+        <div className="min-w-0 space-y-0.5">
+          <h3 className="text-sm font-bold md:text-base">{title}</h3>
+          <p className="text-muted-foreground text-xs leading-snug md:max-w-xs">{description}</p>
+        </div>
       </div>
 
-      <div className="space-y-1">
-        <h3 className="text-lg font-bold">{title}</h3>
-        <p className="text-muted-foreground mx-auto max-w-sm text-sm">{description}</p>
-      </div>
-
-      {mode === 'loading' && <Spinner size="md" className="text-muted-foreground" />}
+      {mode === 'loading' && <Spinner size="sm" className="text-muted-foreground" />}
 
       {mode === 'unlock' && (
-        <div className="flex w-full max-w-xs flex-col gap-3">
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
           {showPasskey && (
             <Button onClick={handlePasskeyUnlock} disabled={busy} className="gap-2">
               {busy ? <Spinner size="sm" /> : <Fingerprint className="h-4 w-4" />}
@@ -200,7 +206,7 @@ export function UnlockGate({
 
           {showPin && (
             <>
-              {showPasskey && <span className="text-muted-foreground text-xs">o usá tu PIN de seguridad</span>}
+              {showPasskey && <span className="text-muted-foreground text-center text-xs">o usá tu PIN de seguridad</span>}
               <Input
                 type="password"
                 inputMode="numeric"
@@ -222,7 +228,9 @@ export function UnlockGate({
           )}
 
           {status?.pinLocked && (
-            <p className="text-destructive text-xs font-medium">Tu PIN está bloqueado por intentos fallidos. Restablecelo por email.</p>
+            <p className="text-destructive text-center text-xs font-medium">
+              Tu PIN está bloqueado por intentos fallidos. Restablecelo por email.
+            </p>
           )}
 
           {status?.hasPin && (
@@ -241,8 +249,8 @@ export function UnlockGate({
       )}
 
       {mode === 'setup' && (
-        <div className="flex w-full max-w-xs flex-col gap-3">
-          <p className="text-muted-foreground text-xs">
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
+          <p className="text-muted-foreground text-center text-xs">
             Creá un PIN de seguridad para proteger los códigos de tus compras. Te lo pediremos antes de mostrar códigos.
           </p>
           <Input
@@ -273,8 +281,8 @@ export function UnlockGate({
       )}
 
       {mode === 'reset_request' && (
-        <div className="flex w-full max-w-xs flex-col gap-3">
-          <p className="text-muted-foreground text-xs">
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
+          <p className="text-muted-foreground text-center text-xs">
             Te enviaremos un código de 6 dígitos al email de tu cuenta para restablecer el PIN.
           </p>
           <Button onClick={handleRequestReset} disabled={busy} className="gap-2">
@@ -295,7 +303,7 @@ export function UnlockGate({
       )}
 
       {mode === 'reset_confirm' && (
-        <div className="flex w-full max-w-xs flex-col gap-3">
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
           <Input
             type="text"
             inputMode="numeric"
@@ -330,13 +338,18 @@ export function UnlockGate({
             {busy ? <Spinner size="sm" /> : null}
             Restablecer PIN y ver códigos
           </Button>
-          <button type="button" onClick={handleRequestReset} disabled={busy} className="text-muted-foreground hover:text-primary text-xs underline underline-offset-2">
+          <button
+            type="button"
+            onClick={handleRequestReset}
+            disabled={busy}
+            className="text-muted-foreground hover:text-primary text-xs underline underline-offset-2"
+          >
             Reenviar código
           </button>
         </div>
       )}
 
-      {error && <p className="text-destructive text-xs font-medium">{error}</p>}
+      {error && <p className="text-destructive text-center text-xs font-medium">{error}</p>}
     </div>
   );
 }

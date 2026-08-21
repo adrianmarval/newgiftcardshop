@@ -242,6 +242,32 @@ export async function requestPinReset(userId: string): Promise<void> {
 }
 
 /**
+ * Validates the email OTP (with attempt tracking) WITHOUT consuming the record.
+ * Used for early validation in the bot flow so the user gets immediate feedback.
+ */
+export async function verifyPinResetOtp(userId: string, otp: string): Promise<void> {
+  const record = await prisma.pinResetOtp.findUnique({ where: { userId } });
+  if (!record) {
+    throw new SecurityPinError('OTP_NOT_FOUND', 'No hay un código de recuperación activo. Solicitá uno nuevo.');
+  }
+  if (record.expiresAt < new Date()) {
+    await prisma.pinResetOtp.delete({ where: { userId } });
+    throw new SecurityPinError('OTP_EXPIRED', 'El código expiró. Solicitá uno nuevo.');
+  }
+  if (record.attempts >= PIN_MAX_ATTEMPTS) {
+    await prisma.pinResetOtp.delete({ where: { userId } });
+    throw new SecurityPinError('OTP_MAX_ATTEMPTS', 'Demasiados intentos fallidos. Solicitá un nuevo código.');
+  }
+  if (record.otp !== otp) {
+    await prisma.pinResetOtp.update({
+      where: { userId },
+      data: { attempts: { increment: 1 } },
+    });
+    throw new SecurityPinError('OTP_INVALID', 'Código incorrecto. Revisá tu email e intentá de nuevo.');
+  }
+}
+
+/**
  * Verifies the email OTP and sets a new PIN. Clears the lockout on success.
  */
 export async function confirmPinReset(userId: string, otp: string, newPin: string): Promise<void> {

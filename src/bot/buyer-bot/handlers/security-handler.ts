@@ -12,6 +12,7 @@ import {
   changeSecurityPin,
   grantSecurityUnlock,
   requestPinReset,
+  verifyPinResetOtp,
   confirmPinReset,
   isValidPinFormat,
   SecurityPinError,
@@ -296,7 +297,7 @@ export async function handlePinSetupConfirmText(ctx: BuyerContext) {
   await revealPendingOrder(ctx);
 }
 
-/** Paso 1 reset: OTP del email. */
+/** Paso 1 reset: OTP del email — validado inmediatamente contra la DB. */
 export async function handlePinResetOtpText(ctx: BuyerContext) {
   const otp = ctx.message?.text?.trim() ?? '';
   await deleteUserInput(ctx);
@@ -304,6 +305,24 @@ export async function handlePinResetOtpText(ctx: BuyerContext) {
   if (!/^\d{6}$/.test(otp)) {
     return promptRetry(ctx, 'El código tiene 6 dígitos.\n\n👇 Intentá de nuevo:', new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'));
   }
+
+  try {
+    await verifyPinResetOtp(ctx.user.id, otp);
+  } catch (error) {
+    if (error instanceof SecurityPinError) {
+      if (error.code === 'OTP_MAX_ATTEMPTS' || error.code === 'OTP_EXPIRED' || error.code === 'OTP_NOT_FOUND') {
+        ctx.session.wizard.step = 'idle';
+        return promptRetry(
+          ctx,
+          error.message,
+          new InlineKeyboard().text('📧 Solicitar nuevo código', 'sec_pin_forgot').row().text('🏠 Volver al Menú', 'start'),
+        );
+      }
+      return promptRetry(ctx, error.message + '\n\n👇 Ingresá el código de nuevo:', new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'));
+    }
+    throw error;
+  }
+
   ctx.session.wizard.securityResetOtp = otp;
   ctx.session.wizard.step = 'awaitingPinResetNewPin';
   await renderUI(ctx, '🛡 <b>Nuevo PIN</b>\n\n👇 Escribí tu nuevo PIN (4 a 6 dígitos):', {
