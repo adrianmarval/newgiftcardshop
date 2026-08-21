@@ -31,6 +31,23 @@ import {
   handleBuyConfirm,
   handleBuyCancel,
 } from './handlers/buy-handler.js';
+import {
+  handleSecUnlock,
+  handleSecCancel,
+  handleSecPinForgot,
+  handleSecMenu,
+  handleSecCreatePin,
+  handleSecChangePin,
+  handleSecurityPinText,
+  handlePinSetupText,
+  handlePinSetupConfirmText,
+  handlePinResetOtpText,
+  handlePinResetNewPinText,
+  handlePinResetConfirmText,
+  handlePinChangeCurrentText,
+  handlePinChangeNewText,
+  handlePinChangeConfirmText,
+} from './handlers/security-handler.js';
 import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword, handleLinkConfirmation } from '@/bot/shared/registration.js';
 
 export function createBuyerBot() {
@@ -148,12 +165,30 @@ export function createBuyerBot() {
   bot.callbackQuery('report_delete', handleReportDelete);
   bot.callbackQuery('report_proof_skip', handleReportProofSkip);
 
+  // Security PIN (gate de revelación de códigos)
+  bot.callbackQuery(/^sec_unlock_/, handleSecUnlock);
+  bot.callbackQuery('sec_cancel', handleSecCancel);
+  bot.callbackQuery('sec_pin_forgot', handleSecPinForgot);
+  bot.callbackQuery('sec_menu', handleSecMenu);
+  bot.callbackQuery('sec_create_pin', handleSecCreatePin);
+  bot.callbackQuery('sec_change_pin', handleSecChangePin);
+
   // ── Mensajes de texto y multimedia post-auth ──────────────────────────────
   bot.on(':text', async (ctx) => {
     const step = ctx.session.wizard.step;
     if (step === 'awaitingAmount') return handleAmountText(ctx);
     if (step === 'awaitingPaymentId') return handlePaymentText(ctx);
     if (step === 'awaitingReportAmount') return handleReportAmountText(ctx);
+    // Security PIN wizard
+    if (step === 'awaitingSecurityPin') return handleSecurityPinText(ctx);
+    if (step === 'awaitingPinSetup') return handlePinSetupText(ctx);
+    if (step === 'awaitingPinSetupConfirm') return handlePinSetupConfirmText(ctx);
+    if (step === 'awaitingPinResetOtp') return handlePinResetOtpText(ctx);
+    if (step === 'awaitingPinResetNewPin') return handlePinResetNewPinText(ctx);
+    if (step === 'awaitingPinResetConfirm') return handlePinResetConfirmText(ctx);
+    if (step === 'awaitingPinChangeCurrent') return handlePinChangeCurrentText(ctx);
+    if (step === 'awaitingPinChangeNew') return handlePinChangeNewText(ctx);
+    if (step === 'awaitingPinChangeConfirm') return handlePinChangeConfirmText(ctx);
     await deleteUserInput(ctx);
   });
 

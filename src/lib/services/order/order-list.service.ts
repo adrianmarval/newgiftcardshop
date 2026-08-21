@@ -8,8 +8,12 @@ import prisma from '@/lib/prisma';
 import { hashCode } from '@/lib/encryption';
 import { computeOrderGiftcardTotals } from '@/lib/services/pricing';
 import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { orderNeedsSecurityGate } from '@/lib/services/security';
 import type { AdminOrder, BuyerOrder, GiftcardForList, ListOrdersServiceInput } from '@/types';
 import { logger } from '@/lib/logger';
+
+/** Sentinel shown in place of a claim code when the security gate masks it. Never decryptable. */
+export const MASKED_CLAIM_CODE = '••••••••';
 
 // ── Where builder (shared) ───────────────────────────────────────────────────
 
@@ -64,8 +68,9 @@ function serializeGiftcard(
     };
   }>,
   search: string | undefined,
+  maskCodes = false,
 ) {
-  const { claimCode, pinCode } = decryptGiftcardCodes(card);
+  const { claimCode, pinCode } = maskCodes ? { claimCode: MASKED_CLAIM_CODE, pinCode: null } : decryptGiftcardCodes(card);
 
   let isSearchMatch = false;
   if (search) {
@@ -161,7 +166,10 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
 
   const items = orders.map((order) => {
     const totals = computeOrderGiftcardTotals(order.giftcards, order.buyRate);
-    const giftcards = order.giftcards.map((card) => serializeGiftcard(card, input.search));
+    // Security gate: mask claim codes for buyer-facing lists when the order still
+    // has unconfirmed cards and the buyer hasn't unlocked codes (PIN/passkey).
+    const codesLocked = input.scope === 'buyer' && input.codesUnlocked !== true && orderNeedsSecurityGate(order.giftcards);
+    const giftcards = order.giftcards.map((card) => serializeGiftcard(card, input.search, codesLocked));
     const payments = order.payments.map((p) => ({
       id: p.id,
       amount: Number(p.amount),
@@ -189,6 +197,7 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
       updatedAt: order.updatedAt.toISOString(),
       giftcards,
       payments,
+      ...(codesLocked ? { codesLocked: true } : {}),
     };
 
     if (input.scope === 'admin') {

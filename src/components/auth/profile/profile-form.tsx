@@ -6,6 +6,7 @@ import { ProfileInfoSection } from '@/components/auth/profile/profile-info-secti
 import { PasswordSection } from '@/components/auth/profile/password-section';
 import { SessionsSection } from '@/components/auth/profile/sessions-section';
 import { PasskeysSection } from '@/components/auth/profile/passkeys-section';
+import { SecurityPinSection } from '@/components/auth/profile/security-pin-section';
 import { TwoFactorSection } from '@/components/auth/profile/two-factor-section';
 import { PaymentMethodSection } from '@/components/sell/payment-method';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -41,6 +42,7 @@ export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUr
   const searchParams = useSearchParams();
   const emailVerified = true;
   const isSeller = portal === 'sell';
+  const isBuyer = portal === 'buy';
 
   const tabParam = searchParams.get('tab');
   const initialTab: TabValue = tabParam && VALID_TABS.includes(tabParam as TabValue) ? (tabParam as TabValue) : 'profile';
@@ -85,6 +87,7 @@ export const ProfileForm = ({ user, telegramPhotoDataUrl, portal, telegramLinkUr
             <div className="space-y-4">
               <PasswordSection />
               <PasskeysSection />
+              {isBuyer && <SecurityPinSection />}
               <SessionsSection />
             </div>
           </TabsContent>

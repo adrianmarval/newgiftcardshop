@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
 import { computeOrderGiftcardTotals } from '@/lib/services/pricing';
+import { orderNeedsSecurityGate, isSecurityUnlocked } from '@/lib/services';
+import { MASKED_CLAIM_CODE } from '@/lib/services/order/order-list.service';
 import { GiftcardStatus, OrderStatus } from '@/generated/prisma/enums';
 import { getOrderByIdInputSchema, getOrderByIdOutputSchema } from './schemas';
 
@@ -27,8 +29,12 @@ export const getOrderById = buyerActionClient
   .action(async ({ ctx }) => {
     const { order } = ctx;
 
+    // Security gate: mask codes when the order has unconfirmed cards and the
+    // buyer hasn't unlocked codes (PIN/passkey). Codes never leave the server.
+    const codesLocked = orderNeedsSecurityGate(order.giftcards) && !(await isSecurityUnlocked(order.userId));
+
     const giftcards = order.giftcards.map((card) => {
-      const { claimCode, pinCode } = decryptGiftcardCodes(card);
+      const { claimCode, pinCode } = codesLocked ? { claimCode: MASKED_CLAIM_CODE, pinCode: null } : decryptGiftcardCodes(card);
       return {
         id: card.id,
         claimCode,
@@ -76,6 +82,7 @@ export const getOrderById = buyerActionClient
         faceValueTotal: totals.faceValueTotal,
         createdAt: order.createdAt.toISOString(),
         updatedAt: order.updatedAt.toISOString(),
+        codesLocked,
         giftcards,
         payments,
         brandCountryId,

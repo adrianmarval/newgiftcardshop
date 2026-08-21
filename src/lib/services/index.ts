@@ -18,3 +18,19 @@ export { findGiftcardCombination } from './browse';
 
 // ── Notification Domain ──────────────────────────────────────────────────────
 export { getNotificationPageData } from './notification';
+
+// ── Security Domain ──────────────────────────────────────────────────────────
+export {
+  SecurityPinError,
+  isValidPinFormat,
+  orderNeedsSecurityGate,
+  getSecurityStatus,
+  isSecurityUnlocked,
+  grantSecurityUnlock,
+  verifySecurityPin,
+  verifyPinAndUnlock,
+  setSecurityPin,
+  changeSecurityPin,
+  requestPinReset,
+  confirmPinReset,
+} from './security';

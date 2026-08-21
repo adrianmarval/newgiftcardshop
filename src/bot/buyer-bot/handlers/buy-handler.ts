@@ -15,6 +15,7 @@ import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftc
 import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
 import { getBrandsWithStock, getBrandWithCountries, getCountryById } from '@/lib/services/catalog/catalog';
+import { withSecurityGate } from './security-handler.js';
 import { createLogger } from '@/lib/logger';
 
 const buyerLogger = createLogger('buyer-bot');
@@ -399,13 +400,41 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   ctx.session.wizard.selectedGiftcardIds = undefined;
 
-  const decryptedCards = giftcards.map((g) => ({
+  // Security gate: los códigos solo se revelan tras verificar PIN (o si la orden
+  // ya está confirmada). La orden YA existe — el gate no interfiere con la compra.
+  const gated = await withSecurityGate(ctx, order.id, 'buy');
+  if (!gated) await renderOrderCreatedReveal(ctx, order.id);
+}
+
+/**
+ * Render del reveal post-creación ("¡Orden creada!" + códigos + acciones).
+ * Exportado para re-renderizar tras el desbloqueo por PIN (security-handler).
+ * SOLO llamar cuando el gate ya pasó (withSecurityGate retornó false) o la
+ * orden está confirmada — nunca antes de verificar.
+ */
+export async function renderOrderCreatedReveal(ctx: BuyerContext, orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      giftcards: {
+        orderBy: { id: 'asc' },
+        include: { brandCountry: { include: { country: true } } },
+      },
+    },
+  });
+  if (!order) {
+    return renderUI(ctx, '❌ Orden no encontrada.', {
+      reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
+    });
+  }
+
+  const decryptedCards = order.giftcards.map((g) => ({
     code: decrypt(g.claimCode),
     amount: g.amount,
     pin: g.pinCode ? decrypt(g.pinCode) : null,
   }));
 
-  const currency = ctx.session.wizard.countryCurrency || 'USD';
+  const currency = order.giftcards[0]?.brandCountry?.country?.currency || 'USD';
   const cardsText = decryptedCards
     .map((c, i) => {
       const pinPart = c.pin ? ` | PIN: <code>${escapeHTML(c.pin)}</code>` : '';
@@ -424,7 +453,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     ctx,
     `✅ <b>¡Orden creada!</b>\n\n` +
       `ID: <code>${order.id}</code>\n` +
-      `Total a pagar: <b>${fmt$(total, 'USD')}</b>\n\n` +
+      `Total a pagar: <b>${fmt$(order.total, 'USD')}</b>\n\n` +
       `<b>Códigos para aplicar:</b>\n${cardsText}\n\n` +
       `📝 <i>Aplicá los códigos, luego confirmá el uso desde los botones de abajo.</i>`,
     { parse_mode: 'HTML', reply_markup: kb, callbackText: '¡Orden creada!' },

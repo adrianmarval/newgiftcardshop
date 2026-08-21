@@ -16,6 +16,7 @@ export const orderListItemSchema = z.object({
   faceValueTotal: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  codesLocked: z.boolean().optional(),
   giftcards: z.array(
     z.object({
       id: z.string(),

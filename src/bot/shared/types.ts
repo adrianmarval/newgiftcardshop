@@ -27,7 +27,18 @@ export type BuyerWizardStep =
   | 'awaitingAmount'
   | 'awaitingPaymentId'
   | 'awaitingReportAmount'
-  | 'awaitingReportProof';
+  | 'awaitingReportProof'
+  // Security PIN (gate de revelación de códigos)
+  | 'awaitingSecurityPin'
+  | 'awaitingPinSetup'
+  | 'awaitingPinSetupConfirm'
+  | 'awaitingPinResetOtp'
+  | 'awaitingPinResetNewPin'
+  | 'awaitingPinResetConfirm'
+  // Security PIN (cambio desde el menú)
+  | 'awaitingPinChangeCurrent'
+  | 'awaitingPinChangeNew'
+  | 'awaitingPinChangeConfirm';
 
 // ── Session ──────────────────────────────────────────────────────────────────
 
@@ -85,6 +96,17 @@ export interface BuyerSessionData {
     reportAmount?: number;
     reportProofUrl?: string;
     selectedGiftcardIds?: string[];
+    // Security PIN
+    /** PIN ingresado en el paso 1 del setup/reset (se confirma en el paso 2). */
+    securityPinDraft?: string;
+    /** PIN actual verificado durante el flujo de cambio (transitorio, se limpia al terminar). */
+    securityPinCurrent?: string;
+    /** OTP de email ingresado durante el reset de PIN. */
+    securityResetOtp?: string;
+    /** Orden cuyos códigos se revelan tras el unlock. */
+    pendingRevealOrderId?: string;
+    /** Qué renderizar tras el unlock: reveal post-creación o detalle de orden. */
+    pendingRevealSource?: 'buy' | 'detail';
   };
   uiMessageId?: number;
   lastChatId?: number;

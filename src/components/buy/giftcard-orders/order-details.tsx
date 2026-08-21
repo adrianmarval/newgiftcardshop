@@ -1,6 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { GiftcardItem } from '@/components/common';
+import { UnlockGate } from '@/components/buy/security/unlock-gate';
 import type { BuyerOrder } from '@/types';
 
 export interface OrderDetailsProps {
@@ -8,6 +10,12 @@ export interface OrderDetailsProps {
 }
 
 export function OrderDetails({ order }: OrderDetailsProps) {
+  const router = useRouter();
+
+  if (order.codesLocked) {
+    return <UnlockGate onUnlocked={() => router.refresh()} description="Verificá tu identidad para ver los códigos." />;
+  }
+
   return (
     <div className="space-y-3">
       <div className="mb-3 flex items-center justify-between">

@@ -15,6 +15,7 @@ import {
   OrderAlreadyProcessedError,
   PaymentVerificationError,
 } from '@/lib/services/order';
+import { orderNeedsSecurityGate, isSecurityUnlocked } from '@/lib/services/security';
 
 import { Prisma } from '@/generated/prisma/client';
 import { strike } from '@/bot/shared/formatters';
@@ -90,13 +91,26 @@ export async function handleOrderDetail(ctx: BuyerContext) {
 
   if (!orderId) return ctx.answerCallbackQuery();
 
+  await renderOrderDetail(ctx, orderId, fromPage);
+}
+
+/**
+ * Render del detalle de orden (códigos + resumen + acciones).
+ * Exportado para re-renderizar tras el desbloqueo por PIN (security-handler).
+ * Aplica el security gate: si la orden tiene cards sin confirmar y el buyer no
+ * tiene unlock vigente, los códigos se muestran enmascarados + botón Desbloquear.
+ */
+export async function renderOrderDetail(ctx: BuyerContext, orderId: string, fromPage = 1) {
   ctx.session.wizard.orderId = orderId;
 
   let order;
   try {
     order = await findOrderForUser(orderId, ctx.user.id);
   } catch {
-    return ctx.answerCallbackQuery('Orden no encontrada');
+    if (ctx.callbackQuery) return ctx.answerCallbackQuery('Orden no encontrada');
+    return renderUI(ctx, '❌ Orden no encontrada.', {
+      reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
+    });
   }
 
   const orderWithBrand = await prisma.order.findUnique({
@@ -109,7 +123,17 @@ export async function handleOrderDetail(ctx: BuyerContext) {
     },
   });
 
-  if (!orderWithBrand) return ctx.answerCallbackQuery('Orden no encontrada');
+  if (!orderWithBrand) {
+    if (ctx.callbackQuery) return ctx.answerCallbackQuery('Orden no encontrada');
+    return renderUI(ctx, '❌ Orden no encontrada.', {
+      reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
+    });
+  }
+
+  // Security gate: enmascarar códigos si la orden tiene cards sin confirmar y
+  // el buyer no tiene un unlock vigente (PIN). Nunca desencriptar en ese caso.
+  const codesLocked = orderNeedsSecurityGate(order.giftcards) && !(await isSecurityUnlocked(ctx.user.id));
+  const renderCode = (encrypted: string) => (codesLocked ? '🔒 ••••••••••' : escapeHTML(decrypt(encrypted)));
 
   const nullifiedCards = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED' && c.status !== 'WRONG_AMOUNT');
   const availableCards = order.giftcards.filter((c) => c.status === 'UNUSED' || c.status === 'USED' || c.status === 'WRONG_AMOUNT');
@@ -131,7 +155,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
       ? `<b>❌ Tarjetas inválidas / reportadas</b>\n` +
         nullifiedCards
           .map((c) => {
-            const claimCode = escapeHTML(decrypt(c.claimCode));
+            const claimCode = renderCode(c.claimCode);
             return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount, currency))} - ${c.status}`;
           })
           .join('\n') +
@@ -143,7 +167,7 @@ export async function handleOrderDetail(ctx: BuyerContext) {
       ? `<b>✅ Tarjetas verificadas</b>\n` +
         availableCards
           .map((c) => {
-            const claimCode = escapeHTML(decrypt(c.claimCode));
+            const claimCode = renderCode(c.claimCode);
             const isWrong = c.status === 'WRONG_AMOUNT';
             const amt = c.reportedAmount ?? c.amount;
             if (isWrong) return `• <code>${claimCode}</code> - ${strike(fmt$(c.amount, currency))} → ${fmt$(amt, currency)}`;
@@ -177,6 +201,10 @@ export async function handleOrderDetail(ctx: BuyerContext) {
   const msg = `<b>Orden #<code>${order.id}</code></b>\n\n${invalidBlock}${validBlock}${summary}${instructions}`;
 
   const kb = new InlineKeyboard();
+
+  if (codesLocked) {
+    kb.text('🔓 Desbloquear y ver códigos', `sec_unlock_${order.id}`).row();
+  }
 
   if (order.status === 'PENDING') {
     if (totalToPay.isZero()) {
@@ -385,10 +413,7 @@ export async function handlePaymentText(ctx: BuyerContext) {
         `❌ <b>No se pudo verificar tu pago.</b>\n\n${escapeHTML(err.message)}\n\n<b>Revisá el ID de transacción y enviálo nuevamente:</b>`,
         {
           parse_mode: 'HTML',
-          reply_markup: new InlineKeyboard()
-            .text('🔄 Reintentar', `make_payment_${orderId}`)
-            .text('📋 Ver mis órdenes', 'my_orders')
-            .row(),
+          reply_markup: new InlineKeyboard().text('🔄 Reintentar', `make_payment_${orderId}`).text('📋 Ver mis órdenes', 'my_orders').row(),
         },
       );
     }

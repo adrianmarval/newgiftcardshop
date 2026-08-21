@@ -23,6 +23,8 @@ export interface BuyerOrder {
   effectiveTotal: number;
   faceValueTotal: number;
   brandCountryId?: string;
+  /** true when the order has unconfirmed cards and the buyer hasn't unlocked codes (claimCodes are masked). */
+  codesLocked?: boolean;
 }
 
 // ── RecentOrder (for dashboard) ────────────────────────────────────────────────

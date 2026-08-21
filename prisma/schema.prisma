@@ -36,8 +36,15 @@ model User {
   minAmountPreference    Decimal? @db.Decimal(10, 2)
   maxAmountPreference    Decimal? @db.Decimal(10, 2)
 
+  // Seguridad de revelación de códigos (buyers)
+  securityPinHash       String?
+  pinFailedAttempts     Int       @default(0)
+  pinLocked             Boolean   @default(false)
+  securityUnlockedUntil DateTime?
+
   // Relaciones
   telegramUser      TelegramUser?
+  pinResetOtp       PinResetOtp?
   sessions          Session[]
   accounts          Account[]
   giftcards         Giftcard[]
@@ -585,6 +592,19 @@ model TelegramOtp {
   createdAt  DateTime @default(now())
 
   @@map("telegram_otp")
+}
+
+// OTP por email para recuperar el security PIN del buyer (lockout a 5 intentos)
+model PinResetOtp {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otp       String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("pin_reset_otp")
 }
 
 // Deep link token para vincular Telegram desde la web (one-time use, 24h expiry)

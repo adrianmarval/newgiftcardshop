@@ -42,12 +42,14 @@ export const getOrderCardsInputSchema = z.object({ orderId: z.string() });
 
 export const getOrderCardsOutputSchema = z.object({
   success: z.literal(true),
+  /** true cuando la orden tiene cards sin confirmar y el buyer no desbloqueó los códigos (claimCode omitido). */
+  requiresUnlock: z.boolean(),
   giftcards: z
     .object({
       id: z.string(),
       brand: z.string(),
       amount: z.number(),
-      claimCode: z.string(),
+      claimCode: z.string().optional(),
       pinCode: z.string().optional(),
       status: z.enum(GiftcardStatus),
       reportedAmount: z.number().optional(),

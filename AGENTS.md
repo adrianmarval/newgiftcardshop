@@ -16,7 +16,7 @@
 src/
 ├── app/(dashboard)/     # Páginas por rol: sell/, store/, admin/
 ├── actions/             # Server actions (next-safe-action)
-│   ├── buyer/           # orders, giftcards, issues, preferences, stats
+│   ├── buyer/           # orders, giftcards, issues, preferences, stats, security (PIN gate)
 │   ├── seller/          # batches (publish, list, check-codes), ocr, rates, stats
 │   ├── admin/           # payments, orders, batches, binance, users, catalog, whatsapp, stats
 │   ├── auth/            # login, register, logout, forgot/reset password, verify email, passkey login guard
@@ -155,6 +155,18 @@ TelegramOtp {
   attempts: Int @default(0) (lockout a 5)
   otp: String (generado con crypto.randomInt, CSPRNG)
 }
+
+PinResetOtp {
+  userId: String @unique
+  otp: String (CSPRNG, expira 10min, lockout a 5)
+}
+
+User {
+  securityPinHash: String? (scrypt salt:hash — PIN 4-6 dígitos del buyer)
+  pinFailedAttempts: Int @default(0) (lockout a 5 → pinLocked)
+  pinLocked: Boolean @default(false)
+  securityUnlockedUntil: DateTime? (ventana de reveal, 10min cross-canal)
+}
 ```
 
 ## Decisiones de negocio intencionales
@@ -165,7 +177,8 @@ TelegramOtp {
 4. **codeHash unique global**: Un claim code no debe existir en múltiples brand-countries. Si existe en US, no puede existir en UK.
 5. **Fotos de evidencia del bot**: Se guarda solo `telegramFileId` (sin cifrar/descargar). Deuda técnica conocida.
 6. **Passkeys**: Plugin `@better-auth/passkey` (pineado a 1.5.6, matchea better-auth core — NO usar `^` en la versión, un minor más nuevo exige core más nuevo). `signIn.passkey` bypasea la action `login`, por eso existe `actions/auth/complete-passkey-login.ts` que revalida la guarda rol/portal server-side (sin ella, un BUYER con passkey entraría al portal sell). El sign-in con passkey NO pide TOTP aunque el usuario tenga 2FA activo (comportamiento del plugin — la passkey ya es factor fuerte: posesión + biometría). Prompt de registro post-login: vista intersticial dedicada `/[portal]/auth/setup-passkey` (page server self-guarding: sin sesión/con passkeys/dismissed → redirect; `PasskeySetupView` client). La action `login` decide el redirect (passkey count + cookie `passkey_setup_done`, definida en `lib/constants.ts`, seteada client-side vía `markPasskeySetupDone`); el flujo 2FA aterriza ahí siempre y la página rebota al dashboard si no aplica. Conditional UI (autofill) activa en el campo email del login (`autocomplete="username webauthn"`). WebAuthn no funciona en iframes cross-origin (Telegram WebView) — la UI de passkey se auto-oculta si `PublicKeyCredential` no está disponible.
-   - **Ceremonia de autenticación propia**: NO usamos `authClient.signIn.passkey()` — el wrapper del plugin hace `console.error` incondicional en cualquier excepción, incluida la cancelación del usuario (ruido rojo en consola al cancelar). `use-passkey-sign-in.ts` implementa la ceremonia con `@simplewebauthn/browser` directo (mismos endpoints `/passkey/generate-authenticate-options` + `/passkey/verify-authentication` vía `authClient.$fetch` — el atomListener `$sessionSignal` refresca la sesión igual). Cancelaciones (`ERROR_CEREMONY_ABORTED`, `ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`/NotAllowedError) se tragan en silencio. El lado de registro (`addPasskey`) SÍ es limpio y se usa el wrapper del plugin.
+   - **Ceremonia de autenticación propia**: NO usamos `authClient.signIn.passkey()` — el wrapper del plugin hace `console.error` incondicional en cualquier excepción, incluida la cancelación del usuario (ruido rojo en consola al cancelar). `use-passkey-sign-in.ts` implementa la ceremonia con `@simplewebauthn/browser` directo (mismos endpoints `/passkey/generate-authenticate-options` + `/passkey/verify-authentication` vía `authClient.$fetch` — el atomListener `$sessionSignal` refresca la sesión igual). Cancelaciones (`ERROR_CEREMONY_ABORTED`, `ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`/NotAllowedError) se tragan en silencio. El lado de registro (`addPasskey`) SÍ es limpio y se usa el wrapper del plugin. La misma ceremonia está extraída en `runPasskeyAuthentication()` (`passkey-utils.ts`) para re-autenticación dentro de sesión (gate de códigos). **OJO**: `verify-authentication` responde `{ session }` — NO incluye `user` aunque el OpenAPI del plugin diga lo contrario; el userId sale de `session.userId`.
+7. **Gate de seguridad para revelar códigos (anti-hurto)**: Los claim codes solo salen del servidor/bot si la orden NO tiene cards sin confirmar (`isConfirmed=false` ⇒ códigos aún aplicables y robables) O el buyer tiene un unlock vigente (`securityUnlockedUntil`, 10 min, cross-canal web+bot). El gate vive en el REVEAL, no en la creación de la orden (cero fricción en el flujo de compra). Es OBLIGATORIO al primer reveal: buyer sin PIN ni passkey debe crear un PIN inline antes de ver códigos. Puntos gateados: `getOrderCards` (redeem step), `getOrderById` (detalle/resume), `listOrders` (masked `••••••••` + flag `codesLocked`, solo scope buyer — admin nunca se enmascara), reveal post-creación y `order_detail` del buyer-bot. Web prioriza passkey (si hay + WebAuthn soportado) con fallback a PIN; Telegram solo PIN (no hay WebAuthn en el bot). Servicio compartido: `lib/services/security/security-pin.service.ts`. UI web: `components/buy/security/unlock-gate.tsx` + sección en perfil. Bot: `bot/buyer-bot/handlers/security-handler.ts` (wizard steps `awaitingSecurityPin`/`awaitingPinSetup*`/`awaitingPinReset*`/`awaitingPinChange*`, borra los mensajes con PIN/OTP vía `deleteUserInput`). Recuperación en ambos canales: OTP por email (`PinResetOtp` + template `pin-reset-otp.tsx`; `requestPinReset` NO swallowa errores a diferencia de `sendOtpEmail`). Lockout: 5 intentos fallidos → `pinLocked`, solo se recupera por email OTP.
 
 ## Seguridad
 
@@ -178,6 +191,7 @@ TelegramOtp {
 
 ## Servicios compartidos
 
+- `src/lib/services/security/security-pin.service.ts` — `orderNeedsSecurityGate`, `isSecurityUnlocked`, `grantSecurityUnlock`, `verifySecurityPin`/`verifyPinAndUnlock` (lockout a 5), `setSecurityPin`/`changeSecurityPin`, `requestPinReset`/`confirmPinReset` (OTP email). Compartido web + buyer-bot.
 - `src/lib/services/giftcard/batch-cancel.service.ts` — `canCancelBatch`, `cancelBatch`, `autoCancelEligibleBatchesForOrder(tx, orderId)` (evento), `sweepCancellableBatches()` (cron). Guards: `isPaid=false`, `cancelledAt=null`, todas las cards `isConfirmed`, `canCancelBatch`.
 - `src/lib/services/giftcard-reservation.service.ts` — `reserveGiftcards(tx, ids, orderId)` con `updateMany` guardado por `inStock/status/orderId` + verificación de `count`. Usado por web y bot.
 - `src/lib/services/pricing.service.ts` — `getUserRates(userId, { brandCountryId? | brandId+countryId })` retorna `{ buyRate, sellRate }`

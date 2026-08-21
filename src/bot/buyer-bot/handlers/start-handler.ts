@@ -66,7 +66,12 @@ export async function startBuyer(ctx: BuyerContext) {
       if (!ctx.session.wizard) ctx.session.wizard = { step: 'idle' };
       ctx.session.wizard.step = 'idle';
 
-      const kb = new InlineKeyboard().text('📋 Ver Mis órdenes', 'my_orders').row().text('🛒 Comprar tarjetas', 'buy_start');
+      const kb = new InlineKeyboard()
+        .text('📋 Ver Mis órdenes', 'my_orders')
+        .row()
+        .text('🛒 Comprar tarjetas', 'buy_start')
+        .row()
+        .text('🔐 Seguridad (PIN)', 'sec_menu');
       const escapedName = escapeHTML(user.name);
 
       await renderUI(ctx, `👋 ¡Hola de nuevo, <b>${escapedName}</b>!\n\nUsá los botones para navegar.`, {

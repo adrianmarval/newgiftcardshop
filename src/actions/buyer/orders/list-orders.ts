@@ -2,6 +2,7 @@
 
 import { buyerActionClient, ActionError } from '@/lib/safe-action';
 import { listOrdersService } from '@/lib/services/order/order-list.service';
+import { isSecurityUnlocked } from '@/lib/services/security';
 import { listOrdersInputSchema, listOrdersOutputSchema } from './schemas';
 
 export const listOrders = buyerActionClient
@@ -9,6 +10,7 @@ export const listOrders = buyerActionClient
   .outputSchema(listOrdersOutputSchema)
   .action(async ({ ctx, parsedInput }) => {
     try {
+      const codesUnlocked = await isSecurityUnlocked(ctx.auth.user.id);
       const result = await listOrdersService({
         scope: 'buyer',
         userId: ctx.auth.user.id,
@@ -17,6 +19,7 @@ export const listOrders = buyerActionClient
         page: parsedInput.page,
         limit: parsedInput.limit,
         sort: parsedInput.sort,
+        codesUnlocked,
       });
 
       return {

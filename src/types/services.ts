@@ -54,6 +54,8 @@ export interface ListOrdersServiceInput {
   dateFrom?: string | null;
   dateTo?: string | null;
   sort?: 'newest' | 'oldest';
+  /** Buyer scope only: whether the buyer currently holds a valid security unlock (PIN/passkey). */
+  codesUnlocked?: boolean;
 }
 
 // ── Batch List Service ──────────────────────────────────────────────────────

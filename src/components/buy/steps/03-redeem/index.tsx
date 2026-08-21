@@ -22,6 +22,7 @@ import { formatCurrency } from '@/lib/utils';
 import { copyToClipboard } from '@/lib/utils/clipboard';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
 import { StepFooter } from '@/components/common';
+import { UnlockGate } from '@/components/buy/security/unlock-gate';
 
 export const RedeemStep = () => {
   const { foundGiftcards, setFoundGiftcards, orderStatus, orderBuyRate, reportIssue, setStep, setOrderStatus, orderId, selectedBrand, selectedCountry, selectedCurrency } = useBuyFlow();
@@ -40,6 +41,10 @@ export const RedeemStep = () => {
     loadingIds: new Set<string>(),
     copiedIds: new Set<string>(),
   });
+
+  // Security gate: true mientras el servidor retiene los códigos (PIN/passkey pendiente)
+  const [codesLocked, setCodesLocked] = useState(false);
+  const [securityRefreshKey, setSecurityRefreshKey] = useState(0);
 
   // Use the order's locked buyRate if available, otherwise fetch current rate
   const effectiveBuyRate = orderBuyRate ?? redeemState.buyRate;
@@ -71,10 +76,11 @@ export const RedeemStep = () => {
     if (!orderId) return;
     getOrderCards({ orderId }).then((result) => {
       if (result?.data?.success && result.data.giftcards) {
+        setCodesLocked(result.data.requiresUnlock === true);
         setFoundGiftcards(result.data.giftcards);
       }
     });
-  }, [orderId]);
+  }, [orderId, securityRefreshKey]);
 
   const setLoading = (id: string, loading: boolean) => {
     setRedeemState((prev) => {
@@ -196,7 +202,7 @@ export const RedeemStep = () => {
     setStep(4);
   };
 
-  useStepHotkeys({ onContinue: handleAdvanceToConfirm });
+  useStepHotkeys({ onContinue: handleAdvanceToConfirm, enabled: !codesLocked });
 
   // Calculate totals based on status and apply buyRate
   const rawTotal = useMemo(() => foundGiftcards.reduce((sum, card) => {
@@ -240,7 +246,9 @@ export const RedeemStep = () => {
         {/* Right Column: Cards Reveal & Reporting */}
         <Card className="flex min-h-0 flex-1 flex-col gap-0 border backdrop-blur-sm md:col-span-8">
           <CardHeader className="flex items-center justify-between px-2 py-2 md:px-3 md:py-2">
-            <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase md:text-xs">Códigos Revelados</span>
+            <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase md:text-xs">
+              {codesLocked ? 'Códigos Protegidos' : 'Códigos Revelados'}
+            </span>
             <div className="flex items-center gap-1.5">
               {copiedCount > 0 && (
                 <Badge variant="outline" className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-[9px] text-emerald-500 md:text-xs">
@@ -253,6 +261,9 @@ export const RedeemStep = () => {
           </CardHeader>
 
           <CardContent className="custom-scrollbar min-h-0 flex-1 space-y-1.5 overflow-y-auto px-1 py-1 md:space-y-1 md:px-2 md:py-2">
+            {codesLocked ? (
+              <UnlockGate onUnlocked={() => setSecurityRefreshKey((k) => k + 1)} />
+            ) : (
             <AnimatePresence>
               {foundGiftcards.map((card, idx) => {
                 const isCopied = redeemState.copiedIds.has(card.id);
@@ -438,12 +449,14 @@ export const RedeemStep = () => {
                 );
               })}
             </AnimatePresence>
+            )}
           </CardContent>
         </Card>
       </div>
 
       <StepFooter
         ctaLabel="Confirmar uso/reportes"
+        ctaDisabled={codesLocked}
         onContinue={handleAdvanceToConfirm}
       />
     </div>
