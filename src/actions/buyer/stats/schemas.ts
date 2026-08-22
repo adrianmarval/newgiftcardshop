@@ -23,7 +23,8 @@ export const buyerStatsOutputSchema = z.object({
   }),
   personal: z.object({
     creditLimit: z.number(),
-    unpaidTotal: z.number(),
+    unpaidFaceValue: z.number(),
+    unpaidUsdt: z.number(),
     availableCredit: z.number(),
     pendingOrdersCount: z.number(),
     totalSaved: z.number(),

@@ -8,6 +8,7 @@ import { findGiftcardCombination } from '@/lib/services/browse/card-combinator';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { Prisma } from '@/generated/prisma/client';
 import { getUserRates } from '@/lib/services/pricing';
+import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { formatCurrency } from '@/lib/utils';
 import { estimateTimeToAccess } from '@/lib/services/pricing/tier-estimation';
 import { getEscalationConfig } from '@/lib/settings/settings.service';
@@ -162,40 +163,47 @@ export async function handleAmountText(ctx: BuyerContext) {
       userId: ctx.user.id,
       status: { in: ['PENDING', 'AWAITING_PAYMENT'] },
     },
-    select: { adjustedTotal: true, total: true, status: true },
+    select: {
+      status: true,
+      giftcards: {
+        select: { amount: true, status: true, reportedAmount: true },
+      },
+    },
   });
-  const unpaidTotal = unpaidOrders.reduce((s, o) => s.plus(o.adjustedTotal ?? o.total), new Decimal(0));
+  const unpaidTotal = unpaidOrders.reduce(
+    (s, order) => s.plus(computeFaceValueTotal(order.giftcards)),
+    new Decimal(0),
+  );
   const pendingCount = unpaidOrders.filter((o) => o.status === 'PENDING').length;
   const hasPendingOrders = pendingCount > 0;
 
   const amountDec = new Decimal(amount);
-  const creditCost = amountDec.mul(buyRate);
 
-  // Siempre verificar límite de crédito
+  // Siempre verificar límite de crédito (face value)
   if (unpaidTotal.gte(user.creditLimit)) {
     return renderUI(
       ctx,
       ` <b>Límite de crédito alcanzado</b>\n\n` +
-        `Tu límite: <b>${fmt$(user.creditLimit)}</b>\n` +
-        `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n\n` +
+        `Tu límite: <b>${fmt$(user.creditLimit)}</b> en gift cards\n` +
+        `Ya tenés: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n\n` +
         `Debes completar los pagos antes de comprar más tarjetas.`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('🏠 Volver', 'start') },
     );
   }
 
-  if (unpaidTotal.plus(creditCost).gt(user.creditLimit)) {
+  if (unpaidTotal.plus(amountDec).gt(user.creditLimit)) {
     const availableCredit = user.creditLimit.minus(unpaidTotal);
-    const unpaidText = unpaidTotal.gt(0) ? `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n` : '';
+    const unpaidText = unpaidTotal.gt(0) ? `Ya tenés: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n` : '';
     const pendingMsg = hasPendingOrders
       ? `\nTenés <b>${pendingCount}</b> orden(es) pendientes que deben ser procesadas para liberar crédito.`
       : '';
     return renderUI(
       ctx,
       ` <b>Crédito insuficiente</b>\n\n` +
-        `Tu límite: <b>${fmt$(user.creditLimit)}</b>\n` +
+        `Tu límite: <b>${fmt$(user.creditLimit)}</b> en gift cards\n` +
         unpaidText +
         `Disponible: <b>${fmt$(availableCredit)}</b>\n` +
-        `Esta compra: <b>${fmt$(creditCost)}</b>\n\n` +
+        `Esta compra: <b>${fmt$(amountDec)}</b> en gift cards\n\n` +
         `Intentá con un monto igual o menor a <b>${fmt$(availableCredit)}</b>.${pendingMsg}`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) },
     );
@@ -340,13 +348,14 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     });
   }
 
-  const total = giftcards.reduce((s, c) => s.plus(c.amount.mul(buyRate)), new Prisma.Decimal(0));
+  const faceValueTotal = giftcards.reduce((s, c) => s.plus(c.amount), new Prisma.Decimal(0));
+  const total = faceValueTotal.mul(buyRate);
 
   let order;
   try {
     order = await prisma.$transaction(async (tx) => {
       // Revalidar crédito atómicamente dentro de la tx (race condition safe)
-      const creditCheck = await checkCreditLimit(ctx.user.id, total, tx);
+      const creditCheck = await checkCreditLimit(ctx.user.id, faceValueTotal, tx);
       if (!creditCheck.allowed) {
         throw new Error('CREDIT_LIMIT_EXCEEDED');
       }

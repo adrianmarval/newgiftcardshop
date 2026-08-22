@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { buyerActionClient, ActionError } from '@/lib/safe-action';
+import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { recentOrdersOutputSchema } from './schemas';
 
 export const recentOrders = buyerActionClient.outputSchema(recentOrdersOutputSchema).action(async ({ ctx }) => {
@@ -30,6 +31,19 @@ export const recentOrders = buyerActionClient.outputSchema(recentOrdersOutputSch
       _count: { id: true },
     });
 
+    // Fetch all giftcards for these orders to compute effective totals consistently with order-list service
+    const allGiftcards = await prisma.giftcard.findMany({
+      where: { orderId: { in: orderIds } },
+      select: { orderId: true, amount: true, status: true, reportedAmount: true },
+    });
+
+    const giftcardsByOrder = new Map<string, typeof allGiftcards>();
+    for (const gc of allGiftcards) {
+      const list = giftcardsByOrder.get(gc.orderId!) ?? [];
+      list.push(gc);
+      giftcardsByOrder.set(gc.orderId!, list);
+    }
+
     const aggregateMap = new Map(aggregates.map((a) => [a.orderId, { faceValue: Number(a._sum.amount ?? 0), totalCards: a._count.id }]));
 
     return orders.map((order) => {
@@ -46,7 +60,9 @@ export const recentOrders = buyerActionClient.outputSchema(recentOrdersOutputSch
       const agg = aggregateMap.get(order.id);
       const faceValueTotal = agg?.faceValue ?? 0;
       const cardsCount = agg?.totalCards ?? order._count.giftcards;
-      const effectiveTotal = Number(order.adjustedTotal ?? order.total);
+      // Compute effectiveTotal from giftcards (consistent with order-list service)
+      const orderGiftcards = giftcardsByOrder.get(order.id) ?? [];
+      const effectiveTotal = Number(computeFaceValueTotal(orderGiftcards).mul(order.buyRate));
 
       return {
         id: order.id,

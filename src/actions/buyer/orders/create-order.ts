@@ -86,14 +86,16 @@ export const createOrder = buyerActionClient
       throw new ActionError(tierError);
     }
 
-    const total = ctx.giftcards.reduce((sum, card) => {
-      return sum.plus(card.amount.mul(buyRate));
+    const faceValueTotal = ctx.giftcards.reduce((sum, card) => {
+      return sum.plus(card.amount);
     }, new Prisma.Decimal(0));
+
+    const total = faceValueTotal.mul(buyRate);
 
     let order;
     try {
       order = await prisma.$transaction(async (tx) => {
-        const creditCheck = await checkCreditLimit(ctx.auth.user.id, total, tx);
+        const creditCheck = await checkCreditLimit(ctx.auth.user.id, faceValueTotal, tx);
         if (!creditCheck.allowed) {
           throw new ActionError('Límite de crédito insuficiente. Tenés pagos pendientes que bloquean esta compra.');
         }

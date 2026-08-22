@@ -242,12 +242,16 @@ export function useCancelBatchAction() {
 // ── Order config helpers ─────────────────────────────────────────────────────
 
 export function getOrderProgressConfig(status: OrderStatus, progressPercentage: number) {
-  const isCompleted = status === 'COMPLETED';
-  const isCancelled = status === 'CANCELLED';
+  const colorMap: Record<OrderStatus, string> = {
+    PENDING: 'bg-amber-500',
+    AWAITING_PAYMENT: 'bg-blue-500',
+    COMPLETED: 'bg-emerald-500',
+    CANCELLED: 'bg-destructive',
+  };
   return {
     percentage: progressPercentage,
-    colorClass: 'bg-primary',
-    fullColorClass: isCompleted ? 'bg-emerald-500' : isCancelled ? 'bg-destructive' : undefined,
+    colorClass: colorMap[status] ?? 'bg-muted',
+    fullColorClass: status === 'COMPLETED' ? 'bg-emerald-500' : status === 'CANCELLED' ? 'bg-destructive' : undefined,
   };
 }
 

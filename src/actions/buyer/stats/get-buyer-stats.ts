@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { startOfDay, startOfMonth } from 'date-fns';
 import { maskEmail } from '@/lib/utils/mask-email';
 import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
+import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { buyerStatsOutputSchema } from './schemas';
 
 const ORDER_BOOK_LIMIT = 10;
@@ -41,7 +42,13 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
       }),
       prisma.order.findMany({
         where: { userId, status: { in: ['PENDING', 'AWAITING_PAYMENT'] } },
-        select: { adjustedTotal: true, total: true },
+        select: {
+          total: true,
+          buyRate: true,
+          giftcards: {
+            select: { amount: true, status: true, reportedAmount: true },
+          },
+        },
       }),
       prisma.order.findMany({
         where: { userId, status: 'COMPLETED' },
@@ -83,7 +90,15 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
     const monthSpend = monthOrders.reduce((sum, o) => sum + Number(o.adjustedTotal ?? o.total), 0);
 
     const creditLimit = user?.creditLimit ? Number(user.creditLimit) : 0;
-    const unpaidTotal = unpaidOrders.reduce((sum, o) => sum + Number(o.adjustedTotal ?? o.total), 0);
+
+    const unpaidFaceValue = unpaidOrders.reduce(
+      (sum, order) => sum + Number(computeFaceValueTotal(order.giftcards)),
+      0,
+    );
+    const unpaidUsdt = unpaidOrders.reduce(
+      (sum, order) => sum + Number(computeFaceValueTotal(order.giftcards).mul(order.buyRate)),
+      0,
+    );
 
     return {
       availableCards: available._count,
@@ -102,8 +117,9 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
       },
       personal: {
         creditLimit,
-        unpaidTotal,
-        availableCredit: creditLimit - unpaidTotal,
+        unpaidFaceValue,
+        unpaidUsdt,
+        availableCredit: creditLimit - unpaidFaceValue,
         pendingOrdersCount: unpaidOrders.length,
         totalSaved: Math.max(totalSaved, 0),
         monthSpend,

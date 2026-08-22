@@ -21,7 +21,8 @@ export interface OrderBookData {
 
 export interface BuyerPersonalStats {
   creditLimit: number;
-  unpaidTotal: number;
+  unpaidFaceValue: number;
+  unpaidUsdt: number;
   availableCredit: number;
   pendingOrdersCount: number;
   totalSaved: number;

@@ -14,6 +14,7 @@ import {
   IconArrowRight,
 } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { StatCard } from '@/components/common';
 import { orderStatusConfig } from '@/lib/config';
 import { formatCurrency } from '@/lib/utils';
@@ -23,6 +24,73 @@ import { timeAgo } from '@/lib/utils';
 interface BuyerDashboardProps {
   stats: BuyerStats;
   recentOrders: RecentOrder[];
+}
+
+function CreditUsageCard({
+  creditLimit,
+  unpaidFaceValue,
+  unpaidUsdt,
+  availableCredit,
+  pendingOrdersCount,
+}: {
+  creditLimit: number;
+  unpaidFaceValue: number;
+  unpaidUsdt: number;
+  availableCredit: number;
+  pendingOrdersCount: number;
+}) {
+  const usagePercent = creditLimit > 0 ? Math.min((unpaidFaceValue / creditLimit) * 100, 100) : 0;
+  const barColor =
+    usagePercent >= 80
+      ? 'bg-red-500'
+      : usagePercent >= 50
+        ? 'bg-amber-500'
+        : 'bg-emerald-500';
+
+  const hasDebt = unpaidFaceValue > 0;
+
+  return (
+    <Card size="sm" className="col-span-2 lg:col-span-2">
+      <CardHeader className="flex flex-row items-center gap-1">
+        <IconCreditCard className={`h-6 w-6 ${hasDebt ? 'text-amber-500' : 'text-muted-foreground'}`} />
+        <CardTitle className="text-base">Límite de Crédito</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Crédito utilizado</span>
+            <span className="font-medium">{usagePercent.toFixed(0)}%</span>
+          </div>
+          <Progress value={usagePercent} className="h-2.5">
+            <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${usagePercent}%` }} />
+          </Progress>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{formatCurrency(unpaidFaceValue)} GC</span>
+            <span>{formatCurrency(creditLimit)} GC</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-2.5 text-sm">
+          <div className="space-y-0.5">
+            <p className="text-muted-foreground text-xs">Deuda a pagar</p>
+            <p className="text-lg font-bold text-amber-500">{formatCurrency(unpaidUsdt)}</p>
+            <p className="text-muted-foreground text-[10px]">USDT (con descuento)</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-muted-foreground text-xs">Crédito restante</p>
+            <p className="text-lg font-bold text-emerald-500">{formatCurrency(availableCredit)}</p>
+            <p className="text-muted-foreground text-[10px]">GC (face value)</p>
+          </div>
+        </div>
+
+        {pendingOrdersCount > 0 && (
+          <p className="text-muted-foreground text-xs">
+            {pendingOrdersCount} orden{pendingOrdersCount !== 1 ? 'es' : ''} pendiente{pendingOrdersCount !== 1 ? 's' : ''} por pagar
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function UserAvatar({ email }: { email: string }) {
@@ -127,11 +195,12 @@ export function BuyerDashboard({ stats, recentOrders }: BuyerDashboardProps) {
       <section className="space-y-2">
         <h2 className="text-xl font-semibold">Mis Estadísticas</h2>
         <div className="grid grid-cols-2 gap-1 lg:grid-cols-4">
-          <StatCard
-            title="Crédito Disponible"
-            value={formatCurrency(personal.availableCredit)}
-            icon={<IconCreditCard className={`h-6 w-6 ${personal.unpaidTotal > 0 ? 'text-amber-500' : 'text-muted-foreground'}`} />}
-            description={`Límite ${formatCurrency(personal.creditLimit)} · Deuda ${formatCurrency(personal.unpaidTotal)}`}
+          <CreditUsageCard
+            creditLimit={personal.creditLimit}
+            unpaidFaceValue={personal.unpaidFaceValue}
+            unpaidUsdt={personal.unpaidUsdt}
+            availableCredit={personal.availableCredit}
+            pendingOrdersCount={personal.pendingOrdersCount}
           />
           <StatCard
             title="Total Ahorrado"
