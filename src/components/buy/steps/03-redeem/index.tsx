@@ -56,6 +56,9 @@ export const RedeemStep = () => {
 
   // Security gate: true mientras el servidor retiene los códigos (PIN/passkey pendiente)
   const [codesLocked, setCodesLocked] = useState(false);
+  // false hasta que el servidor confirma el estado del gate — evita flashear
+  // la lista "revelada" (con data stale del store) antes de saber si hay lock
+  const [codesChecked, setCodesChecked] = useState(false);
   const [securityRefreshKey, setSecurityRefreshKey] = useState(0);
 
   // Use the order's locked buyRate if available, otherwise fetch current rate
@@ -85,13 +88,22 @@ export const RedeemStep = () => {
 
   // Refetch cards AND verify order status on mount to stay in sync with external mutations
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId) {
+      setCodesChecked(true);
+      return;
+    }
+    let ignore = false;
     getOrderCards({ orderId }).then((result) => {
+      if (ignore) return;
       if (result?.data?.success && result.data.giftcards) {
         setCodesLocked(result.data.requiresUnlock === true);
         setFoundGiftcards(result.data.giftcards);
       }
+      setCodesChecked(true);
     });
+    return () => {
+      ignore = true;
+    };
   }, [orderId, securityRefreshKey]);
 
   const setLoading = (id: string, loading: boolean) => {
@@ -214,7 +226,7 @@ export const RedeemStep = () => {
     setStep(4);
   };
 
-  useStepHotkeys({ onContinue: handleAdvanceToConfirm, enabled: !codesLocked });
+  useStepHotkeys({ onContinue: handleAdvanceToConfirm, enabled: codesChecked && !codesLocked });
 
   // Calculate totals based on status and apply buyRate
   const rawTotal = useMemo(
@@ -263,7 +275,7 @@ export const RedeemStep = () => {
         <Card className="flex min-h-0 flex-1 flex-col gap-0 border backdrop-blur-sm md:col-span-8">
           <CardHeader className="flex items-center justify-between px-2 py-2 md:px-3 md:py-2">
             <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase md:text-xs">
-              {codesLocked ? 'Códigos Protegidos' : 'Códigos Revelados'}
+              {!codesChecked ? 'Códigos' : codesLocked ? 'Códigos Protegidos' : 'Códigos Revelados'}
             </span>
             <div className="flex items-center gap-1.5">
               {copiedCount > 0 && (
@@ -277,7 +289,11 @@ export const RedeemStep = () => {
           </CardHeader>
 
           <CardContent className="custom-scrollbar min-h-0 flex-1 space-y-1.5 overflow-y-auto px-1 py-1 md:space-y-1 md:px-2 md:py-2">
-            {codesLocked ? (
+            {!codesChecked ? (
+              <div className="flex h-full min-h-0 items-center justify-center">
+                <Spinner className="text-muted-foreground" />
+              </div>
+            ) : codesLocked ? (
               <div className="flex h-full min-h-0 flex-col items-center justify-center">
                 <UnlockGate onUnlocked={() => setSecurityRefreshKey((k) => k + 1)} />
               </div>
@@ -472,7 +488,7 @@ export const RedeemStep = () => {
         </Card>
       </div>
 
-      <StepFooter ctaLabel="Confirmar uso/reportes" ctaDisabled={codesLocked} onContinue={handleAdvanceToConfirm} />
+      <StepFooter ctaLabel="Confirmar uso/reportes" ctaDisabled={!codesChecked || codesLocked} onContinue={handleAdvanceToConfirm} />
     </div>
   );
 };

@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "tsx --tsconfig tsconfig.json server.ts",
-    "dev:tunnel": "concurrently \"cloudflared tunnel run --url http://localhost:${PORT:-3000} dev\" \"pnpm dev\"",
+    "dev:tunnel": "concurrently \"cloudflared tunnel --config ~/.cloudflared/config.yml run dev\" \"pnpm dev\"",
+    "start:tunnel": "concurrently \"cloudflared tunnel --config ~/.cloudflared/config.yml run dev\" \"pnpm start\"",
     "build": "next build --webpack",
     "postinstall": "prisma generate",
     "start": "NODE_ENV=production tsx --tsconfig tsconfig.json server.ts",
