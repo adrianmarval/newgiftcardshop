@@ -274,6 +274,18 @@ export async function notifySellerBatchPaid(sellerId: string, batchId: number, a
   await notificationDispatcher.dispatch(sellerId, message);
 }
 
+export async function notifySellerBatchPayoutSent(sellerId: string, batchId: number, amount: number): Promise<void> {
+  const message: NotificationMessage = {
+    type: 'BATCH_STATUS',
+    title: `Batch #${batchId} payout on its way`,
+    description: `${amount.toFixed(2)} USDT was sent to your payment method. You'll receive a confirmation once it completes.`,
+    actionUrl: '/sell/dashboard/cards',
+    metadata: { batchId, amount },
+  };
+
+  await notificationDispatcher.dispatch(sellerId, message);
+}
+
 export async function notifySellerBatchCancelled(sellerId: string, batchId: number): Promise<void> {
   const message: NotificationMessage = {
     type: 'BATCH_CANCELLED',
@@ -317,4 +329,37 @@ export async function notifyAdminPaymentReceived(orderId: string, buyerName: str
   };
 
   await notificationDispatcher.dispatch(admin.id, message);
+}
+
+export async function notifyAdminPayoutFailed(batchId: number, amount: number, reason: string): Promise<void> {
+  const admin = await prisma.user.findFirst({
+    where: { role: 'ADMIN' },
+    select: { id: true },
+  });
+
+  if (!admin) {
+    return;
+  }
+
+  const message: NotificationMessage = {
+    type: 'BATCH_STATUS',
+    title: '⚠️ Fallo en pago automático a seller',
+    description: `El pago del lote #${batchId} (${amount.toFixed(2)} USDT) falló: ${reason}. Requiere reintento manual.`,
+    actionUrl: '/admin/dashboard/batches',
+    metadata: { batchId, amount, reason },
+  };
+
+  await notificationDispatcher.dispatch(admin.id, message);
+}
+
+export async function notifySellerWalletRequired(sellerId: string, batchId: number): Promise<void> {
+  const message: NotificationMessage = {
+    type: 'BATCH_STATUS',
+    title: `Batch #${batchId} ready for payout`,
+    description: `Your batch is fully confirmed, but the payout is on hold because you have no payment method configured. Add one to receive your money automatically.`,
+    actionUrl: '/sell/dashboard/account',
+    metadata: { batchId },
+  };
+
+  await notificationDispatcher.dispatch(sellerId, message);
 }

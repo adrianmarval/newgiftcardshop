@@ -2,9 +2,25 @@ import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { computeEffectiveTotalDecimal } from '@/lib/services/pricing';
 import { autoCancelEligibleBatchesForOrder } from '@/lib/services/giftcard/batch-cancel.service';
+import { triggerAutoPayForOrder } from '@/lib/services/payment/auto-pay.service';
 import { OrderNotFoundError, InvalidOrderStateError, OrderAlreadyProcessedError, PaymentVerificationError } from './order-errors';
 import { validateBuyerPayment } from '@/lib/services/payment/buyer-payment.service';
 import { logger } from '@/lib/logger';
+
+/**
+ * Fires the auto-pay trigger post-commit (fire-and-forget). No-op when the
+ * auto_pay_sellers setting is disabled. Never breaks the lifecycle flow.
+ */
+function fireAutoPayTrigger(orderId: string): void {
+  triggerAutoPayForOrder(orderId).catch((err) =>
+    logger.error('Error en trigger de auto-pay post-commit', {
+      flow: 'payment',
+      action: 'auto-pay-trigger',
+      metadata: { orderId },
+      error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+    }),
+  );
+}
 
 /**
  * Cancels an order and marks all giftcards as confirmed.
@@ -46,6 +62,9 @@ export async function cancelOrder(orderId: string) {
       }
     }
   }
+
+  // Auto-pay trigger (no-op when disabled, fire-and-forget)
+  fireAutoPayTrigger(orderId);
 }
 
 /**
@@ -97,6 +116,9 @@ export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal
       }
     }
   }
+
+  // Auto-pay trigger (no-op when disabled, fire-and-forget)
+  fireAutoPayTrigger(orderId);
 
   return { order, adjustedTotal };
 }

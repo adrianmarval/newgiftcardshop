@@ -132,6 +132,62 @@ async function initBatchAutoCancelService() {
   }
 }
 
+// ── Seller Auto-Pay + Payment Sync (safety net) ──────────────────────────────
+
+async function initAutoPayService() {
+  try {
+    const { sweepPayableBatches } = await import('./src/lib/services/payment/auto-pay.service');
+    const { syncPendingSellerPayments } = await import('./src/lib/services/payment/seller-payout.service');
+    const { getAutoPaySellers } = await import('./src/lib/settings/settings.service');
+    const log = await getServerLogger();
+
+    const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+    log.info('[AutoPay] Iniciado - intervalo: 5min');
+
+    let cycleRunning = false;
+
+    setInterval(async () => {
+      if (cycleRunning) {
+        log.info('[AutoPay] Skipping — previous cycle still active');
+        return;
+      }
+      cycleRunning = true;
+      try {
+        // 1. Auto-pay sweep (reads the setting each cycle — toggle without restart)
+        if (await getAutoPaySellers()) {
+          const sweep = await sweepPayableBatches();
+
+          if (sweep.processed > 0) {
+            log.action('payment', 'auto-pay-cron', `Auto-pay sweep: ${sweep.paid} pagado(s), ${sweep.failed} fallido(s) de ${sweep.processed} candidato(s)`, {
+              metadata: { ...sweep },
+            });
+          }
+        }
+
+        // 2. Sync pending seller payouts with Binance (always — resolves manual payouts too)
+        const sync = await syncPendingSellerPayments();
+
+        if (sync.resolved > 0 || sync.failed > 0) {
+          log.action('payment', 'sync-payouts-cron', `Sync payouts: ${sync.resolved} completado(s), ${sync.failed} fallido(s), ${sync.stillPending} pendiente(s)`, {
+            metadata: { ...sync },
+          });
+        }
+      } catch (err) {
+        log.error('[AutoPay] Error en ciclo', {
+          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+        });
+      } finally {
+        cycleRunning = false;
+      }
+    }, INTERVAL_MS);
+  } catch (err) {
+    const log = await getServerLogger();
+    log.error('[AutoPay] Error al iniciar', {
+      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+    });
+  }
+}
+
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
@@ -227,6 +283,9 @@ await initEscalationService();
 
 // ── Batch Auto-Cancel ─────────────────────────────────────────────────────────
 await initBatchAutoCancelService();
+
+// ── Seller Auto-Pay + Payment Sync ────────────────────────────────────────────
+await initAutoPayService();
 
 httpServer.listen(port, () => {
   console.log(`\n> Ready on http://${hostname}:${port}`);

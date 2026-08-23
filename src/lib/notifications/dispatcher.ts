@@ -52,6 +52,8 @@ export class NotificationDispatcher {
 
       if (result.status === 'failed') {
         logger.warn(`[Notifications] Telegram falló para user ${userId}: ${result.error}`);
+      } else if (result.status === 'skipped') {
+        logger.info(`[Notifications] Telegram omitido para user ${userId}: ${result.reason}`);
       }
     }
 

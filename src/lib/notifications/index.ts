@@ -3,7 +3,7 @@ export { BotRegistry } from './bot-registry';
 export { TelegramChannel } from './channels/telegram.channel';
 export { WebPushChannel } from './channels/webpush.channel';
 export { NotificationDispatcher, notificationDispatcher } from './dispatcher';
-export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid, notifySellerBatchCancelled, notifySellerBatchDeleted } from './notification.service';
+export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid, notifySellerBatchPayoutSent, notifySellerBatchCancelled, notifySellerBatchDeleted, notifyAdminPayoutFailed, notifySellerWalletRequired } from './notification.service';
 export { getSubscribedBrandCountries } from './get-subscribed-brand-countries';
 export {
   NOTIFICATIONS_TOPIC_NAME,

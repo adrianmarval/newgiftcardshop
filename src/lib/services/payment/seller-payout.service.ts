@@ -9,7 +9,8 @@
 //
 // Prevents double payment via:
 //   - batch.isPaid check (application level)
-//   - withdrawOrderId: BATCH_<id> (Binance idempotency)
+//   - withdrawOrderId: BATCH_<id>_<attempt> (Binance idempotency — unique per attempt,
+//     so a manual retry after a FAILED payout never collides with the previous one)
 //   - Payment record unique per batch (implicit — we check before creating)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -53,8 +54,11 @@ const WITHDRAW_ORDER_PREFIX = 'BATCH_';
  * Step 3: handle success/failure
  *
  * The transaction is kept minimal — no external calls inside it.
+ *
+ * source='auto' (auto-pay flows) additionally alerts admins on failure
+ * (fire-and-forget) since there is no human watching the result.
  */
-export async function executeSellerPayout(batchId: number): Promise<PayoutResult> {
+export async function executeSellerPayout(batchId: number, source: 'manual' | 'auto' = 'manual'): Promise<PayoutResult> {
   // ── Step 1: DB transaction (validate + reserve) ──────────────────────────
   let paymentRecord: {
     id: string;
@@ -67,6 +71,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
   let coinSymbol: Asset;
   let networkName: Network;
   let isBinanceWallet: boolean;
+  let withdrawOrderId: string;
 
   try {
     const result = await prisma.$transaction(
@@ -121,6 +126,20 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
           throw new PayoutError(`El monto a pagar del lote #${batchId} es cero o negativo.`);
         }
 
+        // 1b2. Platform balance guard — never let the balance go negative silently
+        const balanceSetting = await tx.platformSettings.findUnique({
+          where: { key: 'platformBalance' },
+          select: { balance: true },
+        });
+        const platformBalance = balanceSetting?.balance ?? new Decimal(0);
+
+        if (platformBalance.lt(payoutAmount)) {
+          throw new PayoutError(
+            `Balance de plataforma insuficiente para el lote #${batchId} (disponible: $${platformBalance.toFixed(2)}, requerido: $${payoutAmount.toFixed(2)}).`,
+            payoutAmount.toNumber(),
+          );
+        }
+
         // 1c. Check for existing payment on this batch (belt-and-suspenders)
         const existingPayment = await tx.payment.findFirst({
           where: {
@@ -143,7 +162,16 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
         });
 
         // 1e. Create Payment(PENDING) + mark batch.isPaid
-        const withdrawOrderId = `${WITHDRAW_ORDER_PREFIX}${batchId}`;
+        // withdrawOrderId is unique per attempt (BATCH_<id>_<n>) so a retry after a
+        // FAILED payout never collides with the previous Binance idempotency key.
+        const attemptCount = await tx.payment.count({
+          where: {
+            batchId: batchId,
+            category: PaymentCategory.BATCH,
+            direction: PaymentDirection.DEBIT,
+          },
+        });
+        const attemptWithdrawOrderId = `${WITHDRAW_ORDER_PREFIX}${batchId}_${attemptCount + 1}`;
 
         const payment = await tx.payment.create({
           data: {
@@ -152,7 +180,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
             direction: PaymentDirection.DEBIT,
             category: PaymentCategory.BATCH,
             status: PaymentStatus.PENDING,
-            transactionId: withdrawOrderId,
+            transactionId: attemptWithdrawOrderId,
             batchId: batchId,
             relatedUserId: batch.userId ?? undefined,
             isBinanceWallet: batch.user?.paymentMethod?.isBinanceWallet ?? false,
@@ -175,6 +203,7 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
           coinSymbol: batch.user.paymentMethod.coin.symbol as Asset,
           networkName: batch.user.paymentMethod.network.name as Network,
           isBinanceWallet: batch.user.paymentMethod.isBinanceWallet,
+          withdrawOrderId: attemptWithdrawOrderId,
         };
       },
       { isolationLevel: 'Serializable' },
@@ -187,8 +216,12 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
     coinSymbol = result.coinSymbol;
     networkName = result.networkName;
     isBinanceWallet = result.isBinanceWallet;
+    withdrawOrderId = result.withdrawOrderId;
   } catch (error) {
     if (error instanceof PayoutError) {
+      if (source === 'auto') {
+        alertAdminPayoutFailed(batchId, error.amount ?? 0, error.message);
+      }
       return {
         batchId,
         paymentId: '',
@@ -203,6 +236,9 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
       metadata: { batchId },
       error: { name: (error as Error).name, message: (error as Error).message },
     });
+    if (source === 'auto') {
+      alertAdminPayoutFailed(batchId, 0, 'Error interno al preparar el pago.');
+    }
     return {
       batchId,
       paymentId: '',
@@ -213,8 +249,6 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
   }
 
   // ── Step 2: Call Binance (OUTSIDE transaction) ──────────────────────────
-
-  const withdrawOrderId = `${WITHDRAW_ORDER_PREFIX}${batchId}`;
 
   const response = await binance.withdrawFunds({
     coin: coinSymbol,
@@ -263,6 +297,10 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
         sellerId,
       },
     });
+
+    // Immediate feedback — the "paid" notification comes later, when the sync
+    // confirms the withdrawal on Binance's side
+    notifySellerPayoutSent(sellerId, batchId, payoutAmount.toNumber());
 
     return {
       batchId,
@@ -340,6 +378,10 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
     },
   });
 
+  if (source === 'auto') {
+    alertAdminPayoutFailed(batchId, payoutAmount.toNumber(), `Binance rechazó el pago: ${errorMessage}`);
+  }
+
   return {
     batchId,
     paymentId: paymentRecord.id,
@@ -349,13 +391,49 @@ export async function executeSellerPayout(batchId: number): Promise<PayoutResult
   };
 }
 
+/**
+ * Fire-and-forget admin alert for failed automatic payouts.
+ * Never throws — alerting must not break the payout flow.
+ */
+function alertAdminPayoutFailed(batchId: number, amount: number, reason: string): void {
+  import('@/lib/notifications')
+    .then(({ notifyAdminPayoutFailed }) => notifyAdminPayoutFailed(batchId, amount, reason))
+    .catch((err) =>
+      logger.error('Error notificando admin sobre payout fallido', {
+        flow: 'payment',
+        action: 'execute-seller-payout',
+        metadata: { batchId, amount },
+        error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+      }),
+    );
+}
+
+/**
+ * Fire-and-forget seller notification right after Binance accepts the payout.
+ * Never throws — notifying must not break the payout flow.
+ */
+function notifySellerPayoutSent(sellerId: string | null, batchId: number, amount: number): void {
+  if (!sellerId) return;
+
+  import('@/lib/notifications')
+    .then(({ notifySellerBatchPayoutSent }) => notifySellerBatchPayoutSent(sellerId, batchId, amount))
+    .catch((err) =>
+      logger.error('Error notificando seller sobre payout enviado', {
+        flow: 'payment',
+        action: 'execute-seller-payout',
+        metadata: { batchId, sellerId, amount },
+        error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+      }),
+    );
+}
+
 // ── Sync Pending Seller Payments ─────────────────────────────────────────────
 
 /**
  * Polls Binance for status updates on PENDING batch payments.
  * Designed to be called periodically (cron, manual trigger, etc.)
  *
- * Uses withdrawOrderId (BATCH_<batchId>) to query Binance withdraw history.
+ * Uses withdrawOrderId (BATCH_<batchId>_<attempt>) to query Binance withdraw history.
  */
 export async function syncPendingSellerPayments(): Promise<SyncResult> {
   const pendingPayments = await prisma.payment.findMany({
@@ -447,6 +525,16 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
             }
           });
 
+          // Alert admin — a payout accepted by Binance later failed on their side
+          // and needs a manual retry (no human is watching automatic payouts).
+          if (payment.batchId) {
+            alertAdminPayoutFailed(
+              payment.batchId,
+              Number(payment.amount),
+              `Pago fallido en Binance tras ser aceptado (estado: ${record.status})${record.info ? `: ${record.info}` : ''}`,
+            );
+          }
+
           return { type: 'failed' as const };
         }
 
@@ -496,7 +584,10 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
 // ── Error Class ──────────────────────────────────────────────────────────────
 
 class PayoutError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    public readonly amount?: number,
+  ) {
     super(message);
     this.name = 'PayoutError';
   }
