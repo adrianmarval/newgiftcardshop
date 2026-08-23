@@ -10,7 +10,7 @@ export const BuyStepsProgress = () => {
   return (
     <div className="flex items-center justify-between gap-1.5 rounded-none p-1 backdrop-blur-sm md:flex-row md:items-center md:gap-6 md:rounded-xl md:border md:p-6">
       <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="text-base font-bold md:text-3xl">Comprar Tarjetas</h1>
+        <h1 className="text-base font-bold md:text-3xl">Pasos</h1>
         <p className="text-muted-foreground hidden text-[10px] md:block md:text-base">Completa los pasos para comprar giftcards.</p>
       </motion.div>
 

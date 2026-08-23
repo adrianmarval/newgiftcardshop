@@ -170,6 +170,15 @@ User {
 }
 ```
 
+## PWA — 3 apps instalables (sell, buy, admin)
+
+La app se instala como 3 PWAs separadas para cada panel, con identidad aislada. **NUNCA usar `src/app/manifest.ts`** — la convención de archivo sobreescribe `metadata.manifest` en layouts hijos (verificado en source de Next 16), rompiendo el aislamiento por panel.
+
+- **Manifests estáticos**: `public/manifests/{sell,buy,admin}.webmanifest` — cada uno con `id` estable (misma ruta que el dashboard), `scope` por sección, iconos 192/512, `display: standalone`. **Sin shortcuts** (fuga de información entre roles — los sellers no deben saber que existe el panel de buyers).
+- **Enlace por ruta**: root layout usa `manifest: '/manifests/sell.webmanifest'` (landing es sell-facing). `(auth)/[portal]/auth/layout.tsx` usa `generateMetadata` con `MANIFEST_MAP[portal]`. Los 3 `dashboard/layout.tsx` exportan `metadata.manifest`.
+- **Identidad estable por id**: Chrome identifica la PWA por `id` del manifest. Si cambias el id, las instalaciones existentes se invalidan. Mantener ids como `/sell/dashboard`, `/store/dashboard`, `/admin/dashboard`.
+- **Observaciones**: SW sin fetch handler (OK en Chrome 108+, el requisito se eliminó). Iconos maskable pendientes (requiere assets con safe zone real). iOS no soporta `beforeinstallprompt`.
+
 ## Decisiones de negocio intencionales
 
 1. **Pago sin verificación automática**: El buyer escribe un TxID y la orden pasa a COMPLETED. La verificación con API de Binance se implementará a futuro. El buyer pasa por un filtro manual del admin, se confía en él.

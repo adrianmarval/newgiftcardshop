@@ -177,26 +177,26 @@ export function UnlockGate({
   const pinValid = /^\d{4,6}$/.test(pin);
 
   return (
-    <div className="border-border bg-card/50 flex flex-col justify-center gap-3 rounded-xl p-4 backdrop-blur-sm md:items-center md:p-5 md:text-center">
-      <div className="mx-auto flex w-full max-w-xs flex-col items-center justify-center gap-2.5 text-center">
-        <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full md:h-12 md:w-12">
+    <div className="border-border bg-card/50 flex flex-col justify-center gap-2 rounded-xl p-3 backdrop-blur-sm md:items-center md:gap-3 md:p-5 md:text-center">
+      <div className="mx-auto flex w-full max-w-xs flex-col items-center justify-center gap-1.5 text-center md:gap-2.5">
+        <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full md:h-12 md:w-12">
           {mode === 'setup' ? (
-            <ShieldCheck className="text-primary h-5 w-5 md:h-6 md:w-6" />
+            <ShieldCheck className="text-primary h-4 w-4 md:h-6 md:w-6" />
           ) : (
-            <Lock className="text-primary h-5 w-5 md:h-6 md:w-6" />
+            <Lock className="text-primary h-4 w-4 md:h-6 md:w-6" />
           )}
         </div>
 
-        <div className="min-w-0 space-y-0.5">
-          <h3 className="text-sm font-bold md:text-base">{title}</h3>
-          <p className="text-muted-foreground text-xs leading-snug md:max-w-xs">{description}</p>
+        <div className="min-w-0 space-y-0">
+          <h3 className="text-xs font-bold md:text-base">{title}</h3>
+          <p className="text-muted-foreground hidden text-xs leading-snug md:block md:max-w-xs">{description}</p>
         </div>
       </div>
 
       {mode === 'loading' && <Spinner size="sm" className="text-muted-foreground" />}
 
       {mode === 'unlock' && (
-        <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-2 md:gap-2.5">
           {showPasskey && (
             <Button onClick={handlePasskeyUnlock} disabled={busy} className="gap-2">
               {busy ? <Spinner size="sm" /> : <Fingerprint className="h-4 w-4" />}
@@ -218,7 +218,7 @@ export function UnlockGate({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && pinValid && !busy) void handlePinUnlock();
                 }}
-                className="text-center font-mono tracking-[0.5em]"
+                className="text-center font-mono text-sm tracking-[0.5em] md:text-base"
               />
               <Button variant={showPasskey ? 'outline' : 'default'} onClick={handlePinUnlock} disabled={busy || !pinValid}>
                 {busy && !showPasskey ? <Spinner size="sm" /> : null}
@@ -249,9 +249,9 @@ export function UnlockGate({
       )}
 
       {mode === 'setup' && (
-        <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
-          <p className="text-muted-foreground text-center text-xs">
-            Creá un PIN de seguridad para proteger los códigos de tus compras. Te lo pediremos antes de mostrar códigos.
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-2 md:gap-2.5">
+          <p className="text-muted-foreground text-center text-[11px] leading-snug md:text-xs">
+            Creá un PIN para proteger tus compras. Te lo pediremos antes de mostrar códigos.
           </p>
           <Input
             type="password"
@@ -261,7 +261,7 @@ export function UnlockGate({
             placeholder="Nuevo PIN (4-6 dígitos)"
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            className="text-center font-mono tracking-[0.5em]"
+            className="text-center font-mono text-sm tracking-[0.5em] md:text-base"
           />
           <Input
             type="password"
@@ -271,23 +271,23 @@ export function UnlockGate({
             placeholder="Confirmar PIN"
             value={confirmPin}
             onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-            className="text-center font-mono tracking-[0.5em]"
+            className="text-center font-mono text-sm tracking-[0.5em] md:text-base"
           />
           <Button onClick={handleSetup} disabled={busy || !pinValid || confirmPin.length !== pin.length}>
             {busy ? <Spinner size="sm" /> : null}
-            Crear PIN y ver códigos
+            Crear PIN
           </Button>
         </div>
       )}
 
       {mode === 'reset_request' && (
-        <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
-          <p className="text-muted-foreground text-center text-xs">
-            Te enviaremos un código de 6 dígitos al email de tu cuenta para restablecer el PIN.
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-2 md:gap-2.5">
+          <p className="text-muted-foreground text-center text-[11px] leading-snug md:text-xs">
+            Te enviaremos un código al email para restablecer el PIN.
           </p>
           <Button onClick={handleRequestReset} disabled={busy} className="gap-2">
             {busy ? <Spinner size="sm" /> : <Mail className="h-4 w-4" />}
-            Enviar código a mi email
+            Enviar código
           </Button>
           <button
             type="button"
@@ -303,7 +303,7 @@ export function UnlockGate({
       )}
 
       {mode === 'reset_confirm' && (
-        <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-2 md:gap-2.5">
           <Input
             type="text"
             inputMode="numeric"
@@ -312,7 +312,7 @@ export function UnlockGate({
             placeholder="Código del email"
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-            className="text-center font-mono tracking-[0.5em]"
+            className="text-center font-mono text-sm tracking-[0.5em] md:text-base"
           />
           <Input
             type="password"
@@ -322,7 +322,7 @@ export function UnlockGate({
             placeholder="Nuevo PIN (4-6 dígitos)"
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            className="text-center font-mono tracking-[0.5em]"
+            className="text-center font-mono text-sm tracking-[0.5em] md:text-base"
           />
           <Input
             type="password"
@@ -332,11 +332,11 @@ export function UnlockGate({
             placeholder="Confirmar nuevo PIN"
             value={confirmPin}
             onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-            className="text-center font-mono tracking-[0.5em]"
+            className="text-center font-mono text-sm tracking-[0.5em] md:text-base"
           />
           <Button onClick={handleConfirmReset} disabled={busy || otp.length !== 6 || !pinValid || confirmPin.length !== pin.length}>
             {busy ? <Spinner size="sm" /> : null}
-            Restablecer PIN y ver códigos
+            Restablecer PIN
           </Button>
           <button
             type="button"

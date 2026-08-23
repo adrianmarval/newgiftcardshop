@@ -1,7 +1,25 @@
+import type { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { AuthLayout } from '@/components/layout/auth-layout';
 import { isAppSection, PORTAL_AUTH_CONFIG } from '@/types';
+
+const MANIFEST_MAP: Record<string, string> = {
+  buy: '/manifests/buy.webmanifest',
+  sell: '/manifests/sell.webmanifest',
+  admin: '/manifests/admin.webmanifest',
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ portal: string }>;
+}): Promise<Metadata> {
+  const { portal } = await params;
+  const manifest = MANIFEST_MAP[portal];
+  if (!manifest) return {};
+  return { manifest };
+}
 
 export default async function DynamicAuthLayout({
   children,
