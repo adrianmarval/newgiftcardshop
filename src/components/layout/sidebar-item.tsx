@@ -18,7 +18,6 @@ import {
   FaCog,
   FaMoon,
   FaSun,
-  FaWhatsapp,
   FaClipboardList,
   FaCoins,
 } from 'react-icons/fa';
@@ -36,7 +35,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   tag: FaTag,
   settings: FaCog,
   theme: FaMoon,
-  whatsapp: FaWhatsapp,
   logs: FaClipboardList,
   coins: FaCoins,
 };

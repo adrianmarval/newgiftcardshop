@@ -1,7 +1,6 @@
 export * from './types';
 export { BotRegistry } from './bot-registry';
 export { TelegramChannel } from './channels/telegram.channel';
-export { WhatsAppChannel } from './channels/whatsapp.channel';
 export { WebPushChannel } from './channels/webpush.channel';
 export { NotificationDispatcher, notificationDispatcher } from './dispatcher';
 export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid, notifySellerBatchCancelled, notifySellerBatchDeleted } from './notification.service';

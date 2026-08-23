@@ -5,4 +5,3 @@
 
 export * from './portal-config';
 export * from './pagination';
-export * from './whatsapp';

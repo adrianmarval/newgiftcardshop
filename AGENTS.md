@@ -18,7 +18,7 @@ src/
 ├── actions/             # Server actions (next-safe-action)
 │   ├── buyer/           # orders, giftcards, issues, preferences, stats, security (PIN gate)
 │   ├── seller/          # batches (publish, list, check-codes), ocr, rates, stats
-│   ├── admin/           # payments, orders, batches, binance, users, catalog, whatsapp, stats
+│   ├── admin/           # payments, orders, batches, binance, users, catalog, stats
 │   ├── auth/            # login, register, logout, forgot/reset password, verify email, passkey login guard
 │   ├── catalog/         # brands, countries (público, read-only)
 │   ├── notifications/   # notification CRUD
@@ -29,7 +29,7 @@ src/
 │   ├── buyer-bot/       # Bot de compra (grammy)
 │   └── shared/          # middleware, ui, registration, formatters, types
 ├── components/
-│   ├── admin/           # Dashboard admin (batches, orders, payments, brands, users, config, charts, whatsapp)
+│   ├── admin/           # Dashboard admin (batches, orders, payments, brands, users, config, charts)
 │   ├── auth/            # Cross-cutting auth (login, register, profile, 2FA, passkey/)
 │   ├── buy/             # Wizard de compra web (5 steps) + giftcard-orders
 │   ├── common/          # Shared presentational components (stat-card, giftcard-item, etc.)
@@ -49,7 +49,6 @@ src/
 │   ├── settings/        # settings.service (PlatformSettings)
 │   ├── ui/              # Tailwind utils (cn), SweetAlert, theme utils
 │   ├── utils/           # Pure utility functions (claim-code-parser, clipboard, etc.)
-│   ├── whatsapp/        # WhatsApp Baileys integration
 │   ├── constants.ts     # Domain constants (MAX_BATCH_SIZE, AVAILABLE_GIFTCARD_WHERE)
 │   ├── encryption.ts    # AES-256-GCM (claimCode, pinCode, provenance images)
 │   ├── image-utils.ts   # Image processing
@@ -59,7 +58,7 @@ src/
 │   ├── ai-providers.ts  # AI/OCR provider config
 ├── types/               # Centralized domain + application types
 │   ├── domain/          # Entity types (giftcard, order, batch, brand-country, payment, escalation)
-│   ├── application/     # Pagination, AppSection, WhatsAppStatus
+│   ├── application/     # Pagination, AppSection
 │   ├── auth/            # Session types
 │   ├── sell-flow.ts     # Sell wizard types
 │   ├── buy-flow.ts      # Buy wizard types
@@ -76,6 +75,7 @@ src/
 - **Types**: centralizados en `@/types`. Tipos co-located en componentes solo para Props locales.
 - **Lib**: infraestructura compartida. `auth/` para auth server/client/authorization, `services/` para lógica de negocio, `ui/` para utilidades de presentación (cn, Swal), `utils/` para funciones puras.
 - **Barrel imports**: TODO se importa via barrel (`@/lib/ui`, `@/lib/settings`, `@/lib/notifications`, `@/lib/search-params`, `@/types`, `@/components/layout`). NUNCA se importa directamente de archivos individuales dentro de un subdirectorio con barrel.
+- **Prompts al usuario**: Cualquier pregunta/opt-in al usuario (activar notificaciones, consentimientos) usa `PromptDrawer` (`@/components/common`, bottom drawer vaul en `components/ui/drawer.tsx`), NO toasts improvisados ni SweetAlert. Ejemplo: `components/notifications/push-prompt-drawer.tsx`.
 - **Barrels NO re-exportan server-only**: Los barrels NO deben re-exportar módulos que dependan de `next/headers`, `next/navigation`, Prisma, u otras APIs server-only. Si un Client Component importa del barrel, webpack intentará empaquetar todo incluyendo código server. Los exports server-only (`getSession`, `authorizeByRequiredRole`, `settingsService`, `getServerTheme`) se importan directamente del archivo específico.
 - **File naming**: kebab-case universal para archivos. PascalCase para componentes y interfaces.
 
@@ -209,7 +209,6 @@ El `NotificationDispatcher` (`src/lib/notifications/dispatcher.ts`) despacha por
   - **Guard anti-service-messages**: los service messages generados por el propio bot (ej. `forum_topic_created` al crear un topic) son entregados por Telegram al bot. Sin el guard, authenticateBuyer/authenticateSeller los procesa como si fueran de un usuario no vinculado y renderiza "Tu cuenta no está vinculada" en el chat. El guard (`ctx.from?.id === botId`) está ANTES de session en ambos bots para no persistir filas basura en `bot_session`. Ver: commit previo / bug report "segundo mensaje no vinculada".
   - **Fallback final**: si los reintentos con thread fallan (borrado+cierre en ráfaga, recreación fallida), `renderUI` y el canal de notificaciones envían mensaje plano a General — el usuario NUNCA se queda sin UI por culpa de un topic.
   - **Detección de topic inválido**: `isTopicGoneError` matchea `thread not found` (borrado) y `topic closed` (cerrado, case-insensitive). Los usuarios no generan evento al borrar topics — la detección es lazy, al fallar el envío.
-- **WhatsApp**: Baileys, requiere `whatsappPhone` E.164
 - **Web Push**: `WebPushChannel` (`channels/webpush.channel.ts`) con Push API + VAPID. Suscripciones en `PushSubscription` (endpoint `@unique`, varios dispositivos por user), toggle `pushEnabled` en `NotificationPreference`. SW en `public/sw.js`, registrado silenciosamente por `NotificationProvider`. Hook `src/hooks/use-push-subscription.ts` + server actions `save-push-subscription`/`delete-push-subscription`/`send-test-push` (botón "Probar" en settings — bypass del dispatcher, solo canal push). El canal loguea `sent` (con counts) y `skipped` (con reason) a `app_log`; el dispatcher solo loguea `failed`. Endpoints muertos (404/410) se auto-eliminan. Env: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`. En iOS requiere la PWA instalada (16.4+). Brave requiere "Google services for push messaging" habilitado (el hook detecta el fallo y devuelve `brave_push_service_disabled`).
 
 ## Deuda técnica conocida (P2 — no urgente)

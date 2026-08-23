@@ -2,16 +2,14 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { Spinner } from '@/components/ui/spinner';
-import { Send, MessageCircle, Link2, Package, Check, Bell } from 'lucide-react';
+import { Send, MessageCircle, Package, Check, Bell } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { updateNotificationPreferences, sendTestPush } from '@/actions/notifications';
+import { generateTelegramLink } from '@/actions/auth/generate-telegram-link';
 import { useAction } from 'next-safe-action/hooks';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
 import type { SubscribedBrandCountry } from '@/types';
@@ -22,8 +20,11 @@ const SETTINGS_TEXTS = {
     errorSaving: 'Error saving',
     howToReceive: 'How to receive Notifications',
     telegramDesc: 'Messages to bot chat',
-    linkTelegram: 'Link Telegram from your profile',
-    whatsappDesc: 'Direct messages to your number',
+    linkTelegramTitle: 'Link your Telegram',
+    linkTelegramDesc: 'Connect your account to receive notifications in the bot chat.',
+    linkTelegramCta: 'Link Telegram',
+    linkTelegramHint: 'Once linked, refresh this page to enable the channel.',
+    linkTelegramError: 'Could not generate the link. Try again.',
     pushDesc: 'Notifications in this browser',
     pushBlocked: 'Blocked by the browser — enable it in the site settings',
     pushUnsupported: 'This browser does not support push notifications',
@@ -34,8 +35,6 @@ const SETTINGS_TEXTS = {
     testPushNoSubs: 'No push subscriptions found for this browser',
     testPushTitle: '🔔 Test notification',
     testPushBody: 'If you see this, the Web Push channel works correctly.',
-    phoneLabel: 'Phone number',
-    phoneHint: 'E.164 with country code',
     whichBrands: 'Which brands',
     filter: 'Filter',
     enableAll: 'Enable all',
@@ -49,8 +48,11 @@ const SETTINGS_TEXTS = {
     errorSaving: 'Error al guardar',
     howToReceive: 'Cómo recibir Notificaciones',
     telegramDesc: 'Mensajes al chat del bot',
-    linkTelegram: 'Vinculá Telegram desde tu perfil',
-    whatsappDesc: 'Mensajes directos a tu número',
+    linkTelegramTitle: 'Vinculá tu Telegram',
+    linkTelegramDesc: 'Conectá tu cuenta para recibir notificaciones en el chat del bot.',
+    linkTelegramCta: 'Vincular Telegram',
+    linkTelegramHint: 'Una vez vinculado, actualizá esta página para activar el canal.',
+    linkTelegramError: 'No se pudo generar el link. Intentá de nuevo.',
     pushDesc: 'Notificaciones en este navegador',
     pushBlocked: 'Bloqueado por el navegador — habilitalo en la configuración del sitio',
     pushUnsupported: 'Este navegador no soporta notificaciones push',
@@ -61,8 +63,6 @@ const SETTINGS_TEXTS = {
     testPushNoSubs: 'No se encontraron suscripciones push en este navegador',
     testPushTitle: '🔔 Notificación de prueba',
     testPushBody: 'Si ves esto, el canal Web Push funciona correctamente.',
-    phoneLabel: 'Número',
-    phoneHint: 'E.164 con código de país',
     whichBrands: 'De qué marcas',
     filter: 'Filtrar',
     enableAll: 'Activar todas',
@@ -76,8 +76,11 @@ const SETTINGS_TEXTS = {
     errorSaving: 'Error al guardar',
     howToReceive: 'Cómo recibir Notificaciones',
     telegramDesc: 'Mensajes al chat del bot',
-    linkTelegram: 'Vinculá Telegram desde tu perfil',
-    whatsappDesc: 'Mensajes directos a tu número',
+    linkTelegramTitle: 'Vinculá tu Telegram',
+    linkTelegramDesc: 'Conectá tu cuenta para recibir notificaciones en el chat del bot.',
+    linkTelegramCta: 'Vincular Telegram',
+    linkTelegramHint: 'Una vez vinculado, actualizá esta página para activar el canal.',
+    linkTelegramError: 'No se pudo generar el link. Intentá de nuevo.',
     pushDesc: 'Notificaciones en este navegador',
     pushBlocked: 'Bloqueado por el navegador — habilitalo en la configuración del sitio',
     pushUnsupported: 'Este navegador no soporta notificaciones push',
@@ -88,8 +91,6 @@ const SETTINGS_TEXTS = {
     testPushNoSubs: 'No se encontraron suscripciones push en este navegador',
     testPushTitle: '🔔 Notificación de prueba',
     testPushBody: 'Si ves esto, el canal Web Push funciona correctamente.',
-    phoneLabel: 'Número',
-    phoneHint: 'E.164 con código de país',
     whichBrands: 'De qué marcas',
     filter: 'Filtrar',
     enableAll: 'Activar todas',
@@ -103,22 +104,17 @@ const SETTINGS_TEXTS = {
 export interface NotificationsSettingsProps {
   portal: 'buyer' | 'seller' | 'admin';
   telegramLinked: boolean;
-  telegramProfileUrl?: string;
   initialPreferences?: {
     telegramEnabled: boolean;
-    whatsappEnabled: boolean;
-    whatsappPhone: string | null;
     pushEnabled: boolean;
   };
   brandCountries?: SubscribedBrandCountry[];
 }
 
-export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileUrl, initialPreferences, brandCountries }: NotificationsSettingsProps) => {
+export const NotificationsSettings = ({ portal, telegramLinked, initialPreferences, brandCountries }: NotificationsSettingsProps) => {
   const texts = SETTINGS_TEXTS[portal];
   const [telegramEnabled, setTelegramEnabled] = useState(initialPreferences?.telegramEnabled ?? true);
   const [telegramTouched, setTelegramTouched] = useState(false);
-  const [whatsappEnabled, setWhatsappEnabled] = useState(initialPreferences?.whatsappEnabled ?? false);
-  const [whatsappPhone, setWhatsappPhone] = useState(initialPreferences?.whatsappPhone ?? '');
 
   const initialSubscribed = brandCountries ? new Set(brandCountries.filter((bc) => bc.subscribed).map((bc) => bc.id)) : new Set<string>();
   const [subscribedIds, setSubscribedIds] = useState<Set<string>>(initialSubscribed);
@@ -128,6 +124,20 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
   const push = usePushSubscription(initialPreferences?.pushEnabled ?? false);
 
   const [testPushLoading, setTestPushLoading] = useState(false);
+
+  const { execute: executeGenerateLink, status: generateLinkStatus } = useAction(generateTelegramLink, {
+    onSuccess: ({ data }) => {
+      if (data && 'deepLink' in data && data.deepLink) {
+        window.open(data.deepLink, '_blank');
+        setAlert(null);
+      } else {
+        setAlert({ variant: 'error', title: (data && 'error' in data && data.error) || texts.linkTelegramError });
+      }
+    },
+    onError: () => {
+      setAlert({ variant: 'error', title: texts.linkTelegramError });
+    },
+  });
 
   const handleTestPush = async () => {
     setAlert(null);
@@ -189,8 +199,6 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
     setAlert(null);
     execute({
       ...(telegramTouched ? { telegramEnabled } : {}),
-      whatsappEnabled,
-      whatsappPhone: whatsappPhone || null,
       ...(brandCountries ? { subscribedBrandCountryIds: [...subscribedIds] } : {}),
     });
   };
@@ -231,66 +239,43 @@ export const NotificationsSettings = ({ portal, telegramLinked, telegramProfileU
           </div>
 
           {/* Telegram */}
-          <label
-            className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors ${
-              telegramEnabled && telegramLinked ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20'
-            } ${!telegramLinked ? 'cursor-not-allowed opacity-50' : ''}`}
-          >
-            <Checkbox
-              checked={telegramEnabled && telegramLinked}
-              disabled={!telegramLinked}
-              onCheckedChange={(v) => { setTelegramEnabled(v === true); setTelegramTouched(true); }}
-              className="h-5 w-5"
-            />
-            <MessageCircle className="h-5 w-5 shrink-0 text-blue-400" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Telegram</p>
-              <p className="text-muted-foreground text-xs">{texts.telegramDesc}</p>
-            </div>
-          </label>
-
-          {!telegramLinked && telegramProfileUrl && (
-            <Link
-              href={telegramProfileUrl}
-              className="flex items-center gap-1.5 pl-10 text-xs text-amber-300 hover:text-amber-200 hover:underline"
+          {telegramLinked ? (
+            <label
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors ${
+                telegramEnabled ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20'
+              }`}
             >
-              <Link2 className="h-3 w-3 shrink-0 text-amber-400" />
-              {texts.linkTelegram}
-            </Link>
-          )}
-
-          {/* WhatsApp */}
-          <label
-            className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors ${
-              whatsappEnabled ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20'
-            }`}
-          >
-            <Checkbox checked={whatsappEnabled} onCheckedChange={(v) => setWhatsappEnabled(v === true)} className="h-5 w-5" />
-            <div className="flex h-5 w-5 shrink-0 items-center justify-center">
-              <svg viewBox="0 0 24 24" className="h-5 w-5 text-green-500" fill="currentColor">
-                <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.15c-1.53 0-3.03-.41-4.33-1.19l-.31-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.41a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.43 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.04-.38-1.98-1.22-.73-.65-1.22-1.46-1.37-1.71-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42-.14 0-.31-.02-.47-.02-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.45 3.74.62.27 1.11.43 1.49.55.63.2 1.2.17 1.65.1.5-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.28z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">WhatsApp</p>
-              <p className="text-muted-foreground text-xs">{texts.whatsappDesc}</p>
-            </div>
-          </label>
-
-          {whatsappEnabled && (
-            <div className="pl-10">
-              <Label htmlFor="whatsapp-phone" className="mb-1 block text-xs">
-                {texts.phoneLabel}
-              </Label>
-              <Input
-                id="whatsapp-phone"
-                type="tel"
-                placeholder="+1234567890"
-                value={whatsappPhone}
-                onChange={(e) => setWhatsappPhone(e.target.value)}
-                className="h-9 text-sm"
+              <Checkbox
+                checked={telegramEnabled}
+                onCheckedChange={(v) => { setTelegramEnabled(v === true); setTelegramTouched(true); }}
+                className="h-5 w-5"
               />
-              <p className="text-muted-foreground mt-1 text-[10px]">{texts.phoneHint}</p>
+              <MessageCircle className="h-5 w-5 shrink-0 text-blue-400" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Telegram</p>
+                <p className="text-muted-foreground text-xs">{texts.telegramDesc}</p>
+              </div>
+            </label>
+          ) : (
+            <div className="flex flex-col gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/20">
+                  <MessageCircle className="h-5 w-5 text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{texts.linkTelegramTitle}</p>
+                  <p className="text-muted-foreground text-xs">{texts.linkTelegramDesc}</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => executeGenerateLink()}
+                disabled={generateLinkStatus === 'executing'}
+                size="sm"
+                className="self-start bg-blue-500 text-white hover:bg-blue-400"
+              >
+                {generateLinkStatus === 'executing' ? <Spinner size="sm" className="text-white" /> : texts.linkTelegramCta}
+              </Button>
+              <p className="text-muted-foreground/70 text-[11px]">{texts.linkTelegramHint}</p>
             </div>
           )}
 

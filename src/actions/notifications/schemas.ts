@@ -42,8 +42,6 @@ export const markAsReadOutputSchema = z.union([
 
 export const updateNotificationPreferencesInputSchema = z.object({
   telegramEnabled: z.boolean().optional(),
-  whatsappEnabled: z.boolean().optional(),
-  whatsappPhone: z.string().trim().optional().nullable(),
   subscribedBrandCountryIds: z.array(z.string().min(1)).optional(),
 });
 
@@ -51,8 +49,6 @@ export const updateNotificationPreferencesOutputSchema = z.object({
   success: z.literal(true),
   preference: z.object({
     telegramEnabled: z.boolean(),
-    whatsappEnabled: z.boolean(),
-    whatsappPhone: z.string().nullable(),
   }),
 });
 

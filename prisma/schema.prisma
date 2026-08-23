@@ -648,8 +648,6 @@ model NotificationPreference {
 
   // Channels
   telegramEnabled Boolean  @default(true)
-  whatsappEnabled Boolean  @default(false)
-  whatsappPhone   String?  // E.164 (+1234567890)
   pushEnabled     Boolean  @default(false) // Web Push (navegador)
 
   // Suscripciones explícitas a brand-countries (buyers que quieren Notificaciones de stock nuevo)
@@ -723,31 +721,6 @@ model NotificationLog {
   @@unique([userId, type, referenceType, referenceId])
   @@index([userId, type])
   @@map("notification_log")
-}
-
-// --------------------------------------
-// WhatsApp Baileys (Auth State + Session)
-// --------------------------------------
-
-model WhatsappAuthState {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  data      String   // JSON serializado (creds, pre-keys, etc.)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("whatsapp_auth_state")
-}
-
-model WhatsappSession {
-  id          String   @id @default(cuid())
-  status      String   @default("disconnected") // "connecting" | "open" | "disconnected"
-  phoneNumber String?
-  qrCode      String?  // Base64 del QR actual (null cuando está conectado)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("whatsapp_session")
 }
 
 enum NotificationType {

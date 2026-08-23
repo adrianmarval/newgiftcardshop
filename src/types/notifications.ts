@@ -35,7 +35,7 @@ export interface NotificationContext {
 }
 
 export interface NotificationChannel {
-  readonly name: 'web' | 'telegram' | 'whatsapp' | 'webpush';
+  readonly name: 'web' | 'telegram' | 'webpush';
 
   send(ctx: NotificationContext, message: NotificationMessage): Promise<NotificationChannelResult>;
 }
@@ -67,8 +67,6 @@ export interface NotificationPageData {
   unreadCount: number;
   preference: {
     telegramEnabled: boolean;
-    whatsappEnabled: boolean;
-    whatsappPhone: string | null;
     pushEnabled: boolean;
   } | null;
 }

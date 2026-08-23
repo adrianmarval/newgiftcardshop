@@ -25,8 +25,6 @@ export default async function AdminNotificationsPage() {
           initialPreferences: preference
             ? {
                 telegramEnabled: preference.telegramEnabled,
-                whatsappEnabled: preference.whatsappEnabled,
-                whatsappPhone: preference.whatsappPhone,
                 pushEnabled: preference.pushEnabled,
               }
             : undefined,
