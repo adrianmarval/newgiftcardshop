@@ -3,6 +3,7 @@ import { Aldrich, Lora, IBM_Plex_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
 import { Providers } from '@/components/providers';
+import { AppAlertHost } from '@/components/common';
 import { getServerTheme } from '@/lib/ui/theme-utils';
 
 const fontSans = Aldrich({
@@ -54,11 +55,12 @@ export default async function RootLayout({
     <html lang="en" className={theme} suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
         <Providers>{children}</Providers>
+        <AppAlertHost />
         <Toaster
           position="top-center"
           richColors={false}
           closeButton={false}
-          duration={Infinity}
+          duration={3500}
           swipeDirections={['left', 'right']}
         />
       </body>

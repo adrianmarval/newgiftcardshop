@@ -8,7 +8,7 @@ import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/brow
 import { authClient } from '@/lib/auth/auth-client';
 import { completePasskeyLogin } from '@/actions/auth/complete-passkey-login';
 import { resendVerification } from '@/actions/auth/resend-verification';
-import { showSwal } from '@/lib/ui';
+import { showAlert } from '@/lib/ui';
 import { isWebAuthnSupported } from './passkey-utils';
 import type { AppSection } from '@/types';
 
@@ -45,52 +45,36 @@ export function usePasskeySignIn(portal: AppSection, isSpanish: boolean) {
         const needsVerification = 'needsVerification' in data && data.needsVerification;
         if (needsVerification) {
           const email = 'email' in data ? data.email : undefined;
-          showSwal
-            .fire({
-              icon: 'error',
-              title: isSpanish ? 'Email no verificado' : 'Email not verified',
-              text: data.error,
-              confirmButtonText: isSpanish ? 'Reenviar email' : 'Resend email',
-              cancelButtonText: isSpanish ? 'Cancelar' : 'Cancel',
-              showCancelButton: true,
+          showAlert
+            .confirm(isSpanish ? 'Email no verificado' : 'Email not verified', data.error, {
+              confirmText: isSpanish ? 'Reenviar email' : 'Resend email',
+              cancelText: isSpanish ? 'Cancelar' : 'Cancel',
             })
-            .then((result) => {
-              if (result.isConfirmed && email) {
+            .then((confirmed) => {
+              if (confirmed && email) {
                 resendExecute({ portal, email });
               }
             });
         } else {
-          showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+          showAlert.error('Error', data.error);
         }
       }
     },
     onError: ({ error }) => {
-      showSwal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.serverError || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'),
-      });
+      showAlert.error('Error', error.serverError || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'));
     },
   });
 
   const { execute: resendExecute } = useAction(resendVerification, {
     onSuccess: ({ data }) => {
       if (data?.success) {
-        showSwal.fire({
-          icon: 'success',
-          title: isSpanish ? 'Email reenviado' : 'Email resent',
-          text: isSpanish ? 'Revisa tu bandeja de entrada' : 'Check your inbox',
-        });
+        showAlert.success(isSpanish ? 'Email reenviado' : 'Email resent', isSpanish ? 'Revisa tu bandeja de entrada' : 'Check your inbox');
       } else if (data?.error) {
-        showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+        showAlert.error('Error', data.error);
       }
     },
     onError: ({ error }) => {
-      showSwal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.serverError || (isSpanish ? 'Error al reenviar' : 'Failed to resend'),
-      });
+      showAlert.error('Error', error.serverError || (isSpanish ? 'Error al reenviar' : 'Failed to resend'));
     },
   });
 
@@ -106,11 +90,7 @@ export function usePasskeySignIn(portal: AppSection, isSpanish: boolean) {
           throw: false,
         });
         if (!optionsRes.data) {
-          showSwal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: isSpanish ? 'No se pudo iniciar la verificación' : 'Could not start verification',
-          });
+          showAlert.error('Error', isSpanish ? 'No se pudo iniciar la verificación' : 'Could not start verification');
           return;
         }
 
@@ -125,11 +105,7 @@ export function usePasskeySignIn(portal: AppSection, isSpanish: boolean) {
           throw: false,
         });
         if (verified.error) {
-          showSwal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: isSpanish ? 'No se pudo verificar la passkey' : 'Passkey verification failed',
-          });
+          showAlert.error('Error', isSpanish ? 'No se pudo verificar la passkey' : 'Passkey verification failed');
           return;
         }
 
@@ -137,11 +113,7 @@ export function usePasskeySignIn(portal: AppSection, isSpanish: boolean) {
       } catch (err) {
         // Cancelación del usuario: silencio total. Cualquier otra cosa: error.
         if (err instanceof WebAuthnError && SILENT_WEBAUTHN_CODES.has(err.code)) return;
-        showSwal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: isSpanish ? 'No se pudo verificar la passkey' : 'Passkey verification failed',
-        });
+        showAlert.error('Error', isSpanish ? 'No se pudo verificar la passkey' : 'Passkey verification failed');
       } finally {
         if (!autoFill) setIsPending(false);
       }

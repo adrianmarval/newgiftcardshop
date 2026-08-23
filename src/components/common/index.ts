@@ -37,3 +37,4 @@ export { StepFooter } from './step-footer';
 export { FieldError } from './field-error';
 export { PromptDrawer } from './prompt-drawer';
 export type { PromptDrawerProps, PromptDrawerAction } from './prompt-drawer';
+export { AppAlertHost } from './app-alert-host';

@@ -9,8 +9,7 @@ import { searchGiftcards } from '@/actions/buyer/giftcards/search-giftcards';
 import { useAction } from 'next-safe-action/hooks';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/buyer/preferences';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
-import { showAlert, showSwal, cn } from '@/lib/ui';
-import Swal from 'sweetalert2';
+import { showAlert, cn } from '@/lib/ui';
 import type { BrandCountry } from '@/types';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
 import { CompactSearchBar } from './compact-search-bar';
@@ -196,27 +195,29 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
         }
         if (error.includes('No hay tarjetas disponibles para tu tasa')) {
           if (tierInfoData && tierInfoData.estimatedMinutes != null && tierInfoData.nextCardTier != null) {
-            showSwal
-              .fire({
-                icon: 'info',
-                title: 'Sin stock para tu tasa',
-                html: `
-                <div style="text-align: left; font-size: 14px; line-height: 1.6;">
-                  <p>Tu tasa: <strong>${tierInfoData.buyerBuyRate}%</strong></p>
-                  <p>Stock disponible (no para tu tasa): <strong>$${Number(tierInfoData.inaccessibleAmount).toFixed(2)}</strong> en ${tierInfoData.inaccessibleCardCount} tarjetas</p>
-                  <hr style="border-color: #333; margin: 12px 0;">
-                  <p>⏱️ La próxima tarjeta estará disponible en <strong>~${tierInfoData.estimatedMinutes} min</strong></p>
-                  <p style="font-size: 12px; color: #888;">(Tier ${tierInfoData.nextCardTier}% → ${tierInfoData.buyerBuyRate}%)</p>
-                </div>
-              `,
-                confirmButtonText: 'Entendido',
-                showCancelButton: true,
-                cancelButtonText: 'Reintentar ahora',
-              })
-              .then((result) => {
-                if (result.dismiss === Swal.DismissReason.cancel) {
-                  handleSearch();
-                }
+            showAlert
+              .confirm(
+                'Sin stock para tu tasa',
+                <div className="space-y-1 text-left text-sm leading-relaxed">
+                  <p>
+                    Tu tasa: <strong>{tierInfoData.buyerBuyRate}%</strong>
+                  </p>
+                  <p>
+                    Stock disponible (no para tu tasa): <strong>${Number(tierInfoData.inaccessibleAmount).toFixed(2)}</strong> en{' '}
+                    {tierInfoData.inaccessibleCardCount} tarjetas
+                  </p>
+                  <hr className="border-border my-3" />
+                  <p>
+                    ⏱️ La próxima tarjeta estará disponible en <strong>~{tierInfoData.estimatedMinutes} min</strong>
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    (Tier {tierInfoData.nextCardTier}% → {tierInfoData.buyerBuyRate}%)
+                  </p>
+                </div>,
+                { confirmText: 'Reintentar ahora', cancelText: 'Entendido' },
+              )
+              .then((retry) => {
+                if (retry) handleSearch();
               });
           } else {
             showAlert.info('Disponibilidad', error);

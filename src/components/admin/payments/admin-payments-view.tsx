@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryStates, debounce } from 'nuqs';
 import { Check, ChevronsUpDown, Loader2, RefreshCw } from 'lucide-react';
-import Swal from 'sweetalert2';
+import { showAlert } from '@/lib/ui';
 import { AdminPaymentsList } from './admin-payments-list';
 import { AdminDepositDialog } from './admin-deposit-dialog';
 import { AdminRefundDialog } from './admin-refund-dialog';
@@ -143,38 +143,32 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
   const { execute: syncWithdrawals, isExecuting: isSyncing } = useAction(syncPendingWithdrawals, {
     onSuccess: ({ data }) => {
       if (data?.total === 0) {
-        Swal.fire({
-          title: 'Sin pendientes',
-          text: 'No hay retiros pendientes para sincronizar.',
-          icon: 'info',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-        });
+        showAlert.toast.info('Sin pendientes', 'No hay retiros pendientes para sincronizar.');
         return;
       }
 
-      Swal.fire({
-        title: 'Sincronización Exitosa',
-        html: `
-          <div class="text-left">
-            <p>Total procesados: <b>${data?.total}</b></p>
-            <p>Resueltos (Éxito): <b class="text-green-500">${data?.resolved}</b></p>
-            <p>Fallidos: <b class="text-red-500">${data?.failed}</b></p>
-            <p>Siguen pendientes: <b>${data?.stillPending}</b></p>
-          </div>
-        `,
-        icon: 'success',
-      });
+      showAlert.custom(
+        'success',
+        'Sincronización Exitosa',
+        <div className="space-y-1 text-left">
+          <p>
+            Total procesados: <b>{data?.total}</b>
+          </p>
+          <p>
+            Resueltos (Éxito): <b className="text-emerald-400">{data?.resolved}</b>
+          </p>
+          <p>
+            Fallidos: <b className="text-red-400">{data?.failed}</b>
+          </p>
+          <p>
+            Siguen pendientes: <b>{data?.stillPending}</b>
+          </p>
+        </div>,
+      );
       router.refresh();
     },
     onError: () => {
-      Swal.fire({
-        title: 'Error de Sincronización',
-        text: 'Hubo un problema al conectar con Binance o actualizar la DB.',
-        icon: 'error',
-      });
+      showAlert.error('Error de Sincronización', 'Hubo un problema al conectar con Binance o actualizar la DB.');
     },
   });
 

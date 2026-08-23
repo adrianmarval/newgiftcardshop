@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { KeyRound, Plus, Trash2 } from 'lucide-react';
 import { authClient } from '@/lib/auth/auth-client';
-import { showSwal } from '@/lib/ui';
+import { showAlert } from '@/lib/ui';
 import { useLocale } from '@/hooks/use-locale';
 import { getDeviceName, isPasskeyCancellation } from '@/components/auth/passkey/passkey-utils';
 
@@ -30,37 +30,35 @@ export const PasskeysSection = () => {
       if (!error) return;
       if (isPasskeyCancellation(error)) return;
       if ('code' in error && error.code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED') {
-        showSwal.fire({
-          icon: 'info',
-          title: isSpanish ? 'Passkey ya registrada' : 'Passkey already registered',
-          text: isSpanish ? 'Este dispositivo ya tiene una passkey en tu cuenta.' : 'This device already has a passkey on your account.',
-        });
+        showAlert.info(
+          isSpanish ? 'Passkey ya registrada' : 'Passkey already registered',
+          isSpanish ? 'Este dispositivo ya tiene una passkey en tu cuenta.' : 'This device already has a passkey on your account.',
+        );
         return;
       }
-      showSwal.fire({
-        icon: 'error',
-        title: 'Error',
-        text:
-          (typeof error.message === 'string' ? error.message : undefined) ||
+      showAlert.error(
+        'Error',
+        (typeof error.message === 'string' ? error.message : undefined) ||
           (isSpanish ? 'No se pudo registrar la passkey' : 'Failed to register passkey'),
-      });
+      );
     } finally {
       setIsAdding(false);
     }
   };
 
   const handleDelete = async (id: string, name: string | null | undefined) => {
-    const result = await showSwal.fire({
-      icon: 'warning',
-      title: isSpanish ? 'Eliminar passkey' : 'Delete passkey',
-      text: isSpanish
+    const confirmed = await showAlert.confirm(
+      isSpanish ? 'Eliminar passkey' : 'Delete passkey',
+      isSpanish
         ? `¿Eliminar "${name || 'passkey'}"? Ya no podrás iniciar sesión con ella.`
         : `Delete "${name || 'passkey'}"? You won't be able to sign in with it anymore.`,
-      confirmButtonText: isSpanish ? 'Eliminar' : 'Delete',
-      cancelButtonText: isSpanish ? 'Cancelar' : 'Cancel',
-      showCancelButton: true,
-    });
-    if (!result.isConfirmed) return;
+      {
+        confirmText: isSpanish ? 'Eliminar' : 'Delete',
+        cancelText: isSpanish ? 'Cancelar' : 'Cancel',
+        danger: true,
+      },
+    );
+    if (!confirmed) return;
 
     setDeletingId(id);
     try {
@@ -68,12 +66,10 @@ export const PasskeysSection = () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       const { error } = await (authClient as any).passkey.deletePasskey({ id }) as { error: unknown };
       if (error) {
-        showSwal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: (error as { message?: string }).message ||
-            (isSpanish ? 'No se pudo eliminar la passkey' : 'Failed to delete passkey'),
-        });
+        showAlert.error(
+          'Error',
+          (error as { message?: string }).message || (isSpanish ? 'No se pudo eliminar la passkey' : 'Failed to delete passkey'),
+        );
         return;
       }
       if (wasLast) {

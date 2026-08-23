@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { showSwal } from '@/lib/ui';
+import { showAlert } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,52 +58,36 @@ export const LoginForm = ({
       } else if ('error' in data && data.error) {
         const needsVerification = 'needsVerification' in data && data.needsVerification;
         if (needsVerification) {
-          showSwal
-            .fire({
-              icon: 'error',
-              title: isSpanish ? 'Email no verificado' : 'Email not verified',
-              text: data.error,
-              confirmButtonText: isSpanish ? 'Reenviar email' : 'Resend email',
-              cancelButtonText: isSpanish ? 'Cancelar' : 'Cancel',
-              showCancelButton: true,
+          showAlert
+            .confirm(isSpanish ? 'Email no verificado' : 'Email not verified', data.error, {
+              confirmText: isSpanish ? 'Reenviar email' : 'Resend email',
+              cancelText: isSpanish ? 'Cancelar' : 'Cancel',
             })
-            .then((result) => {
-              if (result.isConfirmed && emailValue) {
+            .then((confirmed) => {
+              if (confirmed && emailValue) {
                 resendExecute({ portal: portalValue, email: emailValue });
               }
             });
         } else {
-          showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+          showAlert.error('Error', data.error);
         }
       }
     },
     onError: ({ error }) => {
-      showSwal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'),
-      });
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al iniciar sesión' : 'Login failed'));
     },
   });
 
   const { execute: resendExecute, status: _resendStatus } = useAction(resendVerification, {
     onSuccess: ({ data }) => {
       if (data?.success) {
-        showSwal.fire({
-          icon: 'success',
-          title: isSpanish ? 'Email reenviado' : 'Email resent',
-          text: isSpanish ? 'Revisa tu bandeja de entrada' : 'Check your inbox',
-        });
+        showAlert.success(isSpanish ? 'Email reenviado' : 'Email resent', isSpanish ? 'Revisa tu bandeja de entrada' : 'Check your inbox');
       } else if (data?.error) {
-        showSwal.fire({ icon: 'error', title: 'Error', text: data.error });
+        showAlert.error('Error', data.error);
       }
     },
     onError: ({ error }) => {
-      showSwal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al reenviar' : 'Failed to resend'),
-      });
+      showAlert.error('Error', error.serverError || error.validationErrors?._errors?.[0] || (isSpanish ? 'Error al reenviar' : 'Failed to resend'));
     },
   });
 

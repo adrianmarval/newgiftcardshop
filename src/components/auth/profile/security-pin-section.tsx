@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { ShieldCheck, Mail } from 'lucide-react';
-import { showSwal } from '@/lib/ui';
+import { showAlert } from '@/lib/ui';
 import { useLocale } from '@/hooks/use-locale';
 import {
   getSecurityStatusAction,
@@ -52,8 +52,8 @@ export const SecurityPinSection = () => {
     setOtp('');
   };
 
-  const showError = (text: string) => showSwal.fire({ icon: 'error', title: 'Error', text });
-  const showOk = (title: string, text: string) => showSwal.fire({ icon: 'success', title, text });
+  const showError = (text: string) => showAlert.error('Error', text);
+  const showOk = (title: string, text: string) => showAlert.success(title, text);
 
   const handleSetup = async () => {
     if (newPin !== confirmPin) return showError(isSpanish ? 'Los PIN no coinciden' : 'PINs do not match');

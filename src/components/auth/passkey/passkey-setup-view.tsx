@@ -6,7 +6,7 @@ import { Fingerprint, Zap, ShieldCheck, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { authClient } from '@/lib/auth/auth-client';
-import { showSwal } from '@/lib/ui';
+import { showAlert } from '@/lib/ui';
 import { getDeviceName, isPasskeyCancellation, isPlatformAuthenticatorAvailable } from './passkey-utils';
 import { dashboardMap } from '@/types';
 import type { AppSection } from '@/types';
@@ -63,13 +63,11 @@ export function PasskeySetupView({ portal }: PasskeySetupViewProps) {
           goToDashboard();
           return;
         }
-        showSwal.fire({
-          icon: 'error',
-          title: 'Error',
-          text:
-            (typeof error.message === 'string' ? error.message : undefined) ||
+        showAlert.error(
+          'Error',
+          (typeof error.message === 'string' ? error.message : undefined) ||
             (isSpanish ? 'No se pudo registrar la passkey' : 'Failed to register passkey'),
-        });
+        );
         return;
       }
       goToDashboard();
