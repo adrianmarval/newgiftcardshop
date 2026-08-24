@@ -101,7 +101,7 @@ export async function getAllSettings(): Promise<Record<SettingKey, { value: unkn
 
   const result = {} as Record<SettingKey, { value: unknown; definition: typeof SETTING_DEFINITIONS[SettingKey] }>;
 
-  for (const key of Object.keys(SETTING_KEYS) as SettingKey[]) {
+  for (const key of Object.values(SETTING_KEYS)) {
     const setting = settings.find((s) => s.key === key);
     const definition = SETTING_DEFINITIONS[key];
 
@@ -119,14 +119,6 @@ export async function getAllSettings(): Promise<Record<SettingKey, { value: unkn
   }
 
   return result;
-}
-
-export async function getEditableSettings(): Promise<Record<SettingKey, { value: unknown; definition: typeof SETTING_DEFINITIONS[SettingKey] }>> {
-  const all = await getAllSettings();
-  const filtered = Object.fromEntries(
-    Object.entries(all).filter(([, { definition }]) => definition.editable !== false)
-  ) as Record<SettingKey, { value: unknown; definition: typeof SETTING_DEFINITIONS[SettingKey] }>;
-  return filtered;
 }
 
 export async function getAutoPaySellers(): Promise<boolean> {

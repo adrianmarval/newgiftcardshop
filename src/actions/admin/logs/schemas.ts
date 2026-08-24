@@ -8,7 +8,7 @@ import { paginatedOutputSchema } from '@/types';
 export const listLogsInputSchema = z.object({
   level: z.enum(['ALL', 'info', 'warn', 'error', 'debug']).optional().default('ALL'),
   source: z.enum(['ALL', 'web', 'seller-bot', 'buyer-bot', 'cron', 'system']).optional().default('ALL'),
-  flow: z.enum(['ALL', 'sell', 'buy', 'order', 'payment', 'batch', 'auth']).optional().default('ALL'),
+  flow: z.enum(['ALL', 'sell', 'buy', 'order', 'payment', 'batch', 'auth', 'admin']).optional().default('ALL'),
   search: z.string().optional().default(''),
   userId: z.string().nullable().optional(),
   dateFrom: z.string().nullable().optional(),

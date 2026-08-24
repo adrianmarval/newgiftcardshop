@@ -1,20 +1,16 @@
 'use server';
 
-import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
+import { getAllSettings } from '@/lib/settings/settings.service';
 import { getPlatformSettingOutputSchema } from './schemas';
 
 export const getPlatformSetting = adminActionClient.outputSchema(getPlatformSettingOutputSchema).action(async () => {
-  const settings = await prisma.platformSettings.findMany();
+  const all = await getAllSettings();
 
-  return {
-    success: true as const,
-    settings: settings.map((s) => ({
-      id: s.id,
-      key: s.key,
-      value: s.value,
-      description: s.description ?? null,
-      balance: s.balance?.toNumber() ?? undefined,
-    })),
-  };
+  const values: Record<string, unknown> = {};
+  for (const [key, { value }] of Object.entries(all)) {
+    values[key] = value;
+  }
+
+  return { success: true as const, values };
 });

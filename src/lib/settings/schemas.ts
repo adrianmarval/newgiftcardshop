@@ -11,6 +11,27 @@ export const SETTING_KEYS = {
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Setting Groups — UI sections for the admin settings page
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SETTING_GROUPS = {
+  payments: {
+    title: 'Pagos',
+    description: 'Binance Pay y cobros a sellers.',
+  },
+  escalation: {
+    title: 'Escalación de inventario',
+    description: 'Controla cómo baja el tier de las tarjetas inactivas con el tiempo.',
+  },
+  platform: {
+    title: 'Plataforma',
+    description: 'Estado operativo de la plataforma. Solo lectura.',
+  },
+} as const;
+
+export type SettingGroupId = keyof typeof SETTING_GROUPS;
+
 const booleanSchema = z.enum(['true', 'false']).transform((val) => val === 'true');
 const numberSchema = z.string().transform((val) => {
   const num = parseFloat(val);
@@ -26,11 +47,25 @@ const decimalSchema = z.string().transform((val) => {
 
 export type SettingType = 'boolean' | 'number' | 'string' | 'decimal';
 
+/** Control que la UI debe renderizar para este setting */
+export type SettingInput = 'switch' | 'number' | 'text';
+
 export interface SettingDefinition<T = unknown> {
   key: SettingKey;
   type: SettingType;
+  group: SettingGroupId;
+  /** Nombre corto mostrado en la UI */
+  label: string;
+  /** Texto de ayuda mostrado bajo el campo */
   description: string;
   default: T;
+  input: SettingInput;
+  /** Unidad mostrada junto al input (ej. "min") */
+  unit?: string;
+  /** Step para inputs numéricos */
+  step?: number;
+  /** Si es true, la UI pide confirmación de peligro antes de guardar */
+  dangerous?: boolean;
   validation?: {
     min?: number;
     max?: number;
@@ -44,31 +79,55 @@ export const SETTING_DEFINITIONS: Record<SettingKey, SettingDefinition> = {
   [SETTING_KEYS.PLATFORM_BALANCE]: {
     key: SETTING_KEYS.PLATFORM_BALANCE,
     type: 'decimal',
-    description: 'Saldo disponible en la plataforma (auditoría)',
+    group: 'platform',
+    label: 'Balance de plataforma',
+    description: 'Saldo disponible. Se modifica automáticamente con depósitos, reembolsos y pagos a sellers.',
     default: 0,
+    input: 'number',
     editable: false,
     auditOnly: true,
   },
   [SETTING_KEYS.BINANCE_PAY_ID]: {
     key: SETTING_KEYS.BINANCE_PAY_ID,
     type: 'string',
-    description: 'ID de pago de Binance',
+    group: 'payments',
+    label: 'Binance Pay ID',
+    description: 'ID de Binance Pay donde los buyers envían sus pagos.',
     default: '',
+    input: 'text',
     validation: {
       pattern: /^\d+$/,
     },
   },
+  [SETTING_KEYS.AUTO_PAY_SELLERS]: {
+    key: SETTING_KEYS.AUTO_PAY_SELLERS,
+    type: 'boolean',
+    group: 'payments',
+    label: 'Pago automático a sellers',
+    description: 'Paga automáticamente vía Binance los lotes confirmados. Desactivado = aprobación manual.',
+    default: false,
+    input: 'switch',
+    dangerous: true,
+  },
   [SETTING_KEYS.ESCALATION_ENABLED]: {
     key: SETTING_KEYS.ESCALATION_ENABLED,
     type: 'boolean',
-    description: 'Habilitar sistema de reserva escalonada de tarjetas',
+    group: 'escalation',
+    label: 'Escalación habilitada',
+    description: 'Baja automáticamente el tier de las tarjetas que llevan tiempo sin venderse.',
     default: true,
+    input: 'switch',
   },
   [SETTING_KEYS.ESCALATION_DURATION_MINUTES]: {
     key: SETTING_KEYS.ESCALATION_DURATION_MINUTES,
     type: 'number',
-    description: 'Duración de cada tier de escalación en minutos',
+    group: 'escalation',
+    label: 'Duración por tier',
+    description: 'Minutos que permanece una tarjeta en cada tier antes de bajar.',
     default: 5,
+    input: 'number',
+    unit: 'min',
+    step: 1,
     validation: {
       min: 1,
       max: 60,
@@ -77,20 +136,30 @@ export const SETTING_DEFINITIONS: Record<SettingKey, SettingDefinition> = {
   [SETTING_KEYS.ESCALATION_DROP_AMOUNT]: {
     key: SETTING_KEYS.ESCALATION_DROP_AMOUNT,
     type: 'number',
-    description: 'Cuánto baja el tier en cada ciclo de escalación',
+    group: 'escalation',
+    label: 'Niveles por ciclo',
+    description: 'Cuántos niveles baja el tier en cada ciclo de escalación.',
     default: 1,
+    input: 'number',
+    step: 1,
     validation: {
       min: 1,
       max: 10,
     },
   },
-  [SETTING_KEYS.AUTO_PAY_SELLERS]: {
-    key: SETTING_KEYS.AUTO_PAY_SELLERS,
-    type: 'boolean',
-    description: 'Pago automático a sellers vía Binance al confirmar lote (false = requiere aprobación manual)',
-    default: false,
-  },
 };
+
+/** Definiciones de un grupo, en el orden declarado en el registry */
+export function getSettingsByGroup(group: SettingGroupId): SettingDefinition[] {
+  return Object.values(SETTING_DEFINITIONS).filter((d) => d.group === group);
+}
+
+/** Keys editables de un grupo (excluye auditOnly y editable: false) */
+export function getEditableKeysByGroup(group: SettingGroupId): SettingKey[] {
+  return getSettingsByGroup(group)
+    .filter((d) => !d.auditOnly && d.editable !== false)
+    .map((d) => d.key);
+}
 
 export const SETTING_SCHEMAS: Record<SettingKey, z.ZodTypeAny> = {
   [SETTING_KEYS.PLATFORM_BALANCE]: decimalSchema,
@@ -117,33 +186,33 @@ export function parseSettingValue<T>(key: SettingKey, rawValue: string | null | 
 
 export function validateSettingValue(key: SettingKey, value: unknown): { valid: boolean; error?: string } {
   const definition = SETTING_DEFINITIONS[key];
-  
+
   if (definition.type === 'boolean') {
     if (typeof value === 'boolean') return { valid: true };
     if (typeof value === 'string' && (value === 'true' || value === 'false')) return { valid: true };
-    return { valid: false, error: 'Must be boolean' };
+    return { valid: false, error: 'Debe ser booleano' };
   }
-  
+
   if (definition.type === 'number' || definition.type === 'decimal') {
     const num = typeof value === 'number' ? value : parseFloat(String(value));
-    if (isNaN(num)) return { valid: false, error: 'Must be a valid number' };
+    if (isNaN(num)) return { valid: false, error: 'Debe ser un número válido' };
     if (definition.validation?.min !== undefined && num < definition.validation.min) {
-      return { valid: false, error: `Must be >= ${definition.validation.min}` };
+      return { valid: false, error: `Debe ser >= ${definition.validation.min}` };
     }
     if (definition.validation?.max !== undefined && num > definition.validation.max) {
-      return { valid: false, error: `Must be <= ${definition.validation.max}` };
+      return { valid: false, error: `Debe ser <= ${definition.validation.max}` };
     }
     return { valid: true };
   }
-  
+
   if (definition.type === 'string') {
     if (definition.validation?.pattern && !definition.validation.pattern.test(String(value))) {
-      return { valid: false, error: `Must match pattern ${definition.validation.pattern}` };
+      return { valid: false, error: 'No cumple con el formato esperado' };
     }
     return { valid: true };
   }
-  
-  return { valid: false, error: 'Unknown setting type' };
+
+  return { valid: false, error: 'Tipo de setting desconocido' };
 }
 
 export function serializeSettingValue(key: SettingKey, value: unknown): string {

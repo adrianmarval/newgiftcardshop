@@ -6,7 +6,7 @@ export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 export type LogSource = 'web' | 'seller-bot' | 'buyer-bot' | 'cron' | 'system';
 
-export type LogFlow = 'sell' | 'buy' | 'order' | 'payment' | 'batch' | 'auth';
+export type LogFlow = 'sell' | 'buy' | 'order' | 'payment' | 'batch' | 'auth' | 'admin';
 
 export interface LogError {
   name: string;
