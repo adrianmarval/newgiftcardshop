@@ -32,19 +32,19 @@ export function ConfigManager({ initialValues, initialAIProviders }: ConfigManag
           <CardDescription>{SETTING_GROUPS.platform.description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-muted flex size-10 items-center justify-center rounded-lg">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-lg">
                 <Wallet className="text-muted-foreground size-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Balance disponible</p>
                 <p className="text-muted-foreground text-xs">Se modifica automáticamente con depósitos, reembolsos y pagos a sellers.</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3 sm:justify-end">
               <span className="text-2xl font-bold tracking-tight tabular-nums">{formatCurrency(balance)}</span>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="shrink-0">
                 <Link href="/admin/dashboard/payments">
                   Movimientos
                   <ArrowRight className="ml-1 size-3.5" />
