@@ -31,6 +31,7 @@ export const listUsersOutputSchema = paginatedOutputSchema(
           telegramId: z.string(),
           username: z.string().nullable(),
           firstName: z.string().nullable(),
+          hasPhoto: z.boolean(),
         })
         .nullable(),
     })

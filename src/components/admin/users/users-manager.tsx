@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, startTransition } from 'react';
+import { useState, useEffect, startTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,7 @@ import { FiltersBar } from '@/components/common';
 import { cn } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
-import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTelegram } from '@/actions/admin/users/';
+import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTelegram, getAdminTelegramPhoto } from '@/actions/admin/users/';
 import { listBrands } from '@/actions/admin/catalog';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { adminUsersSearchParamsParsers } from '@/lib/search-params';
@@ -60,6 +60,28 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const [openBrandCountry, setOpenBrandCountry] = useState(false);
   const [rateForm, setRateForm] = useState({ buyRate: '', sellRate: '' });
   const [unlinkTarget, setUnlinkTarget] = useState<User | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+
+  const fetchPhoto = useCallback(async (userId: string) => {
+    if (photoUrls[userId]) return;
+    const res = await getAdminTelegramPhoto({ userId });
+    if (res?.data?.success) {
+      const url = res.data.dataUrl;
+      setPhotoUrls((prev) => {
+        const next = { ...prev } as Record<string, string>;
+        next[userId] = url;
+        return next;
+      });
+    }
+  }, [photoUrls]);
+
+  useEffect(() => {
+    for (const user of initialUsers) {
+      if (user.telegramUser?.hasPhoto) {
+        fetchPhoto(user.id);
+      }
+    }
+  }, [initialUsers, fetchPhoto]);
 
   const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
     onSuccess: () => {
@@ -233,33 +255,51 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
         }}
       />
 
-      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto custom-scrollbar">
         {initialUsers.map((user) => (
-          <Card key={user.id} className="hover:border-primary/30 overflow-hidden py-1 transition-all duration-200 ease-out">
-            <CardContent className="flex items-center gap-1 p-3">
+          <Card key={user.id} className="hover:border-primary/30 overflow-visible transition-all duration-200 ease-out">
+            <CardContent className="flex items-center gap-3 py-3">
+              {user.telegramUser?.hasPhoto && photoUrls[user.id] ? (
+                <img
+                  src={photoUrls[user.id]}
+                  alt={user.name}
+                  className="h-9 w-9 shrink-0 rounded-full object-cover"
+                />
+              ) : user.telegramUser ? (
+                <div className="bg-sky-500/10 text-sky-500 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium">
+                  {(user.telegramUser.firstName || user.name).charAt(0).toUpperCase()}
+                </div>
+              ) : null}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1">
-                  <span className="truncate font-medium">{user.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-medium text-base">{user.name}</span>
                   {!user.isActive && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="destructive" className="shrink-0 text-xs">
                       Inactivo
                     </Badge>
                   )}
                 </div>
                 <p className="text-muted-foreground truncate text-sm">{user.email}</p>
                 {user.telegramUser ? (
-                  <p className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <a
+                    href={`https://t.me/${user.telegramUser.username || user.telegramUser.telegramId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-sky-500 flex items-center gap-1.5 text-sm transition-colors"
+                  >
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky-500" />
                     @{user.telegramUser.username || user.telegramUser.firstName || user.telegramUser.telegramId}
-                  </p>
+                  </a>
                 ) : (
-                  <p className="text-muted-foreground/60 text-xs">Sin Telegram</p>
+                  <p className="text-muted-foreground/60 text-sm">Sin Telegram</p>
                 )}
               </div>
-              <Badge variant="outline">{user.role}</Badge>
+              <Badge variant="outline" className="shrink-0">
+                {user.role}
+              </Badge>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" className="h-8 w-8" disabled={isUpdating}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" disabled={isUpdating}>
                     {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
                   </Button>
                 </DropdownMenuTrigger>

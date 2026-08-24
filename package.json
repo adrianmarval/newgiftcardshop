@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "migrate": "tsx scripts/migrate-full.ts"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.5.6",

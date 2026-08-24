@@ -20,6 +20,7 @@ export interface User {
     telegramId: string;
     username: string | null;
     firstName: string | null;
+    hasPhoto: boolean;
   } | null;
 }
 

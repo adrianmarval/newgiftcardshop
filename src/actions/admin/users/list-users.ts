@@ -33,7 +33,7 @@ export const listUsers = adminActionClient
         take: limit,
         include: {
           telegramUser: {
-            select: { telegramId: true, username: true, firstName: true },
+            select: { telegramId: true, username: true, firstName: true, photoData: true },
           },
         },
       });
@@ -53,7 +53,9 @@ export const listUsers = adminActionClient
         allowSearchPreferences: user.allowSearchPreferences,
         allowBuyRateAdjustment: user.allowBuyRateAdjustment,
         createdAt: user.createdAt,
-        telegramUser: user.telegramUser ?? null,
+        telegramUser: user.telegramUser
+          ? { telegramId: user.telegramUser.telegramId, username: user.telegramUser.username, firstName: user.telegramUser.firstName, hasPhoto: !!user.telegramUser.photoData }
+          : null,
       }));
 
       return {
