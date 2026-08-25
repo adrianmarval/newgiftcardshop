@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 
 // ── Generic hook for auto-expand on search match ─────────────────────────────
 
-export function useRegistryAutoExpand<T>(items: T[], getMatch: (item: T) => string | number | null) {
+export function useRegistryAutoExpand<T>(items: T[], getMatch: (item: T) => string | number | null, getId: (item: T) => string | number) {
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
   const [lastExpandedId, setLastExpandedId] = useState<string | number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -43,6 +43,18 @@ export function useRegistryAutoExpand<T>(items: T[], getMatch: (item: T) => stri
     }
     prevMatchIdRef.current = matchId;
   }, [matchId]);
+
+  // Collapse when the expanded item is no longer in the list
+  // (e.g. page change, filter change removes it)
+  useEffect(() => {
+    if (expandedId !== null && items.length > 0) {
+      const stillPresent = items.some((i) => getId(i) === expandedId);
+      if (!stillPresent) {
+        setExpandedId(null);
+        setLastExpandedId(null);
+      }
+    }
+  }, [expandedId, items, getId]);
 
   const handleToggle = useCallback((id: string | number) => {
     userInteractingRef.current = true;
@@ -104,7 +116,7 @@ export function RegistryList<T>({
   emptyDescription = 'Intenta ajustar tus filtros o palabras clave de búsqueda.',
   emptyIcon,
 }: RegistryListProps<T>) {
-  const { expandedId, lastExpandedId, listRef, handleToggle } = useRegistryAutoExpand(items, getMatch);
+  const { expandedId, lastExpandedId, listRef, handleToggle } = useRegistryAutoExpand(items, getMatch, getId);
 
   if (items.length === 0) {
     return (
