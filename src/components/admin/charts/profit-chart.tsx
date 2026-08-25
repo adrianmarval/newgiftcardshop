@@ -69,8 +69,8 @@ export function ProfitChart({ charts }: ProfitChartProps) {
   });
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col gap-2 space-y-0 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="py-2">
+      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <CardTitle>Historial de Ganancias</CardTitle>
           <CardDescription>{PERIOD_DESCRIPTIONS[period]}</CardDescription>
