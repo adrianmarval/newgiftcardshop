@@ -4,6 +4,8 @@
 
 import { z } from 'zod';
 
+const profitChartPointSchema = z.object({ date: z.string(), profit: z.number() });
+
 export const getProfitStatsOutputSchema = z.object({
   summary: z.object({
     today: z.number(),
@@ -11,7 +13,11 @@ export const getProfitStatsOutputSchema = z.object({
     month: z.number(),
     todayVolume: z.number(),
   }),
-  chartData: z.array(z.object({ date: z.string(), profit: z.number() })),
+  charts: z.object({
+    daily: z.array(profitChartPointSchema),
+    monthly: z.array(profitChartPointSchema),
+    yearly: z.array(profitChartPointSchema),
+  }),
 });
 
 export const getInventoryStatsOutputSchema = z.array(z.object({ range: z.string(), count: z.number(), total: z.number() }));

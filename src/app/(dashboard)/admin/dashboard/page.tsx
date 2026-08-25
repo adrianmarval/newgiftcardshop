@@ -27,7 +27,10 @@ export default async function AdminDashboardPage() {
   const platformBalance = platformBalanceResponse.data?.balance || 0;
 
   const inventoryData = inventoryRes.data || [];
-  const profitData = profitRes.data || { summary: { today: 0, week: 0, month: 0, todayVolume: 0 }, chartData: [] };
+  const profitData = profitRes.data || {
+    summary: { today: 0, week: 0, month: 0, todayVolume: 0 },
+    charts: { daily: [], monthly: [], yearly: [] },
+  };
   const differential = new Decimal(binanceBalance?.total || 0).minus(new Decimal(platformBalance));
   const diffColor = differential.greaterThan(0) ? 'text-green-400' : differential.lessThan(0) ? 'text-red-400' : 'text-white/80';
 
@@ -131,7 +134,7 @@ export default async function AdminDashboardPage() {
           <InventoryChart data={inventoryData} />
         </div>
         <div className="col-span-1 md:col-span-1 lg:col-span-3">
-          <ProfitChart chartData={profitData.chartData} />
+          <ProfitChart charts={profitData.charts} />
         </div>
       </div>
     </div>

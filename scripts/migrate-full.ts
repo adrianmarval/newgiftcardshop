@@ -105,6 +105,8 @@ interface OldReseller {
   isTwoFactorEnabled: boolean;
   balance: string;
   role: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface OldUser {
@@ -118,6 +120,7 @@ interface OldUser {
   role: string;
   sellerPercentage: string;
   buyerPercentage: string;
+  createdAt: Date;
 }
 
 interface OldPaymentMethod {
@@ -136,6 +139,7 @@ interface OldGiftcardBatch {
   isPaid: boolean;
   discountApplied: string;
   sellerId: string;
+  createdAt: Date;
 }
 
 interface OldGiftcard {
@@ -149,6 +153,7 @@ interface OldGiftcard {
   status: string;
   batchId: string;
   sellerId: string;
+  createdAt: Date;
 }
 
 interface OldOrder {
@@ -158,6 +163,8 @@ interface OldOrder {
   status: string;
   buyerId: string;
   discountApplied: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface OldOrderItem {
@@ -170,6 +177,7 @@ interface OldGiftcardIssue {
   id: string;
   giftcardId: string;
   issueType: string;
+  createdAt: Date;
 }
 
 // ── Mapeos globales (viejoId → nuevoId) ────────────────────────────────────────
@@ -228,7 +236,7 @@ async function migrateReseller() {
   log('RESELLER', 'Migrando Reseller → User (ADMIN)...');
 
   const { rows } = await oldPool.query<OldReseller>(
-    `SELECT id, name, email, "emailVerified", "isTwoFactorEnabled", balance, role FROM "Reseller"`
+    `SELECT id, name, email, "emailVerified", "isTwoFactorEnabled", balance, role, "createdAt", "updatedAt" FROM "Reseller"`
   );
   log('RESELLER', `Encontrados ${rows.length} resellers`);
 
@@ -243,6 +251,8 @@ async function migrateReseller() {
         twoFactorEnabled: r.isTwoFactorEnabled,
         creditLimit: 200,
         legacyId: r.id,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
       },
     });
 
@@ -255,7 +265,7 @@ async function migrateTelegramUsers() {
   log('TELEGRAM', 'Migrando Users (telegram) → User + TelegramUser...');
 
   const { rows } = await oldPool.query<OldUser>(
-    `SELECT id, "telegramId", "first_name", "last_name", "username", "isEnabled", "creditLimit", role, "sellerPercentage", "buyerPercentage" FROM "User"`
+    `SELECT id, "telegramId", "first_name", "last_name", "username", "isEnabled", "creditLimit", role, "sellerPercentage", "buyerPercentage", "createdAt" FROM "User"`
   );
   log('TELEGRAM', `Encontrados ${rows.length} users de telegram`);
 
@@ -273,6 +283,8 @@ async function migrateTelegramUsers() {
         isActive: u.isEnabled,
         creditLimit: parseFloat(u.creditLimit) || 200,
         legacyId: u.id,
+        createdAt: u.createdAt,
+        updatedAt: u.createdAt,
       },
     });
 
@@ -286,6 +298,8 @@ async function migrateTelegramUsers() {
         lastName: u.last_name,
         username: u.username,
         userId: newUser.id,
+        createdAt: u.createdAt,
+        updatedAt: u.createdAt,
       },
     });
 
@@ -397,7 +411,7 @@ async function migrateBatches() {
   log('BATCHES', 'Migrando GiftcardBatch...');
 
   const { rows } = await oldPool.query<OldGiftcardBatch>(
-    `SELECT id, "isPaid", "discountApplied", "sellerId" FROM "GiftcardBatch"`
+    `SELECT id, "isPaid", "discountApplied", "sellerId", "createdAt" FROM "GiftcardBatch"`
   );
   log('BATCHES', `Encontrados ${rows.length} batches`);
 
@@ -413,6 +427,8 @@ async function migrateBatches() {
         sellRate: 1 - parseFloat(b.discountApplied) / 100,
         isPaid: b.isPaid,
         userId: newUserId,
+        createdAt: b.createdAt,
+        updatedAt: b.createdAt,
       },
     });
 
@@ -432,7 +448,7 @@ async function migrateGiftcards() {
   log('GIFTCARDS', 'Migrando Giftcards...');
 
   const { rows } = await oldPool.query<OldGiftcard>(
-    `SELECT id, code, "codeHash", denomination, "inStock", "isConfirmed", "reportedDenomination", status, "batchId", "sellerId" FROM "Giftcard"`
+    `SELECT id, code, "codeHash", denomination, "inStock", "isConfirmed", "reportedDenomination", status, "batchId", "sellerId", "createdAt" FROM "Giftcard"`
   );
   log('GIFTCARDS', `Encontradas ${rows.length} giftcards`);
 
@@ -473,6 +489,8 @@ async function migrateGiftcards() {
         ownerId: newOwnerId,
         batchId: newBatchId,
         escalationTier: 85,
+        createdAt: g.createdAt,
+        updatedAt: g.createdAt,
       },
     });
 
@@ -491,7 +509,7 @@ async function migrateOrders() {
   log('ORDERS', 'Migrando Orders...');
 
   const { rows } = await oldPool.query<OldOrder>(
-    `SELECT id, total, "isPaid", status, "buyerId", "discountApplied" FROM "Order"`
+    `SELECT id, total, "isPaid", status, "buyerId", "discountApplied", "createdAt", "updatedAt" FROM "Order"`
   );
   log('ORDERS', `Encontradas ${rows.length} órdenes`);
 
@@ -514,6 +532,8 @@ async function migrateOrders() {
         status: status as any,
         userId: newUserId,
         brandCountryId: amazonUsBrandCountryId,
+        createdAt: o.createdAt,
+        updatedAt: o.updatedAt,
       },
     });
 
@@ -564,7 +584,7 @@ async function migrateIssues() {
   log('ISSUES', 'Migrando GiftcardIssues...');
 
   const { rows } = await oldPool.query<OldGiftcardIssue>(
-    `SELECT id, "giftcardId", "issueType" FROM "GiftcardIssue"`
+    `SELECT id, "giftcardId", "issueType", "createdAt" FROM "GiftcardIssue"`
   );
   log('ISSUES', `Encontrados ${rows.length} issues`);
 
@@ -596,6 +616,7 @@ async function migrateIssues() {
         orderId: gc.orderId,
         reportedById: gc.ownerId || '',
         sellerId: gc.ownerId,
+        createdAt: i.createdAt,
       },
     });
 
