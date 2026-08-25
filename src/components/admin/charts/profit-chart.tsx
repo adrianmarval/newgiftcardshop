@@ -31,6 +31,12 @@ const PERIOD_DESCRIPTIONS: Record<ProfitPeriod, string> = {
   yearly: 'Historial completo, agrupado por año',
 };
 
+// const PERIOD_AVERAGE_LABELS: Record<ProfitPeriod, string> = {
+//   daily: 'Promedio diario',
+//   monthly: 'Promedio mensual',
+//   yearly: 'Promedio anual',
+// };
+
 function parseDateKey(value: string): Date {
   const [year, month = 1, day = 1] = value.split('-').map(Number);
   return new Date(year, month - 1, day);
@@ -55,6 +61,13 @@ function formatTooltipLabel(value: string, period: ProfitPeriod): string {
 export function ProfitChart({ charts }: ProfitChartProps) {
   const [period, setPeriod] = useState<ProfitPeriod>('daily');
 
+  const data = charts[period];
+  const average = data.length > 0 ? data.reduce((sum, point) => sum + point.profit, 0) / data.length : 0;
+  const formattedAverage = average.toLocaleString('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   return (
     <Card>
       <CardHeader className="flex flex-col gap-2 space-y-0 sm:flex-row sm:items-center sm:justify-between">
@@ -62,17 +75,23 @@ export function ProfitChart({ charts }: ProfitChartProps) {
           <CardTitle>Historial de Ganancias</CardTitle>
           <CardDescription>{PERIOD_DESCRIPTIONS[period]}</CardDescription>
         </div>
-        <Tabs value={period} onValueChange={(value) => setPeriod(value as ProfitPeriod)}>
-          <TabsList>
-            <TabsTrigger value="daily">Día</TabsTrigger>
-            <TabsTrigger value="monthly">Mes</TabsTrigger>
-            <TabsTrigger value="yearly">Año</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-col items-end sm:items-end">
+          <Tabs value={period} onValueChange={(value) => setPeriod(value as ProfitPeriod)}>
+            <TabsList>
+              <TabsTrigger value="daily">Día</TabsTrigger>
+              <TabsTrigger value="monthly">Mes</TabsTrigger>
+              <TabsTrigger value="yearly">Año</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <p className="text-sm">
+            <span className="text-muted-foreground">Promedio: </span>
+            <span className="font-semibold tabular-nums">{formattedAverage} USDT</span>
+          </p>
+        </div>
       </CardHeader>
       <CardContent className="flex-1">
         <ChartContainer config={chartConfig}>
-          <BarChart data={charts[period]} margin={{ top: 10, left: 12, right: 12, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 10, left: 12, right: 12, bottom: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -83,12 +102,7 @@ export function ProfitChart({ charts }: ProfitChartProps) {
             />
             <ChartTooltip
               cursor={false}
-              content={
-                <ChartTooltipContent
-                  indicator="dashed"
-                  labelFormatter={(value) => formatTooltipLabel(String(value), period)}
-                />
-              }
+              content={<ChartTooltipContent indicator="dashed" labelFormatter={(value) => formatTooltipLabel(String(value), period)} />}
             />
             <Bar dataKey="profit" fill="var(--color-profit)" radius={4} />
           </BarChart>
