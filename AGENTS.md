@@ -127,6 +127,15 @@ Wizard de 5 pasos: **Search** (brand+country+monto) → **Results** (tarjetas en
 - Status guards: `order.update` con `where: { status: 'EXPECTED' }` + catch P2025 en complete y confirmUsage
 - Codes entregados ANTES del pago (intencional — modelo de crédito, buyer pasa por filtro manual)
 
+### Web Claim (usuarios migrados: Telegram → Web)
+
+Usuarios migrados del sistema viejo (`scripts/migrate-full.ts`) tienen email sintético `tg_<telegramId>@legacy.migrated` (constante `LEGACY_EMAIL_DOMAIN` en `lib/constants.ts`), sin password — el bot les funciona pero la web no. El claim self-service les activa el acceso web desde el bot:
+
+- Módulo: `src/bot/shared/web-claim.ts` (compartido por ambos bots). Entry: botón `claim_web_start` en el menú principal — solo se renderiza si `hasLegacyEmail(user.email)` (en "🌐 Activate Web Access" seller / es "🌐 Activar acceso web" buyer); tras el claim el botón se transforma en un acceso directo URL permanente al panel web (`🌐 Open Web App` → `/sell/dashboard` / `🌐 Abrir app web` → `/store/dashboard`, via `NEXT_PUBLIC_APP_URL`; se omite si la env var no está definida).
+- Flujo: `awaitingClaimEmail` (valida formato + email no usado por OTRO user) → `awaitingClaimOtp` (OTP CSPRNG por email, reusa `TelegramOtp` + lockout 5 via `verifyTelegramOtp`) → `awaitingClaimPassword` (tx: `user.update({email, emailVerified:true})` + `account.create` credential con hash de `auth.$context.password.hash` — mismo hashing que `signUpEmail`).
+- Los steps del claim son post-auth (NO están en `REG_WIZARD_STEPS` — esos skipean el middleware de auth porque el registro es para usuarios sin cuenta; el claim requiere `ctx.user.id`).
+- Edge: email ya registrado por otro user (se registró en web antes de claimear) → error + contacto admin (merge manual, no automático). P2002 en el tx = race de email, se reintenta desde el paso de email.
+
 ## Modelo de datos clave
 
 ```prisma

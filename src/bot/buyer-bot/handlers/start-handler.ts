@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import { InlineKeyboard } from 'grammy';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { startRegistration } from '@/bot/shared/registration.js';
+import { hasLegacyEmail } from '@/bot/shared/web-claim.js';
 import { renderUI, deleteUserInput, escapeHTML, resolveFlowThreadId } from '@/bot/shared/ui.js';
 
 export async function startBuyer(ctx: BuyerContext) {
@@ -35,7 +36,7 @@ export async function startBuyer(ctx: BuyerContext) {
     // ¿Ya tiene cuenta vinculada?
     const telegramUser = await prisma.telegramUser.findUnique({
       where: { telegramId },
-      include: { user: { select: { name: true, isActive: true, emailVerified: true, role: true } } },
+      include: { user: { select: { name: true, isActive: true, emailVerified: true, role: true, email: true } } },
     });
 
     const user = telegramUser?.user;
@@ -72,6 +73,15 @@ export async function startBuyer(ctx: BuyerContext) {
         .text('🛒 Comprar tarjetas', 'buy_start')
         .row()
         .text('🔐 Seguridad (PIN)', 'sec_menu');
+
+      // Usuario migrado (email legacy) → ofrecer activación de acceso web.
+      // Ya activado → acceso directo al panel web.
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+      if (hasLegacyEmail(user.email)) {
+        kb.row().text('🌐 Activar acceso web', 'claim_web_start');
+      } else if (appUrl) {
+        kb.row().url('🌐 Abrir app web', `${appUrl}/store/dashboard`);
+      }
       const escapedName = escapeHTML(user.name);
 
       await renderUI(ctx, `👋 ¡Hola de nuevo, <b>${escapedName}</b>!\n\nUsá los botones para navegar.`, {

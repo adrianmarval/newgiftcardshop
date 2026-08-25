@@ -3,6 +3,13 @@ import type { Prisma } from '@/generated/prisma/client';
 export const MAX_BATCH_SIZE = 50;
 
 /**
+ * Dominio de emails sintéticos asignados por el script de migración
+ * (tg_<telegramId>@legacy.migrated). Un usuario con este email NO tiene
+ * acceso web (sin password ni inbox real) — el bot le ofrece el claim.
+ */
+export const LEGACY_EMAIL_DOMAIN = '@legacy.migrated';
+
+/**
  * Minimum estimated payout (USD) required for external wallets.
  * Binance wallets are exempt from this restriction.
  */

@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import type { TelegramOtp } from '@/generated/prisma/client';
 import { InlineKeyboard } from 'grammy';
 import { resend, EMAIL_FROM } from '@/lib/resend';
 import { authApi } from '@/lib/auth/auth-server';
@@ -11,7 +12,7 @@ import { renderUI, deleteUserInput, escapeHTML } from './ui.js';
 
 type RegContext = BotContext;
 
-const i18n = {
+export const i18n = {
   en: {
     welcome: 'To get started, <b>ENTER YOUR EMAIL ADDRESS:</b>',
     nameShort: '❌ Name too short. Please enter your full name.',
@@ -78,7 +79,7 @@ const i18n = {
   },
 };
 
-function getLang(role: BotRole): Lang {
+export function getLang(role: BotRole): Lang {
   return role === 'SELLER' ? 'en' : 'es';
 }
 
@@ -112,11 +113,11 @@ async function fetchAndEncryptTelegramPhoto(
   }
 }
 
-function generateOtp(): string {
+export function generateOtp(): string {
   return randomInt(100000, 1000000).toString();
 }
 
-async function sendOtpEmail(email: string, name: string, otp: string, lang: Lang): Promise<void> {
+export async function sendOtpEmail(email: string, name: string, otp: string, lang: Lang): Promise<void> {
   try {
     await resend.emails.send({
       from: EMAIL_FROM,
@@ -132,12 +133,50 @@ async function sendOtpEmail(email: string, name: string, otp: string, lang: Lang
   }
 }
 
-function isValidEmail(email: string): boolean {
+export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function isValidPassword(password: string): boolean {
+export function isValidPassword(password: string): boolean {
   return password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
+}
+
+// ── Verificación de OTP (compartida entre registro y web-claim) ──────────────
+
+export type TelegramOtpVerifyStatus = 'ok' | 'not_found' | 'expired' | 'locked' | 'incorrect';
+
+/**
+ * Verifica el OTP de Telegram con lockout (5 intentos) y expiración.
+ * Efectos colaterales: borra el registro si expiró o se lockeó, incrementa
+ * attempts si el código no matchea. Devuelve el record solo cuando status='ok'.
+ */
+export async function verifyTelegramOtp(
+  telegramId: string,
+  inputOtp: string | undefined,
+): Promise<{ status: TelegramOtpVerifyStatus; record?: TelegramOtp }> {
+  const record = await prisma.telegramOtp.findUnique({ where: { telegramId } });
+
+  if (!record) return { status: 'not_found' };
+
+  if (record.expiresAt < new Date()) {
+    await prisma.telegramOtp.delete({ where: { telegramId } });
+    return { status: 'expired' };
+  }
+
+  if (record.attempts >= 5) {
+    await prisma.telegramOtp.delete({ where: { telegramId } });
+    return { status: 'locked' };
+  }
+
+  if (inputOtp !== record.otp) {
+    await prisma.telegramOtp.update({
+      where: { telegramId },
+      data: { attempts: { increment: 1 } },
+    });
+    return { status: 'incorrect' };
+  }
+
+  return { status: 'ok', record };
 }
 
 export async function startRegistration(ctx: RegContext, role: BotRole, startParam?: string): Promise<void> {
@@ -342,33 +381,27 @@ export async function handleRegOtp(ctx: RegContext, role: BotRole, onFinish?: ()
 
   await deleteUserInput(ctx);
 
-  const record = await prisma.telegramOtp.findUnique({ where: { telegramId } });
+  const { status, record } = await verifyTelegramOtp(telegramId, inputOtp);
 
-  if (!record) {
+  if (status === 'not_found') {
     ctx.session.wizard.step = 'awaitingEmail';
     await renderUI(ctx, i18n[lang].otpNotFound);
     return;
   }
 
-  if (record.expiresAt < new Date()) {
-    await prisma.telegramOtp.delete({ where: { telegramId } });
+  if (status === 'expired') {
     ctx.session.wizard.step = 'awaitingEmail';
     await renderUI(ctx, i18n[lang].otpExpired);
     return;
   }
 
-  if (record.attempts >= 5) {
-    await prisma.telegramOtp.delete({ where: { telegramId } });
+  if (status === 'locked') {
     ctx.session.wizard.step = 'awaitingEmail';
     await renderUI(ctx, i18n[lang].otpIncorrect);
     return;
   }
 
-  if (inputOtp !== record.otp) {
-    await prisma.telegramOtp.update({
-      where: { telegramId },
-      data: { attempts: { increment: 1 } },
-    });
+  if (status === 'incorrect' || !record) {
     await renderUI(ctx, i18n[lang].otpIncorrect);
     return;
   }

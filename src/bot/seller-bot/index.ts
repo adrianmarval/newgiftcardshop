@@ -32,6 +32,7 @@ import {
   handleWalletCancel,
 } from './handlers/wallet-handler.js';
 import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword, handleLinkConfirmation } from '@/bot/shared/registration.js';
+import { startWebClaim, handleClaimEmail, handleClaimOtp, handleClaimPassword } from '@/bot/shared/web-claim.js';
 
 export function createSellerBot() {
   const token = process.env.SELLER_BOT_TOKEN;
@@ -124,6 +125,9 @@ export function createSellerBot() {
   // Menú principal
   bot.callbackQuery('start', startSeller);
 
+  // Web claim (usuario migrado con email legacy activa acceso web)
+  bot.callbackQuery('claim_web_start', (ctx) => startWebClaim(ctx, 'SELLER'));
+
   // Sell flow
   bot.callbackQuery('sell_start', startSellWizard);
   bot.callbackQuery(/^sell_brand_/, handleBrandSelected);
@@ -160,6 +164,10 @@ export function createSellerBot() {
     const step = ctx.session.wizard.step;
     if (step === 'awaitingAddress' && ctx.message?.text) return handleWalletAddressInput(ctx, ctx.message.text);
     if (step === 'awaitingCodes') return handleCodesText(ctx);
+    // Web claim wizard
+    if (step === 'awaitingClaimEmail') return handleClaimEmail(ctx, 'SELLER');
+    if (step === 'awaitingClaimOtp') return handleClaimOtp(ctx, 'SELLER');
+    if (step === 'awaitingClaimPassword') return handleClaimPassword(ctx, 'SELLER', () => startSeller(ctx));
     await deleteUserInput(ctx);
     return next();
   });

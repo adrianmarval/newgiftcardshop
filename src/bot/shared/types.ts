@@ -10,6 +10,10 @@ export type RegWizardStep = (typeof REG_WIZARD_STEPS)[number];
 export type SellerWizardStep =
   | 'idle'
   | RegWizardStep
+  // Web claim (usuario migrado con email legacy activa su acceso web)
+  | 'awaitingClaimEmail'
+  | 'awaitingClaimOtp'
+  | 'awaitingClaimPassword'
   // Flujo de venta
   | 'awaitingCodes'
   | 'awaitingImages'
@@ -23,6 +27,10 @@ export type SellerWizardStep =
 export type BuyerWizardStep =
   | 'idle'
   | RegWizardStep
+  // Web claim (usuario migrado con email legacy activa su acceso web)
+  | 'awaitingClaimEmail'
+  | 'awaitingClaimOtp'
+  | 'awaitingClaimPassword'
   // Flujo de compra
   | 'awaitingAmount'
   | 'awaitingPaymentId'
@@ -49,6 +57,8 @@ export interface SellerSessionData {
     regName?: string;
     regEmail?: string;
     isLinking?: boolean;
+    // Web claim (usuario migrado activa acceso web)
+    claimEmail?: string;
     // Confirmación de vinculación (deep link)
     linkToken?: string;
     linkUserName?: string;
@@ -80,6 +90,8 @@ export interface BuyerSessionData {
     regName?: string;
     regEmail?: string;
     isLinking?: boolean;
+    // Web claim (usuario migrado activa acceso web)
+    claimEmail?: string;
     // Confirmación de vinculación (deep link)
     linkToken?: string;
     linkUserName?: string;

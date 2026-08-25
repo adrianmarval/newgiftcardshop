@@ -49,6 +49,7 @@ import {
   handlePinChangeConfirmText,
 } from './handlers/security-handler.js';
 import { handleRegName, handleRegEmail, handleRegOtp, handleRegPassword, handleLinkConfirmation } from '@/bot/shared/registration.js';
+import { startWebClaim, handleClaimEmail, handleClaimOtp, handleClaimPassword } from '@/bot/shared/web-claim.js';
 
 export function createBuyerBot() {
   const token = process.env.BUYER_BOT_TOKEN;
@@ -142,6 +143,9 @@ export function createBuyerBot() {
   // Menú
   bot.callbackQuery('start', startBuyer);
 
+  // Web claim (usuario migrado con email legacy activa acceso web)
+  bot.callbackQuery('claim_web_start', (ctx) => startWebClaim(ctx, 'BUYER'));
+
   // Buy flow
   bot.callbackQuery('buy_start', startBuyWizard);
   bot.callbackQuery(/^buy_brand_/, handleBuyBrandSelected);
@@ -189,6 +193,10 @@ export function createBuyerBot() {
     if (step === 'awaitingPinChangeCurrent') return handlePinChangeCurrentText(ctx);
     if (step === 'awaitingPinChangeNew') return handlePinChangeNewText(ctx);
     if (step === 'awaitingPinChangeConfirm') return handlePinChangeConfirmText(ctx);
+    // Web claim wizard
+    if (step === 'awaitingClaimEmail') return handleClaimEmail(ctx, 'BUYER');
+    if (step === 'awaitingClaimOtp') return handleClaimOtp(ctx, 'BUYER');
+    if (step === 'awaitingClaimPassword') return handleClaimPassword(ctx, 'BUYER', () => startBuyer(ctx));
     await deleteUserInput(ctx);
   });
 
