@@ -202,6 +202,8 @@ La app se instala como 3 PWAs separadas para cada panel, con identidad aislada. 
 
 ## Seguridad
 
+- **Protección de rutas — 3 capas**: (1) `src/proxy.ts` (convención Next 16, ex-middleware) hace check OPTIMISTA de presencia de cookie `better-auth.session_token`/`__Secure-better-auth.session_token` → sin cookie en rutas protegidas (dashboards + `/pending-activation`) redirige al login del portal sin renderizar; también inyecta `x-current-path` para `unauthorized.tsx`. NUNCA validar sesión en proxy (sin DB). (2) Guards REALES en layouts dashboard via `authorizeByRequiredRole` (matriz: admin=`[ADMIN]`, sell=`[SELLER,ADMIN]`, buy=`[ADMIN,BUYER]`). (3) Server actions via role clients. **Convención obligatoria**: toda página dashboard que lea `prisma` directo DEBE llamar `getSession`/`authorizeByRequiredRole` — los layouts NO se re-ejecutan en soft-nav entre páginas hermanas, la data nunca puede depender solo del layout.
+- **Páginas auth públicas con sesión activa**: `login`, `register`, `forgot-password`, `reset-password` llaman `redirectIfAuthenticated()` (`lib/auth/authorization.ts`) — con sesión vigente redirige al dashboard del ROL del usuario (sesión única, no permite re-login ni switch de portal; inactivos → `/pending-activation`). NO aplicar en `verify-2fa` (sin sesión durante el desafío TOTP), `setup-passkey` (requiere sesión — loop) ni `verify-email` (intersticial post-registro).
 - **Webhook**: `secret_token` en `setWebhook` + verificación de header `X-Telegram-Bot-Api-Secret-Token`
 - **Encryption**: AES-256-GCM con `ENCRYPTION_KEY` (64 hex chars). Sin versionado de keys (deuda).
 - **OTP**: `crypto.randomInt` (CSPRNG) + lockout a 5 intentos

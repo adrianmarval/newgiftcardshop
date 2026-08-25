@@ -52,7 +52,12 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
       }),
       prisma.order.findMany({
         where: { userId, status: 'COMPLETED' },
-        select: { id: true, total: true, adjustedTotal: true },
+        select: {
+          id: true,
+          total: true,
+          adjustedTotal: true,
+          giftcards: { select: { amount: true, status: true, reportedAmount: true } },
+        },
       }),
       prisma.order.findMany({
         where: { userId, status: 'COMPLETED', createdAt: { gte: monthStart } },
@@ -68,22 +73,15 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
       0,
     );
 
-    // Compute total saved: face value - paid across all completed orders
+    // Compute total saved: effective face value - paid across all completed orders.
+    // Face value is status-aware (computeFaceValueTotal): cards with issues
+    // (INVALID/ALREADY_USED/DEACTIVATED/WRONG_AMOUNT) are already discounted from
+    // adjustedTotal — counting their nominal amount would count refunds as savings.
     let totalSaved = 0;
-    if (completedOrders.length > 0) {
-      const completedOrderIds = completedOrders.map((o) => o.id);
-      const faceValues = await prisma.giftcard.groupBy({
-        by: ['orderId'],
-        where: { orderId: { in: completedOrderIds } },
-        _sum: { amount: true },
-      });
-      const faceValueMap = new Map(faceValues.map((a) => [a.orderId, Number(a._sum.amount ?? 0)]));
-
-      for (const order of completedOrders) {
-        const faceValue = faceValueMap.get(order.id) ?? 0;
-        const paid = Number(order.adjustedTotal ?? order.total);
-        totalSaved += faceValue - paid;
-      }
+    for (const order of completedOrders) {
+      const faceValue = Number(computeFaceValueTotal(order.giftcards));
+      const paid = Number(order.adjustedTotal ?? order.total);
+      totalSaved += Math.max(faceValue - paid, 0);
     }
 
     // Month spend

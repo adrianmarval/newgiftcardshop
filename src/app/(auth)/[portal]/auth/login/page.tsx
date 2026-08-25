@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { LoginForm } from '@/components/auth/login-form';
+import { redirectIfAuthenticated } from '@/lib/auth/authorization';
 import { isAppSection, PORTAL_AUTH_CONFIG } from '@/types';
 
 interface PageProps {
@@ -25,6 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function DynamicLoginPage({ params }: PageProps) {
   const { portal } = await params;
   if (!isAppSection(portal)) notFound();
+  await redirectIfAuthenticated();
   const config = PORTAL_AUTH_CONFIG[portal];
   const basePath = `/${portal}/auth`;
 

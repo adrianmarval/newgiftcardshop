@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { RegisterForm } from '@/components/auth/register-form';
+import { redirectIfAuthenticated } from '@/lib/auth/authorization';
 import { isAppSection, PORTAL_AUTH_CONFIG } from '@/types';
 
 interface PageProps {
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function DynamicRegisterPage({ params }: PageProps) {
   const { portal } = await params;
   if (!isAppSection(portal)) notFound();
+  await redirectIfAuthenticated();
   const config = PORTAL_AUTH_CONFIG[portal];
   if (!config.register) notFound();
 

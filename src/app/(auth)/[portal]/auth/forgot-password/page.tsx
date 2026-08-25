@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
+import { redirectIfAuthenticated } from '@/lib/auth/authorization';
 import { isAppSection, PORTAL_AUTH_CONFIG } from '@/types';
 
 interface PageProps {
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function DynamicForgotPasswordPage({ params }: PageProps) {
   const { portal } = await params;
   if (!isAppSection(portal)) notFound();
-  const config = PORTAL_AUTH_CONFIG[portal];
+  await redirectIfAuthenticated();
 
   return (
     <Suspense fallback={<div>Cargando...</div>}>
