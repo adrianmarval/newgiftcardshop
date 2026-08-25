@@ -3,17 +3,18 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { RegistryList } from '@/components/common';
 import { AdminBatchCard } from './admin-batch-card';
-import type { AdminBatch } from '@/types';
+import type { AdminBatch, AdminBuyerSummary, AdminSellerSummary } from '@/types';
 
 interface AdminBatchesListProps {
   batches: AdminBatch[];
   selectedIds: Set<number>;
   onSelect: (id: number, selected: boolean) => void;
   onDeleted: () => void;
-  onViewSeller?: (batch: AdminBatch) => void;
+  onViewSeller?: (seller: AdminSellerSummary) => void;
+  onViewBuyer?: (buyer: AdminBuyerSummary) => void;
 }
 
-export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, onViewSeller }: AdminBatchesListProps) {
+export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, onViewSeller, onViewBuyer }: AdminBatchesListProps) {
   const payableBatches = batches.filter((b) => !b.isPaid && b.confirmedCount === b.cardsCount && b.cardsCount > 0 && b.estimatedPayout > 0);
   const allPayableSelected = payableBatches.length > 0 && payableBatches.every((b) => selectedIds.has(b.id));
 
@@ -43,6 +44,7 @@ export function AdminBatchesList({ batches, selectedIds, onSelect, onDeleted, on
           onSelect={(selected) => onSelect(batch.id, selected)}
           onDeleted={onDeleted}
           onViewSeller={onViewSeller}
+          onViewBuyer={onViewBuyer}
           isExpanded={isExpanded}
           isHighlighted={isHighlighted}
           onToggle={onToggle}

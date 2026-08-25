@@ -4,7 +4,7 @@
 
 import { z } from 'zod';
 import { GiftcardStatus, OrderStatus, GiftcardIssueType } from '@/generated/prisma/enums';
-import { brandSchema, countrySchema, paymentDetailListItemSchema, paginatedOutputSchema } from '@/types';
+import { brandSchema, countrySchema, paymentDetailListItemSchema, paginatedOutputSchema, adminBuyerSummarySchema, adminSellerSummarySchema } from '@/types';
 
 export const adminGiftcardListItemSchema = z.object({
   id: z.string(),
@@ -19,18 +19,10 @@ export const adminGiftcardListItemSchema = z.object({
   brand: brandSchema,
   country: countrySchema.nullable(),
   isSearchMatch: z.boolean().optional(),
-  seller: z.object({ id: z.string(), name: z.string(), email: z.string() }).nullable(),
+  seller: adminSellerSummarySchema.nullable(),
 });
 
-export const adminOrderBuyerSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  buyRate: z.number(),
-  orderCount: z.number(),
-  createdAt: z.string(),
-  twoFactorEnabled: z.boolean(),
-});
+export const adminOrderBuyerSchema = adminBuyerSummarySchema;
 
 export const listOrdersInputSchema = z.object({
   buyerId: z.string().nullable().optional(),

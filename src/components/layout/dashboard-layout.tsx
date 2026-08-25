@@ -9,7 +9,7 @@ import { dashboardMap } from '@/types';
 import { Role } from '@/generated/prisma/enums';
 import { Card } from '../ui/card';
 import prisma from '@/lib/prisma';
-import { decryptBuffer } from '@/lib/encryption';
+import { getDecryptedTelegramPhotoUrl } from '@/lib/telegram';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -36,15 +36,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
     initialUnreadCounts = { buyer: 0, seller: 0, admin: 0, [badgeKey]: unreadCount };
 
     if (session.user.telegramUser?.hasPhoto) {
-      const tu = await prisma.telegramUser.findUnique({
-        where: { userId: session.user.id },
-        select: { photoData: true, photoMimeType: true },
-      });
-      if (tu?.photoData) {
-        const decrypted = decryptBuffer(Buffer.from(tu.photoData));
-        const mimeType = tu.photoMimeType || 'image/jpeg';
-        telegramPhotoDataUrl = `data:${mimeType};base64,${decrypted.toString('base64')}`;
-      }
+      telegramPhotoDataUrl = await getDecryptedTelegramPhotoUrl(session.user.id);
     }
   } catch (err) {
     console.error('[DashboardLayout] Error fetching unread count:', err);

@@ -2,19 +2,20 @@
 
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { CardFooter } from '@/components/ui/card';
-import { GiftcardItem } from '@/components/common';
+import { GiftcardItem, UserBadge } from '@/components/common';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import type { Giftcard } from '@/types';
-import type { AdminOrder } from '@/types';
+import type { AdminOrder, AdminSellerSummary } from '@/types';
 
 interface AdminOrderDetailsProps {
   order: AdminOrder;
+  onViewSeller?: (seller: AdminSellerSummary) => void;
   onAddReport?: (card: Giftcard) => void;
   onEditReport?: (card: Giftcard) => void;
   onDeleteReport?: (card: Giftcard) => void;
 }
 
-export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteReport }: AdminOrderDetailsProps) {
+export function AdminOrderDetails({ order, onViewSeller, onAddReport, onEditReport, onDeleteReport }: AdminOrderDetailsProps) {
   const confirmedCount = order.giftcards.filter((g) => g.isConfirmed).length;
 
   const hasIssue = (card: Giftcard) => {
@@ -76,21 +77,13 @@ export function AdminOrderDetails({ order, onAddReport, onEditReport, onDeleteRe
             contextualInfo={
               card.seller ? (
                 <CardFooter className="bg-muted/30 mt-auto flex items-center justify-between border-t p-1 px-3">
-                  <div className="flex min-w-0 items-center gap-1">
-                    <div className="border-primary/20 bg-primary/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
-                      <span className="text-primary text-[10px] font-bold">
-                        {card.seller.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="text-foreground truncate text-[11px] leading-tight font-semibold">
-                        {card.seller.name}
-                      </span>
-                      <span className="text-muted-foreground truncate text-[9px] leading-tight">
-                        {card.seller.email}
-                      </span>
-                    </div>
-                  </div>
+                  <UserBadge
+                    user={card.seller}
+                    size="xs"
+                    className="min-w-0 flex-1"
+                    onLongPress={() => onViewSeller?.(card.seller!)}
+                    hint="Mantén presionado para ver info"
+                  />
                   <span className="text-muted-foreground ml-2 shrink-0 text-[9px] font-bold tracking-widest uppercase">Vendedor</span>
                 </CardFooter>
               ) : undefined

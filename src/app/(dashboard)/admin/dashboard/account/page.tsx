@@ -1,8 +1,7 @@
 import { getSession } from '@/lib/auth/authorization';
 import { ProfileForm } from '@/components/auth/profile/profile-form';
 import { Metadata } from 'next';
-import { decryptBuffer } from '@/lib/encryption';
-import prisma from '@/lib/prisma';
+import { getDecryptedTelegramPhotoUrl } from '@/lib/telegram';
 
 export const metadata: Metadata = {
   title: `Account | Admin Dashboard | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
@@ -15,15 +14,7 @@ export default async function AdminAccountPage() {
 
   let telegramPhotoDataUrl: string | null = null;
   if (telegramUser?.hasPhoto) {
-    const tu = await prisma.telegramUser.findUnique({
-      where: { userId: session.user.id },
-      select: { photoData: true, photoMimeType: true },
-    });
-    if (tu?.photoData) {
-      const decrypted = decryptBuffer(Buffer.from(tu.photoData));
-      const mimeType = tu.photoMimeType || 'image/jpeg';
-      telegramPhotoDataUrl = `data:${mimeType};base64,${decrypted.toString('base64')}`;
-    }
+    telegramPhotoDataUrl = await getDecryptedTelegramPhotoUrl(session.user.id);
   }
 
   return (

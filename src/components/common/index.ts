@@ -33,6 +33,8 @@ export { StatCard } from './stat-card';
 export type { StatCardProps } from './stat-card';
 export { TelegramAvatar } from './telegram-avatar';
 export type { AvatarProps } from './telegram-avatar';
+export { UserBadge } from './user-badge';
+export type { UserBadgeUser } from './user-badge';
 export { StepFooter } from './step-footer';
 export { FieldError } from './field-error';
 export { PromptDrawer } from './prompt-drawer';

@@ -1,18 +1,17 @@
 'use client';
 
 import { MouseEvent } from 'react';
-import { motion } from 'framer-motion';
-import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderHasReports, getOrderStatusLabel, CopyableId, BrandIcon, OrderTopRight } from '@/components/common';
+import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderHasReports, getOrderStatusLabel, CopyableId, BrandIcon, OrderTopRight, UserBadge } from '@/components/common';
 import { formatDateTime, formatOrderShareText } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { useLongPress } from '@/hooks/use-long-press';
 import { AdminOrderDetails } from '@/components/admin/orders/admin-order-details';
-import type { AdminOrder, Giftcard } from '@/types';
+import type { AdminOrder, AdminBuyerSummary, AdminSellerSummary, Giftcard } from '@/types';
 
 interface AdminOrderCardProps {
   order: AdminOrder;
-  onViewBuyer?: (order: AdminOrder) => void;
+  onViewBuyer?: (buyer: AdminBuyerSummary) => void;
+  onViewSeller?: (seller: AdminSellerSummary) => void;
   onAddReport?: (card: Giftcard) => void;
   onEditReport?: (card: Giftcard) => void;
   onDeleteReport?: (card: Giftcard) => void;
@@ -24,6 +23,7 @@ interface AdminOrderCardProps {
 export const AdminOrderCard = ({
   order,
   onViewBuyer,
+  onViewSeller,
   onAddReport,
   onEditReport,
   onDeleteReport,
@@ -44,22 +44,12 @@ export const AdminOrderCard = ({
       id={order.id}
       title={<CopyableId id={order.id} prefix="Orden #" shareText={formatOrderShareText(order)} />}
       subtitle={
-        <motion.button
-          {...useLongPress({
-            onLongPress: (e) => {
-              e.stopPropagation();
-              onViewBuyer?.(order);
-            },
-            onClick: (e) => e.stopPropagation(),
-          })}
-          whileTap={{ scale: 0.95 }}
-          className="text-muted-foreground hover:text-primary relative touch-manipulation text-left text-xs transition-colors select-none md:text-sm"
-        >
-          {order.buyer.email}
-          <span className="block text-[10px] leading-none opacity-0 transition-opacity group-hover:opacity-50">
-            (Mantén presionado para ver info)
-          </span>
-        </motion.button>
+        <UserBadge
+          user={order.buyer}
+          size="sm"
+          onLongPress={() => onViewBuyer?.(order.buyer)}
+          hint="Mantén presionado para ver info"
+        />
       }
       icon={<BrandIcon image={order.giftcards?.[0]?.brand?.image} name={order.giftcards?.[0]?.brand?.name} fallbackIcon={order.giftcards?.[0]?.brand?.icon} />}
       topRightContent={
@@ -93,7 +83,7 @@ export const AdminOrderCard = ({
         ) : undefined
       }
     >
-      <AdminOrderDetails order={order} onAddReport={onAddReport} onEditReport={onEditReport} onDeleteReport={onDeleteReport} />
+      <AdminOrderDetails order={order} onViewSeller={onViewSeller} onAddReport={onAddReport} onEditReport={onEditReport} onDeleteReport={onDeleteReport} />
     </RegistryCard>
   );
 };

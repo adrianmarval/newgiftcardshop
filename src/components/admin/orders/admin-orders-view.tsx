@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { AdminOrdersList } from './admin-orders-list';
 import { AdminReportDialog } from './admin-report-dialog';
 import { AdminBuyerDialog } from './admin-buyer-dialog';
+import { AdminSellerDialog } from '@/components/admin/batches/admin-seller-dialog';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { FiltersBar } from '@/components/common';
 import { adminOrdersSearchParamsParsers } from '@/lib/search-params';
-import type { Giftcard, AdminOrder, PaginationMeta } from '@/types';
+import type { Giftcard, AdminOrder, PaginationMeta, AdminBuyerSummary, AdminSellerSummary } from '@/types';
 
 interface AdminOrdersViewProps {
   orders: AdminOrder[];
@@ -32,9 +33,8 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
     orderId: string | null;
   }>({ card: null, mode: null, orderId: null });
 
-  const [buyerDialog, setBuyerDialog] = useState<{
-    buyer: AdminOrdersViewProps['orders'][0]['buyer'] | null;
-  }>({ buyer: null });
+  const [buyerDialog, setBuyerDialog] = useState<{ buyer: AdminBuyerSummary | null }>({ buyer: null });
+  const [sellerDialog, setSellerDialog] = useState<{ seller: AdminSellerSummary | null }>({ seller: null });
 
   const findOrderForCard = (card: Giftcard) => orders.find((o) => o.giftcards.some((g) => g.id === card.id));
 
@@ -53,8 +53,12 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
     if (order) setReportDialog({ card, mode: 'DELETE', orderId: order.id });
   };
 
-  const handleViewBuyer = (order: AdminOrder) => {
-    setBuyerDialog({ buyer: order.buyer });
+  const handleViewBuyer = (buyer: AdminBuyerSummary) => {
+    setBuyerDialog({ buyer });
+  };
+
+  const handleViewSeller = (seller: AdminSellerSummary) => {
+    setSellerDialog({ seller });
   };
 
   const handleReportSuccess = () => {
@@ -94,6 +98,7 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
           orders={orders}
           totalPages={pagination.totalPages}
           onViewBuyer={handleViewBuyer}
+          onViewSeller={handleViewSeller}
           onAddReport={handleAddReport}
           onEditReport={handleEditReport}
           onDeleteReport={handleDeleteReport}
@@ -117,6 +122,13 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
         open={!!buyerDialog.buyer}
         onOpenChange={(open) => {
           if (!open) setBuyerDialog({ buyer: null });
+        }}
+      />
+      <AdminSellerDialog
+        seller={sellerDialog.seller}
+        open={!!sellerDialog.seller}
+        onOpenChange={(open) => {
+          if (!open) setSellerDialog({ seller: null });
         }}
       />
     </div>

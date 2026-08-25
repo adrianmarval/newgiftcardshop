@@ -192,34 +192,34 @@ function warn(section: string, msg: string) {
 
 // ── Fase 0: Catálogos ──────────────────────────────────────────────────────────
 
-let unknownBrandCountryId: string;
+let amazonUsBrandCountryId: string;
 
 async function seedCatalogs() {
   log('CATALOGS', 'Verificando catálogos...');
 
   const brand = await newDb.brand.upsert({
-    where: { slug: 'unknown' },
+    where: { slug: 'amazon' },
     update: {},
-    create: { slug: 'unknown', name: 'Unknown', icon: '❓', isActive: false },
+    create: { slug: 'amazon', name: 'Amazon', icon: '📦', isActive: true },
   });
 
   const country = await newDb.country.upsert({
-    where: { code: 'GLOBAL' },
+    where: { code: 'US' },
     update: {},
-    create: { code: 'GLOBAL', name: 'Global', currency: 'USD' },
+    create: { code: 'US', name: 'United States', currency: 'USD' },
   });
 
   const bc = await newDb.brandCountry.upsert({
     where: { brandId_countryId: { brandId: brand.id, countryId: country.id } },
     update: {},
-    create: { brandId: brand.id, countryId: country.id, isActive: false },
+    create: { brandId: brand.id, countryId: country.id, isActive: true },
   });
-  unknownBrandCountryId = bc.id;
+  amazonUsBrandCountryId = bc.id;
 
   const coin = await newDb.coin.findUnique({ where: { symbol: 'USDT' } });
   if (!coin) throw new Error('Coin USDT no existe. Correr seed primero.');
 
-  log('CATALOGS', `✅ BrandCountry "Unknown/Global": ${bc.id}`);
+  log('CATALOGS', `✅ BrandCountry "Amazon/US": ${bc.id}`);
 }
 
 // ── Fase 1: Migrar Users ───────────────────────────────────────────────────────
@@ -314,7 +314,7 @@ async function migrateUserRates() {
     await newDb.userBrandCountryRate.create({
       data: {
         userId: newUserId,
-        brandCountryId: unknownBrandCountryId,
+        brandCountryId: amazonUsBrandCountryId,
         sellRate,
         buyRate,
       },
@@ -462,7 +462,7 @@ async function migrateGiftcards() {
 
     const newGiftcard = await newDb.giftcard.create({
       data: {
-        brandCountryId: unknownBrandCountryId,
+        brandCountryId: amazonUsBrandCountryId,
         claimCode: reEncrypt(g.code),
         codeHash: g.codeHash,
         amount: parseFloat(g.denomination),
@@ -513,7 +513,7 @@ async function migrateOrders() {
         buyRate: 1 - parseFloat(o.discountApplied) / 100,
         status: status as any,
         userId: newUserId,
-        brandCountryId: unknownBrandCountryId,
+        brandCountryId: amazonUsBrandCountryId,
       },
     });
 

@@ -5,6 +5,7 @@
 import { OrderStatus } from '@/generated/prisma/enums';
 import type { Giftcard } from './giftcard';
 import type { Payment } from './payment';
+import type { AdminBuyerSummary, AdminSellerSummary } from './user';
 
 // ── SellerBatch ───────────────────────────────────────────────────────────────
 
@@ -51,19 +52,11 @@ export interface AdminBatch {
   cancelledAt?: string | null;
   createdAt: string;
   updatedAt?: string;
-  seller: {
-    id: string;
-    name: string;
-    email: string;
-    sellRate: number;
-    orderCount: number;
-    createdAt: string;
-    twoFactorEnabled: boolean;
-  };
+  seller: AdminSellerSummary;
   giftcards: (Giftcard & {
     reportedAmount?: number | null;
     orderId?: string | null;
-    buyer?: { id: string; name: string; email: string } | null;
+    buyer?: AdminBuyerSummary | null;
     order?: { id: string; status: OrderStatus } | null;
     issues?: unknown[] | null;
   })[];

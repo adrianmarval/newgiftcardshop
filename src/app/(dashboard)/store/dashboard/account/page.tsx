@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth/authorization';
 import { ProfileForm } from '@/components/auth/profile/profile-form';
 import { Metadata } from 'next';
-import { decryptBuffer } from '@/lib/encryption';
+import { getDecryptedTelegramPhotoUrl } from '@/lib/telegram';
 import prisma from '@/lib/prisma';
 
 export const metadata: Metadata = {
@@ -15,15 +15,7 @@ export default async function BuyerAccountPage() {
 
   let telegramPhotoDataUrl: string | null = null;
   if (telegramUser?.hasPhoto) {
-    const tu = await prisma.telegramUser.findUnique({
-      where: { userId: session.user.id },
-      select: { photoData: true, photoMimeType: true },
-    });
-    if (tu?.photoData) {
-      const decrypted = decryptBuffer(Buffer.from(tu.photoData));
-      const mimeType = tu.photoMimeType || 'image/jpeg';
-      telegramPhotoDataUrl = `data:${mimeType};base64,${decrypted.toString('base64')}`;
-    }
+    telegramPhotoDataUrl = await getDecryptedTelegramPhotoUrl(session.user.id);
   }
 
   const botUsername = process.env.BUYER_BOT_USERNAME;

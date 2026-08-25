@@ -68,13 +68,24 @@ function serializeBatchGiftcard(
   card: Prisma.GiftcardGetPayload<{
     include: {
       brandCountry: { include: { brand: true; country: true } };
-      order: { select: { id: true; status: true; userId: true } };
+      order: { select: { id: true; status: true; userId: true; buyRate: true } };
       issues: true;
     };
   }>,
   search: string | undefined,
-  buyerUsersMap: Map<string, { id: string; name: string; email: string }>,
+  buyerUsersMap: Map<
+    string,
+    {
+      id: string;
+      name: string;
+      email: string;
+      createdAt: Date;
+      twoFactorEnabled: boolean;
+      telegramUser: { telegramId: string; username: string | null; firstName: string | null; photoData: Uint8Array | null } | null;
+    }
+  >,
   includeAdminFields: boolean,
+  buyerOrderCounts?: Map<string, number>,
 ) {
   const { claimCode, pinCode } = decryptGiftcardCodes(card);
 
@@ -116,7 +127,25 @@ function serializeBatchGiftcard(
     card.order?.userId
       ? (() => {
           const b = buyerUsersMap.get(card.order!.userId);
-          return b ? { id: b.id, name: b.name, email: b.email } : null;
+          return b
+            ? {
+                id: b.id,
+                name: b.name,
+                email: b.email,
+                buyRate: card.order!.buyRate.toNumber(),
+                orderCount: buyerOrderCounts?.get(b.id) ?? 0,
+                createdAt: b.createdAt.toISOString(),
+                twoFactorEnabled: b.twoFactorEnabled,
+                telegramUser: b.telegramUser
+                  ? {
+                      telegramId: b.telegramUser.telegramId,
+                      username: b.telegramUser.username,
+                      firstName: b.telegramUser.firstName,
+                      hasPhoto: !!b.telegramUser.photoData,
+                    }
+                  : null,
+              }
+            : null;
         })()
       : null;
 
@@ -162,12 +191,15 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
           email: true,
           createdAt: true,
           twoFactorEnabled: true,
+          telegramUser: {
+            select: { telegramId: true, username: true, firstName: true, photoData: true },
+          },
         },
       },
       giftcards: {
         include: {
           brandCountry: { include: { brand: true, country: true } },
-          order: { select: { id: true, status: true, userId: true } },
+          order: { select: { id: true, status: true, userId: true, buyRate: true } },
           issues: true,
         },
       },
@@ -182,7 +214,18 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
   const totalPages = Math.ceil(totalCount / limit);
 
   // Admin-only: fetch buyer users (one query, then map)
-  let buyerUsersMap = new Map<string, { id: string; name: string; email: string }>();
+  let buyerUsersMap = new Map<
+    string,
+    {
+      id: string;
+      name: string;
+      email: string;
+      createdAt: Date;
+      twoFactorEnabled: boolean;
+      telegramUser: { telegramId: string; username: string | null; firstName: string | null; photoData: Uint8Array | null } | null;
+    }
+  >();
+  let buyerOrderCountMap = new Map<string, number>();
   if (input.scope === 'admin') {
     const buyerUserIds = [
       ...new Set(
@@ -192,11 +235,28 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
       ),
     ];
     if (buyerUserIds.length > 0) {
-      const buyers = await prisma.user.findMany({
-        where: { id: { in: buyerUserIds } },
-        select: { id: true, name: true, email: true },
-      });
+      const [buyers, orderCounts] = await Promise.all([
+        prisma.user.findMany({
+          where: { id: { in: buyerUserIds } },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+            twoFactorEnabled: true,
+            telegramUser: {
+              select: { telegramId: true, username: true, firstName: true, photoData: true },
+            },
+          },
+        }),
+        prisma.order.groupBy({
+          by: ['userId'],
+          where: { userId: { in: buyerUserIds } },
+          _count: { id: true },
+        }),
+      ]);
       buyerUsersMap = new Map(buyers.map((u) => [u.id, u]));
+      buyerOrderCountMap = new Map(orderCounts.map((c) => [c.userId, c._count.id]));
     }
   }
 
@@ -210,7 +270,7 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
     const cardsCount = batch.giftcards.length;
 
     const giftcards = batch.giftcards.map((card) =>
-      serializeBatchGiftcard(card, input.search, buyerUsersMap, input.scope === 'admin'),
+      serializeBatchGiftcard(card, input.search, buyerUsersMap, input.scope === 'admin', buyerOrderCountMap),
     );
 
     const payments = batch.payments.map((p) => ({
@@ -239,6 +299,14 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
             orderCount: 0,
             createdAt: batch.user.createdAt.toISOString(),
             twoFactorEnabled: batch.user.twoFactorEnabled,
+            telegramUser: batch.user.telegramUser
+              ? {
+                  telegramId: batch.user.telegramUser.telegramId,
+                  username: batch.user.telegramUser.username,
+                  firstName: batch.user.telegramUser.firstName,
+                  hasPhoto: !!batch.user.telegramUser.photoData,
+                }
+              : null,
           }
         : {
             id: '',
@@ -248,6 +316,7 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
             orderCount: 0,
             createdAt: '',
             twoFactorEnabled: false,
+            telegramUser: null,
           };
 
       return {

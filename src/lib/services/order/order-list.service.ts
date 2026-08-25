@@ -52,6 +52,9 @@ function buildOrderWhere(input: ListOrdersServiceInput): Prisma.OrderWhereInput 
           },
         },
       },
+      { user: { email: { contains: input.search, mode: 'insensitive' } } },
+      { user: { telegramUser: { username: { contains: input.search, mode: 'insensitive' } } } },
+      { user: { telegramUser: { firstName: { contains: input.search, mode: 'insensitive' } } } },
     ];
   }
 
@@ -64,11 +67,27 @@ function serializeGiftcard(
   card: Prisma.GiftcardGetPayload<{
     include: {
       brandCountry: { include: { brand: true; country: true } };
-      batch: { include: { user: { select: { id: true; name: true; email: true } } } };
+      batch: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              createdAt: true,
+              twoFactorEnabled: true,
+              telegramUser: {
+                select: { telegramId: true, username: true, firstName: true, photoData: true },
+              },
+            },
+          },
+        },
+      };
     };
   }>,
   search: string | undefined,
   maskCodes = false,
+  sellerBatchCounts?: Map<string, number>,
 ) {
   const { claimCode, pinCode } = maskCodes ? { claimCode: MASKED_CLAIM_CODE, pinCode: null } : decryptGiftcardCodes(card);
 
@@ -104,7 +123,23 @@ function serializeGiftcard(
       : null,
     isSearchMatch,
     seller: card.batch?.user
-      ? { id: card.batch.user.id, name: card.batch.user.name, email: card.batch.user.email }
+      ? {
+          id: card.batch.user.id,
+          name: card.batch.user.name,
+          email: card.batch.user.email,
+          sellRate: card.batch.sellRate.toNumber(),
+          orderCount: sellerBatchCounts?.get(card.batch.user.id) ?? 0,
+          createdAt: card.batch.user.createdAt.toISOString(),
+          twoFactorEnabled: card.batch.user.twoFactorEnabled,
+          telegramUser: card.batch.user.telegramUser
+            ? {
+                telegramId: card.batch.user.telegramUser.telegramId,
+                username: card.batch.user.telegramUser.username,
+                firstName: card.batch.user.telegramUser.firstName,
+                hasPhoto: !!card.batch.user.telegramUser.photoData,
+              }
+            : null,
+        }
       : null,
   } as GiftcardForList;
 }
@@ -132,12 +167,30 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
           email: true,
           createdAt: true,
           twoFactorEnabled: true,
+          telegramUser: {
+            select: { telegramId: true, username: true, firstName: true, photoData: true },
+          },
         },
       },
       giftcards: {
         include: {
           brandCountry: { include: { brand: true, country: true } },
-          batch: { include: { user: { select: { id: true, name: true, email: true } } } },
+          batch: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  createdAt: true,
+                  twoFactorEnabled: true,
+                  telegramUser: {
+                    select: { telegramId: true, username: true, firstName: true, photoData: true },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       payments: true,
@@ -152,6 +205,7 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
 
   // Admin-only: compute orderCount per buyer via groupBy
   let orderCountMap = new Map<string, number>();
+  let sellerBatchCountMap = new Map<string, number>();
   if (input.scope === 'admin') {
     const buyerIds = [...new Set(orders.map((o) => o.userId))];
     if (buyerIds.length > 0) {
@@ -162,6 +216,17 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
       });
       orderCountMap = new Map(counts.map((c) => [c.userId, c._count.id]));
     }
+
+    // Batch count per seller (for per-giftcard seller info in details)
+    const sellerIds = [...new Set(orders.flatMap((o) => o.giftcards.map((g) => g.batch?.user?.id).filter((id): id is string => !!id)))];
+    if (sellerIds.length > 0) {
+      const batchCounts = await prisma.giftcardBatch.groupBy({
+        by: ['userId'],
+        where: { userId: { in: sellerIds } },
+        _count: { id: true },
+      });
+      sellerBatchCountMap = new Map(batchCounts.filter((c): c is typeof c & { userId: string } => !!c.userId).map((c) => [c.userId, c._count.id]));
+    }
   }
 
   const items = orders.map((order) => {
@@ -169,7 +234,7 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
     // Security gate: mask claim codes for buyer-facing lists when the order still
     // has unconfirmed cards and the buyer hasn't unlocked codes (PIN/passkey).
     const codesLocked = input.scope === 'buyer' && input.codesUnlocked !== true && orderNeedsSecurityGate(order.giftcards);
-    const giftcards = order.giftcards.map((card) => serializeGiftcard(card, input.search, codesLocked));
+    const giftcards = order.giftcards.map((card) => serializeGiftcard(card, input.search, codesLocked, sellerBatchCountMap));
     const payments = order.payments.map((p) => ({
       id: p.id,
       amount: Number(p.amount),
@@ -211,6 +276,14 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
           orderCount: orderCountMap.get(order.userId) ?? 0,
           createdAt: order.user.createdAt.toISOString(),
           twoFactorEnabled: order.user.twoFactorEnabled,
+          telegramUser: order.user.telegramUser
+            ? {
+                telegramId: order.user.telegramUser.telegramId,
+                username: order.user.telegramUser.username,
+                firstName: order.user.telegramUser.firstName,
+                hasPhoto: !!order.user.telegramUser.photoData,
+              }
+            : null,
         },
       };
     }

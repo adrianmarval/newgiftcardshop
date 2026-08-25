@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';
-import { brandSchema, countrySchema, paymentDetailListItemSchema, paginatedOutputSchema } from '@/types';
+import { brandSchema, countrySchema, paymentDetailListItemSchema, paginatedOutputSchema, adminBuyerSummarySchema, adminSellerSummarySchema } from '@/types';
 
 export const adminBatchGiftcardSchema = z.object({
   id: z.string(),
@@ -16,7 +16,7 @@ export const adminBatchGiftcardSchema = z.object({
   orderId: z.string().nullable(),
   brand: brandSchema,
   country: countrySchema.nullable(),
-  buyer: z.object({ id: z.string(), name: z.string(), email: z.string() }).nullable(),
+  buyer: adminBuyerSummarySchema.nullable(),
   order: z.object({ id: z.string(), status: z.string() }).nullable(),
   issues: z.array(
     z.object({
@@ -34,15 +34,7 @@ export const adminBatchGiftcardSchema = z.object({
   isSearchMatch: z.boolean().optional(),
 });
 
-export const adminBatchSellerSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  sellRate: z.number(),
-  orderCount: z.number(),
-  createdAt: z.string(),
-  twoFactorEnabled: z.boolean(),
-});
+export const adminBatchSellerSchema = adminSellerSummarySchema;
 
 export const adminBatchListInputSchema = z.object({
   sellerId: z.string().nullable().optional(),

@@ -1,19 +1,18 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { RegistryCard, useDeleteBatchAction, useCancelBatchAction, useCardCurrency, getBatchProgressConfig, getBatchActiveBg, getBatchStatusLabel, CopyableId, DeleteIcon, BatchTopRight } from '@/components/common';
+import { RegistryCard, useDeleteBatchAction, useCancelBatchAction, useCardCurrency, getBatchProgressConfig, getBatchActiveBg, getBatchStatusLabel, CopyableId, DeleteIcon, BatchTopRight, UserBadge } from '@/components/common';
 import { formatDateTime, formatBatchShareText } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useLongPress } from '@/hooks/use-long-press';
 import { AdminBatchDetails } from './admin-batch-details';
-import type { AdminBatch } from '@/types';
+import type { AdminBatch, AdminBuyerSummary, AdminSellerSummary } from '@/types';
 
 interface AdminBatchCardProps {
   batch: AdminBatch;
   isSelected: boolean;
   onSelect: (selected: boolean) => void;
   onDeleted: () => void;
-  onViewSeller?: (batch: AdminBatch) => void;
+  onViewSeller?: (seller: AdminSellerSummary) => void;
+  onViewBuyer?: (buyer: AdminBuyerSummary) => void;
   isExpanded?: boolean;
   isHighlighted?: boolean;
   onToggle?: () => void;
@@ -25,6 +24,7 @@ export function AdminBatchCard({
   onSelect,
   onDeleted,
   onViewSeller,
+  onViewBuyer,
   isExpanded = false,
   isHighlighted = false,
   onToggle = () => {},
@@ -43,22 +43,12 @@ export function AdminBatchCard({
       id={batch.id}
       title={<CopyableId id={batch.id} prefix="Lote #" shareText={formatBatchShareText(batch)} />}
       subtitle={
-        <motion.button
-          {...useLongPress({
-            onLongPress: (e) => {
-              e.stopPropagation();
-              onViewSeller?.(batch);
-            },
-            onClick: (e) => e.stopPropagation(),
-          })}
-          whileTap={{ scale: 0.95 }}
-          className="text-muted-foreground hover:text-primary relative touch-manipulation text-left transition-colors select-none"
-        >
-          {batch.seller.email}
-          <span className="block text-[10px] leading-none opacity-0 transition-opacity group-hover:opacity-50">
-            (Mantén presionado para ver info)
-          </span>
-        </motion.button>
+        <UserBadge
+          user={batch.seller}
+          size="sm"
+          onLongPress={() => onViewSeller?.(batch.seller)}
+          hint="Mantén presionado para ver info"
+        />
       }
       icon={
         canPay ? (
@@ -110,7 +100,7 @@ export function AdminBatchCard({
       progress={getBatchProgressConfig(batch)}
       statusLabel={statusLabel}
     >
-      <AdminBatchDetails batch={batch} onDeleted={onDeleted} />
+      <AdminBatchDetails batch={batch} onDeleted={onDeleted} onViewBuyer={onViewBuyer} />
     </RegistryCard>
   );
 }

@@ -7,7 +7,8 @@ import { UrlPagination } from '@/components/ui/url-pagination';
 import { AdminBatchesList } from './admin-batches-list';
 import { AdminPayDialog } from './admin-pay-dialog';
 import { AdminSellerDialog } from './admin-seller-dialog';
-import type { AdminBatch, PaginationMeta } from '@/types';
+import { AdminBuyerDialog } from '@/components/admin/orders/admin-buyer-dialog';
+import type { AdminBatch, AdminBuyerSummary, AdminSellerSummary, PaginationMeta } from '@/types';
 import { IconCurrencyDollar } from '@tabler/icons-react';
 import { FiltersBar } from '@/components/common';
 import { adminBatchesSearchParamsParsers } from '@/lib/search-params';
@@ -29,7 +30,8 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [payDialogOpen, setPayDialogOpen] = useState(false);
-  const [sellerDialog, setSellerDialog] = useState<{ seller: AdminBatch['seller'] | null }>({ seller: null });
+  const [sellerDialog, setSellerDialog] = useState<{ seller: AdminSellerSummary | null }>({ seller: null });
+  const [buyerDialog, setBuyerDialog] = useState<{ buyer: AdminBuyerSummary | null }>({ buyer: null });
 
   const selectedBatches = batches.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount && b.estimatedPayout > 0);
   const showFloatingBar = useMemo(() => selectedBatches.length > 0, [selectedBatches.length]);
@@ -43,8 +45,12 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
     });
   };
 
-  const handleViewSeller = (batch: AdminBatch) => {
-    setSellerDialog({ seller: batch.seller });
+  const handleViewSeller = (seller: AdminSellerSummary) => {
+    setSellerDialog({ seller });
+  };
+
+  const handleViewBuyer = (buyer: AdminBuyerSummary) => {
+    setBuyerDialog({ buyer });
   };
 
   const handleDeleted = () => {
@@ -102,6 +108,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
           onSelect={handleSelect}
           onDeleted={handleDeleted}
           onViewSeller={handleViewSeller}
+          onViewBuyer={handleViewBuyer}
         />
       </div>
 
@@ -116,6 +123,14 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
         open={!!sellerDialog.seller}
         onOpenChange={(open) => {
           if (!open) setSellerDialog({ seller: null });
+        }}
+      />
+
+      <AdminBuyerDialog
+        buyer={buyerDialog.buyer}
+        open={!!buyerDialog.buyer}
+        onOpenChange={(open) => {
+          if (!open) setBuyerDialog({ buyer: null });
         }}
       />
 

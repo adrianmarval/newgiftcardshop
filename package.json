@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "migrate": "tsx scripts/migrate-full.ts"
+    "migrate": "tsx scripts/migrate-full.ts",
+    "refresh-photos": "tsx scripts/refresh-telegram-photos.ts"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.5.6",

@@ -2,19 +2,20 @@
 
 import { CardFooter } from '@/components/ui/card';
 import { showAlert } from '@/lib/ui';
-import { GiftcardItem } from '@/components/common';
+import { GiftcardItem, UserBadge } from '@/components/common';
 import { deleteCard } from '@/actions/admin/batches';
 import { formatCurrency } from '@/lib/utils';
 import { AdminBatchGallery } from './admin-batch-gallery';
 import { CheckCircle2, ExternalLink } from 'lucide-react';
-import type { AdminBatch } from '@/types';
+import type { AdminBatch, AdminBuyerSummary } from '@/types';
 
 interface AdminBatchDetailsProps {
   batch: AdminBatch;
   onDeleted: () => void;
+  onViewBuyer?: (buyer: AdminBuyerSummary) => void;
 }
 
-export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) {
+export function AdminBatchDetails({ batch, onDeleted, onViewBuyer }: AdminBatchDetailsProps) {
   const handleDeleteCard = async (cardId: string) => {
     const confirmed = await showAlert.confirm('¿Eliminar tarjeta?', '¿Eliminar esta tarjeta? Esta acción no se puede deshacer.');
     if (!confirmed) return;
@@ -63,15 +64,13 @@ export function AdminBatchDetails({ batch, onDeleted }: AdminBatchDetailsProps) 
             contextualInfo={
               card.buyer ? (
                 <CardFooter className="bg-muted/30 mt-auto flex items-center justify-between border-t p-1 px-3">
-                  <div className="flex min-w-0 items-center gap-1">
-                    <div className="border-primary/20 bg-primary/10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
-                      <span className="text-primary text-[10px] font-bold">{card.buyer.name.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="text-foreground truncate text-[11px] leading-tight font-semibold">{card.buyer.name}</span>
-                      <span className="text-muted-foreground truncate text-[9px] leading-tight">{card.buyer.email}</span>
-                    </div>
-                  </div>
+                  <UserBadge
+                    user={card.buyer}
+                    size="xs"
+                    className="min-w-0 flex-1"
+                    onLongPress={() => onViewBuyer?.(card.buyer!)}
+                    hint="Mantén presionado para ver info"
+                  />
                   <span className="text-muted-foreground ml-2 shrink-0 text-[9px] font-bold tracking-widest uppercase">Comprador</span>
                 </CardFooter>
               ) : undefined

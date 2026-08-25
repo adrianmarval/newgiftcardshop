@@ -5,6 +5,7 @@
 import type { OrderStatus } from '@/generated/prisma/enums';
 import type { Giftcard } from '@/types/domain/giftcard';
 import type { Payment } from '@/types/domain/payment';
+import type { AdminBuyerSummary, AdminSellerSummary } from '@/types/domain/user';
 
 export { OrderStatus };
 
@@ -52,20 +53,12 @@ export interface AdminOrder {
   createdAt: string;
   updatedAt: string;
   giftcards: (Giftcard & {
-    seller?: { id: string; name: string; email: string } | null;
+    seller?: AdminSellerSummary | null;
   })[];
   payments: Payment[];
   effectiveTotal: number;
   faceValueTotal: number;
-  buyer: {
-    id: string;
-    name: string;
-    email: string;
-    buyRate: number;
-    orderCount: number;
-    createdAt: string;
-    twoFactorEnabled: boolean;
-  };
+  buyer: AdminBuyerSummary;
 }
 
 
