@@ -50,7 +50,7 @@ function CreditUsageCard({
   const hasDebt = unpaidFaceValue > 0;
 
   return (
-    <Card size="sm" className="col-span-2 lg:col-span-2">
+    <Card size="sm" className="col-span-2 lg:col-span-2" data-tour="buy-credit">
       <CardHeader className="flex flex-row items-center gap-1">
         <IconCreditCard className={`h-6 w-6 ${hasDebt ? 'text-amber-500' : 'text-muted-foreground'}`} />
         <CardTitle className="text-base">Límite de Crédito</CardTitle>
@@ -171,7 +171,7 @@ export function BuyerDashboard({ stats, recentOrders }: BuyerDashboardProps) {
 
   return (
     <div className="w-full space-y-2">
-      <section>
+      <section data-tour="buy-explore">
         <Link
           href="/store/dashboard/browse-cards"
           className="bg-primary/10 hover:bg-primary/15 group flex items-center gap-4 rounded-xl border border-dashed p-4 transition-colors"
@@ -223,7 +223,7 @@ export function BuyerDashboard({ stats, recentOrders }: BuyerDashboardProps) {
         </div>
       </section>
 
-      <section className="space-y-2">
+      <section className="space-y-2" data-tour="buy-recent-orders">
         <div className="flex items-center gap-2">
           <IconClock className="text-muted-foreground h-5 w-5" />
           <h2 className="text-xl font-semibold">Órdenes Recientes</h2>

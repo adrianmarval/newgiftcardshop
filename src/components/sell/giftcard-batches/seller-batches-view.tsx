@@ -21,11 +21,12 @@ const FILTERS_DEFAULTS = {
 export function SellerBatchesView({ batches, pagination, search }: SellerBatchesViewProps) {
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
-      <FiltersBar
-        parsers={sellerBatchesSearchParamsParsers}
-        defaults={FILTERS_DEFAULTS}
-        labels={{ filters: 'Filters', clear: 'Clear' }}
-        config={{
+      <div data-tour="batches-filters">
+        <FiltersBar
+          parsers={sellerBatchesSearchParamsParsers}
+          defaults={FILTERS_DEFAULTS}
+          labels={{ filters: 'Filters', clear: 'Clear' }}
+          config={{
           search: { placeholder: 'Search by claim code or batch id...', paramKey: 'search' },
           status: {
             label: 'Status',
@@ -48,8 +49,9 @@ export function SellerBatchesView({ batches, pagination, search }: SellerBatches
             ],
           },
         }}
-      />
-      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+        />
+      </div>
+      <div data-tour="batches-list" className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         <BatchesList batches={batches} totalPages={pagination?.totalPages} search={search} />
       </div>
       <div className="shrink-0">

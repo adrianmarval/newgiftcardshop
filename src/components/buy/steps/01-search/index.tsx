@@ -283,19 +283,21 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     <div className="flex h-full min-h-0 flex-col gap-1">
       <BuyStepsProgress />
 
-      <CompactSearchBar
-        brandCountries={brandCountries}
-        selectedCountry={selectedCountry}
-        targetAmount={targetAmount}
-        searchBrand={searchBrand}
-        onCountryChange={handleCountryChange}
-        onAmountChange={handleAmountChange}
-        onSearchChange={setSearchBrand}
-        onOpenAdvanced={() => setAdvancedOpen(true)}
-        showAdvancedButton={allowSearchPreferences || allowBuyRateAdjustment}
-        autoFocusAmount
-        amountError={showAmountError}
-      />
+      <div data-tour="buy-search">
+        <CompactSearchBar
+          brandCountries={brandCountries}
+          selectedCountry={selectedCountry}
+          targetAmount={targetAmount}
+          searchBrand={searchBrand}
+          onCountryChange={handleCountryChange}
+          onAmountChange={handleAmountChange}
+          onSearchChange={setSearchBrand}
+          onOpenAdvanced={() => setAdvancedOpen(true)}
+          showAdvancedButton={allowSearchPreferences || allowBuyRateAdjustment}
+          autoFocusAmount
+          amountError={showAmountError}
+        />
+      </div>
 
       <Card
         className={cn(

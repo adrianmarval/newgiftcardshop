@@ -35,7 +35,7 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
     <div className="w-full space-y-2">
       <section className="space-y-2">
         <h2 className="text-xl font-semibold">Statistics</h2>
-        <div className="grid grid-cols-2 gap-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-1 md:grid-cols-2 lg:grid-cols-4" data-tour="sell-stats">
           <StatCard
             title="Pending Payout"
             value={formatCurrency(stats.pendingPayout)}
@@ -63,12 +63,13 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
         </div>
       </section>
 
-      <section className="space-y-2">
+      <section className="space-y-2" data-tour="sell-recent-batches">
         <div className="flex items-center justify-between p-1">
           <h2 className="text-xl font-semibold">Recent Batches</h2>
           <div className="flex items-center gap-2">
             <Link
               href="/sell/dashboard/sell-cards"
+              data-tour="sell-cta"
               className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium"
             >
               <IconPlus className="h-4 w-4" />

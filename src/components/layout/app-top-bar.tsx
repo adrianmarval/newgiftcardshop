@@ -4,6 +4,7 @@ import { Power } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NotificationDropdown } from '@/components/layout';
+import { TopbarTourButton } from '@/components/common';
 import { useLogout } from '@/hooks/use-logout';
 import type { AppSection } from '@/types';
 import { cn } from '@/lib/ui';
@@ -64,6 +65,7 @@ export function AppTopBar({ portal, userName, telegramPhotoDataUrl, profileUrl, 
           href={notificationHref}
           className="text-muted-foreground hover:bg-muted hover:text-foreground relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-colors"
         />
+        <TopbarTourButton />
         <ThemeToggle />
         <button
           onClick={handleLogout}

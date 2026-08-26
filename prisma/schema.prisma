@@ -73,6 +73,9 @@ model User {
   // Referencia al sistema viejo (temporal, se elimina post-migración)
   legacyId String?
 
+  // Onboarding tours ya vistos/skipeados (driver.js) — string[] de tour ids
+  toursSeen Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

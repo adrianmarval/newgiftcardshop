@@ -23,6 +23,7 @@ src/
 │   ├── catalog/         # brands, countries (público, read-only)
 │   ├── notifications/   # notification CRUD
 │   ├── platform/        # settings (balance, binance pay id)
+│   ├── tours/           # onboarding tours (get-tours-seen, mark-tour-seen — authActionClient)
 │   └── user/            # telegram profile photo
 ├── bot/
 │   ├── seller-bot/      # Bot de venta (grammy)
@@ -38,12 +39,13 @@ src/
 │   ├── notifications/   # Cross-portal notifications
 │   ├── sell/            # Wizard de venta web (3 steps) + giftcard-batches
 │   └── ui/              # shadcn/ui primitives
-├── hooks/               # use-sell-flow, use-buy-flow (Zustand)
+├── hooks/               # use-sell-flow, use-buy-flow (Zustand), use-tour (driver.js)
 ├── providers/           # React context providers (notifications, auto-refresh)
 ├── lib/
 │   ├── auth/            # Server auth (better-auth), client auth, authorization helpers
 │   ├── config/          # UI config (status colors, labels for domain enums)
 │   ├── notifications/   # Notification subsystem (dispatcher, channels)
+│   ├── tour/            # Onboarding tours driver.js (constants, seller/buyer steps)
 │   ├── search-params/   # URL search param parsers (nuqs)
 │   ├── services/        # Business logic shared between web, bot, and actions
 │   ├── settings/        # settings.service (PlatformSettings)
@@ -79,6 +81,7 @@ src/
 - **Alertas imperativas**: `showAlert` (`@/lib/ui`) es la ÚNICA puerta para avisos/confirmaciones imperativas — SweetAlert está PROHIBIDO (dependencia removida). Bloqueantes (`success/error/warning/info/confirm`/`custom`) → cola zustand (`lib/ui/alert-store.ts`) renderizada por `AppAlertHost` (montado en root layout, adaptativo Drawer/Dialog). Toasts (`showAlert.toast.*`) → sonner. `confirm()` retorna `Promise<boolean>` y acepta `{ confirmText, cancelText, danger }`; `custom()` acepta contenido JSX (reemplaza el viejo `html:` de Swal).
 - **Barrels NO re-exportan server-only**: Los barrels NO deben re-exportar módulos que dependan de `next/headers`, `next/navigation`, Prisma, u otras APIs server-only. Si un Client Component importa del barrel, webpack intentará empaquetar todo incluyendo código server. Los exports server-only (`getSession`, `authorizeByRequiredRole`, `settingsService`, `getServerTheme`) se importan directamente del archivo específico.
 - **File naming**: kebab-case universal para archivos. PascalCase para componentes y interfaces.
+- **Onboarding tours (driver.js)**: Micro-tours por página (máx 5 pasos), NO un tour gigante. Definiciones en `src/lib/tour/` (`seller-tours.ts` EN / `buyer-tours.ts` ES neutro — mismo idioma que la UI del portal), ids en `tour.constants.ts` (`sell-dashboard`, `sell-wizard`, `sell-batches`, `buy-dashboard`, `buy-wizard`, `buy-orders`). Persistencia cross-device en `User.toursSeen` (JSON string[]) via `actions/tours` (`getToursSeen`/`markTourSeen` — append idempotente; skipear también marca como visto). Mounting: `TopbarTourButton` (`@/components/common`) vive en el topbar (`app-top-bar.tsx`, entre la campana y el theme toggle) y mapea `usePathname()` → tourId (`ROUTE_TOURS`, match exacto); `seen` se consulta client-side via `getToursSeen()` al montar. **Auto-start SIN drawer**: en la primera visita el tour arranca directo tras ~1.2s (patrón de apps profesionales — ESC o la X lo cierran y marcan visto), esperando hasta 30s a que no haya ningún `[role="dialog"]` abierto para NO interferir con el prompt de activar notificaciones push; solo arranca si las anclas existen en el DOM (ej. sell-wizard no arranca si el wizard está bloqueado por falta de wallet). El botón `?` siempre permite replay manual. Anclas: atributos `data-tour="..."` en contenedores estables (NUNCA clases Tailwind). Theming: `.driver-popover.app-tour` en globals.css **FUERA de @layer** (driver.css carga sin capa y ganaría a cualquier regla layerada). Para agregar un tour: id nuevo en `TOUR_IDS` + steps + entrada en `ROUTE_TOURS`/`TOUR_REGISTRY` de `topbar-tour-button.tsx`.
 
 ## Flujos principales
 
