@@ -10,13 +10,17 @@ export const listUsers = adminActionClient
   .outputSchema(listUsersOutputSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const { page, limit, role, search } = parsedInput;
+      const { page, limit, role, search, isActive } = parsedInput;
       const skip = (page - 1) * limit;
 
       const where: Record<string, unknown> = {};
 
       if (role && role !== 'ALL') {
         where.role = role;
+      }
+
+      if (isActive !== undefined) {
+        where.isActive = isActive;
       }
 
       if (search) {

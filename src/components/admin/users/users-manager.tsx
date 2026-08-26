@@ -217,7 +217,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
     <div className="flex h-full min-h-0 flex-col gap-1">
       <FiltersBar
         parsers={adminUsersSearchParamsParsers}
-        defaults={{ search: '', role: 'ALL' }}
+        defaults={{ search: '', role: 'ALL', isActive: 'ALL' }}
         config={{
           search: { placeholder: 'Buscar por nombre o email...', paramKey: 'search' },
           status: {
@@ -230,6 +230,17 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
               { value: 'BUYER', label: 'Buyer' },
             ],
           },
+          selects: [
+            {
+              label: 'Estado',
+              paramKey: 'isActive',
+              options: [
+                { value: 'ALL', label: 'Todos' },
+                { value: 'true', label: 'Activo' },
+                { value: 'false', label: 'Inactivo' },
+              ],
+            },
+          ],
         }}
       />
 

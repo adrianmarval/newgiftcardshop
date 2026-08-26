@@ -78,9 +78,9 @@ export async function startSeller(ctx: SellerContext) {
     // Ya activado → acceso directo al panel web.
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (hasLegacyEmail(user.email)) {
-      kb.row().text('🌐 Activate Web Access', 'claim_web_start');
+      kb.row().text('(New🔥) Activate Web Access 🌐', 'claim_web_start');
     } else if (appUrl) {
-      kb.row().url('🌐 Open Web App', `${appUrl}/sell/dashboard`);
+      kb.row().url('(New🔥) Open Web App 🌐', `${appUrl}/sell/dashboard`);
     }
     const escapedName = escapeHTML(user.name);
 

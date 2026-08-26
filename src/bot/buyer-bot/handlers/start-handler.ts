@@ -17,7 +17,7 @@ export async function startBuyer(ctx: BuyerContext) {
   // (no como callback query) — el usuario pudo haber borrado los mensajes del chat
   const chatId = ctx.chat?.id || ctx.from?.id;
   const oldMessageId = !ctx.callbackQuery ? ctx.session.uiMessageId : undefined;
-  
+
   if (!ctx.callbackQuery) {
     ctx.session.uiMessageId = undefined;
     ctx.session.lastChatId = undefined;
@@ -78,9 +78,9 @@ export async function startBuyer(ctx: BuyerContext) {
       // Ya activado → acceso directo al panel web.
       const appUrl = process.env.NEXT_PUBLIC_APP_URL;
       if (hasLegacyEmail(user.email)) {
-        kb.row().text('🌐 Activar acceso web', 'claim_web_start');
+        kb.row().text('(Nuevo🔥) Activar acceso web 🌐', 'claim_web_start');
       } else if (appUrl) {
-        kb.row().url('🌐 Abrir app web', `${appUrl}/store/dashboard`);
+        kb.row().url('(Nuevo🔥) Abrir app web 🌐', `${appUrl}/store/dashboard`);
       }
       const escapedName = escapeHTML(user.name);
 

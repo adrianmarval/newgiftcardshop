@@ -34,6 +34,7 @@ export interface FiltersBarConfig {
     emptyLabel: string;
   };
   status?: { label: string; paramKey: string; options: SelectOption[] };
+  selects?: Array<{ label: string; paramKey: string; options: SelectOption[] }>;
   sort?: { label: string; paramKey: string; options: SelectOption[] };
   dateRange?: {
     fromParamKey: string;
@@ -222,6 +223,27 @@ export function FiltersBar({
                 </Select>
               </div>
             )}
+
+            {config.selects?.map((sel) => (
+              <div key={sel.paramKey} className="space-y-1">
+                <Label className="text-xs">{sel.label}</Label>
+                <Select
+                  value={getParam(sel.paramKey) || 'ALL'}
+                  onValueChange={(value) => setParam(sel.paramKey, value)}
+                >
+                  <SelectTrigger className="h-8 text-xs md:h-9 md:text-sm">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sel.options.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
 
             {config.sort && (
               <div className="space-y-1">

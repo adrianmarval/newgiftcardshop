@@ -10,6 +10,7 @@ export const listUsersInputSchema = z.object({
   limit: z.number().int().positive().max(100).optional().default(10),
   search: z.string().optional().default(''),
   role: z.enum(['ALL', 'ADMIN', 'SELLER', 'BUYER']).optional().default('ALL'),
+  isActive: z.boolean().optional(),
 });
 
 export const listUsersOutputSchema = paginatedOutputSchema(

@@ -15,8 +15,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const { page, limit } = parsed;
   const search = parsed.search || undefined;
   const role = parsed.role === 'ALL' ? undefined : parsed.role;
+  const isActive = parsed.isActive === 'ALL' ? undefined : parsed.isActive === 'true';
 
-  const result = await listUsers({ page, limit, search, role });
+  const result = await listUsers({ page, limit, search, role, isActive });
 
   if (!result.data?.success) {
     throw new Error('Failed to load users');

@@ -54,6 +54,7 @@ export const adminUsersSearchParamsParsers = {
   limit: parseAsInteger.withDefault(10),
   search: parseAsString.withDefault(''),
   role: parseAsStringLiteral(['ALL', 'ADMIN', 'SELLER', 'BUYER'] as const).withDefault('ALL'),
+  isActive: parseAsStringLiteral(['ALL', 'true', 'false'] as const).withDefault('ALL'),
 } as const;
 
 export const adminPaymentsSearchParamsParsers = {
