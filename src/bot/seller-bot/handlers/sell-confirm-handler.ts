@@ -96,6 +96,16 @@ export async function handleSellConfirm(ctx: SellerContext) {
     });
     await ctx.answerCallbackQuery('Error publishing');
 
+    // Dedup errors (códigos ya publicados desde otra sesión/canal): limpiar los
+    // cards pendientes de la sesión — reintentar con los mismos códigos siempre
+    // fallaría y dejaba al usuario en un loop de errores. Errores transitorios
+    // (DB, red) NO limpian la sesión para permitir reintento.
+    if (error.message?.includes('already exist')) {
+      (ctx.session as any)._pendingCards = undefined;
+      (ctx.session as any)._pendingErrors = undefined;
+      ctx.session.wizard.step = 'idle';
+    }
+
     const isWalletError = error.message?.includes('wallet') || error.message?.includes('USDT');
     const kb = new InlineKeyboard();
     if (isWalletError) {

@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { FiltersBar, UserBadge } from '@/components/common';
@@ -29,7 +28,8 @@ import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTeleg
 import { listBrands } from '@/actions/admin/catalog';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { adminUsersSearchParamsParsers } from '@/lib/search-params';
-import { MoreVertical, Edit2, Power, Loader2, ChevronsUpDown, Check, Link2Off } from 'lucide-react';
+import { MoreVertical, Edit2, Power, Loader2, ChevronsUpDown, Check, Link2Off, Wallet, Copy, Pencil, X } from 'lucide-react';
+import { copyToClipboard } from '@/lib/utils';
 import type { BrandCountrySummary, BrandWithCountries } from '@/types';
 import type { User, UserRate } from '@/types';
 
@@ -46,7 +46,6 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const router = useRouter();
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({
-    role: '',
     creditLimit: '',
     minAmount: '',
     maxAmount: '',
@@ -90,7 +89,6 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const openEditDialog = (user: User) => {
     setEditUser(user);
     setEditForm({
-      role: user.role,
       creditLimit: user.creditLimit.toString(),
       minAmount: user.minAmountPreference?.toString() || '',
       maxAmount: user.maxAmountPreference?.toString() || '',
@@ -191,18 +189,35 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
     }
   };
 
-  const brandCountryOptions = brands.flatMap((b) =>
-    b.countries.map((c: BrandCountrySummary) => ({
-      id: c.id,
-      label: `${b.icon} ${b.name} (${c.countryCode})`,
-    })),
-  );
+  const configuredRateIds = new Set(userRates.map((r) => r.brandCountryId));
+  const brandCountryOptions = brands
+    .flatMap((b) =>
+      b.countries.map((c: BrandCountrySummary) => ({
+        id: c.id,
+        label: `${b.icon} ${b.name} (${c.countryCode})`,
+      })),
+    )
+    .filter((opt) => !configuredRateIds.has(opt.id) || opt.id === selectedBrandCountryId);
+
+  const editingRate = userRates.find((r) => r.brandCountryId === selectedBrandCountryId) ?? null;
+
+  const handleEditRate = (rate: UserRate) => {
+    setSelectedBrandCountryId(rate.brandCountryId);
+    setRateForm({
+      buyRate: String(+(rate.buyRate * 100).toFixed(2)),
+      sellRate: String(+(rate.sellRate * 100).toFixed(2)),
+    });
+  };
+
+  const handleClearRateForm = () => {
+    setSelectedBrandCountryId('');
+    setRateForm({ buyRate: '', sellRate: '' });
+  };
 
   const handleSaveEdit = () => {
     if (!editUser) return;
     executeUpdate({
       userId: editUser.id,
-      role: editForm.role as 'ADMIN' | 'SELLER' | 'BUYER',
       creditLimit: editForm.creditLimit ? parseFloat(editForm.creditLimit) : undefined,
       minAmountPreference: editForm.minAmount ? parseFloat(editForm.minAmount) : null,
       maxAmountPreference: editForm.maxAmount ? parseFloat(editForm.maxAmount) : null,
@@ -314,21 +329,47 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
             <DialogDescription>{editUser?.email}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-1 py-4">
+            {/* Método de pago (read-only, configurado por el seller) */}
             <div className="grid gap-1">
-              <label className="text-sm font-medium">Rol</label>
-              <Select value={editForm.role} onValueChange={(role) => setEditForm((f) => ({ ...f, role }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="SELLER">Seller</SelectItem>
-                  <SelectItem value="BUYER">Buyer</SelectItem>
-                </SelectContent>
-              </Select>
+              <p className="text-sm font-medium">Método de Pago</p>
+              {editUser?.paymentMethod ? (
+                <div className="bg-muted/30 grid gap-2 rounded-lg border p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Wallet className="text-muted-foreground h-4 w-4" />
+                      <span className="font-medium">{editUser.paymentMethod.coin.symbol}</span>
+                      <span className="text-muted-foreground">· {editUser.paymentMethod.network.name}</span>
+                    </div>
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {editUser.paymentMethod.isBinanceWallet ? '🏦 Binance' : '🔗 External'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="bg-muted flex-1 truncate rounded px-1.5 py-0.5 font-mono text-xs">
+                      {editUser.paymentMethod.address}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 shrink-0 px-1.5"
+                      onClick={async () => {
+                        if (editUser.paymentMethod && (await copyToClipboard(editUser.paymentMethod.address))) {
+                          showAlert.toast.success('Dirección copiada');
+                        }
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-xs">
+                  Sin método de pago configurado.
+                </p>
+              )}
             </div>
 
-            {editForm.role === 'BUYER' && (
+            {editUser?.role === 'BUYER' && (
               <div className="grid gap-1">
                 <label className="text-sm font-medium">Límite de Crédito ($)</label>
                 <Input
@@ -339,7 +380,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
               </div>
             )}
 
-            {editForm.role === 'BUYER' && (
+            {editUser?.role === 'BUYER' && (
               <div className="grid grid-cols-2 gap-1">
                 <div className="grid gap-1">
                   <label className="text-sm font-medium">Min. Denominación ($)</label>
@@ -362,7 +403,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
               </div>
             )}
 
-            {editForm.role === 'BUYER' && (
+            {editUser?.role === 'BUYER' && (
               <div className="flex flex-row items-center justify-between rounded-lg border p-3">
                 <div className="space-y-0.5">
                   <label className="text-sm font-medium">Filtros de Búsqueda</label>
@@ -379,7 +420,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
               </div>
             )}
 
-            {editForm.role === 'BUYER' && (
+            {editUser?.role === 'BUYER' && (
               <div className="flex flex-row items-center justify-between rounded-lg border p-3">
                 <div className="space-y-0.5">
                   <label className="text-sm font-medium">Ajuste de Tarifa</label>
@@ -401,10 +442,20 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
               <h3 className="mb-2 text-sm font-semibold">Tarifas por Brand/País</h3>
               <p className="text-muted-foreground mb-2 text-xs">
                 Configura tarifas específicas de compra/venta para este usuario. Si no se configuran, se utilizarán las globales de la
-                marca.
+                marca. Usa el lápiz sobre una tarifa existente para editarla.
               </p>
 
               <div className="bg-muted/30 grid gap-1 rounded-lg border p-3">
+                {editingRate && (
+                  <div className="bg-primary/10 text-primary flex items-center justify-between rounded-md px-2 py-1 text-xs">
+                    <span>
+                      Editando: <span className="font-semibold">{editingRate.brandName}</span> ({editingRate.countryCode})
+                    </span>
+                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleClearRateForm}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
                 <div className="grid gap-1">
                   <label className="text-xs font-medium">Seleccionar Marca y País</label>
                   <Popover open={openBrandCountry} onOpenChange={setOpenBrandCountry}>
@@ -474,7 +525,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
                 </div>
 
                 <Button size="sm" onClick={handleAddRate} className="bg-primary text-primary-foreground mt-1 w-full">
-                  Agregar / Actualizar Tarifa
+                  {editingRate ? 'Actualizar Tarifa' : 'Agregar Tarifa'}
                 </Button>
               </div>
 
@@ -509,14 +560,26 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
                           )}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10 h-7 w-7"
-                        onClick={() => handleDeleteRate(rate.brandCountryId)}
-                      >
-                        ✕
-                      </Button>
+                      <div className="flex shrink-0 items-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleEditRate(rate)}
+                          title="Editar tarifa"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 h-7 w-7"
+                          onClick={() => handleDeleteRate(rate.brandCountryId)}
+                          title="Eliminar tarifa"
+                        >
+                          ✕
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}

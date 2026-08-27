@@ -13,6 +13,7 @@ import {
   reportGiftcardIssue,
   deleteGiftcardIssue,
   OrderAlreadyProcessedError,
+  InvalidOrderStateError,
   PaymentVerificationError,
 } from '@/lib/services/order';
 import { orderNeedsSecurityGate, isSecurityUnlocked } from '@/lib/services/security';
@@ -101,6 +102,12 @@ export async function handleOrderDetail(ctx: BuyerContext) {
  * tiene unlock vigente, los códigos se muestran enmascarados + botón Desbloquear.
  */
 export async function renderOrderDetail(ctx: BuyerContext, orderId: string, fromPage = 1) {
+  // Si había un paso de pago activo de OTRA orden, cancelarlo antes de pisar
+  // wizard.orderId — sin esto, el próximo texto del usuario se procesaba como
+  // TxID de una orden distinta a la que inició el pago.
+  if (ctx.session.wizard.step === 'awaitingPaymentId' && ctx.session.wizard.orderId !== orderId) {
+    ctx.session.wizard.step = 'idle';
+  }
   ctx.session.wizard.orderId = orderId;
 
   let order;
@@ -404,6 +411,17 @@ export async function handlePaymentText(ctx: BuyerContext) {
   } catch (err) {
     if (err instanceof OrderAlreadyProcessedError) {
       return renderUI(ctx, ' Esta orden ya fue procesada.', {
+        reply_markup: new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders'),
+      });
+    }
+    // Race cross-canal: la orden se completó/canceló desde la web (u otra sesión)
+    // mientras el wizard esperaba el TxID. Sin este catch el error caía al
+    // middleware de grammy sin feedback al usuario.
+    if (err instanceof InvalidOrderStateError) {
+      ctx.session.wizard.step = 'idle';
+      ctx.session.wizard.orderId = undefined;
+      return renderUI(ctx, '⚠️ <b>Esta orden ya no está esperando pago.</b>\n\nEs posible que la hayas completado o cancelado desde otra sesión.', {
+        parse_mode: 'HTML',
         reply_markup: new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders'),
       });
     }

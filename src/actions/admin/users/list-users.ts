@@ -39,6 +39,15 @@ export const listUsers = adminActionClient
           telegramUser: {
             select: { telegramId: true, username: true, firstName: true, photoData: true },
           },
+          paymentMethod: {
+            select: {
+              address: true,
+              isBinanceWallet: true,
+              updatedAt: true,
+              coin: { select: { symbol: true, name: true } },
+              network: { select: { name: true, description: true } },
+            },
+          },
         },
       });
       const totalCount = await prisma.user.count({ where });
@@ -60,6 +69,7 @@ export const listUsers = adminActionClient
         telegramUser: user.telegramUser
           ? { telegramId: user.telegramUser.telegramId, username: user.telegramUser.username, firstName: user.telegramUser.firstName, hasPhoto: !!user.telegramUser.photoData }
           : null,
+        paymentMethod: user.paymentMethod,
       }));
 
       return {

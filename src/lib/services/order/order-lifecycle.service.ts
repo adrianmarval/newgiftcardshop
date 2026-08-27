@@ -74,6 +74,18 @@ export async function cancelOrder(orderId: string) {
  */
 export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal) {
   const { order, adjustedTotal, cancelledBatches } = await prisma.$transaction(async (tx) => {
+    // Transición de status PRIMERO: el update guardado lockea la fila de la orden
+    // por el resto de la tx (P2025 si otro canal ya la transicionó). Un reporte
+    // de issue concurrente bloquea en su propio guard hasta que esta tx commitea
+    // y entonces falla limpio — nunca se cuela un cambio de card post-cálculo.
+    await tx.order.update({
+      where: { id: orderId, status: 'PENDING' },
+      data: { status: 'AWAITING_PAYMENT' },
+    });
+
+    // Leer las cards DESPUÉS del lock: los reportes o ya commitearon (visibles
+    // acá) o fallarán su guard al despertar — el adjustedTotal siempre refleja
+    // el estado final de las cards.
     const freshCards = await tx.giftcard.findMany({
       where: { orderId },
     });
@@ -81,8 +93,8 @@ export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal
     const adjustedTotal = computeEffectiveTotalDecimal(freshCards, buyRate);
 
     const updatedOrder = await tx.order.update({
-      where: { id: orderId, status: 'PENDING' },
-      data: { status: 'AWAITING_PAYMENT', adjustedTotal },
+      where: { id: orderId },
+      data: { adjustedTotal },
     });
 
     for (const card of freshCards) {

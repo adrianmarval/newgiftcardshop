@@ -67,6 +67,16 @@ export const adminSellerSummarySchema = z.object({
   telegramUser: telegramUserInfoSchema.nullable(),
 });
 
+export const userPaymentMethodSchema = z.object({
+  address: z.string(),
+  isBinanceWallet: z.boolean(),
+  updatedAt: z.date(),
+  coin: z.object({ symbol: z.string(), name: z.string() }),
+  network: z.object({ name: z.string(), description: z.string() }),
+});
+
+export type UserPaymentMethodSummary = z.infer<typeof userPaymentMethodSchema>;
+
 export interface User {
   id: string;
   name: string;
@@ -80,6 +90,7 @@ export interface User {
   allowBuyRateAdjustment: boolean;
   createdAt: Date;
   telegramUser?: TelegramUserInfo | null;
+  paymentMethod?: UserPaymentMethodSummary | null;
 }
 
 export interface UserRate {

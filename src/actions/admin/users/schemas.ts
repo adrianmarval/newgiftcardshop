@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from 'zod';
-import { paginatedOutputSchema } from '@/types';
+import { paginatedOutputSchema, userPaymentMethodSchema } from '@/types';
 
 export const listUsersInputSchema = z.object({
   page: z.number().int().positive().optional().default(1),
@@ -35,6 +35,7 @@ export const listUsersOutputSchema = paginatedOutputSchema(
           hasPhoto: z.boolean(),
         })
         .nullable(),
+      paymentMethod: userPaymentMethodSchema.nullable(),
     })
     .array(),
 );

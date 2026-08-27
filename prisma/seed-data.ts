@@ -30,20 +30,20 @@ export const seedData: SeedData = {
     { name: 'PLASMA', description: 'Plasma', regex: '^(0x)[0-9A-Fa-f]{40}$' },
   ],
   userData: [
-    // {
-    //   name: 'Adrian Marval',
-    //   email: 'adrian.marval@gmail.com',
-    //   emailVerified: true,
-    //   isActive: true,
-    //   role: 'ADMIN',
-    //   accounts: {
-    //     create: {
-    //       accountId: 'admin-account-provider-id',
-    //       providerId: 'credential',
-    //       password: await hashPassword('Adri891.'),
-    //     },
-    //   },
-    // },
+    {
+      name: 'Adrian Marval',
+      email: 'adrian.marval@gmail.com',
+      emailVerified: true,
+      isActive: true,
+      role: 'ADMIN',
+      accounts: {
+        create: {
+          accountId: 'admin-account-provider-id',
+          providerId: 'credential',
+          password: await hashPassword('Adri891.'),
+        },
+      },
+    },
     // {
     //   name: 'Solmaira Maza',
     //   email: 'solmaira.maza@gmail.com',

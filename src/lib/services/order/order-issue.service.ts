@@ -40,6 +40,28 @@ export async function reportGiftcardIssue(params: ReportIssueParams) {
   }
 
   return prisma.$transaction(async (tx) => {
+    // Guard atómico DENTRO de la tx: lockea la fila de la orden y re-valida el
+    // status. Si otro canal confirmó/canceló la orden entre el pre-check y este
+    // punto (race cross-canal web/bot), el update no matchea → P2025 → error
+    // amigable, y nunca se escribe un reporte sobre una orden ya confirmada.
+    try {
+      await tx.order.update({
+        where: { id: orderId, status: 'PENDING' },
+        data: { updatedAt: new Date() },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        logger.warn('reportGiftcardIssue: orden dejó de estar pendiente durante la tx (race cross-canal)', {
+          flow: 'order',
+          action: 'report-issue',
+          userId,
+          metadata: { orderId },
+        });
+        throw new Error('No se pueden reportar problemas en una orden que ya fue confirmada');
+      }
+      throw err;
+    }
+
     await tx.giftcardIssue.deleteMany({
       where: { giftcardId, orderId, reportedById: userId },
     });
@@ -87,6 +109,27 @@ export async function deleteGiftcardIssue(giftcardId: string, orderId: string, u
   }
 
   return prisma.$transaction(async (tx) => {
+    // Guard atómico DENTRO de la tx (mismo patrón que reportGiftcardIssue):
+    // lockea la fila y re-valida status — evita resetear una card a UNUSED en
+    // una orden que otro canal acaba de confirmar (race cross-canal web/bot).
+    try {
+      await tx.order.update({
+        where: { id: orderId, status: 'PENDING' },
+        data: { updatedAt: new Date() },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        logger.warn('deleteGiftcardIssue: orden dejó de estar pendiente durante la tx (race cross-canal)', {
+          flow: 'order',
+          action: 'delete-issue',
+          userId,
+          metadata: { orderId },
+        });
+        throw new Error('No se pueden modificar reportes en una orden que ya fue confirmada');
+      }
+      throw err;
+    }
+
     await tx.giftcardIssue.deleteMany({
       where: { giftcardId, orderId, reportedById: userId },
     });
