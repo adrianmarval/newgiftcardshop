@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, startTransition } from 'react';
+import { useState, useEffect, startTransition, type ComponentType, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { FiltersBar, UserBadge } from '@/components/common';
@@ -28,8 +28,9 @@ import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTeleg
 import { listBrands } from '@/actions/admin/catalog';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { adminUsersSearchParamsParsers } from '@/lib/search-params';
-import { MoreVertical, Edit2, Power, Loader2, ChevronsUpDown, Check, Link2Off, Wallet, Copy, Pencil, X } from 'lucide-react';
+import { Power, Loader2, ChevronsUpDown, Check, Link2Off, Wallet, Copy, Pencil, X } from 'lucide-react';
 import { copyToClipboard } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { BrandCountrySummary, BrandWithCountries } from '@/types';
 import type { User, UserRate } from '@/types';
 
@@ -44,6 +45,7 @@ interface UsersManagerProps {
 
 export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({
     creditLimit: '',
@@ -73,6 +75,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
     onSuccess: () => {
       showAlert.toast.success('Estado actualizado');
       router.refresh();
+      setEditUser(null);
     },
     onError: (e) => showAlert.toast.error('Error actualizando usuario: ' + (e.error?.serverError || 'Unknown error')),
   });
@@ -82,6 +85,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
       showAlert.toast.success('Telegram desvinculado');
       router.refresh();
       setUnlinkTarget(null);
+      setEditUser(null);
     },
     onError: (e) => showAlert.toast.error('Error desvinculando: ' + (e.error?.serverError || 'Unknown error')),
   });
@@ -228,6 +232,18 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
 
   const isUpdating = updateStatus === 'executing' || toggleStatus === 'executing';
 
+  // Contenedor adaptativo: Drawer bottom en mobile / Dialog centrado en desktop (patrón PromptDrawer)
+  const EditRoot: ComponentType<{ open: boolean; onOpenChange: (open: boolean) => void; children?: ReactNode }> = isMobile
+    ? Drawer
+    : Dialog;
+  const EditContent: ComponentType<{ className?: string; children?: ReactNode }> = isMobile ? DrawerContent : DialogContent;
+  const EditHeader: ComponentType<{ className?: string; children?: ReactNode }> = isMobile ? DrawerHeader : DialogHeader;
+  const EditTitle: ComponentType<{ className?: string; children?: ReactNode }> = isMobile ? DrawerTitle : DialogTitle;
+  const EditDescription: ComponentType<{ className?: string; children?: ReactNode }> = isMobile
+    ? DrawerDescription
+    : DialogDescription;
+  const EditFooter: ComponentType<{ className?: string; children?: ReactNode }> = isMobile ? DrawerFooter : DialogFooter;
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <FiltersBar
@@ -261,7 +277,11 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto custom-scrollbar">
         {initialUsers.map((user) => (
-          <Card key={user.id} className="hover:border-primary/30 overflow-visible transition-all duration-200 ease-out">
+          <Card
+            key={user.id}
+            onClick={() => openEditDialog(user)}
+            className="hover:border-primary/30 cursor-pointer overflow-visible transition-all duration-200 ease-out"
+          >
             <CardContent className="flex items-center gap-3 py-3">
               <UserBadge
                 user={user}
@@ -278,35 +298,6 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
               <Badge variant="outline" className="shrink-0">
                 {user.role}
               </Badge>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" disabled={isUpdating}>
-                    {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => openEditDialog(user)}>
-                    <Edit2 className="mr-2 h-4 w-4" />
-                    Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => executeToggle({ userId: user.id, isActive: !user.isActive })}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Power className="mr-2 h-4 w-4" />
-                    {user.isActive ? 'Desactivar' : 'Activar'}
-                  </DropdownMenuItem>
-                  {user.telegramUser && (
-                    <DropdownMenuItem
-                      onClick={() => setUnlinkTarget(user)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Link2Off className="mr-2 h-4 w-4" />
-                      Desvincular Telegram
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </CardContent>
           </Card>
         ))}
@@ -322,13 +313,13 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
         <UrlPagination totalPages={pagination.totalPages} />
       </div>
 
-      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-106.25 md:max-w-125">
-          <DialogHeader>
-            <DialogTitle>Editar Usuario</DialogTitle>
-            <DialogDescription>{editUser?.email}</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-1 py-4">
+      <EditRoot open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+        <EditContent className={isMobile ? undefined : 'max-h-[90vh] overflow-y-auto sm:max-w-106.25 md:max-w-125'}>
+          <EditHeader className={isMobile ? 'items-start text-left' : undefined}>
+            <EditTitle>Editar Usuario</EditTitle>
+            <EditDescription>{editUser?.email}</EditDescription>
+          </EditHeader>
+          <div className={cn('grid gap-1 py-4', isMobile && 'custom-scrollbar min-h-0 flex-1 overflow-y-auto px-4')}>
             {/* Método de pago (read-only, configurado por el seller) */}
             <div className="grid gap-1">
               <p className="text-sm font-medium">Método de Pago</p>
@@ -585,17 +576,45 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
                 )}
               </div>
             </div>
+
+            {/* Acciones de cuenta */}
+            <div className="mt-4 border-t pt-4">
+              <h3 className="mb-2 text-sm font-semibold">Acciones</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={editUser?.isActive ? 'destructive' : 'outline'}
+                  size="sm"
+                  disabled={isUpdating}
+                  onClick={() => {
+                    if (editUser) executeToggle({ userId: editUser.id, isActive: !editUser.isActive });
+                  }}
+                >
+                  {toggleStatus === 'executing' ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Power className="mr-2 h-4 w-4" />
+                  )}
+                  {editUser?.isActive ? 'Desactivar usuario' : 'Activar usuario'}
+                </Button>
+                {editUser?.telegramUser && (
+                  <Button variant="outline" size="sm" className="text-destructive" onClick={() => setUnlinkTarget(editUser)}>
+                    <Link2Off className="mr-2 h-4 w-4" />
+                    Desvincular Telegram
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-          <DialogFooter>
+          <EditFooter className={isMobile ? 'flex-col-reverse' : undefined}>
             <Button variant="outline" onClick={() => setEditUser(null)}>
               Cancelar
             </Button>
             <Button onClick={handleSaveEdit} disabled={updateStatus === 'executing'}>
               {updateStatus === 'executing' ? 'Guardando...' : 'Guardar'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </EditFooter>
+        </EditContent>
+      </EditRoot>
 
       <AlertDialog open={!!unlinkTarget} onOpenChange={(open) => !open && setUnlinkTarget(null)}>
         <AlertDialogContent>
