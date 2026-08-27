@@ -3,7 +3,7 @@
 // Centralized UI configs used across admin and buyer/seller portals
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { OrderStatus, PaymentCategory, PaymentDirection, PaymentStatus } from '@/generated/prisma/enums';
+import type { OrderStatus, PaymentCategory, PaymentDirection, PaymentStatus, GiftcardIssueType } from '@/generated/prisma/enums';
 import type { ValidationState } from '@/types';
 import { ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle2, HelpCircle, ImageIcon, MinusCircle } from 'lucide-react';
 
@@ -30,6 +30,15 @@ export const orderStatusConfig: Record<OrderStatus, { label: string; color: stri
     color: 'bg-destructive/20 text-destructive border-destructive/30',
     activeBg: 'bg-destructive/10 dark:bg-destructive/15',
   },
+};
+
+// ── Giftcard Issue Type ───────────────────────────────────────────────────────
+
+export const giftcardIssueTypeConfig: Record<GiftcardIssueType, { label: string; color: string }> = {
+  INVALID: { label: 'Inválida', color: 'bg-red-500/20 text-red-500 border-red-500/30' },
+  ALREADY_USED: { label: 'Ya usada', color: 'bg-orange-500/20 text-orange-500 border-orange-500/30' },
+  DEACTIVATED: { label: 'Desactivada', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' },
+  WRONG_AMOUNT: { label: 'Monto incorrecto', color: 'bg-amber-500/20 text-amber-500 border-amber-500/30' },
 };
 
 // ── Payment Category ─────────────────────────────────────────────────────────

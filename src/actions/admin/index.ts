@@ -1,6 +1,7 @@
 // ── Admin Actions — Barrel ────────────────────────────────────────────────────
 export * from './batches';
 export * from './orders';
+export * from './issues';
 export * from './payments';
 export * from './users';
 export * from './catalog';

@@ -18,7 +18,7 @@ src/
 ├── actions/             # Server actions (next-safe-action)
 │   ├── buyer/           # orders, giftcards, issues, preferences, stats, security (PIN gate)
 │   ├── seller/          # batches (publish, list, check-codes), ocr, rates, stats
-│   ├── admin/           # payments, orders, batches, binance, users, catalog, stats
+│   ├── admin/           # payments, orders, batches, issues (read-only + proof via BUYER_BOT_TOKEN), binance, users, catalog, stats
 │   ├── auth/            # login, register, logout, forgot/reset password, verify email, passkey login guard
 │   ├── catalog/         # brands, countries (público, read-only)
 │   ├── notifications/   # notification CRUD

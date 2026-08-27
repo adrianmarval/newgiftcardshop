@@ -1,1 +1,1 @@
-export { orderStatusConfig, paymentCategoryConfig, paymentDirectionConfig, validationStatusConfig } from './ui-config';
+export { orderStatusConfig, paymentCategoryConfig, paymentDirectionConfig, validationStatusConfig, giftcardIssueTypeConfig } from './ui-config';

@@ -49,6 +49,18 @@ export const adminBatchesSearchParamsParsers = {
 
 // ── Admin: Users, Payments, Logs ─────────────────────────────────────────────
 
+export const adminIssuesSearchParamsParsers = {
+  page: parseAsInteger.withDefault(1),
+  limit: parseAsInteger.withDefault(10),
+  issueType: parseAsStringLiteral(['ALL', 'INVALID', 'ALREADY_USED', 'DEACTIVATED', 'WRONG_AMOUNT'] as const).withDefault('ALL'),
+  search: parseAsString.withDefault(''),
+  sort: parseAsStringLiteral(['newest', 'oldest'] as const).withDefault('newest'),
+  sellerId: parseAsString.withDefault(''),
+  buyerId: parseAsString.withDefault(''),
+  dateFrom: parseAsString.withDefault(''),
+  dateTo: parseAsString.withDefault(''),
+} as const;
+
 export const adminUsersSearchParamsParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(10),
@@ -85,6 +97,7 @@ export const adminLogsSearchParamsParsers = {
 export const orderSearchParamsCache = createSearchParamsCache(orderSearchParamsParsers);
 export const adminBatchesSearchParamsCache = createSearchParamsCache(adminBatchesSearchParamsParsers);
 export const adminOrdersSearchParamsCache = createSearchParamsCache(adminOrdersSearchParamsParsers);
+export const adminIssuesSearchParamsCache = createSearchParamsCache(adminIssuesSearchParamsParsers);
 export const adminUsersSearchParamsCache = createSearchParamsCache(adminUsersSearchParamsParsers);
 export const adminPaymentsSearchParamsCache = createSearchParamsCache(adminPaymentsSearchParamsParsers);
 export const adminLogsSearchParamsCache = createSearchParamsCache(adminLogsSearchParamsParsers);

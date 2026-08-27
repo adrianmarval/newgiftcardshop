@@ -20,6 +20,7 @@ const NAV_ITEMS: Record<AppSection, NavItem[]> = {
     { title: 'Home', url: '/admin/dashboard', icon: 'home' },
     { title: 'Users', url: '/admin/dashboard/users', icon: 'users' },
     { title: 'Orders', url: '/admin/dashboard/orders', icon: 'cart' },
+    { title: 'Issues', url: '/admin/dashboard/issues', icon: 'alert' },
     { title: 'Lotes', url: '/admin/dashboard/batches', icon: 'cards' },
     { title: 'Pagos', url: '/admin/dashboard/payments', icon: 'cash' },
     { title: 'Brands', url: '/admin/dashboard/brands', icon: 'tag' },
@@ -48,7 +49,7 @@ export async function DashboardSidebar({ portal }: DashboardSidebarProps) {
     <>
       {/*Desktop Sidebar*/}
       <nav className="hidden h-full items-center justify-center lg:flex lg:flex-col lg:gap-1 lg:p-4">
-        <div className="flex flex-col gap-0">{items.map((item) => renderSidebarItem(item))}</div>
+        <div className="flex flex-col gap-1">{items.map((item) => renderSidebarItem(item))}</div>
       </nav>
       {/*Mobile Sidebar*/}
       <div className="lg:hidden">

@@ -20,6 +20,7 @@ import {
   FaSun,
   FaClipboardList,
   FaCoins,
+  FaExclamationTriangle,
 } from 'react-icons/fa';
 import Link from 'next/link';
 
@@ -37,6 +38,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   theme: FaMoon,
   logs: FaClipboardList,
   coins: FaCoins,
+  alert: FaExclamationTriangle,
 };
 
 interface SidebarItemProps {
@@ -76,14 +78,14 @@ export const SidebarItem = ({ item }: SidebarItemProps) => {
       )}
     >
       <div className="relative">
-        <IconComponent className="h-6 w-6 lg:h-12 lg:w-12" />
+        <IconComponent className="h-6 w-6 lg:w-12" />
         {badgeCount > 0 && (
           <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground animate-pulse">
             {badgeCount > 9 ? '9+' : badgeCount}
           </span>
         )}
       </div>
-      <span className="md:text-md text-xs font-semibold tracking-wide">{item.title}</span>
+      <span className="md:text-sm text-xs font-semibold tracking-wide">{item.title}</span>
     </Link>
   );
 };

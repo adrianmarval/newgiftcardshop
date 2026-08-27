@@ -2,9 +2,10 @@
 // Giftcard — Core entity types
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { GiftcardStatus, GiftcardIssueType } from '@/generated/prisma/enums';
+import type { GiftcardStatus, GiftcardIssueType, OrderStatus } from '@/generated/prisma/enums';
 import type { Giftcard as PrismaGiftcard } from '@/generated/prisma/client';
 import type { Decimal } from '@prisma/client/runtime/client';
+import type { AdminBuyerSummary, AdminSellerSummary } from './user';
 
 export { GiftcardStatus };
 
@@ -39,6 +40,23 @@ export interface GiftcardIssue {
   reportedById: string;
   sellerId: string | null;
   createdAt: string;
+}
+
+// ── Admin: GiftcardIssue (list view) ─────────────────────────────────────────
+
+export interface AdminGiftcardIssue {
+  id: string;
+  issueType: GiftcardIssueType;
+  reportedAmount: number | null;
+  /** True when the buyer attached a proof screenshot (Telegram file_id). Fetched lazily via getIssueProof. */
+  hasProof: boolean;
+  createdAt: string;
+  /** Full card with decrypted claimCode — admin scope never masks codes. */
+  giftcard: Giftcard;
+  order: { id: string; status: OrderStatus; total: number };
+  buyer: AdminBuyerSummary;
+  seller: AdminSellerSummary | null;
+  isSearchMatch?: boolean;
 }
 
 // ── Claim Code Parsing ────────────────────────────────────────────────────────
