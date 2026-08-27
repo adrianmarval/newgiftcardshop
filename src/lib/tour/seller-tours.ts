@@ -55,10 +55,29 @@ export const SELL_BATCHES_STEPS: DriveStep[] = [
     },
   },
   {
-    element: '[data-tour="batches-list"]',
+    element: '[data-tour="batch-card"]',
+    // Empty history → this step (and the details one) is skipped automatically.
+    skipMissingElement: true,
+    onHighlightStarted: () => {
+      // Expand the first card so the next step can show its inside. Idempotent:
+      // if it's already expanded (back navigation), don't toggle it closed.
+      if (document.querySelector('[data-tour="batch-details"]')) return;
+      (document.querySelector('[data-tour="batch-card"] [id^="registry-card-"]') as HTMLElement | null)?.click();
+    },
     popover: {
       title: 'Reading a batch',
-      description: 'Each card shows the brand, totals and a progress bar. The colors tell the story: amber = processing, blue = fully confirmed, green = paid, red = cancelled. Tap a card to expand its details.',
+      description: 'Brand and totals up top; status and progress bar below. The colors tell the story: amber = processing, blue = fully confirmed, green = paid, red = cancelled. We just expanded it for you.',
+      side: 'bottom',
+    },
+  },
+  {
+    element: '[data-tour="batch-details"]',
+    skipMissingElement: true,
+    // The expansion renders async — driver observes the DOM until it appears.
+    waitForElement: 4000,
+    popover: {
+      title: 'Inside the batch',
+      description: 'Every card with its individual status. Cards reported with issues (wrong amount, invalid...) are flagged here and deducted from the payout.',
       side: 'top',
     },
   },
@@ -66,6 +85,11 @@ export const SELL_BATCHES_STEPS: DriveStep[] = [
     popover: {
       title: 'Getting paid',
       description: "Once every card in a batch is confirmed, the batch becomes payable and the payout is released to your wallet. Watch for the Paid status — that's money in your account.",
+    },
+    onHighlightStarted: () => {
+      // Collapse the card back so the full list is restored as the tour ends.
+      if (!document.querySelector('[data-tour="batch-details"]')) return;
+      (document.querySelector('[data-tour="batch-card"] [id^="registry-card-"]') as HTMLElement | null)?.click();
     },
   },
 ];

@@ -49,7 +49,7 @@ export const BuyerOrdersView = ({ orders, pagination, search }: BuyerOrdersViewP
           }}
         />
       </div>
-      <div data-tour="orders-list" className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         <OrdersList orders={orders} totalPages={pagination.totalPages} search={search} />
       </div>
       <div className="shrink-0">

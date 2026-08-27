@@ -23,12 +23,14 @@ export function BatchesList({ batches, search }: BatchesListProps) {
       emptyTitle="No batches found"
       emptyDescription="Try adjusting your filters or search terms."
       renderItem={(batch, { isExpanded, isHighlighted, onToggle }) => (
-        <BatchCard
-          batch={batch}
-          isExpanded={isExpanded}
-          isHighlighted={isHighlighted}
-          onToggle={onToggle}
-        />
+        <div data-tour={batch.id === batches[0]?.id ? 'batch-card' : undefined}>
+          <BatchCard
+            batch={batch}
+            isExpanded={isExpanded}
+            isHighlighted={isHighlighted}
+            onToggle={onToggle}
+          />
+        </div>
       )}
     />
   );

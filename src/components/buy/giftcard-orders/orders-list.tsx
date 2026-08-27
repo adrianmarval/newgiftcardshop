@@ -21,12 +21,14 @@ export const OrdersList = ({ orders, search }: OrdersListProps) => {
         return null;
       }}
       renderItem={(order, { isExpanded, isHighlighted, onToggle }) => (
-        <OrderCard
-          order={order}
-          isExpanded={isExpanded}
-          isHighlighted={isHighlighted}
-          onToggle={onToggle}
-        />
+        <div data-tour={order.id === orders[0]?.id ? 'order-card' : undefined}>
+          <OrderCard
+            order={order}
+            isExpanded={isExpanded}
+            isHighlighted={isHighlighted}
+            onToggle={onToggle}
+          />
+        </div>
       )}
     />
   );

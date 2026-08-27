@@ -16,7 +16,7 @@ export function BatchDetails({ batch }: BatchDetailsProps) {
   const successfulPayment = completedPayments.length > 0 ? completedPayments[completedPayments.length - 1] : null;
 
   return (
-    <div className="space-y-3">
+    <div data-tour="batch-details" className="space-y-3">
       <div className="mb-3 flex items-center justify-between">
         {batch.cancelledAt ? (
           <span className="text-destructive text-xs font-medium md:text-base">Cancelled</span>
