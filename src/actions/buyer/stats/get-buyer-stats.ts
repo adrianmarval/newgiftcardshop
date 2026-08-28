@@ -17,24 +17,27 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
     const todayStart = startOfDay(now);
     const monthStart = startOfMonth(now);
 
-    const [available, todayOrders, user, unpaidOrders, completedOrders, monthOrders, reportedIssues] = await Promise.all([
+    const [available, todayOrders, todayOrderCount, user, unpaidOrders, completedOrders, monthOrders, reportedIssues] = await Promise.all([
       prisma.giftcard.aggregate({
         where: AVAILABLE_GIFTCARD_WHERE,
         _count: true,
         _sum: { amount: true },
       }),
       prisma.order.findMany({
-        where: { createdAt: { gte: todayStart } },
+        where: { createdAt: { gte: todayStart }, status: { not: 'CANCELLED' } },
         select: {
           id: true,
           total: true,
           status: true,
           createdAt: true,
           user: { select: { email: true } },
-          giftcards: { select: { amount: true } },
+          giftcards: { select: { amount: true, status: true, reportedAmount: true } },
         },
         orderBy: { createdAt: 'desc' },
         take: ORDER_BOOK_LIMIT,
+      }),
+      prisma.order.count({
+        where: { createdAt: { gte: todayStart }, status: { not: 'CANCELLED' } },
       }),
       prisma.user.findUnique({
         where: { id: userId },
@@ -69,7 +72,7 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
     ]);
 
     const totalTradedToday = todayOrders.reduce(
-      (sum, order) => sum + order.giftcards.reduce((s, gc) => s + gc.amount.toNumber(), 0),
+      (sum, order) => sum + Number(computeFaceValueTotal(order.giftcards)),
       0,
     );
 
@@ -102,7 +105,7 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
       availableCards: available._count,
       availableAmount: available._sum.amount?.toNumber() ?? 0,
       orderBook: {
-        totalOrdersToday: todayOrders.length,
+        totalOrdersToday: todayOrderCount,
         totalTradedToday,
         entries: todayOrders.map((order) => ({
           orderId: order.id,
