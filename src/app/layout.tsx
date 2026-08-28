@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Aldrich, Lora, IBM_Plex_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
+import Script from 'next/script';
 import './globals.css';
 import { Providers } from '@/components/providers';
 import { AppAlertHost } from '@/components/common';
@@ -54,6 +55,27 @@ export default async function RootLayout({
   return (
     <html lang="en" className={theme} suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
+        {/*
+          Captura GLOBAL de beforeinstallprompt ANTES de React: el evento
+          dispara una sola vez, apenas el SW está activo (antes de la
+          hidratación). Cualquier listener montado por un componente llega
+          tarde en visitas repetidas y el evento NO se re-emite — la install
+          landing (/tg-open) y cualquier futuro CTA de instalación in-app
+          consumen window.__pwaInstallPrompt / el evento 'pwa-installable'.
+        */}
+        <Script id="pwa-install-capture" strategy="beforeInteractive">
+          {`
+            window.addEventListener('beforeinstallprompt', function (e) {
+              e.preventDefault();
+              window.__pwaInstallPrompt = e;
+              window.dispatchEvent(new Event('pwa-installable'));
+            });
+            window.addEventListener('appinstalled', function () {
+              window.__pwaInstallPrompt = null;
+              window.dispatchEvent(new Event('pwa-installed'));
+            });
+          `}
+        </Script>
         <Providers>{children}</Providers>
         <AppAlertHost />
         <Toaster

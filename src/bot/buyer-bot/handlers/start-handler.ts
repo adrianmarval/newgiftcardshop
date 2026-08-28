@@ -80,7 +80,10 @@ export async function startBuyer(ctx: BuyerContext) {
       if (hasLegacyEmail(user.email)) {
         kb.row().text('(Nuevo🔥) Activar acceso web 🌐', 'claim_web_start');
       } else if (appUrl) {
-        kb.row().url('(Nuevo🔥) Abrir app web 🌐', `${appUrl}/store/dashboard`);
+        // Mini App trampolín (/tg-open): abre una install landing en browser
+        // externo vía openLink (un botón `url` abriría el WebView in-app, que
+        // no puede instalar PWAs — beforeinstallprompt no existe ahí).
+        kb.row().webApp('(Nuevo🔥) Instalar app 📲', `${appUrl}/tg-open?to=/store/dashboard`);
       }
       const escapedName = escapeHTML(user.name);
 
