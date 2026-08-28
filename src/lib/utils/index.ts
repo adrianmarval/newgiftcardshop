@@ -9,3 +9,4 @@ export { getCountryFlag } from './country-flags';
 export { maskEmail } from './mask-email';
 export { formatBatchShareText, formatOrderShareText } from './share-formatter';
 export { timeAgo } from './time-ago';
+export { getPortalSwScope } from './portal-sw-scope';

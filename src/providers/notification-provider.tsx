@@ -1,6 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import { usePathname } from 'next/navigation';
+import { getPortalSwScope } from '@/lib/utils';
 
 interface NotificationContextValue {
   unreadCounts: Record<string, number>;
@@ -19,12 +21,17 @@ export function NotificationProvider({ children, initialUnreadCounts }: Notifica
     initialUnreadCounts ?? { buyer: 0, seller: 0, admin: 0 },
   );
 
-  // Registrar el service worker de Web Push (sin pedir permiso — eso se hace desde Settings)
+  // Registrar el service worker de Web Push (sin pedir permiso — eso se hace desde Settings).
+  // Se registra con el scope del portal: INVARIANTE para que Android atribuya las
+  // notificaciones a la PWA instalada y no a Chrome (ver getPortalSwScope).
+  const pathname = usePathname();
   React.useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker
+        .register('/sw.js', { scope: getPortalSwScope(pathname) })
+        .catch(() => {});
     }
-  }, []);
+  }, [pathname]);
 
   // Sync with server-provided counts when auto-refresh re-renders the parent
   React.useEffect(() => {
