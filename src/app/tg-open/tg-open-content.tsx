@@ -8,14 +8,23 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+interface RelatedApp {
+  platform: string;
+  id?: string;
+  url?: string;
+}
+
 declare global {
   interface Window {
     __pwaInstallPrompt?: BeforeInstallPromptEvent | null;
   }
+  interface Navigator {
+    getInstalledRelatedApps?: () => Promise<RelatedApp[]>;
+  }
 }
 
 type Mode = 'miniapp' | 'install';
-type InstallState = 'waiting' | 'ready' | 'installed' | 'ios' | 'unavailable';
+type InstallState = 'waiting' | 'ready' | 'installing' | 'installed' | 'alreadyInstalled' | 'ios' | 'unavailable';
 
 export interface TgOpenContentProps {
   target: TgOpenTarget;
@@ -32,7 +41,10 @@ const I18N: Record<
     installSubtitle: string;
     installButton: string;
     preparing: string;
+    installing: string;
     installed: string;
+    alreadyTitle: string;
+    alreadyMsg: string;
     iosTitle: string;
     iosSteps: string;
     fallback: string;
@@ -49,13 +61,17 @@ const I18N: Record<
     installSubtitle: 'Add it to your home screen for the best experience',
     installButton: '📲 Install',
     preparing: 'Preparing installation…',
+    installing: 'Installing… please wait.',
     installed: 'Installed! Open it from your home screen.',
+    alreadyTitle: 'The app is already installed',
+    alreadyMsg: 'Open it from your home screen.',
     iosTitle: 'Install the app',
     iosSteps: 'In Safari: tap the Share button and then "Add to Home Screen".',
     fallback: "Didn't open? Tap here",
     openApp: 'Open the app',
     openWeb: 'Continue in the browser version',
-    unavailableHint: 'You can also install it from the browser menu (⋮) → "Install app" / "Add to Home screen".',
+    unavailableHint:
+      'If you already installed it, open it from your home screen. Otherwise install it from the browser menu (⋮) → "Install app" / "Add to Home screen".',
   },
   '/store/dashboard': {
     miniappTitle: 'Instalar la app',
@@ -65,13 +81,17 @@ const I18N: Record<
     installSubtitle: 'Agrégala a tu pantalla de inicio para la mejor experiencia',
     installButton: '📲 Instalar',
     preparing: 'Preparando instalación…',
+    installing: 'Instalando… por favor espera.',
     installed: '¡Instalada! Ábrela desde tu pantalla de inicio.',
+    alreadyTitle: 'Ya tienes la app instalada',
+    alreadyMsg: 'Ábrela desde tu pantalla de inicio.',
     iosTitle: 'Instalar la app',
     iosSteps: 'En Safari: toca el botón Compartir y luego «Añadir a pantalla de inicio».',
     fallback: '¿No se abrió? Toca aquí',
     openApp: 'Abrir la app',
     openWeb: 'Continuar en la versión web',
-    unavailableHint: 'También puedes instalarla desde el menú del navegador (⋮) → «Instalar app» / «Añadir a pantalla de inicio».',
+    unavailableHint:
+      'Si ya la instalaste, ábrela desde tu pantalla de inicio. Si no, instálala desde el menú del navegador (⋮) → «Instalar app» / «Añadir a pantalla de inicio».',
   },
 };
 
@@ -94,12 +114,10 @@ export function TgOpenContent({ target, intentInstall }: TgOpenContentProps) {
       }
     };
     const onAppInstalled = () => {
+      // La ventana NO se cierra ni redirige a la versión web — el usuario
+      // queda en la pantalla de éxito ("ábrela desde tu pantalla de inicio").
+      // No existe API para lanzar la PWA instalada desde una página web.
       setInstallState('installed');
-      // NO redirigir a la versión web — el objetivo es que use la PWA. La
-      // web no puede lanzar la app instalada (no existe API); intentamos
-      // cerrar la pestaña (Chrome solo lo permite en tabs abiertas por
-      // intent/script — si falla, queda la pantalla de éxito).
-      setTimeout(() => window.close(), 1500);
     };
     window.addEventListener('pwa-installable', adopt);
     window.addEventListener('pwa-installed', onAppInstalled);
@@ -119,6 +137,17 @@ export function TgOpenContent({ target, intentInstall }: TgOpenContentProps) {
       }
       setMode('install');
       adopt(); // el evento pudo llegar antes de que montara este componente
+      // Detección de ya-instalada (Chrome Android): sin beforeinstallprompt
+      // el usuario se quedaría esperando 8s en "Preparando…". Requiere la
+      // entrada self-referencial `related_applications` en el manifest.
+      navigator
+        .getInstalledRelatedApps?.()
+        .then((apps) => {
+          if (apps.some((a) => a.platform === 'webapp')) {
+            setInstallState((prev) => (prev === 'waiting' ? 'alreadyInstalled' : prev));
+          }
+        })
+        .catch(() => {});
       const ua = navigator.userAgent;
       const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       if (isIOS) setInstallState('ios');
@@ -158,6 +187,9 @@ export function TgOpenContent({ target, intentInstall }: TgOpenContentProps) {
     const ev = deferredPrompt.current;
     if (!ev) return;
     deferredPrompt.current = null;
+    // La instalación WebAPK tarda unos segundos tras aceptar el diálogo —
+    // mostrar feedback mientras tanto (appinstalled la cierra).
+    setInstallState('installing');
     await ev.prompt();
     const { outcome } = await ev.userChoice;
     if (outcome !== 'accepted') setInstallState('unavailable');
@@ -186,18 +218,28 @@ export function TgOpenContent({ target, intentInstall }: TgOpenContentProps) {
   }
 
   if (mode === 'install') {
+    const title = installState === 'ios' ? t.iosTitle : installState === 'alreadyInstalled' ? t.alreadyTitle : t.installTitle;
     return (
       <>
         <div className="space-y-2">
-          <h1 className="text-foreground text-2xl font-semibold">{installState === 'ios' ? t.iosTitle : t.installTitle}</h1>
+          <h1 className="text-foreground text-2xl font-semibold">{title}</h1>
           <p className="text-muted-foreground text-sm">
             {installState === 'waiting' && t.preparing}
             {installState === 'ready' && t.installSubtitle}
+            {installState === 'installing' && t.installing}
             {installState === 'installed' && t.installed}
+            {installState === 'alreadyInstalled' && t.alreadyMsg}
             {installState === 'ios' && t.iosSteps}
             {installState === 'unavailable' && t.unavailableHint}
           </p>
         </div>
+        {(installState === 'waiting' || installState === 'installing') && (
+          <div
+            className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
+            role="status"
+            aria-label={installState === 'installing' ? t.installing : t.preparing}
+          />
+        )}
         {installState === 'ready' && (
           <button
             type="button"
@@ -207,11 +249,11 @@ export function TgOpenContent({ target, intentInstall }: TgOpenContentProps) {
             {t.installButton}
           </button>
         )}
-        {installState === 'installed' && (
+        {/* {(installState === 'installed' || installState === 'alreadyInstalled') && (
           <a href={target} className="text-muted-foreground text-sm underline">
             {t.openWeb}
           </a>
-        )}
+        )} */}
         {installState === 'unavailable' && (
           <a
             href={target}

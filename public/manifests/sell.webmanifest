@@ -21,5 +21,13 @@
       "type": "image/png",
       "purpose": "any"
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://dev.giftcardshop.app/manifests/sell.webmanifest",
+      "id": "/sell/dashboard"
+    }
+  ],
+  "prefer_related_applications": false
 }
