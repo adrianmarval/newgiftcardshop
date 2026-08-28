@@ -61,11 +61,13 @@ export function CompactSearchBar({
   }, [brandCountries]);
 
   return (
-    <div className={cn('bg-card/50 flex flex-col items-center gap-2 rounded-xl border p-2 backdrop-blur-sm md:gap-3 md:p-4', className)}>
+    <div
+      className={cn('bg-card/50 flex flex-col items-center rounded-xl border p-1.5 backdrop-blur-sm', className)}
+    >
       {/* Country */}
-      <div className="flex w-full flex-col gap-1.5">
+      <div className="flex w-full flex-col">
         <span className="text-muted-foreground text-xs font-medium">País</span>
-        <div className="bg-muted/40 flex items-center rounded-lg p-1">
+        <div className="bg-muted/40 flex items-center rounded-lg">
           {countries.map((country) => (
             <button
               key={country.id}
@@ -73,9 +75,7 @@ export function CompactSearchBar({
               onClick={() => onCountryChange(country.id)}
               className={cn(
                 'min-w-0 flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all md:px-3.5 md:py-2 md:text-sm',
-                selectedCountry === country.id
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
+                selectedCountry === country.id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
               )}
             >
               <span className="mr-1">{COUNTRY_FLAGS[country.code] || ''}</span>
@@ -87,7 +87,7 @@ export function CompactSearchBar({
       </div>
 
       {/* Amount */}
-      <div className="flex w-full flex-col gap-1.5">
+      <div className="flex w-full flex-col">
         <span className="text-muted-foreground text-xs font-medium">Monto</span>
         <div className="relative flex w-full items-center">
           <DollarSign className="text-muted-foreground/50 absolute left-3 h-4 w-4 shrink-0 md:h-5 md:w-5" />
