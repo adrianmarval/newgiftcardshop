@@ -72,7 +72,9 @@ export async function startBuyer(ctx: BuyerContext) {
         .row()
         .text('🛒 Comprar tarjetas', 'buy_start')
         .row()
-        .text('🔐 Seguridad (PIN)', 'sec_menu');
+        .text('🔐 Seguridad (PIN)', 'sec_menu')
+        .row()
+        .url('👨‍💼 Contactar Admin', `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}`);
 
       // Usuario migrado (email legacy) → ofrecer activación de acceso web.
       // Ya activado → acceso directo al panel web.

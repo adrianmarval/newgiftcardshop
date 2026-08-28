@@ -72,7 +72,9 @@ export async function startSeller(ctx: SellerContext) {
       .row()
       .text('➕ Sell Giftcards', 'sell_start')
       .row()
-      .text('💰 Wallet', 'wallet');
+      .text('💰 Wallet', 'wallet')
+      .row()
+      .url('👨‍💼 Contact Admin', `https://t.me/${process.env.ADMIN_TELEGRAM_USERNAME}`);
 
     // Usuario migrado (email legacy) → ofrecer activación de acceso web.
     // Ya activado → acceso directo al panel web.
