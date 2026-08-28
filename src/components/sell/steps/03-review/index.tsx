@@ -474,7 +474,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
           <DialogTitle className="sr-only">Screenshot Preview</DialogTitle>
           <DialogDescription className="sr-only">Preview of the uploaded gift card screenshot</DialogDescription>
           {previewImage && imageMap.has(previewImage) && (
-            <div className="relative flex max-h-[93vh] w-full items-center justify-center overflow-auto">
+            <div className="custom-scrollbar relative flex max-h-[93vh] w-full items-center justify-center overflow-auto">
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}

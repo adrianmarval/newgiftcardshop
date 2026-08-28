@@ -119,7 +119,7 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
           </div>
 
           {/* List */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="custom-scrollbar max-h-80 overflow-y-auto">
             {listStatus === 'executing' && !loaded ? (
               <div className="flex items-center justify-center py-8">
                 <Spinner size="sm" />

@@ -264,7 +264,7 @@ export function AdminBatchGallery({ batchId, giftcards }: AdminBatchGalleryProps
                                   Vincular a tarjeta
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="center" className="w-64 max-h-64 overflow-y-auto">
+                              <DropdownMenuContent align="center" className="custom-scrollbar w-64 max-h-64 overflow-y-auto">
                                 {availableCards.length === 0 ? (
                                   <div className="text-muted-foreground p-2 text-center text-xs">
                                     Todas las tarjetas ya tienen imagen

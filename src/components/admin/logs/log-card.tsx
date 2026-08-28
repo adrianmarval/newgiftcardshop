@@ -89,7 +89,7 @@ export function LogCard({ log, isExpanded, isHighlighted, onToggle }: LogCardPro
               {errorObj.name && <p className="text-sm font-semibold text-red-600 dark:text-red-400">{errorObj.name}</p>}
               {errorObj.message && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errorObj.message}</p>}
               {errorObj.stack && (
-                <pre className="mt-2 max-h-40 overflow-auto text-xs whitespace-pre-wrap text-red-500/80">{errorObj.stack}</pre>
+                <pre className="custom-scrollbar mt-2 max-h-40 overflow-auto text-xs whitespace-pre-wrap text-red-500/80">{errorObj.stack}</pre>
               )}
             </div>
           </div>
@@ -99,7 +99,7 @@ export function LogCard({ log, isExpanded, isHighlighted, onToggle }: LogCardPro
         {log.metadata !== null && log.metadata !== undefined && (
           <div>
             <h4 className="text-muted-foreground mb-1 text-xs font-medium uppercase tracking-wider">Metadata</h4>
-            <pre className="bg-muted max-h-60 overflow-auto rounded-md p-3 text-xs whitespace-pre-wrap">
+            <pre className="custom-scrollbar bg-muted max-h-60 overflow-auto rounded-md p-3 text-xs whitespace-pre-wrap">
               {JSON.stringify(log.metadata, null, 2)}
             </pre>
           </div>

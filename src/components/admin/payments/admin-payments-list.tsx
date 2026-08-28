@@ -32,7 +32,7 @@ export const AdminPaymentsList = ({ payments, totalPages: _totalPages }: AdminPa
   return (
     <>
       <div className="bg-card rounded-lg border">
-        <div className="overflow-x-auto">
+        <div className="custom-scrollbar overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-muted/50 border-b">

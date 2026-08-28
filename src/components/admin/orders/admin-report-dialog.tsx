@@ -91,7 +91,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-border bg-card max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-106.25">
+      <DialogContent className="custom-scrollbar border-border bg-card max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic">{title}</DialogTitle>
           <DialogDescription className="sr-only">{title}</DialogDescription>

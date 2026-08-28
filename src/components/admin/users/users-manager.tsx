@@ -314,7 +314,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
       </div>
 
       <EditRoot open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
-        <EditContent className={isMobile ? undefined : 'max-h-[90vh] overflow-y-auto sm:max-w-106.25 md:max-w-125'}>
+        <EditContent className={isMobile ? undefined : 'custom-scrollbar max-h-[90vh] overflow-y-auto sm:max-w-106.25 md:max-w-125'}>
           <EditHeader className={isMobile ? 'items-start text-left' : undefined}>
             <EditTitle>Editar Usuario</EditTitle>
             <EditDescription>{editUser?.email}</EditDescription>
@@ -521,7 +521,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
               </div>
 
               {/* Lista de tarifas */}
-              <div className="mt-4 max-h-48 space-y-1 overflow-y-auto">
+              <div className="custom-scrollbar mt-4 max-h-48 space-y-1 overflow-y-auto">
                 {userRates.length === 0 ? (
                   <p className="text-muted-foreground p-2 text-center text-xs">No hay tarifas personalizadas configuradas.</p>
                 ) : (

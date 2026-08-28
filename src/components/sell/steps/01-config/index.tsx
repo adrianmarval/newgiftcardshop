@@ -76,7 +76,7 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
 
       <div className="flex min-h-0 flex-1 flex-col gap-1 md:grid md:grid-cols-12" data-tour="sell-config">
         <Card className="flex shrink-0 flex-col border p-3 md:col-span-4 md:row-span-11 md:min-h-0 md:p-6">
-          <div className="space-y-1 md:flex-1 md:space-y-6 md:overflow-y-auto">
+          <div className="space-y-1 md:flex-1 md:space-y-6 md:overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between gap-1 md:flex-col md:items-start md:justify-start md:gap-1">
               <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
                 1. Select Country
