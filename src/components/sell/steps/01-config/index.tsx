@@ -1,17 +1,23 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+// NOTE: Search icon + Input kept for the hidden brand search below
 import { Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSellFlow } from '@/hooks/use-sell-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { cn } from '@/lib/ui';
 import type { BrandCountry } from '@/types';
 import { SellStepsProgress } from '../shared/sell-steps-progress';
 import { BrandCountryGrid, StepFooter, FieldError } from '@/components/common';
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  GB: '🇬🇧',
+  US: '🇺🇸',
+  CA: '🇨🇦',
+};
 
 export interface BrandStepProps {
   brandCountries: BrandCountry[];
@@ -33,9 +39,23 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
         unique.set(bc.countryId, { id: bc.countryId, name: bc.countryName, code: bc.countryCode });
       }
     }
-    return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(unique.values()).sort((a, b) => {
+      if (a.code === 'US') return -1;
+      if (b.code === 'US') return 1;
+      return a.name.localeCompare(b.name);
+    });
   }, [brandCountries]);
 
+  // Auto-select US on first mount if nothing selected
+  useEffect(() => {
+    if (!selectedCountryId && brandCountries.length > 0) {
+      const usCountry = brandCountries.find((bc) => bc.countryCode === 'US');
+      if (usCountry) {
+        setSelectedCountryId(usCountry.countryId);
+      }
+    }
+  }, [brandCountries]);
+    
   const handleCountryChange = (val: string) => {
     setSelectedCountryId(val);
     setSelectedBrandCountry('', { minAmount: null, maxAmount: null });
@@ -76,42 +96,53 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
 
       <div className="flex min-h-0 flex-1 flex-col gap-1 md:grid md:grid-cols-12" data-tour="sell-config">
         <Card className="flex shrink-0 flex-col border p-3 md:col-span-4 md:row-span-11 md:min-h-0 md:p-6">
-          <div className="space-y-1 md:flex-1 md:space-y-6 md:overflow-y-auto custom-scrollbar">
-            <div className="flex items-center justify-between gap-1 md:flex-col md:items-start md:justify-start md:gap-1">
+          <div className="space-y-3 md:flex-1 md:space-y-6 md:overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col gap-1.5">
               <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
                 1. Select Country
               </Label>
-              <div className="w-44 md:w-full">
-                <Select value={selectedCountryId} onValueChange={handleCountryChange}>
-                  <SelectTrigger
-                    aria-invalid={!!showCountryError}
+              <div
+                className={cn(
+                  'bg-muted/40 flex items-center rounded-lg p-1',
+                  showCountryError && 'border-destructive/50 ring-destructive/30 ring-1',
+                )}
+              >
+                {countries.map((country) => (
+                  <button
+                    key={country.id}
+                    type="button"
+                    onClick={() => handleCountryChange(country.id)}
                     className={cn(
-                      'h-9 w-full',
-                      showCountryError && 'border-destructive/50 ring-destructive/30 ring-1',
+                      'min-w-0 flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all md:px-3.5 md:py-2',
+                      selectedCountryId === country.id
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground',
                     )}
                   >
-                    <SelectValue placeholder="Select Country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.id} value={country.id}>
-                        {country.name} ({country.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldError message={showCountryError} className="mt-1" />
+                    <span className="mr-1">{COUNTRY_FLAGS[country.code] || ''}</span>
+                    <span className="hidden sm:inline">{country.name}</span>
+                    <span className="sm:hidden">{country.code}</span>
+                  </button>
+                ))}
               </div>
+              <FieldError message={showCountryError} />
             </div>
 
-            <div className="flex items-center justify-between gap-1 md:flex-col md:items-start md:justify-start md:gap-1">
+            <div className="flex flex-col gap-1.5">
               <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider whitespace-nowrap uppercase md:text-xs">
                 2. Select Brand
               </Label>
+            </div>
+
+            {/*
+              Brand search — HIDDEN (few brands for now).
+              Uncomment when the catalog grows and filtering is useful again.
+
+            <div className="flex flex-col gap-1.5">
               <div className="relative w-44 md:w-full">
                 <Search className="text-muted-foreground/50 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 md:h-4 md:w-4" />
                 <Input
-                  placeholder={selectedCountryId ? 'Search Brand' : 'Select country first'}
+                  placeholder={selectedCountryId ? 'Search brand...' : 'Select country first'}
                   value={searchBrand}
                   onChange={(e) => setSearchBrand(e.target.value)}
                   disabled={!selectedCountryId}
@@ -119,6 +150,7 @@ export function BrandStep({ brandCountries, onBrandSelect, rateError }: BrandSte
                 />
               </div>
             </div>
+            */}
           </div>
         </Card>
 
