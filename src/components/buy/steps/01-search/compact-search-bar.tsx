@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import { Search, Settings, DollarSign } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/ui';
@@ -51,31 +50,36 @@ export function CompactSearchBar({
         unique.set(bc.countryId, { id: bc.countryId, name: bc.countryName, code: bc.countryCode });
       }
     }
-    return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(unique.values()).sort((a, b) => {
+      if (a.code === 'US') return -1;
+      if (b.code === 'US') return 1;
+      return a.name.localeCompare(b.name);
+    });
   }, [brandCountries]);
 
   return (
     <div className={cn('bg-card/50 flex flex-col items-center gap-1 rounded-xl border p-1 backdrop-blur-sm md:gap-1 md:p-3', className)}>
-      {/* Row 1: Country (takes most space) + Amount (small) */}
+      {/* Row 1: Country segmented control + Amount */}
       <div className="flex w-full items-center gap-1">
-        <Select value={selectedCountry} onValueChange={onCountryChange}>
-          <SelectTrigger className="h-8 min-w-0 grow border-0 bg-transparent p-1 text-xs font-medium focus:ring-0 md:h-9 md:text-sm [&>span]:line-clamp-1">
-            <SelectValue placeholder="Selecciona un país">
-              {selectedCountry &&
-                (() => {
-                  const country = countries.find((c) => c.id === selectedCountry);
-                  return country ? `${COUNTRY_FLAGS[country.code] || ''} ${country.name}` : null;
-                })()}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent className="bg-popover border-border">
-            {countries.map((country) => (
-              <SelectItem key={country.id} value={country.id}>
-                {COUNTRY_FLAGS[country.code] || ''} {country.name} ({country.code})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="bg-muted/40 flex min-w-0 grow items-center rounded-lg p-0.5">
+          {countries.map((country) => (
+            <button
+              key={country.id}
+              type="button"
+              onClick={() => onCountryChange(country.id)}
+              className={cn(
+                'min-w-0 flex-1 rounded-md px-1.5 py-1 text-xs font-medium transition-all md:px-2.5 md:text-sm',
+                selectedCountry === country.id
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <span className="mr-0.5">{COUNTRY_FLAGS[country.code] || ''}</span>
+              <span className="hidden sm:inline">{country.name}</span>
+              <span className="sm:hidden">{country.code}</span>
+            </button>
+          ))}
+        </div>
 
         <div className="relative flex flex-col items-center">
           <div className="relative flex items-center">

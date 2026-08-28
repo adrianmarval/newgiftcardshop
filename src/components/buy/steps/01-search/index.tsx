@@ -75,6 +75,16 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
     }
   }, [session?.user?.id]);
 
+  // Auto-select US on first mount if nothing selected
+  useEffect(() => {
+    if (!selectedCountry && brandCountries.length > 0) {
+      const usCountry = brandCountries.find((bc) => bc.countryCode === 'US');
+      if (usCountry) {
+        setSelectedCountry(usCountry.countryId);
+      }
+    }
+  }, [brandCountries]);
+
   const selectedBcId = selectedBc?.id;
 
   useEffect(() => {
