@@ -38,7 +38,7 @@ export const withdrawBalance = adminActionClient
 
         if (existingPending) {
           throw new ActionError(
-            'Ya existe un retiro de Binance pendiente de sincronización. Por favor, usá el botón de "Sincronizar" antes de intentar uno nuevo para evitar duplicados.',
+            'Ya existe un retiro de Binance pendiente de sincronización. Por favor, usa el botón de "Sincronizar" antes de intentar uno nuevo para evitar duplicados.',
           );
         }
 

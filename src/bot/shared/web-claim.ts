@@ -35,12 +35,12 @@ const claimI18n = {
   },
   es: {
     promptEmail:
-      '🌐 <b>Activar acceso web</b>\n\nIngresá el <b>correo electrónico</b> que vas a usar para entrar al panel web:',
-    emailInUse: `❌ Ese email ya está registrado por otra cuenta.\n\n👉 Contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} si necesitás ayuda.`,
-    alreadyActive: '✅ Tu acceso web ya está activo. Ingresá con <b>{email}</b>.',
+      '🌐 <b>Activar acceso web</b>\n\nIngresa el <b>correo electrónico</b> que vas a usar para entrar al panel web:',
+    emailInUse: `❌ Ese email ya está registrado por otra cuenta.\n\n👉 Contacta a @${process.env.ADMIN_TELEGRAM_USERNAME} si necesitas ayuda.`,
+    alreadyActive: '✅ Tu acceso web ya está activo. Ingresa con <b>{email}</b>.',
     success:
-      '🎉 <b>¡Acceso web activado!</b>\n\nYa podés entrar al panel web con:\n📧 Email: <b>{email}</b>\n🔑 La contraseña que acabás de crear.',
-    error: '❌ No se pudo activar el acceso web. Intentá de nuevo o contactá al administrador.',
+      '🎉 <b>¡Acceso web activado!</b>\n\nYa puedes entrar al panel web con:\n📧 Email: <b>{email}</b>\n🔑 La contraseña que acabas de crear.',
+    error: '❌ No se pudo activar el acceso web. Intenta de nuevo o contacta al administrador.',
   },
 };
 

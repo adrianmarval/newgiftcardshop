@@ -47,25 +47,25 @@ export const i18n = {
   },
   es: {
     welcome: '👋 ¡Bienvenido!\n\nPara comenzar, por favor ingresa tu correo electrónico.',
-    nameShort: '❌ Nombre muy corto. Ingresá tu nombre completo.',
+    nameShort: '❌ Nombre muy corto. Ingresa tu nombre completo.',
     helloName: '✅ ¡Hola, <b>{name}</b>!\n\n📧 <b>¿Cuál es tu correo electrónico?</b>',
-    invalidEmail: '❌ Email inválido. Ingresá un email con formato correcto.\nEjemplo: <code>usuario@gmail.com</code>',
+    invalidEmail: '❌ Email inválido. Ingresa un email con formato correcto.\nEjemplo: <code>usuario@gmail.com</code>',
     emailInUse: ' Ese email ya está registrado.\n\nPara vincular tu cuenta de Telegram, te enviamos un código de verificación al correo.',
-    emailLinkedElsewhere: ' Este email ya está vinculado a otra cuenta de Telegram. Contactá al administrador si necesitás ayuda.',
-    emailNotFound: ' No se encontró cuenta con este email. Por favor, registrate primero usando /start.',
+    emailLinkedElsewhere: ' Este email ya está vinculado a otra cuenta de Telegram. Contacta al administrador si necesitas ayuda.',
+    emailNotFound: ' No se encontró cuenta con este email. Por favor, regístrate primero usando /start.',
     otpSent:
-      '📬 Te enviamos un código de 6 dígitos a <b>{email}</b>.\n\n🔐 <b>Ingresá el código:</b>\n\n<i>El código expira en 5 minutos. Si no llega, revisá spam.</i>',
+      '📬 Te enviamos un código de 6 dígitos a <b>{email}</b>.\n\n🔐 <b>Ingresa el código:</b>\n\n<i>El código expira en 5 minutos. Si no llega, revisa spam.</i>',
     otpSubject: '🔐 Tu código de verificación',
-    otpEmailError: '❌ No pude enviar el código. Verificá el email e intentá de nuevo.',
-    otpNotFound: '❌ No encontré un código pendiente. Ingresá tu email de nuevo.',
-    otpExpired: '⏰ El código expiró. Ingresá tu email de nuevo para recibir uno nuevo.',
-    otpIncorrect: '❌ Código incorrecto. Revisá el email e intentá de nuevo.',
+    otpEmailError: '❌ No se pudo enviar el código. Verifica el email e intenta de nuevo.',
+    otpNotFound: '❌ No se encontró un código pendiente. Ingresa tu email de nuevo.',
+    otpExpired: '⏰ El código expiró. Ingresa tu email de nuevo para recibir uno nuevo.',
+    otpIncorrect: '❌ Código incorrecto. Revisa el email e intenta de nuevo.',
     emailVerified:
-      '✅ ¡Email verificado!\n\n🔑 Creá tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i> Tus mensajes en Telegram no son cifrados. Usá una contraseña única para esta cuenta.</i>',
+      '✅ ¡Email verificado!\n\n🔑 Crea tu contraseña:\n\nRequisitos:\n• Mínimo 8 caracteres\n• Al menos una mayúscula\n• Al menos una minúscula\n• Al menos un número\n\n<i> Tus mensajes en Telegram no son cifrados. Usa una contraseña única para esta cuenta.</i>',
     invalidPassword: '❌ Contraseña inválida. Necesita al menos:\n• 8 mayúscula\n• 1 minúscula\n• 1 número',
-    sessionIncomplete: '❌ Sesión incompleta. Empezá de nuevo con /start.',
-    accountCreated: `🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
-    accountLinked: `🎉 <b>¡Cuenta vinculada!</b>\n\n¡Bienvenido de nuevo, <b>{name}</b>!\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
+    sessionIncomplete: '❌ Sesión incompleta. Empieza de nuevo con /start.',
+    accountCreated: `🎉 ¡Cuenta creada!\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n⏳ Tu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contacta a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
+    accountLinked: `🎉 <b>¡Cuenta vinculada!</b>\n\n¡Bienvenido de nuevo, <b>{name}</b>!\nTu Telegram ahora está vinculado a <b>{email}</b>.\n\n⏳ Tu cuenta debe ser activada por el administrador.\n\n👉 <b>Por favor, contacta a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
     accountLinkedActive:
       '🎉 <b>¡Cuenta vinculada!</b>\n\n¡Bienvenido de nuevo, <b>{name}</b>!\nTu Telegram ahora está vinculado a <b>{email}</b>.',
     contactAdmin: 'Contactar administrador',
@@ -73,9 +73,9 @@ export const i18n = {
       '🔗 <b>Vincular cuenta</b>\n\nNombre: <b>{name}</b>\nEmail: <b>{email}</b>\n\n¿Es correcto?',
     linkConfirm: '✅ Confirmar',
     linkCancel: '❌ Cancelar',
-    linkCancelled: '❌ Vinculación cancelada. Podés empezar de nuevo con /start.',
-    emailError: '❌ El email ya está en uso. Contactá al administrador.',
-    genericError: '❌ Error al crear la cuenta. Intentá de nuevo o contactá al administrador.',
+    linkCancelled: '❌ Vinculación cancelada. Puedes empezar de nuevo con /start.',
+    emailError: '❌ El email ya está en uso. Contacta al administrador.',
+    genericError: '❌ Error al crear la cuenta. Intenta de nuevo o contacta al administrador.',
   },
 };
 
@@ -206,7 +206,7 @@ export async function startRegistration(ctx: RegContext, role: BotRole, startPar
     if (!linkToken) {
       await renderUI(ctx, lang === 'en'
         ? '❌ Invalid or expired link. Please try again from the web dashboard.'
-        : '❌ Enlace inválido o expirado. Intentá de nuevo desde el panel web.', { parse_mode: 'HTML' });
+        : '❌ Enlace inválido o expirado. Intenta de nuevo desde el panel web.', { parse_mode: 'HTML' });
       return;
     }
 
@@ -221,7 +221,7 @@ export async function startRegistration(ctx: RegContext, role: BotRole, startPar
       await prisma.telegramLinkToken.delete({ where: { token } });
       await renderUI(ctx, lang === 'en'
         ? '❌ This link has expired. Please generate a new one from the web dashboard.'
-        : '❌ Este enlace expiró. Generá uno nuevo desde el panel web.', { parse_mode: 'HTML' });
+        : '❌ Este enlace expiró. Genera uno nuevo desde el panel web.', { parse_mode: 'HTML' });
       return;
     }
 
@@ -265,7 +265,7 @@ export async function startRegistration(ctx: RegContext, role: BotRole, startPar
     const errorMsg =
       role === 'SELLER'
         ? '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot. Please contact the administrator if you think this is a mistake.'
-        : '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot. Por favor, contactá al administrador si creés que es un error.';
+        : '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot. Por favor, contacta al administrador si crees que es un error.';
 
     await renderUI(ctx, errorMsg, { parse_mode: 'HTML' });
     return;
@@ -597,7 +597,7 @@ export async function handleLinkConfirmation(
     ctx.session.wizard = { step: 'idle' };
     await renderUI(ctx, lang === 'en'
       ? '❌ This link is no longer valid. Please generate a new one from the web dashboard.'
-      : '❌ Este enlace ya no es válido. Generá uno nuevo desde el panel web.', { parse_mode: 'HTML' });
+       : '❌ Este enlace ya no es válido. Genera uno nuevo desde el panel web.', { parse_mode: 'HTML' });
     return;
   }
 

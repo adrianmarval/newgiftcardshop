@@ -19,21 +19,21 @@ const DRAWER_TEXTS = {
   },
   buyer: {
     title: 'No te pierdas nada',
-    description: 'Activá las notificaciones push para recibir alertas en este navegador sobre stock disponible, entrega de códigos y vencimiento de pagos.',
+    description: 'Activa las notificaciones push para recibir alertas en este navegador sobre stock disponible, entrega de códigos y vencimiento de pagos.',
     enable: 'Activar notificaciones push',
     dismiss: 'Ahora no',
     dismissForever: 'No volver a mostrar',
-    errorBlocked: 'Las notificaciones están bloqueadas por el navegador. Habilitalas en la configuración del sitio e intentá de nuevo.',
-    errorGeneric: 'Ocurrió un error al activar las notificaciones. Intentá de nuevo.',
+    errorBlocked: 'Las notificaciones están bloqueadas por el navegador. Habilítalas en la configuración del sitio e intenta de nuevo.',
+    errorGeneric: 'Ocurrió un error al activar las notificaciones. Intenta de nuevo.',
   },
   admin: {
     title: 'No te pierdas nada',
-    description: 'Activá las notificaciones push para recibir alertas en este navegador sobre pagos pendientes y nuevos lotes.',
+    description: 'Activa las notificaciones push para recibir alertas en este navegador sobre pagos pendientes y nuevos lotes.',
     enable: 'Activar notificaciones push',
     dismiss: 'Ahora no',
     dismissForever: 'No volver a mostrar',
-    errorBlocked: 'Las notificaciones están bloqueadas por el navegador. Habilitalas en la configuración del sitio e intentá de nuevo.',
-    errorGeneric: 'Ocurrió un error al activar las notificaciones. Intentá de nuevo.',
+    errorBlocked: 'Las notificaciones están bloqueadas por el navegador. Habilítalas en la configuración del sitio e intenta de nuevo.',
+    errorGeneric: 'Ocurrió un error al activar las notificaciones. Intenta de nuevo.',
   },
 } as const;
 

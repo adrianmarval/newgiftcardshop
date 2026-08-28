@@ -20,7 +20,7 @@ export const updateNotificationPreferences = authActionClient
         select: { telegramId: true },
       });
       if (!telegramUser) {
-        throw new ActionError('Telegram no está vinculado. Vinculá tu cuenta antes de habilitar Notificaciones por Telegram.');
+        throw new ActionError('Telegram no está vinculado. Vincula tu cuenta antes de habilitar Notificaciones por Telegram.');
       }
     }
 

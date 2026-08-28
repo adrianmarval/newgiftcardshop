@@ -18,7 +18,7 @@ export const unlockWithPasskey = buyerActionClient
   .outputSchema(unlockOutputSchema)
   .action(async ({ ctx }) => {
     const passkeyCount = await prisma.passkey.count({ where: { userId: ctx.auth.user.id } });
-    if (passkeyCount === 0) throw new ActionError('No tenés una passkey registrada. Usá tu PIN de seguridad.');
+    if (passkeyCount === 0) throw new ActionError('No tienes una passkey registrada. Usa tu PIN de seguridad.');
     const until = await grantSecurityUnlock(ctx.auth.user.id);
     return { success: true as const, unlockedUntil: until.toISOString() };
   });

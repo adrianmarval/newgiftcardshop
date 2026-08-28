@@ -44,7 +44,7 @@ export async function startBuyer(ctx: BuyerContext) {
     if (user && user.role === 'SELLER') {
       await renderUI(
         ctx,
-        '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot. Por favor, contactá al administrador si creés que es un error.',
+        '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot. Por favor, contacta al administrador si crees que es un error.',
         { parse_mode: 'HTML' },
       );
       await cleanupOldMessage();
@@ -56,7 +56,7 @@ export async function startBuyer(ctx: BuyerContext) {
         const escapedName = escapeHTML(user.name);
         await renderUI(
           ctx,
-          `⏳ <b>Hola, ${escapedName}.</b>\n\nTu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contactá a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
+          `⏳ <b>Hola, ${escapedName}.</b>\n\nTu cuenta está pendiente de activación por el administrador.\n\n👉 <b>Por favor, contacta a @${process.env.ADMIN_TELEGRAM_USERNAME} para activarla.</b>`,
           { parse_mode: 'HTML' },
         );
         await cleanupOldMessage();
@@ -84,7 +84,7 @@ export async function startBuyer(ctx: BuyerContext) {
       }
       const escapedName = escapeHTML(user.name);
 
-      await renderUI(ctx, `👋 ¡Hola de nuevo, <b>${escapedName}</b>!\n\nUsá los botones para navegar.`, {
+      await renderUI(ctx, `👋 ¡Hola de nuevo, <b>${escapedName}</b>!\n\nUsa los botones para navegar.`, {
         parse_mode: 'HTML',
         reply_markup: kb,
       });
@@ -98,7 +98,7 @@ export async function startBuyer(ctx: BuyerContext) {
     await deleteUserInput(ctx);
   } catch (_err: any) {
     const threadId = await resolveFlowThreadId(ctx).catch(() => undefined);
-    const errorMsg = '❌ Ocurrió un error al iniciar el bot. Por favor, intentá de nuevo más tarde.';
+    const errorMsg = '❌ Ocurrió un error al iniciar el bot. Por favor, intenta de nuevo más tarde.';
     // Si el thread está stale (topic borrado/cerrado), reintentar como mensaje plano
     await ctx
       .reply(errorMsg, {

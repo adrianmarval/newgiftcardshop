@@ -116,7 +116,7 @@ export async function validateBuyerPayment(txId: string, expectedAmount: string,
       });
       return {
         isValid: false,
-        message: 'No se pudo conectar con Binance. Reintentá en unos segundos.',
+        message: 'No se pudo conectar con Binance. Intenta de nuevo en unos segundos.',
         code: 'API_ERROR',
       };
     }
@@ -202,7 +202,7 @@ export async function validateBuyerPayment(txId: string, expectedAmount: string,
     });
     return {
       isValid: false,
-      message: 'Error de conexión con Binance. Reintentá en unos segundos.',
+      message: 'Error de conexión con Binance. Intenta de nuevo en unos segundos.',
       code: 'API_ERROR',
     };
   }

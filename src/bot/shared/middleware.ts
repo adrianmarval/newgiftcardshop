@@ -129,7 +129,7 @@ export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) =
     logger.warn(`[Auth] Buyer no vinculado: telegramId=${telegramId}, telegramUserExiste=${!!telegramUser}`);
     return renderUI(
       ctx,
-      '🔗 <b>Tu cuenta no está vinculada.</b>\n\nSi tu cuenta está activa, intentá de nuevo en unos segundos o contactá a @' +
+      '🔗 <b>Tu cuenta no está vinculada.</b>\n\nSi tu cuenta está activa, intenta de nuevo en unos segundos o contacta a @' +
         ADMIN_USERNAME +
         '.',
       { parse_mode: 'HTML' },
@@ -137,7 +137,7 @@ export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) =
   }
 
   if (!user.isActive) {
-    return renderUI(ctx, '⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contactá a @${ADMIN_USERNAME} para activarla.`, {
+    return renderUI(ctx, '⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contacta a @${ADMIN_USERNAME} para activarla.`, {
       parse_mode: 'HTML',
     });
   }

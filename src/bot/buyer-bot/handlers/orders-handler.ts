@@ -49,7 +49,7 @@ export async function handleOrders(ctx: BuyerContext) {
 
   if (orders.length === 0 && page === 1) {
     const kb = new InlineKeyboard().text('🛒 Comprar tarjetas', 'buy_start').row().text('🏠 Volver al Menú', 'start');
-    await renderUI(ctx, '📭 No tenés órdenes todavía.', { reply_markup: kb });
+    await renderUI(ctx, '📭 No tienes órdenes todavía.', { reply_markup: kb });
     return;
   }
 
@@ -192,17 +192,17 @@ export async function renderOrderDetail(ctx: BuyerContext, orderId: string, from
   let instructions = '';
   if (order.status === 'PENDING') {
     if (totalToPay.isZero()) {
-      instructions = `\n\n<b> Total Cero</b>\nEl total de tu orden es $0.00. No se requiere pago. Podés <b>cancelar la orden</b> si ya no la necesitás.`;
+      instructions = `\n\n<b> Total Cero</b>\nEl total de tu orden es $0.00. No se requiere pago. Puedes <b>cancelar la orden</b> si ya no la necesitas.`;
     } else if (order.giftcards.every((c) => c.isConfirmed)) {
-      instructions = `\n\n<b>🎉 ¡Listo para pagar!</b>\nTodas las tarjetas han sido confirmadas. Presioná <b>"✅ Pagar ahora"</b> para proceder.`;
+      instructions = `\n\n<b>🎉 ¡Listo para pagar!</b>\nTodas las tarjetas han sido confirmadas. Presiona <b>"✅ Pagar ahora"</b> para proceder.`;
     } else {
       instructions = `\n\n<b>📝 Instrucciones</b>
-1. Aplicá los códigos en tu cuenta.
-2. Si alguno falla, usá el botón <b>"🚩 Reportar problema"</b>.
-3. Al terminar, presioná <b>"✅ Confirmar uso exitoso"</b> para continuar.`;
+1. Aplica los códigos en tu cuenta.
+2. Si alguno falla, usa el botón <b>"🚩 Reportar problema"</b>.
+3. Al terminar, presiona <b>"✅ Confirmar uso exitoso"</b> para continuar.`;
     }
   } else if (order.status === 'AWAITING_PAYMENT') {
-    instructions = `\n\n<b>💳 Pago Pendiente</b>\nPresioná el botón de abajo para informar el ID de transacción de tu pago.`;
+    instructions = `\n\n<b>💳 Pago Pendiente</b>\nPresiona el botón de abajo para informar el ID de transacción de tu pago.`;
   }
 
   const msg = `<b>Orden #<code>${order.id}</code></b>\n\n${invalidBlock}${validBlock}${summary}${instructions}`;
@@ -290,8 +290,8 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
   }, new Prisma.Decimal(0));
 
   const reportedCount = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED').length;
-  const warningText =
-    reportedCount > 0 ? `\n <b>Tenés ${reportedCount} tarjeta(s) reportada(s)</b> - El pago se ajustará automáticamente.\n` : '';
+    const warningText =
+    reportedCount > 0 ? `\n <b>Tienes ${reportedCount} tarjeta(s) reportada(s)</b> - El pago se ajustará automáticamente.\n` : '';
 
   const firstCard = order.giftcards[0];
   const brandCountry = await prisma.brandCountry.findUnique({
@@ -310,7 +310,7 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
     ` <b>¿Confirmar uso de tarjetas?</b>\n\n` +
       `Esta acción <b>NO se puede revertir</b>.\n\n` +
       `Al confirmar, el sistema procesará el pago al proveedor por <b>${fmt$(totalEffectiveFaceValue, currency)}</b> giftcards.\n${warningText}\n` +
-      `📝 <b>Asegurate de que:</b>\n` +
+      `📝 <b>Asegúrate de que:</b>\n` +
       `• Las tarjetas fueron aplicadas correctamente\n` +
       `• El saldo ${fmt$(totalEffectiveFaceValue, currency)} exacto fue acreditado en tu cuenta\n` +
       `• Si hubo problemas que no reportaste, detente ahora y regresa para reportarlos con el botón "🚩 Reportar problema"`,
@@ -344,7 +344,7 @@ export async function handleConfirmUsageFinal(ctx: BuyerContext) {
     await renderUI(
       ctx,
       `✅ <b>Uso confirmado.</b>\n\nTotal a pagar: <b>${fmt$(adjustedTotal, 'USD')}</b>\n\n` +
-        `Enviá el pago en USDT a la dirección del administrador y confirmá con el botón.`,
+        `Envía el pago en USDT a la dirección del administrador y confirma con el botón.`,
       { parse_mode: 'HTML', reply_markup: kb, callbackText: 'Uso confirmado' },
     );
   } catch (err: any) {
@@ -363,7 +363,7 @@ export async function handleMakePayment(ctx: BuyerContext) {
   ctx.session.wizard.step = 'awaitingPaymentId';
   ctx.session.wizard.orderId = orderId;
 
-  await renderUI(ctx, '💳 <b>Enviá el ID de transacción de Binance:</b>\n\n' + '<i>Ejemplo: 5A3F2E1D4C6B...</i>', {
+  await renderUI(ctx, '💳 <b>Envía el ID de transacción de Binance:</b>\n\n' + '<i>Ejemplo: 5A3F2E1D4C6B...</i>', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('⬅️ Volver', `order_detail_${orderId}`),
   });
@@ -379,7 +379,7 @@ export async function handlePaymentText(ctx: BuyerContext) {
 
   const orderId = ctx.session.wizard.orderId;
   if (!orderId)
-    return renderUI(ctx, '❌ Sesión expirada. Usá /orders para ver tu orden.', {
+    return renderUI(ctx, '❌ Sesión expirada. Usa /orders para ver tu orden.', {
       reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start'),
     });
 
@@ -428,7 +428,7 @@ export async function handlePaymentText(ctx: BuyerContext) {
     if (err instanceof PaymentVerificationError) {
       return renderUI(
         ctx,
-        `❌ <b>No se pudo verificar tu pago.</b>\n\n${escapeHTML(err.message)}\n\n<b>Revisá el ID de transacción y enviálo nuevamente:</b>`,
+        `❌ <b>No se pudo verificar tu pago.</b>\n\n${escapeHTML(err.message)}\n\n<b>Revisa el ID de transacción y envíalo nuevamente:</b>`,
         {
           parse_mode: 'HTML',
           reply_markup: new InlineKeyboard().text('🔄 Reintentar', `make_payment_${orderId}`).text('📋 Ver mis órdenes', 'my_orders').row(),
@@ -474,7 +474,7 @@ export async function handleReportIssues(ctx: BuyerContext) {
   }
 
   const kb = new InlineKeyboard();
-  let msg = '🚩 <b>¿Con qué tarjeta tenés problemas?</b>\n\nSeleccioná una tarjeta para reportar o gestionar un reporte existente:';
+  let msg = '🚩 <b>¿Con qué tarjeta tienes problemas?</b>\n\nSelecciona una tarjeta para reportar o gestionar un reporte existente:';
 
   const currency = orderWithBrand.giftcards[0]?.brandCountry?.country?.currency || 'USD';
 
@@ -600,7 +600,7 @@ export async function handleReportTypeSelect(ctx: BuyerContext) {
 
   if (type === 'WRONG_AMOUNT') {
     ctx.session.wizard.step = 'awaitingReportAmount';
-    await renderUI(ctx, '📉 <b>¿Cuál es el monto real que tiene la tarjeta?</b>\n\nIngresá solo el número (ejemplo: 50):', {
+    await renderUI(ctx, '📉 <b>¿Cuál es el monto real que tiene la tarjeta?</b>\n\nIngresa solo el número (ejemplo: 50):', {
       parse_mode: 'HTML',
       reply_markup: new InlineKeyboard().text('❌ Cancelar', `report_type_WRONG_AMOUNT`),
     });
@@ -619,7 +619,7 @@ export async function handleReportAmountText(ctx: BuyerContext) {
   await deleteUserInput(ctx);
 
   if (isNaN(amount) || amount <= 0) {
-    return renderUI(ctx, '❌ Por favor, ingresá un monto válido (solo números).', {
+    return renderUI(ctx, '❌ Por favor, ingresa un monto válido (solo números).', {
       reply_markup: new InlineKeyboard().text('⬅️ Volver', `report_type_WRONG_AMOUNT`),
     });
   }
@@ -633,7 +633,7 @@ async function requestProof(ctx: BuyerContext) {
   const kb = new InlineKeyboard().text('⏭️ Omitir prueba', 'report_proof_skip').row();
 
   const msg =
-    '📸 <b>Enviá una captura de pantalla (opcional)</b>\n\nPara agilizar el proceso, podés enviar una imagen que sirva de prueba del error:';
+    '📸 <b>Envía una captura de pantalla (opcional)</b>\n\nPara agilizar el proceso, puedes enviar una imagen que sirva de prueba del error:';
 
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
 }
@@ -658,7 +658,7 @@ export async function handleReportProofSkip(ctx: BuyerContext) {
 async function submitReport(ctx: BuyerContext) {
   const { reportCardId, orderId, reportIssueType, reportAmount, reportProofUrl } = ctx.session.wizard;
   if (!reportCardId || !orderId || !reportIssueType) {
-    return renderUI(ctx, '❌ Error en la sesión. Empezá de nuevo desde /orders.', {
+    return renderUI(ctx, '❌ Error en la sesión. Empieza de nuevo desde /orders.', {
       reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start'),
     });
   }
@@ -682,7 +682,7 @@ async function submitReport(ctx: BuyerContext) {
     return handleReportIssues(ctx);
   } catch (err) {
     console.error('[Report] Error:', err);
-    await renderUI(ctx, '❌ Error al procesar el reporte. Intentá de nuevo.', {
+    await renderUI(ctx, '❌ Error al procesar el reporte. Intenta de nuevo.', {
       reply_markup: new InlineKeyboard().text('⬅️ Volver a mis órdenes', 'my_orders'),
     });
   }

@@ -206,7 +206,7 @@ export function UnlockGate({
 
           {showPin && (
             <>
-              {showPasskey && <span className="text-muted-foreground text-center text-xs">o usá tu PIN de seguridad</span>}
+              {showPasskey && <span className="text-muted-foreground text-center text-xs">o usa tu PIN de seguridad</span>}
               <Input
                 type="password"
                 inputMode="numeric"
@@ -251,7 +251,7 @@ export function UnlockGate({
       {mode === 'setup' && (
         <div className="mx-auto flex w-full max-w-xs flex-col gap-2 md:gap-2.5">
           <p className="text-muted-foreground text-center text-[11px] leading-snug md:text-xs">
-            Creá un PIN para proteger tus compras. Te lo pediremos antes de mostrar códigos.
+            Crea un PIN para proteger tus compras. Te lo pediremos antes de mostrar códigos.
           </p>
           <Input
             type="password"

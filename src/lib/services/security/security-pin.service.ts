@@ -124,7 +124,7 @@ export async function verifySecurityPin(userId: string, pin: string): Promise<vo
     select: { securityPinHash: true, pinFailedAttempts: true, pinLocked: true },
   });
   if (!user?.securityPinHash) {
-    throw new SecurityPinError('PIN_NOT_SET', 'No tenés un PIN de seguridad configurado.');
+    throw new SecurityPinError('PIN_NOT_SET', 'No tienes un PIN de seguridad configurado.');
   }
   if (user.pinLocked) {
     throw new SecurityPinError('PIN_LOCKED', 'Tu PIN está bloqueado por intentos fallidos. Restablecelo con el código enviado a tu email.');
@@ -175,7 +175,7 @@ export async function setSecurityPin(userId: string, pin: string): Promise<void>
     select: { securityPinHash: true },
   });
   if (user?.securityPinHash) {
-    throw new SecurityPinError('PIN_FORMAT_INVALID', 'Ya tenés un PIN configurado. Usá la opción de cambiar PIN.');
+    throw new SecurityPinError('PIN_FORMAT_INVALID', 'Ya tienes un PIN configurado. Usa la opción de cambiar PIN.');
   }
   await prisma.user.update({
     where: { id: userId },
@@ -194,7 +194,7 @@ export async function changeSecurityPin(userId: string, currentPin: string, newP
     select: { securityPinHash: true },
   });
   if (!user?.securityPinHash) {
-    throw new SecurityPinError('PIN_NOT_SET', 'No tenés un PIN de seguridad configurado.');
+    throw new SecurityPinError('PIN_NOT_SET', 'No tienes un PIN de seguridad configurado.');
   }
   await verifySecurityPin(userId, currentPin);
   await prisma.user.update({
@@ -213,12 +213,12 @@ export async function requestPinReset(userId: string): Promise<void> {
   });
   if (!user) throw new SecurityPinError('PIN_NOT_SET', 'Usuario no encontrado.');
   if (!user.securityPinHash) {
-    throw new SecurityPinError('PIN_NOT_SET', 'No tenés un PIN configurado — no hay nada que restablecer.');
+    throw new SecurityPinError('PIN_NOT_SET', 'No tienes un PIN configurado — no hay nada que restablecer.');
   }
 
   const existing = await prisma.pinResetOtp.findUnique({ where: { userId } });
   if (existing && Date.now() - existing.createdAt.getTime() < PIN_RESET_COOLDOWN_SECONDS * 1000) {
-    throw new SecurityPinError('OTP_COOLDOWN', 'Ya enviamos un código hace un momento. Revisá tu email o esperá unos segundos.');
+    throw new SecurityPinError('OTP_COOLDOWN', 'Ya enviamos un código hace un momento. Revisa tu email o espera unos segundos.');
   }
 
   const otp = crypto.randomInt(100000, 1000000).toString();
@@ -263,7 +263,7 @@ export async function verifyPinResetOtp(userId: string, otp: string): Promise<vo
       where: { userId },
       data: { attempts: { increment: 1 } },
     });
-    throw new SecurityPinError('OTP_INVALID', 'Código incorrecto. Revisá tu email e intentá de nuevo.');
+    throw new SecurityPinError('OTP_INVALID', 'Código incorrecto. Revisa tu email e intenta de nuevo.');
   }
 }
 
@@ -277,15 +277,15 @@ export async function confirmPinReset(userId: string, otp: string, newPin: strin
 
   const record = await prisma.pinResetOtp.findUnique({ where: { userId } });
   if (!record) {
-    throw new SecurityPinError('OTP_NOT_FOUND', 'No hay un código de recuperación activo. Solicitá uno nuevo.');
+    throw new SecurityPinError('OTP_NOT_FOUND', 'No hay un código de recuperación activo. Solicita uno nuevo.');
   }
   if (record.expiresAt < new Date()) {
     await prisma.pinResetOtp.delete({ where: { userId } });
-    throw new SecurityPinError('OTP_EXPIRED', 'El código expiró. Solicitá uno nuevo.');
+    throw new SecurityPinError('OTP_EXPIRED', 'El código expiró. Solicita uno nuevo.');
   }
   if (record.attempts >= PIN_MAX_ATTEMPTS) {
     await prisma.pinResetOtp.delete({ where: { userId } });
-    throw new SecurityPinError('OTP_MAX_ATTEMPTS', 'Demasiados intentos fallidos. Solicitá un nuevo código.');
+    throw new SecurityPinError('OTP_MAX_ATTEMPTS', 'Demasiados intentos fallidos. Solicita un nuevo código.');
   }
 
   if (record.otp !== otp) {
@@ -293,7 +293,7 @@ export async function confirmPinReset(userId: string, otp: string, newPin: strin
       where: { userId },
       data: { attempts: { increment: 1 } },
     });
-    throw new SecurityPinError('OTP_INVALID', 'Código incorrecto. Revisá tu email e intentá de nuevo.');
+    throw new SecurityPinError('OTP_INVALID', 'Código incorrecto. Revisa tu email e intenta de nuevo.');
   }
 
   await prisma.$transaction([

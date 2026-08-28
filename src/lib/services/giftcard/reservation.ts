@@ -33,7 +33,7 @@ export async function reserveGiftcards(
       metadata: { orderId, requested: giftcardIds.length, reserved: result.count, missing: giftcardIds.length - result.count },
     });
     throw new GiftcardReservationError(
-      'Una o más tarjetas ya no están disponibles. Por favor, volvé a buscar.',
+      'Una o más tarjetas ya no están disponibles. Por favor, vuelve a buscar.',
     );
   }
 }

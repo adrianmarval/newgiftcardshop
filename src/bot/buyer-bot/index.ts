@@ -85,7 +85,7 @@ export function createBuyerBot() {
       limit: 30,
       onLimitExceeded: (ctx) => {
         if (ctx.callbackQuery) {
-          ctx.answerCallbackQuery('Calma, estás yendo muy rápido').catch(() => {});
+          ctx.answerCallbackQuery('Calma, vas muy rápido').catch(() => {});
         }
       },
     }),
@@ -209,7 +209,7 @@ export function createBuyerBot() {
   // ── Error handler ─────────────────────────────────────────────────────────
   bot.catch((err) => {
     console.error('[BuyerBot] Error:', err.message, err.ctx?.update);
-    err.ctx?.reply('❌ Ocurrió un error inesperado. Intentá de nuevo o usá /start.').catch(() => {});
+    err.ctx?.reply('❌ Ocurrió un error inesperado. Intenta de nuevo o usa /start.').catch(() => {});
   });
 
   const webhookPath = `/api/bot/buyer/${token.split(':')[0]}`;

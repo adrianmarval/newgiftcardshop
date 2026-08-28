@@ -246,7 +246,7 @@ export function BuyerDashboard({ stats, recentOrders }: BuyerDashboardProps) {
         ) : (
           <Card>
             <CardHeader>
-              <CardDescription>No tenés órdenes aún. Explorá las tarjetas disponibles para empezar.</CardDescription>
+              <CardDescription>No tienes órdenes aún. Explora las tarjetas disponibles para empezar.</CardDescription>
             </CardHeader>
           </Card>
         )}

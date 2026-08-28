@@ -62,10 +62,10 @@ export async function withSecurityGate(ctx: BuyerContext, orderId: string, sourc
     kb.text('❌ Cancelar', 'sec_cancel');
     await renderUI(
       ctx,
-      `🔐 <b>Protegé tus códigos</b>\n\n` +
-        `Antes de mostrar los códigos de tu orden, creá un <b>PIN de seguridad</b> (4 a 6 dígitos).\n` +
-        `Te lo vamos a pedir cada vez que quieras ver códigos de órdenes nuevas.\n\n` +
-        `👇 Escribí tu nuevo PIN:`,
+        `🔐 <b>Protege tus códigos</b>\n\n` +
+        `Antes de mostrar los códigos de tu orden, crea un <b>PIN de seguridad</b> (4 a 6 dígitos).\n` +
+        `Te lo pediremos cada vez que quieras ver códigos de órdenes nuevas.\n\n` +
+        `👇 Escribe tu nuevo PIN:`,
       { parse_mode: 'HTML', reply_markup: kb },
     );
     return true;
@@ -74,9 +74,9 @@ export async function withSecurityGate(ctx: BuyerContext, orderId: string, sourc
   ctx.session.wizard.step = 'awaitingSecurityPin';
   kb.text('📧 Olvidé mi PIN', 'sec_pin_forgot').row().text('📋 Ver Mis órdenes', 'my_orders');
   const lockedNote = status.pinLocked
-    ? '\n\n⚠️ <b>Tu PIN está bloqueado por intentos fallidos.</b> Usá "Olvidé mi PIN" para restablecerlo.'
+    ? '\n\n⚠️ <b>Tu PIN está bloqueado por intentos fallidos.</b> Usa "Olvidé mi PIN" para restablecerlo.'
     : '';
-  await renderUI(ctx, `🔐 <b>Códigos protegidos</b>\n\n Ingresá tu <b>PIN de seguridad</b> para ver los códigos:${lockedNote}`, {
+  await renderUI(ctx, `🔐 <b>Códigos protegidos</b>\n\n Ingresa tu <b>PIN de seguridad</b> para ver los códigos:${lockedNote}`, {
     parse_mode: 'HTML',
     reply_markup: kb,
     callbackText: '🔐 Verificación requerida',
@@ -138,7 +138,7 @@ export async function handleSecPinForgot(ctx: BuyerContext) {
   try {
     await requestPinReset(ctx.user.id);
   } catch (error) {
-    const msg = error instanceof SecurityPinError ? error.message : 'No se pudo enviar el email. Intentá más tarde.';
+    const msg = error instanceof SecurityPinError ? error.message : 'No se pudo enviar el email. Intenta más tarde.';
     return renderUI(ctx, `❌ ${msg}`, {
       parse_mode: 'HTML',
       reply_markup: new InlineKeyboard().text('⬅️ Volver', 'start'),
@@ -186,7 +186,7 @@ export async function handleSecCreatePin(ctx: BuyerContext) {
   ctx.session.wizard.pendingRevealOrderId = undefined;
   ctx.session.wizard.pendingRevealSource = undefined;
   ctx.session.wizard.step = 'awaitingPinSetup';
-  await renderUI(ctx, '🛡 <b>Crear PIN de seguridad</b>\n\n👇 Escribí tu nuevo PIN (4 a 6 dígitos):', {
+  await renderUI(ctx, '🛡 <b>Crear PIN de seguridad</b>\n\n👇 Escribe tu nuevo PIN (4 a 6 dígitos):', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
   });
@@ -196,7 +196,7 @@ export async function handleSecCreatePin(ctx: BuyerContext) {
 export async function handleSecChangePin(ctx: BuyerContext) {
   await ctx.answerCallbackQuery();
   ctx.session.wizard.step = 'awaitingPinChangeCurrent';
-  await renderUI(ctx, '🔑 <b>Cambiar PIN</b>\n\n👇 Escribí tu PIN <b>actual</b>:', {
+  await renderUI(ctx, '🔑 <b>Cambiar PIN</b>\n\n👇 Escribe tu PIN <b>actual</b>:', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
   });
@@ -235,7 +235,7 @@ export async function handleSecurityPinText(ctx: BuyerContext) {
           reply_markup: new InlineKeyboard().text('📧 Restablecer por email', 'sec_pin_forgot').row().text('🏠 Volver al Menú', 'start'),
         });
       }
-      return promptRetry(ctx, `${error.message}\n\n👇 Intentá de nuevo:`);
+      return promptRetry(ctx, `${error.message}\n\n👇 Intenta de nuevo:`);
     }
     throw error;
   }
@@ -252,13 +252,13 @@ export async function handlePinSetupText(ctx: BuyerContext) {
   if (!isValidPinFormat(pin)) {
     return promptRetry(
       ctx,
-      'El PIN debe tener entre 4 y 6 dígitos numéricos.\n\n👇 Intentá de nuevo:',
+      'El PIN debe tener entre 4 y 6 dígitos numéricos.\n\n👇 Intenta de nuevo:',
       new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
     );
   }
   ctx.session.wizard.securityPinDraft = pin;
   ctx.session.wizard.step = 'awaitingPinSetupConfirm';
-  await renderUI(ctx, '🔁 <b>Confirmá tu PIN</b>\n\n👇 Escribilo de nuevo:', {
+  await renderUI(ctx, '🔁 <b>Confirma tu PIN</b>\n\n👇 Escríbelo de nuevo:', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
   });
@@ -274,7 +274,7 @@ export async function handlePinSetupConfirmText(ctx: BuyerContext) {
     ctx.session.wizard.step = 'awaitingPinSetup';
     return promptRetry(
       ctx,
-      'Los PIN no coinciden.\n\n👇 Escribí tu nuevo PIN otra vez:',
+      'Los PIN no coinciden.\n\n👇 Escribe tu nuevo PIN otra vez:',
       new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
     );
   }
@@ -303,7 +303,7 @@ export async function handlePinResetOtpText(ctx: BuyerContext) {
   await deleteUserInput(ctx);
 
   if (!/^\d{6}$/.test(otp)) {
-    return promptRetry(ctx, 'El código tiene 6 dígitos.\n\n👇 Intentá de nuevo:', new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'));
+    return promptRetry(ctx, 'El código tiene 6 dígitos.\n\n👇 Intenta de nuevo:', new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'));
   }
 
   try {
@@ -318,14 +318,14 @@ export async function handlePinResetOtpText(ctx: BuyerContext) {
           new InlineKeyboard().text('📧 Solicitar nuevo código', 'sec_pin_forgot').row().text('🏠 Volver al Menú', 'start'),
         );
       }
-      return promptRetry(ctx, error.message + '\n\n👇 Ingresá el código de nuevo:', new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'));
+      return promptRetry(ctx, error.message + '\n\n👇 Ingresa el código de nuevo:', new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'));
     }
     throw error;
   }
 
   ctx.session.wizard.securityResetOtp = otp;
   ctx.session.wizard.step = 'awaitingPinResetNewPin';
-  await renderUI(ctx, '🛡 <b>Nuevo PIN</b>\n\n👇 Escribí tu nuevo PIN (4 a 6 dígitos):', {
+  await renderUI(ctx, '🛡 <b>Nuevo PIN</b>\n\n👇 Escribe tu nuevo PIN (4 a 6 dígitos):', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
   });
@@ -339,13 +339,13 @@ export async function handlePinResetNewPinText(ctx: BuyerContext) {
   if (!isValidPinFormat(pin)) {
     return promptRetry(
       ctx,
-      'El PIN debe tener entre 4 y 6 dígitos numéricos.\n\n👇 Intentá de nuevo:',
+      'El PIN debe tener entre 4 y 6 dígitos numéricos.\n\n👇 Intenta de nuevo:',
       new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
     );
   }
   ctx.session.wizard.securityPinDraft = pin;
   ctx.session.wizard.step = 'awaitingPinResetConfirm';
-  await renderUI(ctx, '🔁 <b>Confirmá tu nuevo PIN</b>\n\n👇 Escribilo de nuevo:', {
+  await renderUI(ctx, '🔁 <b>Confirma tu nuevo PIN</b>\n\n👇 Escríbelo de nuevo:', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
   });
@@ -361,7 +361,7 @@ export async function handlePinResetConfirmText(ctx: BuyerContext) {
     ctx.session.wizard.step = 'awaitingPinResetNewPin';
     return promptRetry(
       ctx,
-      'Los PIN no coinciden.\n\n👇 Escribí tu nuevo PIN otra vez:',
+      'Los PIN no coinciden.\n\n👇 Escribe tu nuevo PIN otra vez:',
       new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
     );
   }
@@ -370,7 +370,7 @@ export async function handlePinResetConfirmText(ctx: BuyerContext) {
   if (!otp) {
     clearSecuritySession(ctx);
     ctx.session.wizard.step = 'idle';
-    return renderUI(ctx, '❌ Sesión expirada. Iniciá la recuperación de nuevo.', {
+    return renderUI(ctx, '❌ Sesión expirada. Inicia la recuperación de nuevo.', {
       reply_markup: new InlineKeyboard().text('🏠 Volver al Menú', 'start'),
     });
   }
@@ -383,7 +383,7 @@ export async function handlePinResetConfirmText(ctx: BuyerContext) {
         ctx.session.wizard.step = 'awaitingPinResetOtp';
         return promptRetry(
           ctx,
-          `${error.message}\n\n👇 Ingresá el código de nuevo:`,
+          `${error.message}\n\n👇 Ingresa el código de nuevo:`,
           new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
         );
       }
@@ -420,7 +420,7 @@ export async function handlePinChangeCurrentText(ctx: BuyerContext) {
           reply_markup: new InlineKeyboard().text('📧 Restablecer por email', 'sec_pin_forgot').row().text('🏠 Volver al Menú', 'start'),
         });
       }
-      return promptRetry(ctx, `${error.message}\n\n👇 Intentá de nuevo:`, new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'));
+      return promptRetry(ctx, `${error.message}\n\n👇 Intenta de nuevo:`, new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'));
     }
     throw error;
   }
@@ -429,7 +429,7 @@ export async function handlePinChangeCurrentText(ctx: BuyerContext) {
   // (changeSecurityPin lo valida de nuevo antes de cambiar).
   ctx.session.wizard.securityPinCurrent = pin;
   ctx.session.wizard.step = 'awaitingPinChangeNew';
-  await renderUI(ctx, '🛡 <b>Nuevo PIN</b>\n\n👇 Escribí tu nuevo PIN (4 a 6 dígitos):', {
+  await renderUI(ctx, '🛡 <b>Nuevo PIN</b>\n\n👇 Escribe tu nuevo PIN (4 a 6 dígitos):', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
   });
@@ -443,13 +443,13 @@ export async function handlePinChangeNewText(ctx: BuyerContext) {
   if (!isValidPinFormat(pin)) {
     return promptRetry(
       ctx,
-      'El PIN debe tener entre 4 y 6 dígitos numéricos.\n\n👇 Intentá de nuevo:',
+      'El PIN debe tener entre 4 y 6 dígitos numéricos.\n\n👇 Intenta de nuevo:',
       new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
     );
   }
   ctx.session.wizard.securityPinDraft = pin;
   ctx.session.wizard.step = 'awaitingPinChangeConfirm';
-  await renderUI(ctx, '🔁 <b>Confirmá tu nuevo PIN</b>\n\n👇 Escribilo de nuevo:', {
+  await renderUI(ctx, '🔁 <b>Confirma tu nuevo PIN</b>\n\n👇 Escríbelo de nuevo:', {
     parse_mode: 'HTML',
     reply_markup: new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
   });
@@ -465,7 +465,7 @@ export async function handlePinChangeConfirmText(ctx: BuyerContext) {
     ctx.session.wizard.step = 'awaitingPinChangeNew';
     return promptRetry(
       ctx,
-      'Los PIN no coinciden.\n\n👇 Escribí tu nuevo PIN otra vez:',
+      'Los PIN no coinciden.\n\n👇 Escribe tu nuevo PIN otra vez:',
       new InlineKeyboard().text('❌ Cancelar', 'sec_cancel'),
     );
   }
@@ -474,7 +474,7 @@ export async function handlePinChangeConfirmText(ctx: BuyerContext) {
   if (!currentPin) {
     clearSecuritySession(ctx);
     ctx.session.wizard.step = 'idle';
-    return renderUI(ctx, '❌ Sesión expirada. Iniciá el cambio de nuevo.', {
+    return renderUI(ctx, '❌ Sesión expirada. Inicia el cambio de nuevo.', {
       reply_markup: new InlineKeyboard().text('🏠 Volver al Menú', 'start'),
     });
   }

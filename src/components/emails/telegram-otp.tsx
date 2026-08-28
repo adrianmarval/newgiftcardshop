@@ -24,7 +24,7 @@ export function TelegramOtpTemplate({ code, userName }: TelegramOtpProps) {
           <Section style={content}>
             <Text style={greeting}>{userName ? `Hola ${userName}, 👋` : 'Hola, 👋'}</Text>
             <Text style={text}>
-              Estás vinculando tu cuenta con nuestro bot de Telegram. Para completar el registro, ingresá este código de verificación en el
+              Estás vinculando tu cuenta con nuestro bot de Telegram. Para completar el registro, ingresa este código de verificación en el
               chat del bot:
             </Text>
 
@@ -38,7 +38,7 @@ export function TelegramOtpTemplate({ code, userName }: TelegramOtpProps) {
           <Hr style={divider} />
 
           <Section style={footer}>
-            <Text style={footerText}>Si no solicitaste este código, podés ignorar este email de forma segura.</Text>
+            <Text style={footerText}>Si no solicitaste este código, puedes ignorar este email de forma segura.</Text>
             <Text style={footerBrand}>
               © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}. All rights reserved.
             </Text>

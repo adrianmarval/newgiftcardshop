@@ -33,7 +33,7 @@ export default async function UnauthorizedPage() {
       <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-red-800 lg:text-5xl">Acceso Denegado!</h1>
 
       <p className="text-muted-foreground mb-8 max-w-md text-xl">
-        No tenés los permisos necesarios para ver esta página, o tu sesión expiró.
+        No tienes los permisos necesarios para ver esta página, o tu sesión expiró.
       </p>
 
       <div className="flex gap-1">

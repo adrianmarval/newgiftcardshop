@@ -28,7 +28,7 @@ export async function startBuyWizard(ctx: BuyerContext) {
   const brandsWithStock = await getBrandsWithStock();
 
   if (brandsWithStock.length === 0) {
-    return renderUI(ctx, '😔 No hay tarjetas disponibles en este momento. Intentá más tarde.', {
+    return renderUI(ctx, '😔 No hay tarjetas disponibles en este momento. Intenta más tarde.', {
       reply_markup: new InlineKeyboard().text('⬅️ Volver', 'start'),
     });
   }
@@ -41,7 +41,7 @@ export async function startBuyWizard(ctx: BuyerContext) {
 
   ctx.session.wizard.step = 'idle';
 
-  const msg = '🛒 <b>¿Qué marca querés comprar?</b>';
+  const msg = '🛒 <b>¿Qué marca deseas comprar?</b>';
   await renderUI(ctx, msg, { parse_mode: 'HTML', reply_markup: kb });
 }
 
@@ -85,12 +85,12 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
   if (!country) return ctx.answerCallbackQuery('País no encontrado');
 
   const { brandId } = ctx.session.wizard;
-  if (!brandId) return ctx.answerCallbackQuery('Sesión expirada. Empezá de nuevo con /buy');
+  if (!brandId) return ctx.answerCallbackQuery('Sesión expirada. Empieza de nuevo con /buy');
 
   try {
     await getUserRates(ctx.user.id, { brandId, countryId });
   } catch {
-    return ctx.answerCallbackQuery('No tienes tarifa para comprar aquí. Contactá al admin.');
+    return ctx.answerCallbackQuery('No tienes tarifa para comprar aquí. Contacta al admin.');
   }
 
   ctx.session.wizard.countryId = country.id;
@@ -100,9 +100,9 @@ export async function handleBuyCountrySelected(ctx: BuyerContext) {
 
   await renderUI(
     ctx,
-    `💵 <b>¿Qué monto de tarjetas querés? (${ctx.session.wizard.countryCurrency})</b>\n\n` +
+    `💵 <b>¿Qué monto de tarjetas quieres? (${ctx.session.wizard.countryCurrency})</b>\n\n` +
       `Marca: <b>${escapeHTML(ctx.session.wizard.brandName ?? '')} — ${escapeHTML(country.name)}</b>\n\n` +
-      `Escribí el monto. Ejemplo: <code>50</code>`,
+      `Escribe el monto. Ejemplo: <code>50</code>`,
     {
       parse_mode: 'HTML',
       reply_markup: new InlineKeyboard()
@@ -124,7 +124,7 @@ export async function handleAmountText(ctx: BuyerContext) {
   const amount = text ? parseFloat(text) : NaN;
 
   if (isNaN(amount) || amount <= 0) {
-    return renderUI(ctx, '❌ Monto inválido. Ingresá un número mayor a 0. Ejemplo: <code>50</code>', {
+    return renderUI(ctx, '❌ Monto inválido. Ingresa un número mayor a 0. Ejemplo: <code>50</code>', {
       parse_mode: 'HTML',
       reply_markup: new InlineKeyboard().text('⬅️ Volver', `buy_country_${ctx.session.wizard.countryId}`),
     });
@@ -132,7 +132,7 @@ export async function handleAmountText(ctx: BuyerContext) {
 
   const { brandId, countryId } = ctx.session.wizard;
   if (!brandId || !countryId) {
-    return renderUI(ctx, '❌ Sesión expirada. Empezá de nuevo con /buy.', {
+    return renderUI(ctx, '❌ Sesión expirada. Empieza de nuevo con /buy.', {
       reply_markup: new InlineKeyboard().text('🏠 Inicio', 'start'),
     });
   }
@@ -170,10 +170,7 @@ export async function handleAmountText(ctx: BuyerContext) {
       },
     },
   });
-  const unpaidTotal = unpaidOrders.reduce(
-    (s, order) => s.plus(computeFaceValueTotal(order.giftcards)),
-    new Decimal(0),
-  );
+  const unpaidTotal = unpaidOrders.reduce((s, order) => s.plus(computeFaceValueTotal(order.giftcards)), new Decimal(0));
   const pendingCount = unpaidOrders.filter((o) => o.status === 'PENDING').length;
   const hasPendingOrders = pendingCount > 0;
 
@@ -185,7 +182,7 @@ export async function handleAmountText(ctx: BuyerContext) {
       ctx,
       ` <b>Límite de crédito alcanzado</b>\n\n` +
         `Tu límite: <b>${fmt$(user.creditLimit)}</b> en gift cards\n` +
-        `Ya tenés: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n\n` +
+        `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n\n` +
         `Debes completar los pagos antes de comprar más tarjetas.`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('🏠 Volver', 'start') },
     );
@@ -193,9 +190,9 @@ export async function handleAmountText(ctx: BuyerContext) {
 
   if (unpaidTotal.plus(amountDec).gt(user.creditLimit)) {
     const availableCredit = user.creditLimit.minus(unpaidTotal);
-    const unpaidText = unpaidTotal.gt(0) ? `Ya tenés: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n` : '';
+    const unpaidText = unpaidTotal.gt(0) ? `Ya tienes: <b>${fmt$(unpaidTotal)}</b> en pagos pendientes.\n` : '';
     const pendingMsg = hasPendingOrders
-      ? `\nTenés <b>${pendingCount}</b> orden(es) pendientes que deben ser procesadas para liberar crédito.`
+      ? `\nTienes <b>${pendingCount}</b> orden(es) pendientes que deben ser procesadas para liberar crédito.`
       : '';
     return renderUI(
       ctx,
@@ -204,7 +201,7 @@ export async function handleAmountText(ctx: BuyerContext) {
         unpaidText +
         `Disponible: <b>${fmt$(availableCredit)}</b>\n` +
         `Esta compra: <b>${fmt$(amountDec)}</b> en gift cards\n\n` +
-        `Intentá con un monto igual o menor a <b>${fmt$(availableCredit)}</b>.${pendingMsg}`,
+        `Intenta con un monto igual o menor a <b>${fmt$(availableCredit)}</b>.${pendingMsg}`,
       { parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('⬅️ Cambiar Monto', `buy_country_${countryId}`) },
     );
   }
@@ -261,10 +258,10 @@ export async function handleAmountText(ctx: BuyerContext) {
         : '';
 
       msg =
-        `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}), pero no alcanza los ${fmt$(amount, currency)} buscados.\n\n` +
+        `😔 Puedes tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}), pero no alcanza los ${fmt$(amount, currency)} buscados.\n\n` +
         `📦 Stock no accesible: <b>${fmt$(Number(inaccessibleAmount), currency)}</b> en ${inaccessibleCardsCount} tarjetas.${estimationPart}`;
     } else {
-      msg = `😔 Podés tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}).\n\nEl total no alcanza lo que buscás. Probá con un monto menor.`;
+      msg = `😔 Puedes tomar ${accessibleCards} tarjetas (${fmt$(Number(accessibleAmount), currency)}).\n\nEl total no alcanza lo que buscas. Prueba con un monto menor.`;
     }
 
     const kb = new InlineKeyboard()
@@ -308,7 +305,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
   }
   const { brandId, countryId } = ctx.session.wizard;
   if (!brandId || !countryId) {
-    await ctx.answerCallbackQuery('Sesión expirada. Empezá de nuevo con /buy');
+    await ctx.answerCallbackQuery('Sesión expirada. Empieza de nuevo con /buy');
     return;
   }
 
@@ -335,15 +332,15 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
   const buyerBuyRate = Math.floor(Number(buyRate) * 100);
   const blockedCards = giftcards.filter((c) => c.escalationTier > buyerBuyRate);
   if (blockedCards.length > 0) {
-    await ctx.answerCallbackQuery('Algunas tarjetas cambiaron de tier. Intentá de nuevo.');
-    return renderUI(ctx, '😔 Algunas tarjetas ya no están disponibles para tu tasa. Intentá de nuevo con /buy.', {
+    await ctx.answerCallbackQuery('Algunas tarjetas cambiaron de tier. Intenta de nuevo.');
+    return renderUI(ctx, '😔 Algunas tarjetas ya no están disponibles para tu tasa. Intenta de nuevo con /buy.', {
       reply_markup: new InlineKeyboard().text('🛒 Nueva búsqueda', 'buy_start'),
     });
   }
 
   if (giftcards.length === 0) {
     await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
-    return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.', {
+    return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intenta de nuevo con /buy.', {
       reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
     });
   }
@@ -353,31 +350,34 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
 
   let order;
   try {
-    order = await prisma.$transaction(async (tx) => {
-      // Revalidar crédito atómicamente dentro de la tx (race condition safe)
-      const creditCheck = await checkCreditLimit(ctx.user.id, faceValueTotal, tx);
-      if (!creditCheck.allowed) {
-        throw new Error('CREDIT_LIMIT_EXCEEDED');
-      }
+    order = await prisma.$transaction(
+      async (tx) => {
+        // Revalidar crédito atómicamente dentro de la tx (race condition safe)
+        const creditCheck = await checkCreditLimit(ctx.user.id, faceValueTotal, tx);
+        if (!creditCheck.allowed) {
+          throw new Error('CREDIT_LIMIT_EXCEEDED');
+        }
 
-      const idempotencyKey = crypto.randomUUID();
-      const created = await tx.order.create({
-        data: {
-          userId: ctx.user.id,
-          brandCountryId: giftcards[0]?.brandCountryId,
-          total,
-          buyRate: buyRate,
-          status: 'PENDING',
-          idempotencyKey,
-        },
-      });
-      await reserveGiftcards(
-        tx,
-        giftcards.map((c) => c.id),
-        created.id,
-      );
-      return created;
-    }, { isolationLevel: 'Serializable' });
+        const idempotencyKey = crypto.randomUUID();
+        const created = await tx.order.create({
+          data: {
+            userId: ctx.user.id,
+            brandCountryId: giftcards[0]?.brandCountryId,
+            total,
+            buyRate: buyRate,
+            status: 'PENDING',
+            idempotencyKey,
+          },
+        });
+        await reserveGiftcards(
+          tx,
+          giftcards.map((c) => c.id),
+          created.id,
+        );
+        return created;
+      },
+      { isolationLevel: 'Serializable' },
+    );
   } catch (error) {
     if (error instanceof GiftcardReservationError) {
       buyerLogger.warn('Reserva fallida en bot buy', {
@@ -385,7 +385,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
         metadata: { giftcardIds: selectedGiftcardIds, error: error.message },
       });
       await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
-      return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intentá de nuevo con /buy.', {
+      return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intenta de nuevo con /buy.', {
         reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
       });
     }
@@ -395,7 +395,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
         metadata: { total: total.toString() },
       });
       await ctx.answerCallbackQuery('Crédito insuficiente');
-      return renderUI(ctx, '❌ Límite de crédito insuficiente. Completá tus pagos pendientes primero.', {
+      return renderUI(ctx, '❌ Límite de crédito insuficiente. Completa tus pagos pendientes primero.', {
         reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
       });
     }
@@ -464,7 +464,7 @@ export async function renderOrderCreatedReveal(ctx: BuyerContext, orderId: strin
       `ID: <code>${order.id}</code>\n` +
       `Total a pagar: <b>${fmt$(order.total, 'USD')}</b>\n\n` +
       `<b>Códigos para aplicar:</b>\n${cardsText}\n\n` +
-      `📝 <i>Aplicá los códigos, luego confirmá el uso desde los botones de abajo.</i>`,
+      `📝 <i>Aplica los códigos, luego confirma el uso desde los botones de abajo.</i>`,
     { parse_mode: 'HTML', reply_markup: kb, callbackText: '¡Orden creada!' },
   );
 }
