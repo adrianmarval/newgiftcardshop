@@ -16,6 +16,8 @@ import {
   type TourPortal,
 } from '@/lib/tour';
 import { getToursSeen } from '@/actions/tours';
+import { useOverlayArbiter } from '@/hooks/use-overlay-arbiter';
+import { showAlert } from '@/lib/ui';
 
 const TOUR_REGISTRY: Record<TourId, { portal: TourPortal; steps: DriveStep[] }> = {
   'sell-dashboard': { portal: 'seller', steps: SELL_DASHBOARD_STEPS },
@@ -40,8 +42,10 @@ function resolveTourId(pathname: string): TourId | null {
   return ROUTE_TOURS.find((r) => r.path === pathname)?.tourId ?? null;
 }
 
-// Reintentos esperando a que se cierre cualquier diálogo abierto (1 por segundo).
-const MAX_DIALOG_WAIT_ATTEMPTS = 30;
+// Reintentos esperando a que se cierre cualquier overlay bloqueante (1 por segundo).
+// El usuario puede leer el push prompt con calma; si expira, no arranca ni se
+// marca visto — reintenta en la próxima visita.
+const MAX_DIALOG_WAIT_ATTEMPTS = 60;
 
 function TopbarTourButtonInner({ tourId }: { tourId: TourId }) {
   const { portal, steps } = TOUR_REGISTRY[tourId];
@@ -50,8 +54,10 @@ function TopbarTourButtonInner({ tourId }: { tourId: TourId }) {
 
   // Auto-start en la primera visita: SIN drawer — el tour arranca directo (patrón
   // de apps profesionales; ESC o la X lo cierran y marcan como visto). Espera a que
-  // no haya ningún diálogo abierto (ej. el prompt de activar notificaciones push)
-  // para no competir por la atención del usuario.
+  // no haya ningún overlay bloqueante (ej. el prompt de activar notificaciones push)
+  // para no competir por la atención del usuario: driver.js mata los pointer-events
+  // de TODA la página y su overlay tapa los dialogs de Radix (z-50), así que si
+  // arrancara con un prompt abierto, el usuario no podría responderlo.
   useEffect(() => {
     let cancelled = false;
     let attempts = 0;
@@ -62,16 +68,20 @@ function TopbarTourButtonInner({ tourId }: { tourId: TourId }) {
       // wallet) no arrancar ni marcar — se reintenta en la próxima visita.
       const hasAnchors = steps.some((s) => typeof s.element === 'string' && document.querySelector(s.element));
       if (!hasAnchors) return;
-      // No interferir con otros overlays bloqueantes (push prompt, security gate...).
+
+      // Exclusión mutua: el push prompt claimea el slot del arbiter; el check de
+      // `[role="dialog"]` queda como safety net para overlays no integrados
+      // (security gate, etc.). `start()` devuelve false si perdió la carrera por
+      // el slot — se trata como "ocupado" y se reintenta.
+      const overlayBusy = useOverlayArbiter.getState().activeOverlay !== null;
       const dialogOpen = document.querySelector('[role="dialog"]') !== null;
-      if (dialogOpen) {
+      if (overlayBusy || dialogOpen || !start()) {
         attempts += 1;
         if (attempts < MAX_DIALOG_WAIT_ATTEMPTS) {
           timerRef.current = setTimeout(tryStart, 1000);
         }
         return;
       }
-      start();
     };
 
     getToursSeen()
@@ -93,9 +103,18 @@ function TopbarTourButtonInner({ tourId }: { tourId: TourId }) {
 
   const label = portal === 'seller' ? 'Replay the page tour' : 'Repetir el tour de la página';
 
+  // Replay manual: el claim del slot puede fallar si hay un prompt abierto —
+  // no arrancar encima (mismo conflicto de pointer-events) y avisar con toast.
+  const handleManualStart = () => {
+    if (start()) return;
+    showAlert.toast.info(
+      portal === 'seller' ? 'Answer the open prompt first' : 'Primero responde el aviso que está abierto',
+    );
+  };
+
   return (
     <button
-      onClick={start}
+      onClick={handleManualStart}
       title={label}
       aria-label={label}
       className="text-muted-foreground hover:bg-muted hover:text-foreground flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-colors"

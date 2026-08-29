@@ -41,6 +41,7 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Receiving from all your brands (${n})`,
     receivingSome: (n: number, total: number) => `Receiving from ${n} of ${total} brands`,
     brandsHint: 'Brands where you have an assigned rate',
+    stockDigestHint: 'Stock alerts arrive on Telegram/Push as a periodic summary (frequency depends on the brand). In the app they arrive instantly.',
     save: 'Save',
   },
   buyer: {
@@ -69,6 +70,7 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Recibiendo de todas tus marcas (${n})`,
     receivingSome: (n: number, total: number) => `Recibiendo de ${n} de ${total} marcas`,
     brandsHint: 'Marcas donde tienes tarifa asignada',
+    stockDigestHint: 'Las alertas de stock llegan a Telegram/Push como un resumen periódico (la frecuencia depende de la marca). En la app llegan al instante.',
     save: 'Guardar',
   },
   admin: {
@@ -97,6 +99,7 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Recibiendo de todas tus marcas (${n})`,
     receivingSome: (n: number, total: number) => `Recibiendo de ${n} de ${total} marcas`,
     brandsHint: 'Marcas donde tienes tarifa asignada',
+    stockDigestHint: 'Las alertas de stock llegan a Telegram/Push como un resumen periódico (la frecuencia depende de la marca). En la app llegan al instante.',
     save: 'Guardar',
   },
 } as const;
@@ -372,6 +375,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
             </div>
 
             <p className="text-muted-foreground/60 text-[10px]">{texts.brandsHint}</p>
+            <p className="text-muted-foreground/60 text-[10px]">{texts.stockDigestHint}</p>
           </section>
         )}
 

@@ -188,6 +188,45 @@ async function initAutoPayService() {
   }
 }
 
+// ── Stock Digest Sweep ────────────────────────────────────────────────────────
+
+async function initStockDigestService() {
+  try {
+    const { sweepStockDigests } = await import('./src/lib/notifications/stock-digest.service');
+    const log = await getServerLogger();
+
+    const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes (la due-ness por marca se evalúa dentro)
+    log.info('[StockDigest] Iniciado - sweep cada 5min');
+
+    let sweepRunning = false;
+
+    setInterval(async () => {
+      if (sweepRunning) {
+        log.info('[StockDigest] Skipping — previous sweep still active');
+        return;
+      }
+      sweepRunning = true;
+      try {
+        const result = await sweepStockDigests();
+        if (result.sent > 0 || result.skipped > 0) {
+          log.info(`[StockDigest] Sweep: ${result.sent} resumen(es) enviado(s), ${result.skipped} descartado(s)`);
+        }
+      } catch (err) {
+        log.error('[StockDigest] Error en sweep', {
+          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+        });
+      } finally {
+        sweepRunning = false;
+      }
+    }, INTERVAL_MS);
+  } catch (err) {
+    const log = await getServerLogger();
+    log.error('[StockDigest] Error al iniciar', {
+      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+    });
+  }
+}
+
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
@@ -286,6 +325,9 @@ await initBatchAutoCancelService();
 
 // ── Seller Auto-Pay + Payment Sync ────────────────────────────────────────────
 await initAutoPayService();
+
+// ── Stock Digest Sweep ────────────────────────────────────────────────────────
+await initStockDigestService();
 
 httpServer.listen(port, () => {
   console.log(`\n> Ready on http://${hostname}:${port}`);

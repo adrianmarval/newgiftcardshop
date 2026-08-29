@@ -7,6 +7,7 @@ export const SETTING_KEYS = {
   ESCALATION_DURATION_MINUTES: 'escalation_duration_minutes',
   ESCALATION_DROP_AMOUNT: 'escalation_drop_amount',
   AUTO_PAY_SELLERS: 'auto_pay_sellers',
+  STOCK_DIGEST_INTERVAL_MINUTES: 'stock_digest_interval_minutes',
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -27,6 +28,10 @@ export const SETTING_GROUPS = {
   platform: {
     title: 'Plataforma',
     description: 'Estado operativo de la plataforma. Solo lectura.',
+  },
+  notifications: {
+    title: 'Notificaciones',
+    description: 'Resumen de stock para Telegram/Push. Cada brand-country puede tener su propio intervalo.',
   },
 } as const;
 
@@ -147,6 +152,21 @@ export const SETTING_DEFINITIONS: Record<SettingKey, SettingDefinition> = {
       max: 10,
     },
   },
+  [SETTING_KEYS.STOCK_DIGEST_INTERVAL_MINUTES]: {
+    key: SETTING_KEYS.STOCK_DIGEST_INTERVAL_MINUTES,
+    type: 'number',
+    group: 'notifications',
+    label: 'Intervalo del resumen de stock',
+    description: 'Minutos entre resúmenes de stock por Telegram/Push. Default para brand-countries sin intervalo propio.',
+    default: 30,
+    input: 'number',
+    unit: 'min',
+    step: 5,
+    validation: {
+      min: 5,
+      max: 1440,
+    },
+  },
 };
 
 /** Definiciones de un grupo, en el orden declarado en el registry */
@@ -168,6 +188,7 @@ export const SETTING_SCHEMAS: Record<SettingKey, z.ZodTypeAny> = {
   [SETTING_KEYS.ESCALATION_DURATION_MINUTES]: numberSchema,
   [SETTING_KEYS.ESCALATION_DROP_AMOUNT]: numberSchema,
   [SETTING_KEYS.AUTO_PAY_SELLERS]: booleanSchema,
+  [SETTING_KEYS.STOCK_DIGEST_INTERVAL_MINUTES]: numberSchema,
 };
 
 export function parseSettingValue<T>(key: SettingKey, rawValue: string | null | undefined): T {

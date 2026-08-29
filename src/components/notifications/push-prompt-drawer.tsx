@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { PromptDrawer } from '@/components/common';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
+import { useOverlayArbiter } from '@/hooks/use-overlay-arbiter';
 
 const DISMISS_KEY = 'push-prompt-dismissed';
 
@@ -52,8 +53,33 @@ export function PushPromptDrawer({ portal }: { portal: string }) {
   const [permanentlyDismissed] = useState(() => typeof window === 'undefined' || localStorage.getItem(DISMISS_KEY) === '1');
   const [sessionDismissed, setSessionDismissed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const activeOverlay = useOverlayArbiter((s) => s.activeOverlay);
 
-  const open = push.supported && !push.subscribed && !permanentlyDismissed && !sessionDismissed;
+  // Elegible: el prompt DEBERÍA mostrarse en esta sesión (aunque la sync con
+  // el browser todavía no resolvió si ya hay suscripción).
+  const eligible = push.supported && !push.subscribed && !permanentlyDismissed && !sessionDismissed;
+
+  // - `push.ready`: no mostrar hasta que la sync con el browser resuelva — si no,
+  //   el prompt flashea abierto para usuarios ya suscritos (subscribed arranca
+  //   en false) y se cierra solo, pareciendo que otro overlay lo cerró.
+  // - `activeOverlay !== 'tour'`: NUNCA abrir durante un tour activo (driver.js
+  //   mata los pointer-events de toda la página y tapa este dialog con su
+  //   overlay). El prompt abre solo cuando el tour termina.
+  const open = eligible && push.ready && activeOverlay !== 'tour';
+
+  // Exclusión mutua con el tour (overlay-arbiter). El slot se retiene desde que
+  // el prompt es ELEGIBLE aunque todavía no esté visible (ready=false): si se
+  // claimeara recién al abrir, el tour ganaría la carrera en la primera visita
+  // (la sync del SW tarda segundos y el auto-start dispara a los ~1.2s) y el
+  // prompt quedaría diferido detrás del tour — invirtiendo la prioridad. Si el
+  // claim falla es porque el tour ya está activo: el prompt simplemente espera
+  // a que termine (open queda false por el gate de activeOverlay).
+  const holdsOverlaySlot = eligible && (!push.ready || open);
+  useEffect(() => {
+    if (!holdsOverlaySlot) return;
+    useOverlayArbiter.getState().claim('push-prompt');
+    return () => useOverlayArbiter.getState().release('push-prompt');
+  }, [holdsOverlaySlot]);
 
   const handleEnable = async () => {
     setError(null);

@@ -57,6 +57,7 @@ export function ConfigManager({ initialValues, initialAIProviders }: ConfigManag
 
       <SettingsSection groupId="payments" initialValues={initialValues} />
       <SettingsSection groupId="escalation" initialValues={initialValues} />
+      <SettingsSection groupId="notifications" initialValues={initialValues} />
 
       {/* ── Proveedores de IA ── */}
       <section className="space-y-3">

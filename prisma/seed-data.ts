@@ -30,62 +30,62 @@ export const seedData: SeedData = {
     { name: 'PLASMA', description: 'Plasma', regex: '^(0x)[0-9A-Fa-f]{40}$' },
   ],
   userData: [
-    // {
-    //   name: 'Adrian Marval',
-    //   email: 'adrian.marval@gmail.com',
-    //   emailVerified: true,
-    //   isActive: true,
-    //   role: 'ADMIN',
-    //   accounts: {
-    //     create: {
-    //       accountId: 'admin-account-provider-id',
-    //       providerId: 'credential',
-    //       password: await hashPassword('Adri891.'),
-    //     },
-    //   },
-    // },
-    // {
-    //   name: 'Solmaira Maza',
-    //   email: 'solmaira.maza@gmail.com',
-    //   emailVerified: true,
-    //   isActive: true,
-    //   role: 'SELLER',
-    //   accounts: {
-    //     create: {
-    //       accountId: 'seller-account-provider-id',
-    //       providerId: 'credential',
-    //       password: await hashPassword('Adri891.'),
-    //     },
-    //   },
-    // },
-    // {
-    //   name: 'Dunia Marcano',
-    //   email: 'gaget85reingerk542@gmail.com',
-    //   emailVerified: true,
-    //   isActive: true,
-    //   role: 'BUYER',
-    //   accounts: {
-    //     create: {
-    //       accountId: 'buyer-account-provider-id',
-    //       providerId: 'credential',
-    //       password: await hashPassword('Adri891.'),
-    //     },
-    //   },
-    // },
-    // {
-    //   name: 'Jesus Marval',
-    //   email: 'pagosqt@gmail.com',
-    //   emailVerified: true,
-    //   isActive: true,
-    //   role: 'BUYER',
-    //   accounts: {
-    //     create: {
-    //       accountId: 'buyer-account1-provider-id',
-    //       providerId: 'credential',
-    //       password: await hashPassword('Adri891.'),
-    //     },
-    //   },
-    // },
+    {
+      name: 'Adrian Marval',
+      email: 'adrian.marval@gmail.com',
+      emailVerified: true,
+      isActive: true,
+      role: 'ADMIN',
+      accounts: {
+        create: {
+          accountId: 'admin-account-provider-id',
+          providerId: 'credential',
+          password: await hashPassword('Adri891.'),
+        },
+      },
+    },
+    {
+      name: 'Solmaira Maza',
+      email: 'solmaira.maza@gmail.com',
+      emailVerified: true,
+      isActive: true,
+      role: 'SELLER',
+      accounts: {
+        create: {
+          accountId: 'seller-account-provider-id',
+          providerId: 'credential',
+          password: await hashPassword('Adri891.'),
+        },
+      },
+    },
+    {
+      name: 'Dunia Marcano',
+      email: 'gaget85reingerk542@gmail.com',
+      emailVerified: true,
+      isActive: true,
+      role: 'BUYER',
+      accounts: {
+        create: {
+          accountId: 'buyer-account-provider-id',
+          providerId: 'credential',
+          password: await hashPassword('Adri891.'),
+        },
+      },
+    },
+    {
+      name: 'Jesus Marval',
+      email: 'pagosqt@gmail.com',
+      emailVerified: true,
+      isActive: true,
+      role: 'BUYER',
+      accounts: {
+        create: {
+          accountId: 'buyer-account1-provider-id',
+          providerId: 'credential',
+          password: await hashPassword('Adri891.'),
+        },
+      },
+    },
   ],
   countryData: [
     { code: 'US', name: 'United States', currency: 'USD' },

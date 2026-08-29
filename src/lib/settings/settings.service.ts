@@ -128,3 +128,7 @@ export async function getAutoPaySellers(): Promise<boolean> {
 export async function setAutoPaySellers(enabled: boolean): Promise<void> {
   await setSetting(SETTING_KEYS.AUTO_PAY_SELLERS, enabled);
 }
+
+export async function getStockDigestIntervalMinutes(): Promise<number> {
+  return getSetting<number>(SETTING_KEYS.STOCK_DIGEST_INTERVAL_MINUTES);
+}

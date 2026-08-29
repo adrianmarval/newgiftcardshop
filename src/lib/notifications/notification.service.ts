@@ -159,6 +159,7 @@ export async function notifyBuyersStockAvailable(brandCountryId: string, initial
       description: stockText,
       actionUrl: '/store/dashboard/browse-cards',
       metadata: {
+        brandCountryId,
         brandName: info.brandName,
         countryName: info.countryName,
         countryCode: info.countryCode,

@@ -67,6 +67,8 @@ export interface BrandCountrySummary {
   maxAmount: number | null;
   isActive: boolean;
   claimCodePattern: string | null;
+  /** Intervalo (min) del digest de stock Telegram/Push. null = default global */
+  stockDigestIntervalMinutes: number | null;
 }
 
 // ── Brand with nested countries (admin catalog list) ─────────────────────────

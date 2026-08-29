@@ -145,6 +145,10 @@ export function usePushSubscription(initialEnabled: boolean) {
   const [permission, setPermission] = useState<PushPermission>('default');
   const [subscribed, setSubscribed] = useState(initialEnabled);
   const [loading, setLoading] = useState(false);
+  // `ready` se pone true cuando la sync inicial con el browser termina (éxito o
+  // error). Sin este flag, `subscribed` arranca en false y los prompts flashean
+  // abiertos para usuarios ya suscritos hasta que la async check resuelve.
+  const [ready, setReady] = useState(false);
 
   const pathname = usePathname();
   const swScope = getPortalSwScope(pathname);
@@ -188,6 +192,8 @@ export function usePushSubscription(initialEnabled: boolean) {
         setSubscribed(false);
       } catch {
         // Sync de estado best-effort — la UI queda con el estado inicial del servidor
+      } finally {
+        setReady(true);
       }
     })();
   }, [swScope]);
@@ -246,5 +252,5 @@ export function usePushSubscription(initialEnabled: boolean) {
     }
   }, []);
 
-  return { supported, permission, subscribed, loading, enable, disable };
+  return { supported, permission, subscribed, loading, ready, enable, disable };
 }

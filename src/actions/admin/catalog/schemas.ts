@@ -62,6 +62,7 @@ export const listBrandsOutputSchema = z.object({
           maxAmount: z.number().nullable(),
           isActive: z.boolean(),
           claimCodePattern: z.string().nullable(),
+          stockDigestIntervalMinutes: z.number().nullable(),
         }),
       ),
     })
@@ -116,6 +117,7 @@ export const updateBrandCountryLimitsInputSchema = z.object({
   maxAmount: z.number().nullable().optional(),
   isActive: z.boolean().optional(),
   claimCodePattern: z.string().nullable().optional(),
+  stockDigestIntervalMinutes: z.number().int().min(5).max(1440).nullable().optional(),
 });
 
 export const updateBrandCountryLimitsOutputSchema = z.object({ success: z.literal(true) });
