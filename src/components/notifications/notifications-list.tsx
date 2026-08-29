@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ const LIST_TEXTS = {
 export function NotificationsList({ portal, initialNotifications, initialUnreadCount: _initialUnreadCount }: NotificationsListProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const { setUnreadCount } = useNotifications();
+  const router = useRouter();
   const texts = LIST_TEXTS[portal];
 
   // Sync with server props when parent re-renders (auto-refresh)
@@ -46,6 +48,9 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
     if (!item.read) {
       setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
       executeMarkAsRead({ notificationId: item.id });
+    }
+    if (item.actionUrl) {
+      router.push(item.actionUrl);
     }
   };
 

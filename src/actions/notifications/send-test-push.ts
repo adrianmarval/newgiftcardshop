@@ -5,6 +5,15 @@ import { WebPushChannel } from '@/lib/notifications/channels/webpush.channel';
 import { sendTestPushInputSchema, sendTestPushOutputSchema } from './schemas';
 import type { Session } from '@/types';
 
+// Keyed por portal (NO por rol): el SW que recibe el push es el del portal
+// donde el usuario se suscribió — abrir el dashboard de ese portal mantiene
+// el containment de la WebAPK (un ADMIN puede operar los 3 portales).
+const PORTAL_DASHBOARD: Record<'buyer' | 'seller' | 'admin', string> = {
+  seller: '/sell/dashboard',
+  buyer: '/store/dashboard',
+  admin: '/admin/dashboard',
+};
+
 /**
  * Envía una notificación push de prueba al usuario autenticado.
  * Llama al WebPushChannel directamente (bypass del dispatcher): NO persiste
@@ -26,7 +35,7 @@ export const sendTestPush = authActionClient
         type: 'BATCH_STATUS',
         title: parsedInput.title,
         description: parsedInput.description,
-        actionUrl: '/',
+        actionUrl: PORTAL_DASHBOARD[parsedInput.portal],
       },
     );
 

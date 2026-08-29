@@ -72,6 +72,7 @@ export const deletePushSubscriptionOutputSchema = z.object({ success: z.literal(
 export const sendTestPushInputSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
+  portal: z.enum(['buyer', 'seller', 'admin']),
 });
 
 export const sendTestPushOutputSchema = z.object({

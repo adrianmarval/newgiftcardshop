@@ -267,7 +267,7 @@ export async function notifySellerBatchPaid(sellerId: string, batchId: number, a
     type: 'BATCH_PAID',
     title: `Batch #${batchId} paid`,
     description: `${amount.toFixed(2)} USDT transferred to your account`,
-    actionUrl: '/sell/dashboard/cards',
+    actionUrl: `/sell/dashboard/cards?search=${batchId}`,
     metadata: { batchId, amount },
   };
 
@@ -279,7 +279,7 @@ export async function notifySellerBatchPayoutSent(sellerId: string, batchId: num
     type: 'BATCH_STATUS',
     title: `Batch #${batchId} payout on its way`,
     description: `${amount.toFixed(2)} USDT was sent to your payment method. You'll receive a confirmation once it completes.`,
-    actionUrl: '/sell/dashboard/cards',
+    actionUrl: `/sell/dashboard/cards?search=${batchId}`,
     metadata: { batchId, amount },
   };
 
@@ -291,7 +291,7 @@ export async function notifySellerBatchCancelled(sellerId: string, batchId: numb
     type: 'BATCH_CANCELLED',
     title: `Batch #${batchId} cancelled`,
     description: `Your batch was cancelled because all cards were reported with no balance. If you believe this is an error, please contact support.`,
-    actionUrl: '/sell/dashboard/cards',
+    actionUrl: `/sell/dashboard/cards?search=${batchId}`,
     metadata: { batchId },
   };
 
@@ -324,7 +324,7 @@ export async function notifyAdminPaymentReceived(orderId: string, buyerName: str
     type: 'PAYMENT_PENDING',
     title: '💰 Pago recibido',
     description: `${buyerName} pagó ${amount.toFixed(2)} USDT — Orden #${orderId.slice(-8)}`,
-    actionUrl: '/admin/payments',
+    actionUrl: `/admin/dashboard/payments?search=${encodeURIComponent(txId)}`,
     metadata: { orderId, buyerName, amount, txId },
   };
 
@@ -345,7 +345,7 @@ export async function notifyAdminPayoutFailed(batchId: number, amount: number, r
     type: 'BATCH_STATUS',
     title: '⚠️ Fallo en pago automático a seller',
     description: `El pago del lote #${batchId} (${amount.toFixed(2)} USDT) falló: ${reason}. Requiere reintento manual.`,
-    actionUrl: '/admin/dashboard/batches',
+    actionUrl: `/admin/dashboard/batches?search=${batchId}`,
     metadata: { batchId, amount, reason },
   };
 

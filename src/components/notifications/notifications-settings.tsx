@@ -143,7 +143,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
     setAlert(null);
     setTestPushLoading(true);
     try {
-      const res = await sendTestPush({ title: texts.testPushTitle, description: texts.testPushBody });
+      const res = await sendTestPush({ title: texts.testPushTitle, description: texts.testPushBody, portal });
       const data = res?.data;
       if (data?.status === 'sent') {
         setAlert({ variant: 'success', title: texts.testPushSent });
