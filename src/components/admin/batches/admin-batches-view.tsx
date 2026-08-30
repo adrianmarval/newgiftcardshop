@@ -10,6 +10,7 @@ import { AdminSellerDialog } from './admin-seller-dialog';
 import { AdminBuyerDialog } from '@/components/admin/orders/admin-buyer-dialog';
 import type { AdminBatch, AdminBuyerSummary, AdminSellerSummary, PaginationMeta } from '@/types';
 import { IconCurrencyDollar } from '@tabler/icons-react';
+import { formatCurrency } from '@/lib/utils';
 import { FiltersBar } from '@/components/common';
 import { adminBatchesSearchParamsParsers } from '@/lib/search-params';
 
@@ -141,7 +142,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
           </span>
           <Button onClick={() => setPayDialogOpen(true)} size="sm" className="gap-1">
             <IconCurrencyDollar className="h-4 w-4" />
-            Pagar ${selectedBatches.reduce((s, b) => s + b.estimatedPayout, 0).toFixed(2)}
+            Pagar {formatCurrency(selectedBatches.reduce((s, b) => s + b.estimatedPayout, 0))}
           </Button>
         </div>
       )}

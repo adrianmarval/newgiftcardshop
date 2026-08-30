@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getBuyerStats } from '@/actions/buyer/stats';
+import { getBuyerStats, getLiveAvailability } from '@/actions/buyer/stats';
 import { recentOrders } from '@/actions/buyer/orders';
 import { BuyerDashboard } from '@/components/buy/buyer-dashboard';
 import type { BuyerStats, RecentOrder } from '@/types';
@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default async function BuyerDashboardPage() {
-  const [statsResult, ordersResult] = await Promise.all([getBuyerStats(), recentOrders()]);
+  const [statsResult, ordersResult, availabilityResult] = await Promise.all([
+    getBuyerStats(),
+    recentOrders(),
+    getLiveAvailability(),
+  ]);
 
   if (!statsResult.data) {
     throw new Error('Failed to load buyer stats');
@@ -20,8 +24,6 @@ export default async function BuyerDashboardPage() {
   }
 
   const stats: BuyerStats = {
-    availableCards: statsResult.data.availableCards,
-    availableAmount: statsResult.data.availableAmount,
     orderBook: statsResult.data.orderBook,
     personal: statsResult.data.personal,
   };
@@ -42,7 +44,7 @@ export default async function BuyerDashboardPage() {
     <div className="w-full">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Buyer Dashboard</h1>
 
-      <BuyerDashboard stats={stats} recentOrders={recentOrdersList} />
+      <BuyerDashboard stats={stats} recentOrders={recentOrdersList} availability={availabilityResult.data?.items ?? []} />
     </div>
   );
 }

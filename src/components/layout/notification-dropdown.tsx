@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, Settings, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Bell, Settings, ExternalLink, ChevronRight } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useNotifications } from '@/providers/notification-provider';
 import { listNotifications, markAsRead } from '@/actions/notifications';
@@ -36,6 +37,7 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const { unreadCounts, setUnreadCount } = useNotifications();
   const count = unreadCounts[badgeKey] || 0;
   const labels = PORTAL_LABELS[portal];
@@ -55,12 +57,7 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
     },
   });
 
-  const { execute: executeMarkAsRead } = useAction(markAsRead, {
-    onSuccess: () => {
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(portal, 0);
-    },
-  });
+  const { execute: executeMarkAsRead } = useAction(markAsRead);
 
   useEffect(() => {
     if (!open) return;
@@ -76,23 +73,37 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
   const handleToggle = () => {
     const next = !open;
     setOpen(next);
-    if (next && !loaded) {
+    if (next) {
       executeList({ limit: 8, filter: 'all' });
     }
   };
 
+  // Refetch en vivo: si el badge sube mientras el dropdown está abierto, llegó
+  // una notificación nueva (vía auto-refresh de 15s) — traerla sin request extra.
+  const prevCountRef = useRef(count);
+  useEffect(() => {
+    if (open && loaded && count > prevCountRef.current) {
+      executeList({ limit: 8, filter: 'all' });
+    }
+    prevCountRef.current = count;
+  }, [count, open, loaded, executeList]);
+
   const handleClick = (item: NotificationItem) => {
     if (!item.read) {
       setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
+      setUnreadCount(badgeKey, Math.max(0, count - 1));
       executeMarkAsRead({ notificationId: item.id });
-      setUnreadCount(portal, Math.max(0, count - 1));
+    }
+    setOpen(false);
+    if (item.actionUrl) {
+      router.push(item.actionUrl);
     }
   };
 
   const handleMarkAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(badgeKey, 0);
     executeMarkAsRead({ all: true });
-    setUnreadCount(portal, 0);
   };
 
   return (
@@ -148,6 +159,7 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
                     </div>
                     <p className="text-muted-foreground text-sm leading-snug">{item.description}</p>
                   </div>
+                  {item.actionUrl && <ChevronRight className="text-muted-foreground/60 mt-1 h-4 w-4 shrink-0" />}
                   {!item.read && <span className="bg-primary mt-1.5 h-2 w-2 shrink-0 rounded-full" />}
                 </button>
               ))

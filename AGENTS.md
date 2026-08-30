@@ -106,6 +106,7 @@ Wizard de 5 pasos: **Search** (brand+country+monto) → **Results** (tarjetas en
 - Búsqueda: `src/actions/buyer/giftcards/search-giftcards.ts` (subset-sum DP en `src/lib/services/browse-giftcards.service.ts`)
 - Creación de orden: `src/actions/buyer/orders/create-order.ts` (con idempotencyKey + credit limit check en tx)
 - Reservación: `src/lib/services/giftcard-reservation.service.ts` (compartido con bot)
+- **Live availability grid** (`components/buy/live-availability-grid.tsx`): reemplaza la vieja card "Disponibles" del buyer dashboard. Data de `actions/buyer/stats/get-live-availability.ts` — por marca CON TARIFA ASIGNADA retorna stock total y ACCESIBLE (`escalationTier ≤ floor(buyRate*100)` — lo que el buyer realmente puede comprar). La UI es monto-first (la cantidad de tarjetas no se muestra): grande `$X a tu tasa` (accesible) y gris `$Y en plataforma` siempre visible debajo (mismo copy que las notificaciones de stock). Near-real-time gratis: el `AutoRefreshProvider` (15s, layout) re-renderiza la página server y los montos animan con `@number-flow/react` (NumberFlow — dígitos rodantes). Click en una card → `/store/dashboard/browse-cards?brand=<brandId>&country=<countryId>` — la página valida el par contra el catálogo y `BuyGiftcardManager` lo aplica DESPUÉS de `resetForm()` (formato del store: `selectedBrand = 'brandId|countryId'`). La MISMA info accesible aparece en el step 1 del wizard: browse-cards fetchea `getLiveAvailability` y pasa un mapa `brandCountryId → accessibleAmount` hasta `BrandCountryGrid` (prop opt-in `accessibleAmountByBrandCountry` — sell flow no la pasa y mantiene el badge `$X disponible` original). **Deep links en notificaciones de stock**: `STOCK_AVAILABLE`, `TIER_DROP_ACCESS`, digest y reminder usan actionUrl con `?brand=&country=` (preselección directa); `BrandCountryInfo` lleva `brandId`/`countryId` para construirlas.
 - Pago: `src/actions/buyer/orders/complete-order.ts` (buyer reporta TxID, sin verificación automática aún)
 - Crédito: buyer tiene `creditLimit`, se revalida dentro de la transacción de create-order
 - Tiers: giftcards tienen `escalationTier` que baja con el tiempo (cron en server.ts) — buyer solo puede tomar cards con tier ≤ su buyRate
@@ -256,6 +257,8 @@ El `NotificationDispatcher` (`src/lib/notifications/dispatcher.ts`) despacha por
 - Refactor pendiente: extraer `OrderService`, `PaymentService` compartidos bot+web
 
 ## Comandos útiles
+
+**Package manager: pnpm** (NUNCA npm — `pnpm add`, `pnpm install`).
 
 ```bash
 npx tsc --noEmit          # Typecheck (limpio = OK)

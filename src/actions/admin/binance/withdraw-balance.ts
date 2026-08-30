@@ -4,6 +4,7 @@ import { ActionError, adminActionClient } from '@/lib/safe-action';
 import binance from '@/lib/services/payment/binance.service';
 import { executeAdminWithdrawal, WithdrawalError } from '@/lib/services/payment/admin-withdrawal.service';
 import { Decimal } from '@prisma/client/runtime/client';
+import { formatCurrency } from '@/lib/utils';
 import { withdrawBalanceInputSchema, withdrawBalanceOutputSchema } from './schemas';
 
 export const withdrawBalance = adminActionClient
@@ -23,7 +24,7 @@ export const withdrawBalance = adminActionClient
 
     if (fundingBalance.lt(amount)) {
       throw new ActionError(
-        `Balance Funding de Binance insuficiente (disponible: $${fundingBalance.toFixed(2)}, requerido: $${amount.toFixed(2)}).`,
+        `Balance Funding de Binance insuficiente (disponible: ${formatCurrency(fundingBalance.toNumber())}, requerido: ${formatCurrency(amount.toNumber())}).`,
       );
     }
 

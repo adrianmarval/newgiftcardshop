@@ -10,6 +10,7 @@ import { useAction } from 'next-safe-action/hooks';
 import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/buyer/preferences';
 import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
 import { showAlert, cn } from '@/lib/ui';
+import { formatCurrency } from '@/lib/utils';
 import type { BrandCountry } from '@/types';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
 import { CompactSearchBar } from './compact-search-bar';
@@ -18,9 +19,11 @@ import { BrandCountryGrid, StepFooter, FieldError } from '@/components/common';
 
 export interface SearchStepProps {
   brandCountries: BrandCountry[];
+  /** brandCountryId → monto accesible para el buyer (tier <= su buyRate) */
+  accessibility?: Record<string, number>;
 }
 
-export function SearchStep({ brandCountries }: SearchStepProps) {
+export function SearchStep({ brandCountries, accessibility }: SearchStepProps) {
   const { data: session } = useSession();
   const {
     selectedBrand,
@@ -213,7 +216,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
                     Tu tasa: <strong>{tierInfoData.buyerBuyRate}%</strong>
                   </p>
                   <p>
-                    Stock disponible (no para tu tasa): <strong>${Number(tierInfoData.inaccessibleAmount).toFixed(2)}</strong> en{' '}
+                    Stock disponible (no para tu tasa): <strong>{formatCurrency(Number(tierInfoData.inaccessibleAmount))}</strong> en{' '}
                     {tierInfoData.inaccessibleCardCount} tarjetas
                   </p>
                   <hr className="border-border my-3" />
@@ -323,6 +326,7 @@ export function SearchStep({ brandCountries }: SearchStepProps) {
             searchBrand={searchBrand}
             onSelect={(brandId, countryId) => handleBrandSelect({ brandId, countryId })}
             showStock
+            accessibleAmountByBrandCountry={accessibility}
           />
         </CardContent>
         <div className="px-2 pb-1 md:px-2">

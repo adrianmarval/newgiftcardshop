@@ -13,6 +13,8 @@ export interface BrandCountryGridProps {
   searchBrand?: string;
   onSelect: (brandId: string, countryId: string) => void;
   showStock?: boolean;
+  /** brandCountryId → monto ACCESIBLE para el buyer (tier <= su buyRate). Solo buy wizard. */
+  accessibleAmountByBrandCountry?: Record<string, number>;
   emptyMessage?: string;
 }
 
@@ -23,6 +25,7 @@ export function BrandCountryGrid({
   searchBrand = '',
   onSelect,
   showStock = false,
+  accessibleAmountByBrandCountry,
   emptyMessage = 'Selecciona un país primero',
 }: BrandCountryGridProps) {
   const filteredBrandCountries = useMemo(() => {
@@ -63,6 +66,7 @@ export function BrandCountryGrid({
         const brandKey = `${bc.brandId}|${bc.countryId}`;
         const isSelected = selectedBrandKey === brandKey;
         const isDisabled = !bc.isActive;
+        const accessibleAmount = accessibleAmountByBrandCountry?.[bc.id];
 
         return (
           <motion.button
@@ -103,9 +107,30 @@ export function BrandCountryGrid({
             </div>
 
             {showStock && bc.isActive && bc.stockCount > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-green-600 md:text-xs dark:text-green-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />${bc.stockAmount.toLocaleString()} disponible
-              </span>
+              <div className="flex flex-col items-center gap-0.5">
+                {accessibleAmount !== undefined ? (
+                  // Buyer tiene tarifa: destacar lo que REALMENTE puede comprar (tier <= su buyRate)
+                  accessibleAmount > 0 ? (
+                    <>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-green-600 md:text-xs dark:text-green-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />${accessibleAmount.toLocaleString()} a tu tasa
+                      </span>
+                      <span className="text-muted-foreground text-[8px] md:text-[10px]">
+                        de ${bc.stockAmount.toLocaleString()} en plataforma
+                      </span>
+                    </>
+                  ) : (
+                    <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold md:text-xs">
+                      ${bc.stockAmount.toLocaleString()} en plataforma
+                    </span>
+                  )
+                ) : (
+                  // Sin mapa de accesibilidad (sell flow) o buyer sin tarifa: comportamiento original
+                  <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-green-600 md:text-xs dark:text-green-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />${bc.stockAmount.toLocaleString()} disponible
+                  </span>
+                )}
+              </div>
             )}
 
             {!bc.isActive && (

@@ -74,6 +74,8 @@ export interface NotificationPageData {
 // ── Brand Country Info ──────────────────────────────────────────────────────
 
 export interface BrandCountryInfo {
+  brandId: string;
+  countryId: string;
   brandName: string;
   countryName: string;
   countryCode: string;

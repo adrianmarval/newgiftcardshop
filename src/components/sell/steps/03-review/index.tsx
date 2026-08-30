@@ -13,6 +13,7 @@ import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { isBlockingEvidenceState, type ValidationState, type SellFlowImage } from '@/types';
 
 import { cn } from '@/lib/ui';
+import { formatCurrency } from '@/lib/utils';
 import { useAction } from 'next-safe-action/hooks';
 import { uploadImage } from '@/actions/seller/ocr/upload-image';
 import { extractDraft } from '@/actions/seller/ocr/extract-draft';
@@ -130,7 +131,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
 
   const totalAmount = giftcards.reduce((sum, card) => sum + (parseFloat(card.amount) || 0), 0);
   const totalToReceive = totalAmount * sellRate;
-  const currencySymbol = brandCountry?.countryCurrency === 'GBP' ? '£' : brandCountry?.countryCurrency === 'CAD' ? 'C$' : '$';
+  const currency = brandCountry?.countryCurrency || 'USD';
 
   const rangeViolations: AmountRangeViolation[] = useMemo(
     () =>
@@ -212,12 +213,11 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                     <span className="font-mono">{v.claimCode || '(no code)'}</span>
                     <span className="text-destructive/60">
                       {' — '}
-                      {currencySymbol}
-                      {v.amount.toFixed(2)}
+                      {formatCurrency(Number(v.amount), { currency })}
                     </span>
                     <span className="text-destructive/70">
                       {' '}
-                      ({v.violation === 'below_min' ? `min ${currencySymbol}${v.minAmount!.toFixed(2)}` : `max ${currencySymbol}${v.maxAmount!.toFixed(2)}`})
+                      ({v.violation === 'below_min' ? `min ${formatCurrency(v.minAmount!, { currency })}` : `max ${formatCurrency(v.maxAmount!, { currency })}`})
                     </span>
                   </div>
                 ))}
@@ -235,8 +235,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
               <div className="flex flex-col justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-1.5">
                 <span className="text-[9px] font-medium tracking-wider text-emerald-400 uppercase">Total</span>
                 <p className="text-base font-black text-emerald-400">
-                  {currencySymbol}
-                  {totalAmount.toFixed(2)}
+                  {formatCurrency(totalAmount, { currency })}
                 </p>
               </div>
             </div>
@@ -244,7 +243,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
             <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1">
               <div className="flex flex-col">
                 <span className="text-[9px] font-medium tracking-wider text-emerald-400 uppercase">You receive</span>
-                <p className="text-base font-black text-emerald-400">${totalToReceive.toFixed(2)}</p>
+                <p className="text-base font-black text-emerald-400">{formatCurrency(totalToReceive, { currency })}</p>
               </div>
               <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/5 text-[12px] font-bold text-emerald-400">
                 {sellRate * 100}%
@@ -306,8 +305,7 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                               rangeViolation ? 'text-destructive' : 'text-foreground',
                             )}
                           >
-                            {currencySymbol}
-                            {card.amount || '0.00'}
+                            {formatCurrency(Number(card.amount || '0'), { currency })}
                           </span>
                           {rangeViolation && (
                             <Badge className="border-0 bg-destructive/20 px-1.5 py-0.5 text-[9px] font-bold text-destructive shadow-none">
@@ -403,14 +401,13 @@ export function ReviewStep({ onPublish, isPublishing, brandCountry, sellRate, ba
                             <div className="rounded border border-amber-500/10 bg-black/20 p-1 md:p-1.5">
                               <p className="text-[8px] font-medium text-amber-200/50 uppercase">Written</p>
                               <p className="text-[11px] font-black md:text-xs">
-                                {currencySymbol}
-                                {card.amount}
+                                {formatCurrency(Number(card.amount), { currency })}
                               </p>
                             </div>
                             <div className="rounded border border-emerald-500/10 bg-black/20 p-1 md:p-1.5">
                               <p className="text-[8px] font-medium text-emerald-200/50 uppercase">In Picture</p>
                               <p className="text-[11px] font-black text-emerald-400 md:text-xs">
-                                {currencySymbol}
+                                {formatCurrency(Number(card.amount), { currency })}
                                 {card.evidence?.extractedAmount || '?'}
                               </p>
                             </div>

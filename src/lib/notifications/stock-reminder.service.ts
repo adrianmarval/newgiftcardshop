@@ -24,6 +24,7 @@ import { notificationDispatcher } from './dispatcher';
 import type { NotificationMessage } from './types';
 import { getStockReminderIntervalMinutes } from '@/lib/settings/settings.service';
 import { getCountryFlag } from '@/lib/utils/country-flags';
+import { formatCurrency } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 /**
@@ -72,6 +73,8 @@ export async function sweepStockReminders(): Promise<{ sent: number; skipped: nu
     select: {
       id: true,
       stockReminderIntervalMinutes: true,
+      brandId: true,
+      countryId: true,
       brand: { select: { name: true } },
       country: { select: { name: true, code: true } },
     },
@@ -144,8 +147,8 @@ export async function sweepStockReminders(): Promise<{ sent: number; skipped: nu
         const message: NotificationMessage = {
           type: 'STOCK_REMINDER',
           title: `${flag} ${bc.brand.name} • ${bc.country.name}`,
-          description: `${cardCount} tarjetas por $${total.toFixed(2)} siguen disponibles a tu tasa`,
-          actionUrl: '/store/dashboard/browse-cards',
+          description: `${cardCount} tarjetas por ${formatCurrency(total.toNumber())} siguen disponibles a tu tasa`,
+          actionUrl: `/store/dashboard/browse-cards?brand=${bc.brandId}&country=${bc.countryId}`,
           metadata: {
             brandCountryId: bc.id,
             reminder: true,

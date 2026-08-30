@@ -8,6 +8,7 @@ import { InlineAlert } from '@/components/ui/inline-alert';
 import { payBatch } from '@/actions/admin/batches';
 import type { AdminBatch } from '@/types';
 import type { AlertState } from '@/components/admin/types';
+import { formatCurrency } from '@/lib/utils';
 
 interface AdminPayDialogProps {
   batches: AdminBatch[];
@@ -109,12 +110,12 @@ export function AdminPayDialog({ batches, open, onOpenChange, onPaid }: AdminPay
               <span>
                 Lote #{batch.id} ({batch.seller.name})
               </span>
-              <span className="font-medium">${batch.estimatedPayout.toFixed(2)}</span>
+              <span className="font-medium">{formatCurrency(batch.estimatedPayout)}</span>
             </div>
           ))}
           <div className="mt-2 flex items-center justify-between border-t pt-2 font-semibold">
             <span>Total</span>
-            <span>${totalPayout.toFixed(2)}</span>
+            <span>{formatCurrency(totalPayout)}</span>
           </div>
         </div>
 

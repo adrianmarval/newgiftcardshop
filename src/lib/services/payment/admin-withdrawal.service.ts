@@ -21,6 +21,7 @@ import { Decimal } from '@prisma/client/runtime/client';
 import prisma from '@/lib/prisma';
 import binance from '@/lib/services/payment/binance.service';
 import { logger } from '@/lib/logger';
+import { formatCurrency } from '@/lib/utils';
 import { PaymentDirection, PaymentCategory, PaymentStatus, PaymentReferenceType } from '@/generated/prisma/client';
 import type { Asset, Network } from '@/types';
 import type { SyncResult } from './seller-payout.service';
@@ -132,7 +133,7 @@ export async function executeAdminWithdrawal({
 
         if (platformBalance.lt(amount)) {
           throw new WithdrawalError(
-            `Balance de plataforma insuficiente (disponible: $${platformBalance.toFixed(2)}, requerido: $${amount.toFixed(2)}).`,
+            `Balance de plataforma insuficiente (disponible: ${formatCurrency(platformBalance.toNumber())}, requerido: ${formatCurrency(amount.toNumber())}).`,
           );
         }
 

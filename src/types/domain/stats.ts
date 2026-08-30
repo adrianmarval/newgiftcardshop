@@ -32,8 +32,6 @@ export interface BuyerPersonalStats {
 }
 
 export interface BuyerStats {
-  availableCards: number;
-  availableAmount: number;
   orderBook: OrderBookData;
   personal: BuyerPersonalStats;
 }

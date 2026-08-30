@@ -4,7 +4,6 @@ import { buyerActionClient, ActionError } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
 import { startOfDay, startOfMonth } from 'date-fns';
 import { maskEmail } from '@/lib/utils/mask-email';
-import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { buyerStatsOutputSchema } from './schemas';
 
@@ -17,12 +16,7 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
     const todayStart = startOfDay(now);
     const monthStart = startOfMonth(now);
 
-    const [available, todayOrders, todayOrderCount, user, unpaidOrders, completedOrders, monthOrders, reportedIssues] = await Promise.all([
-      prisma.giftcard.aggregate({
-        where: AVAILABLE_GIFTCARD_WHERE,
-        _count: true,
-        _sum: { amount: true },
-      }),
+    const [todayOrders, todayOrderCount, user, unpaidOrders, completedOrders, monthOrders, reportedIssues] = await Promise.all([
       prisma.order.findMany({
         where: { createdAt: { gte: todayStart }, status: { not: 'CANCELLED' } },
         select: {
@@ -102,8 +96,6 @@ export const getBuyerStats = buyerActionClient.outputSchema(buyerStatsOutputSche
     );
 
     return {
-      availableCards: available._count,
-      availableAmount: available._sum.amount?.toNumber() ?? 0,
       orderBook: {
         totalOrdersToday: todayOrderCount,
         totalTradedToday,

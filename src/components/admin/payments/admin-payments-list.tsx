@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Payment } from '@/types/domain';
 import { showAlert } from '@/lib/ui';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, formatCurrency } from '@/lib/utils';
 import { paymentCategoryConfig, paymentDirectionConfig, paymentStatusConfig } from '@/lib/config/ui-config';
 
 interface AdminPaymentsListProps {
@@ -82,7 +82,7 @@ export const AdminPaymentsList = ({ payments, totalPages: _totalPages }: AdminPa
                       </div>
                     </td>
                     <td className={`px-4 py-3 text-right text-sm font-medium ${paymentDirectionConfig[payment.direction].colorClass}`}>
-                      {paymentDirectionConfig[payment.direction].prefix}${Math.abs(payment.amount).toFixed(2)}
+                      {paymentDirectionConfig[payment.direction].prefix}{formatCurrency(Math.abs(payment.amount))}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {payment.referenceType && payment.referenceId ? (
@@ -128,7 +128,7 @@ export const AdminPaymentsList = ({ payments, totalPages: _totalPages }: AdminPa
                         <span className="text-muted-foreground">-</span>
                       )}
                     </td>
-                    <td className="text-muted-foreground px-4 py-3 text-right text-sm">${payment.balanceAfter.toFixed(2)}</td>
+                    <td className="text-muted-foreground px-4 py-3 text-right text-sm">{formatCurrency(payment.balanceAfter)}</td>
                   </tr>
                 );
               })}

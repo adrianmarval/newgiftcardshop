@@ -4,6 +4,7 @@ import { notificationDispatcher } from './dispatcher';
 import type { NotificationMessage } from './types';
 import type { NotificationType } from '@/generated/prisma/client';
 import { getCountryFlag } from '@/lib/utils/country-flags';
+import { formatCurrency } from '@/lib/utils';
 import type { BrandCountryInfo, EligibleBuyer, TierDropEvent } from '@/types';
 
 interface StockCard {
@@ -17,16 +18,25 @@ async function getBrandCountryInfo(brandCountryId: string): Promise<BrandCountry
   const bc = await prisma.brandCountry.findUnique({
     where: { id: brandCountryId },
     select: {
+      brandId: true,
+      countryId: true,
       brand: { select: { name: true } },
       country: { select: { name: true, code: true } },
     },
   });
   if (!bc) return null;
   return {
+    brandId: bc.brandId,
+    countryId: bc.countryId,
     brandName: bc.brand.name,
     countryName: bc.country.name,
     countryCode: bc.country.code,
   };
+}
+
+/** Deep link al buy wizard con la marca+país ya seleccionados. */
+function browseCardsUrl(info: BrandCountryInfo): string {
+  return `/store/dashboard/browse-cards?brand=${info.brandId}&country=${info.countryId}`;
 }
 
 async function getEligibleBuyers(brandCountryId: string): Promise<EligibleBuyer[]> {
@@ -150,14 +160,14 @@ export async function notifyBuyersStockAvailable(brandCountryId: string, initial
     const flag = getCountryFlag(info.countryCode);
     const stockText =
       summary.cardCount > 0
-        ? `${summary.cardCount} tarjetas por $${summary.totalAmount.toFixed(2)} disponibles`
+        ? `${summary.cardCount} tarjetas por ${formatCurrency(summary.totalAmount.toNumber())} disponibles`
         : `Tier inicial: ${effectiveTier}%`;
 
     const message: NotificationMessage = {
       type: 'STOCK_AVAILABLE',
       title: `${flag} ${info.brandName} • ${info.countryName}`,
       description: stockText,
-      actionUrl: '/store/dashboard/browse-cards',
+      actionUrl: browseCardsUrl(info),
       metadata: {
         brandCountryId,
         brandName: info.brandName,
@@ -225,14 +235,14 @@ export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<voi
         const flag = getCountryFlag(info.countryCode);
         const stockText =
           summary.cardCount > 0
-            ? `${summary.cardCount} tarjetas por $${summary.totalAmount.toFixed(2)} disponibles`
+            ? `${summary.cardCount} tarjetas por ${formatCurrency(summary.totalAmount.toNumber())} disponibles`
             : `Tier bajó de ${event.oldTier}% a ${event.newTier}%`;
 
         const message: NotificationMessage = {
           type: 'TIER_DROP_ACCESS',
           title: `${flag} ${info.brandName} • ${info.countryName}`,
           description: stockText,
-          actionUrl: '/store/dashboard/browse-cards',
+          actionUrl: browseCardsUrl(info),
           metadata: {
             brandName: info.brandName,
             countryName: info.countryName,

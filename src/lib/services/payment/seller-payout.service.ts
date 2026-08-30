@@ -19,6 +19,7 @@ import prisma from '@/lib/prisma';
 import binance from '@/lib/services/payment/binance.service';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { logger } from '@/lib/logger';
+import { formatCurrency } from '@/lib/utils';
 import { PaymentDirection, PaymentCategory, PaymentStatus, PaymentReferenceType } from '@/generated/prisma/client';
 import type { Asset, Network } from '@/types';
 
@@ -135,7 +136,7 @@ export async function executeSellerPayout(batchId: number, source: 'manual' | 'a
 
         if (platformBalance.lt(payoutAmount)) {
           throw new PayoutError(
-            `Balance de plataforma insuficiente para el lote #${batchId} (disponible: $${platformBalance.toFixed(2)}, requerido: $${payoutAmount.toFixed(2)}).`,
+            `Balance de plataforma insuficiente para el lote #${batchId} (disponible: ${formatCurrency(platformBalance.toNumber())}, requerido: ${formatCurrency(payoutAmount.toNumber())}).`,
             payoutAmount.toNumber(),
           );
         }

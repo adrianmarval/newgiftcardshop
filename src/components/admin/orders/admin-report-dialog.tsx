@@ -10,6 +10,7 @@ import { manageReport } from '@/actions/admin/orders';
 import { Spinner } from '@/components/ui/spinner';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import type { Giftcard } from '@/types';
+import { formatCurrency } from '@/lib/utils';
 import type { AlertState } from '@/components/admin/types';
 
 interface AdminReportDialogProps {
@@ -113,7 +114,7 @@ export function AdminReportDialog({ card, orderId, mode, open, onOpenChange, onS
             <div className="bg-muted/30 flex items-center gap-1 rounded-2xl p-3">
               <div>
                 <p className="font-black">{card.brand.name}</p>
-                <p className="text-muted-foreground text-sm">${card.amount.toFixed(2)}</p>
+                <p className="text-muted-foreground text-sm">{formatCurrency(card.amount)}</p>
               </div>
             </div>
           )}

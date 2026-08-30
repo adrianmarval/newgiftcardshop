@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell } from 'lucide-react';
+import { Bell, ExternalLink } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
 import { markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
@@ -20,9 +20,9 @@ export interface NotificationsListProps {
 }
 
 const LIST_TEXTS = {
-  seller: { empty: 'No notifications', unread: 'unread', markRead: 'Mark all read' },
-  buyer: { empty: 'Sin Notificaciones', unread: 'sin leer', markRead: 'Marcar leídas' },
-  admin: { empty: 'Sin Notificaciones', unread: 'sin leer', markRead: 'Marcar leídas' },
+  seller: { empty: 'No notifications', unread: 'unread', markRead: 'Mark all read', view: 'View' },
+  buyer: { empty: 'Sin Notificaciones', unread: 'sin leer', markRead: 'Marcar leídas', view: 'Ver' },
+  admin: { empty: 'Sin Notificaciones', unread: 'sin leer', markRead: 'Marcar leídas', view: 'Ver' },
 } as const;
 
 export function NotificationsList({ portal, initialNotifications, initialUnreadCount: _initialUnreadCount }: NotificationsListProps) {
@@ -38,15 +38,12 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const { execute: executeMarkAsRead } = useAction(markAsRead, {
-    onSuccess: () => {
-      setUnreadCount(portal, notifications.filter((n) => !n.read).length);
-    },
-  });
+  const { execute: executeMarkAsRead } = useAction(markAsRead);
 
   const handleClick = (item: NotificationItem) => {
     if (!item.read) {
       setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
+      setUnreadCount(portal, notifications.filter((n) => !n.read && n.id !== item.id).length);
       executeMarkAsRead({ notificationId: item.id });
     }
     if (item.actionUrl) {
@@ -56,6 +53,7 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
 
   const handleMarkAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(portal, 0);
     executeMarkAsRead({ all: true });
   };
 
@@ -101,6 +99,12 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
                 <span className="text-muted-foreground shrink-0 text-xs">{timeAgo(item.createdAt)}</span>
               </div>
               <p className="text-muted-foreground text-sm leading-snug">{item.description}</p>
+              {item.actionUrl && (
+                <span className="text-primary mt-1 inline-flex items-center gap-1 text-xs font-medium">
+                  {texts.view}
+                  <ExternalLink className="h-3 w-3" />
+                </span>
+              )}
             </div>
 
             {!item.read && <span className="bg-primary mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" />}

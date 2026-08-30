@@ -18,6 +18,7 @@ import { WebPushChannel } from './channels/webpush.channel';
 import type { NotificationContext, NotificationMessage } from './types';
 import { getStockDigestIntervalMinutes } from '@/lib/settings/settings.service';
 import { getCountryFlag } from '@/lib/utils/country-flags';
+import { formatCurrency } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 /** Acumula un evento de stock para el resumen. Idempotente por (user, brandCountry). */
@@ -31,6 +32,8 @@ export async function enqueueStockDigest(userId: string, brandCountryId: string)
 
 interface DigestBrandCountry {
   stockDigestIntervalMinutes: number | null;
+  brandId: string;
+  countryId: string;
   brand: { name: string };
   country: { name: string; code: string };
 }
@@ -77,8 +80,8 @@ async function sendStockDigest(userId: string, brandCountryId: string, bc: Diges
   const message: NotificationMessage = {
     type: 'STOCK_AVAILABLE',
     title: `${flag} ${bc.brand.name} • ${bc.country.name}`,
-    description: `${batchesText} — ${cards.length} tarjetas por $${total.toFixed(2)} accesibles a tu tasa`,
-    actionUrl: '/store/dashboard/browse-cards',
+    description: `${batchesText} — ${cards.length} tarjetas por ${formatCurrency(total.toNumber())} accesibles a tu tasa`,
+    actionUrl: `/store/dashboard/browse-cards?brand=${bc.brandId}&country=${bc.countryId}`,
     metadata: {
       brandCountryId,
       digest: true,
@@ -121,6 +124,8 @@ export async function sweepStockDigests(): Promise<{ sent: number; skipped: numb
       brandCountry: {
         select: {
           stockDigestIntervalMinutes: true,
+          brandId: true,
+          countryId: true,
           brand: { select: { name: true } },
           country: { select: { name: true, code: true } },
         },

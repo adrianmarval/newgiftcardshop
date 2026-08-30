@@ -11,9 +11,14 @@ import { GiftcardStatus } from '@/types';
 export interface BuyGiftcardManagerProps {
   brandCountries: BrandCountry[];
   resumeOrder?: BuyerOrder | null;
+  /** Preselection from the live availability grid: brandId + countryId. */
+  initialBrandId?: string;
+  initialCountryId?: string;
+  /** brandCountryId → monto accesible para el buyer (tier <= su buyRate) */
+  accessibility?: Record<string, number>;
 }
 
-export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardManagerProps) => {
+export const BuyGiftcardManager = ({ brandCountries, resumeOrder, initialBrandId, initialCountryId, accessibility }: BuyGiftcardManagerProps) => {
   const { step } = useBuyFlow();
   const router = useRouter();
 
@@ -63,8 +68,16 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
       });
     } else {
       useBuyFlow.getState().resetForm();
+      // Preselection AFTER reset (the reset would wipe it). SearchStep reads
+      // selectedBrand as 'brandId|countryId'.
+      if (initialBrandId && initialCountryId) {
+        useBuyFlow.setState({
+          selectedBrand: `${initialBrandId}|${initialCountryId}`,
+          selectedCountry: initialCountryId,
+        });
+      }
     }
-  }, [targetKey, resumeOrder, router]);
+  }, [targetKey, resumeOrder, router, initialBrandId, initialCountryId]);
 
   return (
     <div className="h-full">
@@ -88,7 +101,7 @@ export const BuyGiftcardManager = ({ brandCountries, resumeOrder }: BuyGiftcardM
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <SearchStep brandCountries={brandCountries} />
+                <SearchStep brandCountries={brandCountries} accessibility={accessibility} />
               </motion.div>
             )}
             {step === 2 && (

@@ -5,8 +5,6 @@
 import { z } from 'zod';
 
 export const buyerStatsOutputSchema = z.object({
-  availableCards: z.number(),
-  availableAmount: z.number(),
   orderBook: z.object({
     totalOrdersToday: z.number(),
     totalTradedToday: z.number(),
@@ -32,4 +30,24 @@ export const buyerStatsOutputSchema = z.object({
     monthOrdersCount: z.number(),
     reportedIssues: z.number(),
   }),
+});
+
+export const liveAvailabilityItemSchema = z.object({
+  brandCountryId: z.string(),
+  brandId: z.string(),
+  countryId: z.string(),
+  brandName: z.string(),
+  brandIcon: z.string(),
+  brandImage: z.string().nullable(),
+  countryName: z.string(),
+  countryCode: z.string(),
+  currency: z.string(),
+  totalCount: z.number(),
+  totalAmount: z.number(),
+  accessibleCount: z.number(),
+  accessibleAmount: z.number(),
+});
+
+export const liveAvailabilityOutputSchema = z.object({
+  items: z.array(liveAvailabilityItemSchema),
 });

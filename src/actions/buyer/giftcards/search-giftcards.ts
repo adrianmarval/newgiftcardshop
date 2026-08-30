@@ -9,6 +9,7 @@ import { getEscalationConfig } from '@/lib/settings/settings.service';
 import { getBuyerBuyRate } from '@/lib/services/pricing';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
 import { searchGiftcardsInputSchema, searchGiftcardsOutputSchema } from './schemas';
+import { formatCurrency } from '@/lib/utils';
 
 export const searchGiftcards = buyerActionClient
   .inputSchema(searchGiftcardsInputSchema)
@@ -30,13 +31,13 @@ export const searchGiftcards = buyerActionClient
       const credit = await checkCreditLimit(userId, amountDecimal);
 
       if (!credit.allowed) {
-        const pendingText = credit.unpaidTotal.gt(0) ? `Tienes $${credit.unpaidTotal.toFixed(2)} en pagos pendientes. ` : '';
+        const pendingText = credit.unpaidTotal.gt(0) ? `Tienes ${formatCurrency(credit.unpaidTotal.toNumber())} en pagos pendientes. ` : '';
         return {
           success: true as const,
           giftcards: [],
           error: credit.availableCredit.lte(0)
             ? 'Has alcanzado tu límite de crédito. Debes completar los pagos pendientes antes de comprar más.'
-            : `Esta compra excedería tu límite de crédito. ${pendingText}Crédito disponible: $${credit.availableCredit.toFixed(2)}. Intentá con un monto menor.`,
+            : `Esta compra excedería tu límite de crédito. ${pendingText}Crédito disponible: ${formatCurrency(credit.availableCredit.toNumber())}. Intentá con un monto menor.`,
         };
       }
     }
@@ -103,7 +104,7 @@ export const searchGiftcards = buyerActionClient
         return {
           success: true as const,
           giftcards: [],
-          error: `No hay tarjetas disponibles para tu tasa del ${buyerBuyRate}%. Hay $${totalInaccessible.toFixed(2)} en ${result.tierInfo.inaccessibleCards.length} tarjetas con tier superior.${estimationPart}`,
+          error: `No hay tarjetas disponibles para tu tasa del ${buyerBuyRate}%. Hay ${formatCurrency(totalInaccessible)} en ${result.tierInfo.inaccessibleCards.length} tarjetas con tier superior.${estimationPart}`,
           tierInfo: {
             buyerBuyRate,
             accessibleAmount: result.tierInfo.accessibleAmount.toString(),
@@ -122,7 +123,7 @@ export const searchGiftcards = buyerActionClient
           return {
             success: true as const,
             giftcards: [],
-            error: `La tarjeta más chica disponible es de $${minCard.amount.toFixed(2)}. Intentá con un monto mayor o igual.`,
+            error: `La tarjeta más chica disponible es de ${formatCurrency(minCard.amount.toNumber())}. Intentá con un monto mayor o igual.`,
           };
         }
       }
@@ -130,7 +131,7 @@ export const searchGiftcards = buyerActionClient
       return {
         success: true as const,
         giftcards: [],
-        error: `No se encontró una combinación exacta para $${amount.toFixed(2)}. Probá con otro monto.`,
+        error: `No se encontró una combinación exacta para ${formatCurrency(amount)}. Probá con otro monto.`,
       };
     }
 

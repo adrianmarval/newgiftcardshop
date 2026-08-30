@@ -14,6 +14,7 @@ import { getBinancePayPaymentId } from '@/actions/platform';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
 import { copyToClipboard } from '@/lib/utils/clipboard';
+import { formatCurrency } from '@/lib/utils';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
 import { StepFooter, FieldError } from '@/components/common';
 import { useRouter } from 'next/navigation';
@@ -133,7 +134,7 @@ export const PaymentStep = () => {
         <div className="group border-border bg-muted/50 relative w-full max-w-xs space-y-2 rounded-2xl border p-2 md:max-w-sm md:space-y-3 md:p-4">
           <div className="relative z-10 space-y-0.5">
             <div className="text-muted-foreground text-[9px] font-black tracking-widest uppercase md:text-[10px]">Total a Pagar</div>
-            <div className="text-primary text-xl font-black md:text-3xl">${adjustedTotal != null ? adjustedTotal.toFixed(2) : '—'}</div>
+            <div className="text-primary text-xl font-black md:text-3xl">{adjustedTotal != null ? formatCurrency(adjustedTotal) : '—'}</div>
           </div>
 
           <div className="relative z-10 space-y-1">

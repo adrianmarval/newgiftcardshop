@@ -11,11 +11,11 @@ import {
   IconCircleCheck,
   IconAlertTriangle,
   IconChevronRight,
-  IconArrowRight,
 } from '@tabler/icons-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { StatCard } from '@/components/common';
+import { LiveAvailabilityGrid, type LiveAvailabilityItem } from '@/components/buy/live-availability-grid';
 import { orderStatusConfig } from '@/lib/config';
 import { formatCurrency } from '@/lib/utils';
 import type { BuyerStats, OrderBookEntry, RecentOrder } from '@/types';
@@ -24,6 +24,7 @@ import { timeAgo } from '@/lib/utils';
 interface BuyerDashboardProps {
   stats: BuyerStats;
   recentOrders: RecentOrder[];
+  availability: LiveAvailabilityItem[];
 }
 
 function CreditUsageCard({
@@ -121,12 +122,12 @@ function OrderBookRow({ entry }: { entry: OrderBookEntry }) {
         <span className="text-muted-foreground text-xs">
           {entry.cardCount} card{entry.cardCount !== 1 ? 's' : ''}
         </span>
-        <span className="font-semibold">${entry.total.toFixed(2)}</span>
+        <span className="font-semibold">{formatCurrency(entry.total)}</span>
         <span className="text-muted-foreground w-12 text-right text-xs">{timeAgo(entry.createdAt)}</span>
       </div>
 
       <div className="flex flex-col items-end gap-0.5 sm:hidden">
-        <span className="font-semibold">${entry.total.toFixed(2)}</span>
+        <span className="font-semibold">{formatCurrency(entry.total)}</span>
         <span className="text-muted-foreground text-xs">{timeAgo(entry.createdAt)}</span>
       </div>
     </div>
@@ -165,32 +166,13 @@ function RecentOrderRow({ order, onClick }: { order: RecentOrder; onClick: () =>
   );
 }
 
-export function BuyerDashboard({ stats, recentOrders }: BuyerDashboardProps) {
+export function BuyerDashboard({ stats, recentOrders, availability }: BuyerDashboardProps) {
   const router = useRouter();
   const { personal, orderBook } = stats;
 
   return (
     <div className="w-full space-y-2">
-      <section data-tour="buy-explore">
-        <Link
-          href="/store/dashboard/browse-cards"
-          className="bg-primary/10 hover:bg-primary/15 group flex items-center gap-4 rounded-xl border border-dashed p-4 transition-colors"
-        >
-          <div className="bg-primary/20 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-            <IconSearch className="text-primary h-6 w-6" />
-          </div>
-          <div className="flex-1">
-            <p className="text-base font-semibold group-hover:underline">Disponibles</p>
-            <p className="text-muted-foreground text-sm">
-              {stats.availableCards.toLocaleString()} cards · {formatCurrency(stats.availableAmount)}
-            </p>
-          </div>
-          <div className="bg-primary text-primary-foreground flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium">
-            Explorar
-            <IconArrowRight className="h-4 w-4" />
-          </div>
-        </Link>
-      </section>
+      <LiveAvailabilityGrid items={availability} />
 
       <section className="space-y-2">
         <h2 className="text-xl font-semibold">Mis Estadísticas</h2>
@@ -268,7 +250,7 @@ export function BuyerDashboard({ stats, recentOrders }: BuyerDashboardProps) {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">
-                ${orderBook.totalTradedToday.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatCurrency(orderBook.totalTradedToday)}
               </p>
               <p className="text-muted-foreground text-sm">
                 {orderBook.totalOrdersToday} orden{orderBook.totalOrdersToday !== 1 ? 'es' : ''} hoy

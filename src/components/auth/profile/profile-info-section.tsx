@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { showAlert } from '@/lib/ui';
+import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -258,7 +259,7 @@ export const ProfileInfoSection = ({
                   <CreditCard className="h-3.5 w-3.5 text-slate-500" />
                   <span>
                     {isSpanish ? 'Límite de crédito' : 'Credit limit'}{' '}
-                    <span className="font-medium text-emerald-400">${creditLimit.toFixed(2)}</span>
+                    <span className="font-medium text-emerald-400">{formatCurrency(creditLimit)}</span>
                   </span>
                 </div>
               )}
