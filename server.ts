@@ -138,6 +138,7 @@ async function initAutoPayService() {
   try {
     const { sweepPayableBatches } = await import('./src/lib/services/payment/auto-pay.service');
     const { syncPendingSellerPayments } = await import('./src/lib/services/payment/seller-payout.service');
+    const { syncPendingAdminWithdrawals } = await import('./src/lib/services/payment/admin-withdrawal.service');
     const { getAutoPaySellers } = await import('./src/lib/settings/settings.service');
     const log = await getServerLogger();
 
@@ -172,6 +173,20 @@ async function initAutoPayService() {
             metadata: { ...sync },
           });
         }
+
+        // 3. Sync pending admin withdrawals with Binance (resolves network-error PENDINGs)
+        const withdrawalSync = await syncPendingAdminWithdrawals();
+
+        if (withdrawalSync.resolved > 0 || withdrawalSync.failed > 0) {
+          log.action(
+            'payment',
+            'sync-withdrawals-cron',
+            `Sync retiros admin: ${withdrawalSync.resolved} completado(s), ${withdrawalSync.failed} fallido(s), ${withdrawalSync.stillPending} pendiente(s)`,
+            {
+              metadata: { ...withdrawalSync },
+            },
+          );
+        }
       } catch (err) {
         log.error('[AutoPay] Error en ciclo', {
           error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
@@ -193,10 +208,11 @@ async function initAutoPayService() {
 async function initStockDigestService() {
   try {
     const { sweepStockDigests } = await import('./src/lib/notifications/stock-digest.service');
+    const { sweepStockReminders } = await import('./src/lib/notifications/stock-reminder.service');
     const log = await getServerLogger();
 
     const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes (la due-ness por marca se evalúa dentro)
-    log.info('[StockDigest] Iniciado - sweep cada 5min');
+    log.info('[StockDigest] Iniciado - sweep cada 5min (digest + recordatorios de stock varado)');
 
     let sweepRunning = false;
 
@@ -210,6 +226,10 @@ async function initStockDigestService() {
         const result = await sweepStockDigests();
         if (result.sent > 0 || result.skipped > 0) {
           log.info(`[StockDigest] Sweep: ${result.sent} resumen(es) enviado(s), ${result.skipped} descartado(s)`);
+        }
+        const reminders = await sweepStockReminders();
+        if (reminders.sent > 0) {
+          log.info(`[StockReminder] Sweep: ${reminders.sent} recordatorio(s) enviado(s), ${reminders.skipped} descartado(s)`);
         }
       } catch (err) {
         log.error('[StockDigest] Error en sweep', {

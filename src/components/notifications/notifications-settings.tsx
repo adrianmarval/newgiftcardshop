@@ -41,7 +41,7 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Receiving from all your brands (${n})`,
     receivingSome: (n: number, total: number) => `Receiving from ${n} of ${total} brands`,
     brandsHint: 'Brands where you have an assigned rate',
-    stockDigestHint: 'Stock alerts arrive on Telegram/Push as a periodic summary (frequency depends on the brand). In the app they arrive instantly.',
+    stockDigestHint: 'Stock alerts arrive on Telegram/Push as a periodic summary (frequency depends on the brand). If stock stays unsold, you get a periodic reminder. In the app everything arrives instantly.',
     save: 'Save',
   },
   buyer: {
@@ -70,7 +70,7 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Recibiendo de todas tus marcas (${n})`,
     receivingSome: (n: number, total: number) => `Recibiendo de ${n} de ${total} marcas`,
     brandsHint: 'Marcas donde tienes tarifa asignada',
-    stockDigestHint: 'Las alertas de stock llegan a Telegram/Push como un resumen periódico (la frecuencia depende de la marca). En la app llegan al instante.',
+    stockDigestHint: 'Las alertas de stock llegan a Telegram/Push como un resumen periódico (la frecuencia depende de la marca). Si el stock no se vende, recibes un recordatorio periódico. En la app todo llega al instante.',
     save: 'Guardar',
   },
   admin: {
@@ -99,7 +99,7 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Recibiendo de todas tus marcas (${n})`,
     receivingSome: (n: number, total: number) => `Recibiendo de ${n} de ${total} marcas`,
     brandsHint: 'Marcas donde tienes tarifa asignada',
-    stockDigestHint: 'Las alertas de stock llegan a Telegram/Push como un resumen periódico (la frecuencia depende de la marca). En la app llegan al instante.',
+    stockDigestHint: 'Las alertas de stock llegan a Telegram/Push como un resumen periódico (la frecuencia depende de la marca). Si el stock no se vende, recibes un recordatorio periódico. En la app todo llega al instante.',
     save: 'Guardar',
   },
 } as const;

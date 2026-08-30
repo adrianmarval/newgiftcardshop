@@ -64,6 +64,7 @@ model User {
   notificationLogs       NotificationLog[]
   pushSubscriptions      PushSubscription[]
   stockDigestQueue       StockDigestQueue[]
+  stockReminderState     StockReminderState[]
 
   // Deep link tokens para vinculación Telegram
   telegramLinkTokens TelegramLinkToken[]
@@ -231,6 +232,10 @@ model BrandCountry {
   // Intervalo (min) del digest de stock para Telegram/Push. null = default global (PlatformSettings)
   stockDigestIntervalMinutes Int?
 
+  // Intervalo (min) del recordatorio de stock varado. null = default global (PlatformSettings)
+  // Es a la vez el umbral de "varado" y el cooldown por buyer (ver stock-reminder.service.ts)
+  stockReminderIntervalMinutes Int?
+
   orders    Order[]
   giftcards Giftcard[]
   userRates UserBrandCountryRate[]
@@ -240,6 +245,9 @@ model BrandCountry {
 
   // Cola de digest de stock pendiente por marca
   stockDigestQueue StockDigestQueue[]
+
+  // Cooldown del recordatorio de stock varado por buyer
+  stockReminderState StockReminderState[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -756,8 +764,27 @@ model StockDigestQueue {
   @@map("stock_digest_queue")
 }
 
+// Cooldown del recordatorio de stock varado (STOCK_REMINDER) por (user, brandCountry).
+// La fila ES el dedup: el sweep hace claim atómico actualizando lastSentAt con guarda
+// (ver stock-reminder.service.ts). X = BrandCountry.stockReminderIntervalMinutes ?? global
+model StockReminderState {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandCountryId String
+  brandCountry   BrandCountry @relation(fields: [brandCountryId], references: [id], onDelete: Cascade)
+  lastSentAt     DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, brandCountryId])
+  @@map("stock_reminder_state")
+}
+
 enum NotificationType {
   STOCK_AVAILABLE
+  STOCK_REMINDER
   TIER_DROP_ACCESS
   PAYMENT_PENDING
   ORDER_COMPLETED

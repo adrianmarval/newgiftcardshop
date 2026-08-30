@@ -8,6 +8,7 @@ import { showAlert } from '@/lib/ui';
 import { AdminPaymentsList } from './admin-payments-list';
 import { AdminDepositDialog } from './admin-deposit-dialog';
 import { AdminRefundDialog } from './admin-refund-dialog';
+import { AdminWithdrawDialog } from './admin-withdraw-dialog';
 import { Button } from '@/components/ui/button';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -133,11 +134,13 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
   const router = useRouter();
   const [depositOpen, setDepositOpen] = useState(false);
   const [refundOpen, setRefundOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const handleSuccess = () => {
     router.refresh();
     setDepositOpen(false);
     setRefundOpen(false);
+    setWithdrawOpen(false);
   };
 
   const { execute: syncWithdrawals, isExecuting: isSyncing } = useAction(syncPendingWithdrawals, {
@@ -197,6 +200,7 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
               { value: 'ORDER', label: 'Orden' },
               { value: 'BATCH', label: 'Batch' },
               { value: 'DEPOSIT', label: 'Depósito' },
+              { value: 'WITHDRAWAL', label: 'Retiro' },
               { value: 'REFUND_BUYER', label: 'Refund Buyer' },
               { value: 'REFUND_SELLER', label: 'Refund Seller' },
             ],
@@ -215,6 +219,9 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
         <Button variant={'secondary'} onClick={() => setRefundOpen(true)}>
           + Registrar Refund
         </Button>
+        <Button variant={'secondary'} onClick={() => setWithdrawOpen(true)}>
+          Retirar Fondos
+        </Button>
         <Button variant={'outline'} onClick={() => syncWithdrawals()} disabled={isSyncing}>
           {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
           Sincronizar Binance
@@ -222,6 +229,7 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
       </div>
       <AdminDepositDialog open={depositOpen} onOpenChange={setDepositOpen} onSuccess={handleSuccess} />
       <AdminRefundDialog open={refundOpen} onOpenChange={setRefundOpen} sellers={sellers} buyers={buyers} onSuccess={handleSuccess} />
+      <AdminWithdrawDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} onSuccess={handleSuccess} />
     </div>
   );
 };

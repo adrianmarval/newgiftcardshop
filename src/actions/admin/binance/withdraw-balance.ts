@@ -2,120 +2,45 @@
 
 import { ActionError, adminActionClient } from '@/lib/safe-action';
 import binance from '@/lib/services/payment/binance.service';
-import type { Asset, Network } from '@/types';
-import prisma from '@/lib/prisma';
+import { executeAdminWithdrawal, WithdrawalError } from '@/lib/services/payment/admin-withdrawal.service';
 import { Decimal } from '@prisma/client/runtime/client';
-import { PaymentDirection, PaymentCategory, PaymentReferenceType, PaymentStatus } from '@/generated/prisma/client';
 import { withdrawBalanceInputSchema, withdrawBalanceOutputSchema } from './schemas';
 
 export const withdrawBalance = adminActionClient
   .inputSchema(withdrawBalanceInputSchema)
   .outputSchema(withdrawBalanceOutputSchema)
   .action(async ({ parsedInput }) => {
-    const WITHDRAW_WALLET = process.env.WITHDRAW_WALLET;
-    const WITHDRAW_COIN = process.env.WITHDRAW_COIN as Asset;
-    const WITHDRAW_NETWORK = process.env.WITHDRAW_NETWORK as Network;
+    const amount = new Decimal(parsedInput.amount).toDecimalPlaces(2);
 
-    if (!WITHDRAW_WALLET || !WITHDRAW_COIN || !WITHDRAW_NETWORK) {
-      throw new ActionError('WITHDRAW_WALLET or WITHDRAW_COIN or WITHDRAW_NETWORK is not defined');
+    // Early friendly check against the real Funding wallet — the authoritative
+    // platformBalance guard runs inside executeAdminWithdrawal's transaction
+    let fundingBalance: Decimal;
+    try {
+      fundingBalance = new Decimal(await binance.getFundingUsdtBalance());
+    } catch {
+      throw new ActionError('No se pudo consultar el balance de Binance. Intenta de nuevo en unos segundos.');
     }
 
-    const { amount } = parsedInput;
+    if (fundingBalance.lt(amount)) {
+      throw new ActionError(
+        `Balance Funding de Binance insuficiente (disponible: $${fundingBalance.toFixed(2)}, requerido: $${amount.toFixed(2)}).`,
+      );
+    }
 
-    const withdrawOrderId = `WD_${Date.now()}`;
-
-    let paymentRecord;
     try {
-      paymentRecord = await prisma.$transaction(async (tx) => {
-        const existingPending = await tx.payment.findFirst({
-          where: {
-            status: PaymentStatus.PENDING,
-            category: PaymentCategory.WITHDRAWAL,
-            direction: PaymentDirection.DEBIT,
-            notes: { contains: 'Binance' },
-          },
-        });
-
-        if (existingPending) {
-          throw new ActionError(
-            'Ya existe un retiro de Binance pendiente de sincronización. Por favor, usa el botón de "Sincronizar" antes de intentar uno nuevo para evitar duplicados.',
-          );
-        }
-
-        const currentSettings = await tx.platformSettings.findUnique({ where: { key: 'platformBalance' } });
-        const currentBalance = currentSettings?.balance || new Decimal(0);
-
-        return await tx.payment.create({
-          data: {
-            amount: new Decimal(amount),
-            balanceAfter: currentBalance,
-            direction: PaymentDirection.DEBIT,
-            category: PaymentCategory.WITHDRAWAL,
-            transactionId: withdrawOrderId,
-            status: PaymentStatus.PENDING,
-            isBinanceWallet: true,
-            referenceType: PaymentReferenceType.MANUAL,
-            notes: 'Retiro desde Binance hacia wallet de ahorro del Admin',
-          },
-        });
+      const result = await executeAdminWithdrawal({
+        amount,
+        notes: parsedInput.notes,
       });
+
+      if (result.status === 'FAILED') {
+        throw new ActionError(result.error ?? 'El retiro fue rechazado por Binance.');
+      }
+
+      return result;
     } catch (error) {
       if (error instanceof ActionError) throw error;
-      console.error(error);
-      throw new ActionError('No se pudo inicializar la transacción en la base de datos local.');
+      if (error instanceof WithdrawalError) throw new ActionError(error.message);
+      throw new ActionError('Error inesperado al procesar el retiro.');
     }
-
-    const response = await binance.withdrawFunds({
-      address: WITHDRAW_WALLET,
-      amount: amount.toLocaleString(),
-      coin: WITHDRAW_COIN,
-      transactionFeeFlag: true,
-      walletType: 1,
-      network: WITHDRAW_NETWORK,
-      withdrawOrderId,
-    });
-
-    if (!response.success) {
-      if (response.isNetworkError) {
-        throw new ActionError(
-          `El retiro fue enviado pero hubo un problema de red. La transacción (Ref: ${withdrawOrderId}) quedará pendiente y se verificará automáticamente.`,
-        );
-      } else {
-        await prisma.payment.update({
-          where: { id: paymentRecord.id },
-          data: { status: PaymentStatus.FAILED, notes: `Rechazado por Binance: ${response.error}` },
-        });
-        throw new ActionError(`Error en el retiro de Binance: ${response.error}`);
-      }
-    }
-
-    const binanceRef = response.data.id;
-    try {
-      await prisma.$transaction(async (tx) => {
-        const platformSettings = await tx.platformSettings.upsert({
-          where: { key: 'platformBalance' },
-          update: { balance: { decrement: amount } },
-          create: { key: 'platformBalance', value: '0', balance: new Decimal(-amount) },
-        });
-
-        await tx.payment.update({
-          where: { id: paymentRecord.id },
-          data: {
-            status: PaymentStatus.COMPLETED,
-            balanceAfter: platformSettings.balance,
-            notes: `Retiro desde Binance hacia la plataforma (Completado — Ref: ${binanceRef})`,
-          },
-        });
-      });
-    } catch (error) {
-      console.error(
-        `[CRITICAL] Binance withdrawal succeeded but DB completion failed. Ref: ${binanceRef}. Payment ID: ${paymentRecord.id}`,
-        error,
-      );
-      throw new ActionError(
-        `El retiro en Binance fue exitoso (Ref: ${binanceRef}) pero falló la sincronización local. Se resolverá en la próxima verificación automática.`,
-      );
-    }
-
-    return response.data;
   });

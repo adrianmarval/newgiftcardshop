@@ -9,7 +9,7 @@ import { paginatedOutputSchema } from '@/types';
 export const listPaymentsInputSchema = z.object({
   direction: z.enum(['ALL', 'CREDIT', 'DEBIT'] as const).optional().default('ALL'),
   category: z
-    .enum(['ALL', 'ORDER', 'BATCH', 'DEPOSIT', 'REFUND_BUYER', 'REFUND_SELLER'] as const)
+    .enum(['ALL', 'ORDER', 'BATCH', 'DEPOSIT', 'WITHDRAWAL', 'REFUND_BUYER', 'REFUND_SELLER'] as const)
     .optional()
     .default('ALL'),
   userId: z.string().nullable().optional(),

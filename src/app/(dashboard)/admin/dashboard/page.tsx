@@ -3,8 +3,10 @@ import { formatCurrency } from '@/lib/utils';
 import { Metadata } from 'next';
 import { getBinanceBalances } from '@/actions/admin/binance';
 import { getPlatformBalance } from '@/actions/platform';
-import { getInventoryStats, getProfitStats } from '@/actions/admin/stats';
+import { getInventoryStats, getProfitStats, getStockAgingReport } from '@/actions/admin/stats';
 import { InventoryChart, ProfitChart } from '@/components/admin/charts';
+import { StockAgingTable } from '@/components/admin/stock-aging-table';
+import { AdminWithdrawButton } from '@/components/admin/payments';
 
 import { Bitcoin, CircleDollarSignIcon, Equal, TrendingDown, TrendingUp } from 'lucide-react';
 import { Decimal } from '@prisma/client/runtime/client';
@@ -16,11 +18,12 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  const [binanceRes, platformBalanceResponse, inventoryRes, profitRes] = await Promise.all([
+  const [binanceRes, platformBalanceResponse, inventoryRes, profitRes, agingRes] = await Promise.all([
     getBinanceBalances(),
     getPlatformBalance(),
     getInventoryStats(),
     getProfitStats(),
+    getStockAgingReport(),
   ]);
 
   const { data: binanceBalance, serverError } = binanceRes;
@@ -61,6 +64,9 @@ export default async function AdminDashboardPage() {
                   <span>{formatCurrency(differential.abs().toNumber())} diff</span>
                 </div>
               )}
+            </div>
+            <div className="mt-2">
+              <AdminWithdrawButton />
             </div>
           </CardContent>
         </Card>
@@ -137,6 +143,8 @@ export default async function AdminDashboardPage() {
           <ProfitChart charts={profitData.charts} />
         </div>
       </div>
+
+      <StockAgingTable data={agingRes.data || []} />
     </div>
   );
 }

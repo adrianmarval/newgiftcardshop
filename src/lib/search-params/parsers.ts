@@ -73,7 +73,7 @@ export const adminPaymentsSearchParamsParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(20),
   direction: parseAsStringLiteral(['ALL', 'CREDIT', 'DEBIT'] as const).withDefault('ALL'),
-  category: parseAsStringLiteral(['ALL', 'ORDER', 'BATCH', 'DEPOSIT', 'REFUND_BUYER', 'REFUND_SELLER'] as const).withDefault('ALL'),
+  category: parseAsStringLiteral(['ALL', 'ORDER', 'BATCH', 'DEPOSIT', 'WITHDRAWAL', 'REFUND_BUYER', 'REFUND_SELLER'] as const).withDefault('ALL'),
   userId: parseAsString.withDefault(''),
   search: parseAsString.withDefault(''),
   dateFrom: parseAsString.withDefault(''),
