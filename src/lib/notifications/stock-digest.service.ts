@@ -19,6 +19,7 @@ import type { NotificationContext, NotificationMessage } from './types';
 import { getStockDigestIntervalMinutes } from '@/lib/settings/settings.service';
 import { getCountryFlag } from '@/lib/utils/country-flags';
 import { formatCurrency } from '@/lib/utils';
+import { publishToUser } from '@/lib/realtime/bus';
 import { logger } from '@/lib/logger';
 
 /** Acumula un evento de stock para el resumen. Idempotente por (user, brandCountry). */
@@ -150,8 +151,13 @@ export async function sweepStockDigests(): Promise<{ sent: number; skipped: numb
 
     try {
       const delivered = await sendStockDigest(row.userId, row.brandCountryId, row.brandCountry, row.eventCount);
-      if (delivered) sent++;
-      else skipped++;
+      if (delivered) {
+        sent++;
+        // El digest confirma stock nuevo para el buyer → su grid live se refresca
+        publishToUser(row.userId, ['availability']);
+      } else {
+        skipped++;
+      }
       await prisma.stockDigestQueue.delete({ where: { id: row.id } });
     } catch (err) {
       logger.error(`[StockDigest] Error enviando resumen (user ${row.userId}, bc ${row.brandCountryId}):`, {

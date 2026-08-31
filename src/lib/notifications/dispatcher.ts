@@ -3,8 +3,14 @@ import type { NotificationChannelResult, NotificationContext, NotificationMessag
 import { TelegramChannel } from './channels/telegram.channel';
 import { WebPushChannel } from './channels/webpush.channel';
 import { enqueueStockDigest } from './stock-digest.service';
-import type { Prisma } from '@/generated/prisma/client';
+import { publishToUser } from '@/lib/realtime/bus';
+import type { NotificationType, Prisma } from '@/generated/prisma/client';
 import { logger } from '@/lib/logger';
+
+// Tipos que NUNCA salen por canales interruptivos (Telegram/Push) — solo in-app.
+// TIER_DROP_ACCESS: el buyer ya fue avisado por STOCK_AVAILABLE/digest cuando el
+// stock llegó; un tier drop es info incremental que no amerita interrumpir.
+const IN_APP_ONLY_TYPES: ReadonlySet<NotificationType> = new Set(['TIER_DROP_ACCESS']);
 
 export class NotificationDispatcher {
   async dispatch(userId: string, message: NotificationMessage): Promise<void> {
@@ -34,6 +40,10 @@ export class NotificationDispatcher {
           metadata: (message.metadata ?? null) as Prisma.InputJsonValue,
         },
       });
+      // Invalidación realtime: la campana/lista in-app se actualiza en <1s.
+      // Aplica a TODOS los tipos (incluye STOCK_AVAILABLE — el digest solo
+      // gobierna Telegram/Push, la vista in-app es instantánea).
+      publishToUser(userId, ['notifications']);
     } catch (err) {
       logger.error(`[Notifications] Error persistiendo Notification (web):`, { error: { name: 'NotificationPersistError', message: String(err) } });
     }
@@ -49,6 +59,11 @@ export class NotificationDispatcher {
           });
         });
       }
+      return;
+    }
+
+    // In-app queda persistido arriba (con realtime); estos tipos no interrumpen.
+    if (IN_APP_ONLY_TYPES.has(message.type)) {
       return;
     }
 

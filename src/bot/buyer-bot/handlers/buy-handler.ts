@@ -15,6 +15,7 @@ import { getEscalationConfig } from '@/lib/settings/settings.service';
 import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
 import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
+import { publishToRole, publishToUser } from '@/lib/realtime/bus';
 import { getBrandsWithStock, getBrandWithCountries, getCountryById } from '@/lib/services/catalog/catalog';
 import { withSecurityGate } from './security-handler.js';
 import { createLogger } from '@/lib/logger';
@@ -406,6 +407,12 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     userId: ctx.user.id,
     metadata: { orderId: order.id, giftcardCount: giftcards.length, total: total.toString() },
   });
+
+  // Invalidación realtime: si el buyer tiene la web abierta ve su orden al
+  // instante; el stock baja para todos los buyers conectados
+  publishToUser(ctx.user.id, ['orders', 'stats']);
+  publishToRole('BUYER', ['availability']);
+  publishToRole('ADMIN', ['orders']);
 
   ctx.session.wizard.selectedGiftcardIds = undefined;
 

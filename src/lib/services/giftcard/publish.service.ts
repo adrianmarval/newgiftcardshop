@@ -10,6 +10,7 @@ import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-
 import { getUserRates } from '@/lib/services/pricing';
 import { getInitialTier } from './escalation';
 import { notifyBuyersStockAvailable } from '@/lib/notifications';
+import { publishToRole, publishToUser } from '@/lib/realtime/bus';
 import { MAX_BATCH_SIZE, WALLET_MIN_PAYOUT_EXTERNAL } from '@/lib/constants';
 import { validateAmountsAgainstRange, buildAmountRangeErrorMessage } from '@/lib/utils/amount-range-validator';
 import { logger } from '@/lib/logger';
@@ -262,6 +263,14 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     }
     throw err;
   }
+
+  // Invalidación realtime: el seller ve su batch al instante (web y bot
+  // pasan por acá) y el stock sube para todos los buyers conectados.
+  // La vista de cada buyer recomputa su monto ACCESIBLE server-side — el
+  // socket solo lleva la señal, nunca data.
+  publishToUser(userId, ['batches', 'stats']);
+  publishToRole('BUYER', ['availability']);
+  publishToRole('ADMIN', ['batches']);
 
   // Non-blocking: notify buyers
   notifyBuyersStockAvailable(brandCountry.id, initialTier, batch.id)

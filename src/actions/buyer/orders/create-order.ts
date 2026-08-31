@@ -6,6 +6,7 @@ import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { getUserRates } from '@/lib/services/pricing';
 import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
+import { publishToRole, publishToUser } from '@/lib/realtime/bus';
 import { logger } from '@/lib/logger';
 import { createOrderInputSchema, createOrderOutputSchema } from './schemas';
 
@@ -140,6 +141,12 @@ export const createOrder = buyerActionClient
         buyRate: order.buyRate.toString(),
       },
     });
+
+    // Invalidación realtime: stock reservado baja para TODOS los buyers,
+    // la orden aparece en el listado del buyer y en el panel admin
+    publishToUser(ctx.auth.user.id, ['orders', 'stats']);
+    publishToRole('BUYER', ['availability']);
+    publishToRole('ADMIN', ['orders']);
 
     return { success: true as const, orderId: order.id };
   });

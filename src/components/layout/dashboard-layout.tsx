@@ -2,7 +2,7 @@ import { DashboardSidebar } from './dashboard-sidebar';
 import { AppTopBar } from '@/components/layout';
 import { PushPromptDrawer } from '@/components/notifications/push-prompt-drawer';
 import { authorizeByRequiredRole } from '@/lib/auth/authorization';
-import { AutoRefreshProvider } from '@/providers/auto-refresh-provider';
+import { RealtimeProvider } from '@/providers/realtime-provider';
 import { NotificationProvider } from '@/providers/notification-provider';
 import type { AppSection } from '@/types';
 import { dashboardMap } from '@/types';
@@ -44,7 +44,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
 
   return (
     <NotificationProvider initialUnreadCounts={initialUnreadCounts}>
-      <AutoRefreshProvider interval={15000}>
+      <RealtimeProvider>
         <div className="flex h-svh flex-col ring-0 md:px-4 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}
           <Card className="order-1 flex-10 gap-0 overflow-hidden rounded-none py-0 shadow-2xl md:rounded-t-4xl md:p-1 lg:order-2">
@@ -67,7 +67,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
             <DashboardSidebar portal={portal} />
           </div>
         </div>
-      </AutoRefreshProvider>
+      </RealtimeProvider>
     </NotificationProvider>
   );
 };

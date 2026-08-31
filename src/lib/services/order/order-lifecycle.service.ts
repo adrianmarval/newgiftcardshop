@@ -5,6 +5,7 @@ import { autoCancelEligibleBatchesForOrder } from '@/lib/services/giftcard/batch
 import { triggerAutoPayForOrder } from '@/lib/services/payment/auto-pay.service';
 import { OrderNotFoundError, InvalidOrderStateError, OrderAlreadyProcessedError, PaymentVerificationError } from './order-errors';
 import { validateBuyerPayment } from '@/lib/services/payment/buyer-payment.service';
+import { publishToRole, publishToUser, publishToUsers } from '@/lib/realtime/bus';
 import { logger } from '@/lib/logger';
 
 /**
@@ -27,7 +28,7 @@ function fireAutoPayTrigger(orderId: string): void {
  * Auto-cancels eligible batches (payable = 0, all cards confirmed).
  */
 export async function cancelOrder(orderId: string) {
-  const { cancelledBatches } = await prisma.$transaction(async (tx) => {
+  const { order, cancelledBatches } = await prisma.$transaction(async (tx) => {
     const order = await tx.order.update({
       where: { id: orderId, status: 'PENDING' },
       data: {
@@ -62,6 +63,14 @@ export async function cancelOrder(orderId: string) {
       }
     }
   }
+
+  // Invalidación realtime (cross-canal: web y bot pasan por acá)
+  publishToUser(order.userId, ['orders', 'stats']);
+  publishToUsers(cancelledBatches.map((b) => b.sellerId).filter((id): id is string => Boolean(id)), [
+    'batches',
+    'stats',
+  ]);
+  publishToRole('ADMIN', ['orders']);
 
   // Auto-pay trigger (no-op when disabled, fire-and-forget)
   fireAutoPayTrigger(orderId);
@@ -128,6 +137,14 @@ export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal
       }
     }
   }
+
+  // Invalidación realtime (cross-canal: web y bot pasan por acá)
+  publishToUser(order.userId, ['orders', 'stats']);
+  publishToUsers(cancelledBatches.map((b) => b.sellerId).filter((id): id is string => Boolean(id)), [
+    'batches',
+    'stats',
+  ]);
+  publishToRole('ADMIN', ['orders']);
 
   // Auto-pay trigger (no-op when disabled, fire-and-forget)
   fireAutoPayTrigger(orderId);
@@ -200,6 +217,10 @@ export async function completeOrderPayment(orderId: string, txId: string) {
         error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
       }),
     );
+
+    // Invalidación realtime: orden completada + payment CREDIT registrado
+    publishToUser(result.userId, ['orders', 'stats']);
+    publishToRole('ADMIN', ['orders', 'payments']);
 
     return { orderId: result.orderId, paymentAmount: result.paymentAmount };
   } catch (err) {

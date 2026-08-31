@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/client';
 import { getEscalationConfig } from '@/lib/settings/settings.service';
 import { notifyBuyersTierDrop } from '@/lib/notifications';
+import { publishToRole } from '@/lib/realtime/bus';
 import { logger } from '@/lib/logger';
 import type { EscalationConfig, TierInfo, TierDropEvent } from '@/types';
 
@@ -120,6 +121,10 @@ export async function processEscalationTiers(): Promise<{ processed: number }> {
           metadata: { eventCount: tierDropEvents.length },
           error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown' },
         }));
+
+      // Tier drops = más stock accesible → los grids de buyers se actualizan
+      // en cuanto el cron corre (la frecuencia de detección sigue siendo la del cron)
+      publishToRole('BUYER', ['availability']);
     }
   }
 

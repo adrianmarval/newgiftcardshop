@@ -103,6 +103,9 @@ async function initBatchAutoCancelService() {
           });
 
           const { notifySellerBatchCancelled } = await import('./src/lib/notifications/notification.service');
+          const { publishToUsers, publishToRole } = await import('./src/lib/realtime/bus');
+          publishToUsers(cancelled.map((c) => c.sellerId).filter((id): id is string => Boolean(id)), ['batches', 'stats']);
+          publishToRole('ADMIN', ['batches']);
           for (const { batchId, sellerId } of cancelled) {
             if (sellerId) {
               notifySellerBatchCancelled(sellerId, batchId).catch((err) =>

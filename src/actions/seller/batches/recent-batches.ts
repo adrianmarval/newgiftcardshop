@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { sellerActionClient, ActionError } from '@/lib/safe-action';
+import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { recentBatchesOutputSchema } from './schemas';
 
 export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutputSchema).action(async ({ ctx }) => {
@@ -23,22 +24,19 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutput
 
     const batchIds = batches.map((b) => b.id);
 
-    const [aggregates, confirmedAggregates] = await Promise.all([
-      prisma.giftcard.groupBy({
-        by: ['batchId'],
-        where: { batchId: { in: batchIds } },
-        _sum: { amount: true },
-        _count: { id: true },
-      }),
-      prisma.giftcard.groupBy({
-        by: ['batchId'],
-        where: { batchId: { in: batchIds }, isConfirmed: true },
-        _count: { id: true },
-      }),
-    ]);
+    // Status-aware per-batch aggregation (face value respects issue adjustments)
+    const batchCards = await prisma.giftcard.findMany({
+      where: { batchId: { in: batchIds } },
+      select: { batchId: true, status: true, amount: true, reportedAmount: true, isConfirmed: true },
+    });
 
-    const aggregateMap = new Map(aggregates.map((a) => [a.batchId, { totalFaceValue: Number(a._sum.amount ?? 0), totalCards: a._count.id }]));
-    const confirmedMap = new Map(confirmedAggregates.map((a) => [a.batchId, a._count.id]));
+    const cardsByBatch = new Map<number, typeof batchCards>();
+    for (const card of batchCards) {
+      if (card.batchId === null) continue;
+      const list = cardsByBatch.get(card.batchId) ?? [];
+      list.push(card);
+      cardsByBatch.set(card.batchId, list);
+    }
 
     return batches.map((batch) => {
       const giftcards = batch.giftcards.map((card) => ({
@@ -51,10 +49,11 @@ export const recentBatches = sellerActionClient.outputSchema(recentBatchesOutput
         },
       }));
 
-      const agg = aggregateMap.get(batch.id);
-      const realCardsCount = agg?.totalCards ?? batch._count.giftcards;
-      const effectiveTotal = (agg?.totalFaceValue ?? 0) * Number(batch.sellRate);
-      const confirmedCount = confirmedMap.get(batch.id) ?? 0;
+      const cards = cardsByBatch.get(batch.id) ?? [];
+      const realCardsCount = cards.length || batch._count.giftcards;
+      const confirmedCount = cards.filter((c) => c.isConfirmed).length;
+      // Face value (status-aware, no rate) — matches effectiveTotal in batch-list.service
+      const effectiveTotal = computeFaceValueTotal(cards).toNumber();
 
       return {
         id: batch.id,

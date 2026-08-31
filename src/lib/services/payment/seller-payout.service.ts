@@ -18,6 +18,7 @@ import { Decimal } from '@prisma/client/runtime/client';
 import prisma from '@/lib/prisma';
 import binance from '@/lib/services/payment/binance.service';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
+import { publishToRole, publishToUser } from '@/lib/realtime/bus';
 import { logger } from '@/lib/logger';
 import { formatCurrency } from '@/lib/utils';
 import { PaymentDirection, PaymentCategory, PaymentStatus, PaymentReferenceType } from '@/generated/prisma/client';
@@ -303,6 +304,10 @@ export async function executeSellerPayout(batchId: number, source: 'manual' | 'a
     // confirms the withdrawal on Binance's side
     notifySellerPayoutSent(sellerId, batchId, payoutAmount.toNumber());
 
+    // Invalidación realtime: batch marcado isPaid + payment PENDING visible
+    if (sellerId) publishToUser(sellerId, ['batches', 'stats']);
+    publishToRole('ADMIN', ['payments']);
+
     return {
       batchId,
       paymentId: paymentRecord.id,
@@ -382,6 +387,10 @@ export async function executeSellerPayout(batchId: number, source: 'manual' | 'a
   if (source === 'auto') {
     alertAdminPayoutFailed(batchId, payoutAmount.toNumber(), `Binance rechazó el pago: ${errorMessage}`);
   }
+
+  // Invalidación realtime: el revert deja el batch como no pagado
+  if (sellerId) publishToUser(sellerId, ['batches', 'stats']);
+  publishToRole('ADMIN', ['payments']);
 
   return {
     batchId,
@@ -494,7 +503,12 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
                 error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
               }),
             );
+
+            // Invalidación realtime: el seller ve el batch pagado <1s después
+            // de que el cron detecta la confirmación on-chain
+            publishToUser(payment.batch.userId, ['batches', 'stats']);
           }
+          publishToRole('ADMIN', ['payments']);
 
           return { type: 'resolved' as const };
         }
@@ -535,6 +549,12 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
               `Pago fallido en Binance tras ser aceptado (estado: ${record.status})${record.info ? `: ${record.info}` : ''}`,
             );
           }
+
+          // Invalidación realtime: payment FAILED + batch.isPaid revertido
+          if (payment.batch?.userId) {
+            publishToUser(payment.batch.userId, ['batches', 'stats']);
+          }
+          publishToRole('ADMIN', ['payments']);
 
           return { type: 'failed' as const };
         }

@@ -33,7 +33,7 @@ const LEVEL_MAP: Record<number, string> = {
 const FLUSH_INTERVAL_MS = 5_000;
 const BUFFER_LIMIT = 50;
 
-const buffer: Array<{
+interface LogBufferEntry {
   level: string;
   source: LogSource;
   flow: LogFlow | null;
@@ -43,21 +43,41 @@ const buffer: Array<{
   metadata: Record<string, unknown> | null;
   error: { name: string; message: string; stack?: string } | null;
   ip: string | null;
-}> = [];
+}
 
-let flushTimer: ReturnType<typeof setInterval> | null = null;
-let isShuttingDown = false;
+interface DbTransportState {
+  buffer: LogBufferEntry[];
+  flushTimer: ReturnType<typeof setInterval> | null;
+  isShuttingDown: boolean;
+  hooksRegistered: boolean;
+}
+
+// Estado en globalThis SIEMPRE (no solo en dev): en producción webpack duplica
+// este módulo en varios chunks y server.ts corre vía tsx con otro module graph.
+// Sin estado compartido, cada copia tiene su propio buffer+timer y el
+// gracefulFlush de server.ts solo flushea la copia del graph de tsx — los logs
+// buffereados en los chunks de Next se PIERDEN al apagar el proceso.
+const globalForTransport = globalThis as unknown as { __dbTransportState?: DbTransportState };
+
+const state: DbTransportState = globalForTransport.__dbTransportState ?? {
+  buffer: [],
+  flushTimer: null,
+  isShuttingDown: false,
+  hooksRegistered: false,
+};
+
+globalForTransport.__dbTransportState = state;
 
 function startFlushTimer() {
-  if (flushTimer) return;
-  flushTimer = setInterval(flushBuffer, FLUSH_INTERVAL_MS);
-  flushTimer.unref();
+  if (state.flushTimer) return;
+  state.flushTimer = setInterval(flushBuffer, FLUSH_INTERVAL_MS);
+  state.flushTimer.unref();
 }
 
 async function flushBuffer() {
-  if (buffer.length === 0) return;
+  if (state.buffer.length === 0) return;
 
-  const batch = buffer.splice(0, buffer.length);
+  const batch = state.buffer.splice(0, state.buffer.length);
 
   try {
     await prisma.appLog.createMany({
@@ -80,22 +100,21 @@ async function flushBuffer() {
 }
 
 export async function gracefulFlush() {
-  if (isShuttingDown) return;
-  isShuttingDown = true;
+  if (state.isShuttingDown) return;
+  state.isShuttingDown = true;
 
-  if (flushTimer) {
-    clearInterval(flushTimer);
-    flushTimer = null;
+  if (state.flushTimer) {
+    clearInterval(state.flushTimer);
+    state.flushTimer = null;
   }
 
   await flushBuffer();
 }
 
-// Register shutdown hooks once
-let hooksRegistered = false;
+// Register shutdown hooks once (compartido entre todos los chunks via state)
 function registerShutdownHooks() {
-  if (hooksRegistered) return;
-  hooksRegistered = true;
+  if (state.hooksRegistered) return;
+  state.hooksRegistered = true;
 
   process.once('beforeExit', () => {
     void gracefulFlush();
@@ -124,7 +143,7 @@ export function createDbTransport(): Writable {
           return;
         }
 
-        buffer.push({
+        state.buffer.push({
           level: LEVEL_MAP[entry.level] ?? 'info',
           source: entry.source,
           flow: entry.flow ?? null,
@@ -136,7 +155,7 @@ export function createDbTransport(): Writable {
           ip: entry.ip ?? null,
         });
 
-        if (buffer.length >= BUFFER_LIMIT) {
+        if (state.buffer.length >= BUFFER_LIMIT) {
           void flushBuffer();
         }
 

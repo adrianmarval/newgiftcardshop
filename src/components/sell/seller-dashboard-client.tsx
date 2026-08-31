@@ -52,7 +52,7 @@ export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardC
             title="In-Stock Value"
             value={formatCurrency(stats.inStockValue)}
             icon={<IconPackage className="h-6 w-6 text-blue-500" />}
-            description="Capital at work"
+            description="Face value of unsold cards"
           />
           <StatCard
             title="Problem Cards"

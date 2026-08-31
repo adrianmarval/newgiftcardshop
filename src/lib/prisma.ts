@@ -29,6 +29,11 @@ const createPrismaClient = () => {
 
 const prisma = globalForPrisma.prisma || createPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// SIEMPRE asignar (no solo en dev): en producción webpack duplica este módulo
+// en varios chunks y server.ts corre vía tsx con otro module graph. Sin la
+// asignación incondicional, CADA chunk crea su propio Pool (max 20 conexiones
+// c/u) — N copias × 20 conexiones contra el max_connections de Postgres.
+// Ver el invariante en src/lib/realtime/bus.ts.
+globalForPrisma.prisma = prisma;
 
 export default prisma;

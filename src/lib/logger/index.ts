@@ -22,6 +22,7 @@ const globalForLogger = globalThis as unknown as { __appLogger?: Logger };
 
 export const logger: Logger = globalForLogger.__appLogger ?? createLogger('system');
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForLogger.__appLogger = logger;
-}
+// SIEMPRE asignar (no solo en dev): en producción webpack duplica este módulo
+// en varios chunks y server.ts corre vía tsx con otro module graph. globalThis
+// es lo único compartido — ver el invariante en src/lib/realtime/bus.ts.
+globalForLogger.__appLogger = logger;

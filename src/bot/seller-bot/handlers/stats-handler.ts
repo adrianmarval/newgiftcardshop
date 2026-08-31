@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import { computeFaceValueTotal } from '@/lib/services/pricing';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput } from '@/bot/shared/ui.js';
@@ -16,7 +17,9 @@ export async function handleStats(ctx: SellerContext) {
       select: {
         amount: true,
         inStock: true,
-        batch: { select: { sellRate: true, isPaid: true } },
+        status: true,
+        reportedAmount: true,
+        batch: { select: { sellRate: true, isPaid: true, cancelledAt: true } },
       },
     }),
   ]);
@@ -26,12 +29,15 @@ export async function handleStats(ctx: SellerContext) {
   const inStockCards = cards.filter((c) => c.inStock).length;
   const faceValueTotal = cards.reduce((s, c) => s + Number(c.amount), 0);
   const faceValueSold = cards.filter((c) => !c.inStock).reduce((s, c) => s + Number(c.amount), 0);
+  // Status-aware (computeFaceValueTotal): cards with issues contribute their
+  // adjusted amount (WRONG_AMOUNT → reportedAmount) or 0. Cancelled batches
+  // never get paid — excluded from pending.
   const earnedPaid = cards
     .filter((c) => !c.inStock && c.batch?.isPaid)
-    .reduce((s, c) => s + Number(c.amount) * Number(c.batch!.sellRate), 0);
+    .reduce((s, c) => s + Number(computeFaceValueTotal([c]).mul(c.batch!.sellRate)), 0);
   const earnedPending = cards
-    .filter((c) => !c.inStock && !c.batch?.isPaid)
-    .reduce((s, c) => s + Number(c.amount) * Number(c.batch!.sellRate), 0);
+    .filter((c) => !c.inStock && c.batch && !c.batch.isPaid && !c.batch.cancelledAt)
+    .reduce((s, c) => s + Number(computeFaceValueTotal([c]).mul(c.batch!.sellRate)), 0);
 
   const msg =
     `📊 <b>Your Statistics</b>\n\n` +

@@ -21,6 +21,7 @@ import { Decimal } from '@prisma/client/runtime/client';
 import prisma from '@/lib/prisma';
 import binance from '@/lib/services/payment/binance.service';
 import { logger } from '@/lib/logger';
+import { publishToRole } from '@/lib/realtime/bus';
 import { formatCurrency } from '@/lib/utils';
 import { PaymentDirection, PaymentCategory, PaymentStatus, PaymentReferenceType } from '@/generated/prisma/client';
 import type { Asset, Network } from '@/types';
@@ -215,6 +216,8 @@ export async function executeAdminWithdrawal({
       metadata: { paymentId: paymentRecord.id, amount: amount.toNumber(), binanceRef, withdrawOrderId },
     });
 
+    publishToRole('ADMIN', ['payments']);
+
     return { paymentId: paymentRecord.id, amount: amount.toNumber(), status: 'PENDING' };
   }
 
@@ -270,6 +273,8 @@ export async function executeAdminWithdrawal({
     action: 'admin-withdrawal',
     metadata: { paymentId: paymentRecord.id, amount: amount.toNumber(), error: errorMessage },
   });
+
+  publishToRole('ADMIN', ['payments']);
 
   return {
     paymentId: paymentRecord.id,
@@ -333,6 +338,7 @@ export async function syncPendingAdminWithdrawals(): Promise<SyncResult> {
               notes: `Retiro completado vía Binance (TxID: ${record.txId})`,
             },
           });
+          publishToRole('ADMIN', ['payments']);
           return { type: 'resolved' as const };
         }
 
@@ -354,6 +360,7 @@ export async function syncPendingAdminWithdrawals(): Promise<SyncResult> {
               },
             });
           });
+          publishToRole('ADMIN', ['payments']);
           return { type: 'failed' as const };
         }
 

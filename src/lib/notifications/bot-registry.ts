@@ -18,9 +18,13 @@ const registry: BotRegistryGlobal = globalForBots.__botRegistry ?? {
   sellerBot: null,
 };
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForBots.__botRegistry = registry;
-}
+// SIEMPRE asignar (no solo en dev): en producción webpack DUPLICA este módulo
+// en varios chunks y server.ts (que registra los bots) corre vía tsx con otro
+// module graph. globalThis es lo único compartido — con la asignación solo en
+// dev, las copias del bundle de Next quedaban VACÍAS en producción y las
+// notificaciones Telegram disparadas desde server actions web se saltaban en
+// silencio (solo llegaban las originadas en crons/bots del graph de tsx).
+globalForBots.__botRegistry = registry;
 
 export const BotRegistry = {
   registerBuyerBot(bot: BuyerBot): void {
