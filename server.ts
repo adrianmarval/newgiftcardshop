@@ -352,6 +352,19 @@ await initAutoPayService();
 // ── Stock Digest Sweep ────────────────────────────────────────────────────────
 await initStockDigestService();
 
+// Fail-fast ante puerto ocupado: una segunda instancia que no puede bindear
+// pero sigue viva es un ZOMBIE peligroso — sus crons y bots (long polling)
+// siguen corriendo con código viejo y compiten con la instancia real (races
+// en escalación/tier drops, updates de Telegram robados entre pollers).
+httpServer.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[Server] ❌ Puerto ${port} ocupado — ya hay otra instancia corriendo.`);
+    console.error(`[Server]    Identifícala con: lsof -nP -iTCP:${port} -sTCP:LISTEN`);
+    process.exit(1);
+  }
+  throw err;
+});
+
 httpServer.listen(port, () => {
   console.log(`\n> Ready on http://${hostname}:${port}`);
   console.log(`> Modo: ${isProd ? 'producción (webhook)' : 'desarrollo (long polling)'}`);

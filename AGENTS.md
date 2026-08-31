@@ -278,4 +278,7 @@ npm run lint              # ESLint (77 errores pre-existentes, todos no-explicit
 npx prisma db push --accept-data-loss  # Push schema a DB local
 npx prisma generate       # Regenerar client
 docker compose up -d database  # Levantar Postgres local (puerto 5444)
+lsof -nP -iTCP:3000 -sTCP:LISTEN  # Verificar qué proceso sirve :3000 (anti-zombies)
 ```
+
+> **⚠️ Instancia ÚNICA de `tsx server.ts`**: una segunda instancia que no puede bindear :3000 muere al instante (fail-fast en `httpServer.on('error')`). Sin ese guard era un ZOMBIE invisible: sus crons (escalación, digests) y bots (long polling) seguían corriendo con código VIEJO y competían con la instancia real — races en tier drops (un dispatcher viejo manda Telegram aunque el código nuevo lo prohíba) y updates de Telegram robados entre pollers. `tsx` sin `--watch` NO recarga el graph de `server.ts`/crons/bots: tras cambios en `src/lib/notifications`, `src/lib/services` o `src/bot`, REINICIAR el proceso (el HMR de Next solo cubre el graph de la app web). Verificar huérfanos con `ps -eo pid,lstart,command | grep server.ts` antes de levantar dev.
