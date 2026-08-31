@@ -46,6 +46,7 @@ export const liveAvailabilityItemSchema = z.object({
   totalAmount: z.number(),
   accessibleCount: z.number(),
   accessibleAmount: z.number(),
+  buyRate: z.number(),
 });
 
 export const liveAvailabilityOutputSchema = z.object({

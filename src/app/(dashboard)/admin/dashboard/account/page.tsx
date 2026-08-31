@@ -4,8 +4,8 @@ import { Metadata } from 'next';
 import { getDecryptedTelegramPhotoUrl } from '@/lib/telegram';
 
 export const metadata: Metadata = {
-  title: `Account | Admin Dashboard | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
-  description: `Manage your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} admin account settings`,
+  title: `Cuenta | Panel Admin | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Administra la configuración de tu cuenta de administrador en ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default async function AdminAccountPage() {
@@ -19,7 +19,7 @@ export default async function AdminAccountPage() {
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
-      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Account</h1>
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Cuenta</h1>
       <ProfileForm
         user={{
           name: session.user.name,

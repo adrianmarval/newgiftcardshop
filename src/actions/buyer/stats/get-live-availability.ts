@@ -60,6 +60,7 @@ export const getLiveAvailability = buyerActionClient
             totalAmount: total._sum.amount?.toNumber() ?? 0,
             accessibleCount: accessible._count,
             accessibleAmount: accessible._sum.amount?.toNumber() ?? 0,
+            buyRate: rate.buyRate.toNumber(),
           };
         }),
       );

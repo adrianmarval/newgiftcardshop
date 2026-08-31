@@ -5,8 +5,8 @@ import { getDecryptedTelegramPhotoUrl } from '@/lib/telegram';
 import prisma from '@/lib/prisma';
 
 export const metadata: Metadata = {
-  title: `Account | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
-  description: `Manage your ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'} account settings`,
+  title: `Cuenta | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: `Administra la configuración de tu cuenta en ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
 };
 
 export default async function BuyerAccountPage() {
@@ -28,7 +28,7 @@ export default async function BuyerAccountPage() {
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
-      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Account</h1>
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Cuenta</h1>
       <ProfileForm
         user={{
           name: session.user.name,

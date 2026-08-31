@@ -120,7 +120,7 @@ function OrderBookRow({ entry }: { entry: OrderBookEntry }) {
 
       <div className="hidden items-center gap-4 sm:flex">
         <span className="text-muted-foreground text-xs">
-          {entry.cardCount} card{entry.cardCount !== 1 ? 's' : ''}
+          {entry.cardCount} tarjeta{entry.cardCount !== 1 ? 's' : ''}
         </span>
         <span className="font-semibold">{formatCurrency(entry.total)}</span>
         <span className="text-muted-foreground w-12 text-right text-xs">{timeAgo(entry.createdAt)}</span>
@@ -157,7 +157,7 @@ function RecentOrderRow({ order, onClick }: { order: RecentOrder; onClick: () =>
           </span>
         </div>
         <p className="text-muted-foreground text-xs">
-          {order.cardsCount} card{order.cardsCount !== 1 ? 's' : ''} · {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          {order.cardsCount} tarjeta{order.cardsCount !== 1 ? 's' : ''} · {new Date(order.createdAt).toLocaleDateString('es', { month: 'short', day: 'numeric' })}
         </p>
       </div>
       <span className="text-sm font-semibold">{formatCurrency(order.effectiveTotal)}</span>
@@ -188,7 +188,7 @@ export function BuyerDashboard({ stats, recentOrders, availability }: BuyerDashb
             title="Total Ahorrado"
             value={formatCurrency(personal.totalSaved)}
             icon={<IconCircleCheck className="h-6 w-6 text-emerald-500" />}
-            description="All-time en órdenes completadas"
+            description="En total de órdenes completadas"
           />
           <StatCard
             title="Compras del Mes"
@@ -197,7 +197,7 @@ export function BuyerDashboard({ stats, recentOrders, availability }: BuyerDashb
             description={`${personal.monthOrdersCount} orden${personal.monthOrdersCount !== 1 ? 'es' : ''} este mes`}
           />
           <StatCard
-            title="Issues Reportados"
+            title="Problemas Reportados"
             value={personal.reportedIssues.toString()}
             icon={<IconAlertTriangle className={`h-6 w-6 ${personal.reportedIssues > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />}
             description="Tarjetas con problemas"

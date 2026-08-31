@@ -8,7 +8,7 @@ const NAV_ITEMS: Record<AppSection, NavItem[]> = {
     { title: 'Inicio', url: '/store/dashboard', icon: 'home' },
     { title: 'Historial', url: '/store/dashboard/orders', icon: 'history' },
     { title: 'Comprar', url: '/store/dashboard/browse-cards', icon: 'cart' },
-    { title: 'Account', url: '/store/dashboard/account', icon: 'user' },
+    { title: 'Cuenta', url: '/store/dashboard/account', icon: 'user' },
   ],
   sell: [
     { title: 'Home', url: '/sell/dashboard', icon: 'home' },

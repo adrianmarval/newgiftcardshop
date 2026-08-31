@@ -67,13 +67,17 @@ function AvailabilityCard({ item }: { item: LiveAvailabilityItem }) {
             currency={item.currency}
             className="text-primary text-lg leading-tight font-bold tabular-nums"
           />
-          <span className="text-muted-foreground text-xs">a tu tasa</span>
+          <span className="text-muted-foreground text-xs">a tu tasa ({(item.buyRate * 100).toFixed(0)}%)</span>
         </div>
 
-        {/* Monto total en stock (todos los tiers) — siempre visible, en gris */}
-        <div className="text-muted-foreground flex items-baseline gap-1 text-xs">
-          <AnimatedMoney value={item.totalAmount} currency={item.currency} className="tabular-nums" />
-          <span>en plataforma</span>
+        {/* Monto total en stock (todos los tiers) — siempre visible, estilo amber */}
+        <div className="flex items-baseline gap-1.5">
+          <AnimatedMoney
+            value={item.totalAmount}
+            currency={item.currency}
+            className="text-amber-500 text-lg leading-tight font-bold tabular-nums"
+          />
+          <span className="text-muted-foreground text-xs">en plataforma</span>
         </div>
       </div>
 
@@ -94,15 +98,12 @@ export function LiveAvailabilityGrid({ items }: LiveAvailabilityGridProps) {
 
   return (
     <section className="space-y-2" data-tour="buy-explore">
-      <div className="flex items-center justify-between p-1">
-        <h2 className="text-xl font-semibold">Disponibles para ti</h2>
-        <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-          </span>
-          Stock en vivo
-        </p>
+      <div className="flex items-center gap-2 p-1">
+        <h2 className="text-xl font-semibold">Stock en vivo</h2>
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        </span>
       </div>
 
       {sorted.length > 0 ? (

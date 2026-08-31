@@ -17,10 +17,10 @@ export default async function BuyerDashboardPage() {
   ]);
 
   if (!statsResult.data) {
-    throw new Error('Failed to load buyer stats');
+    throw new Error('Error al cargar las estadísticas del comprador');
   }
   if (!ordersResult.data) {
-    throw new Error('Failed to load recent orders');
+    throw new Error('Error al cargar las órdenes recientes');
   }
 
   const stats: BuyerStats = {
@@ -42,7 +42,7 @@ export default async function BuyerDashboardPage() {
 
   return (
     <div className="w-full">
-      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Buyer Dashboard</h1>
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Panel de Comprador</h1>
 
       <BuyerDashboard stats={stats} recentOrders={recentOrdersList} availability={availabilityResult.data?.items ?? []} />
     </div>

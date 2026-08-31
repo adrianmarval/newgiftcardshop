@@ -5,8 +5,8 @@ import { AdminIssuesView } from '@/components/admin/issues';
 import { adminIssuesSearchParamsCache } from '@/lib/search-params';
 
 export const metadata: Metadata = {
-  title: `Admin Issues | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
-  description: 'Review reported gift card issues and buyer proofs',
+  title: `Problemas | Admin | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
+  description: 'Revisa los problemas reportados en tarjetas de regalo y comprobantes de compradores',
 };
 
 export default async function AdminIssuesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -35,7 +35,7 @@ export default async function AdminIssuesPage({ searchParams }: { searchParams: 
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Issues</h1>
+      <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Problemas</h1>
       <AdminIssuesView issues={issuesResult.data.items} sellers={sellers} buyers={buyers} pagination={issuesResult.data.pagination} />
     </div>
   );

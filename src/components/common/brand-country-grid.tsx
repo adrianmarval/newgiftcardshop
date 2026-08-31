@@ -115,8 +115,8 @@ export function BrandCountryGrid({
                       <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-green-600 md:text-xs dark:text-green-400">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-500" />${accessibleAmount.toLocaleString()} a tu tasa
                       </span>
-                      <span className="text-muted-foreground text-[8px] md:text-[10px]">
-                        de ${bc.stockAmount.toLocaleString()} en plataforma
+                      <span className="text-amber-500 text-[10px] font-semibold md:text-xs">
+                        ${bc.stockAmount.toLocaleString()} en plataforma
                       </span>
                     </>
                   ) : (
