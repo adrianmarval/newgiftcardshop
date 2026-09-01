@@ -1,7 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { decrypt, hashCode } from '@/lib/encryption';
+import { hashCode } from '@/lib/encryption';
 import { sellerActionClient } from '@/lib/safe-action';
 import { normalizeClaimCode, formatClaimCodeCanonical } from '@/lib/utils/claim-code-parser';
 import { checkCodesInputSchema, checkCodesOutputSchema } from './schemas';
@@ -19,7 +19,10 @@ export const checkCodes = sellerActionClient
       return normalized ? formatClaimCodeCanonical(normalized) : code.trim().toUpperCase();
     });
 
-    const codeHashes = formattedCodes.map((c) => hashCode(c.toUpperCase()));
+    // Mapa hash → código formateado DEL INPUT: el caller ya posee los códigos,
+    // solo necesita saber cuáles existen. NUNCA desencriptar los claim codes
+    // de la DB para responder (y el viejo catch devolvía el ciphertext crudo).
+    const hashToInputCode = new Map(formattedCodes.map((c) => [hashCode(c.toUpperCase()), c] as const));
 
     const brandCountry = await prisma.brandCountry.findUnique({
       where: { brandId_countryId: { brandId, countryId } },
@@ -32,19 +35,15 @@ export const checkCodes = sellerActionClient
 
     const existingInDb = await prisma.giftcard.findMany({
       where: {
-        codeHash: { in: codeHashes },
+        codeHash: { in: [...hashToInputCode.keys()] },
       },
-      select: { claimCode: true },
+      select: { codeHash: true },
     });
 
     const existingCodes: string[] = [];
     for (const dbCard of existingInDb) {
-      try {
-        const decrypted = decrypt(dbCard.claimCode);
-        existingCodes.push(decrypted);
-      } catch {
-        existingCodes.push(dbCard.claimCode);
-      }
+      const inputCode = dbCard.codeHash ? hashToInputCode.get(dbCard.codeHash) : undefined;
+      if (inputCode) existingCodes.push(inputCode);
     }
 
     return next({ ctx: { existingCodes } });

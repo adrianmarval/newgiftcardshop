@@ -12,7 +12,7 @@ export const updateNotificationPreferences = authActionClient
   .outputSchema(updateNotificationPreferencesOutputSchema)
   .action(async ({ ctx, parsedInput }) => {
     const userId = ctx.auth.user.id;
-    const { telegramEnabled, subscribedBrandCountryIds } = parsedInput;
+    const { telegramEnabled, stockAlertsEnabled, subscribedBrandCountryIds } = parsedInput;
 
     if (telegramEnabled === true) {
       const telegramUser = await prisma.telegramUser.findUnique({
@@ -26,9 +26,11 @@ export const updateNotificationPreferences = authActionClient
 
     const data: {
       telegramEnabled?: boolean;
+      stockAlertsEnabled?: boolean;
     } = {};
 
     if (telegramEnabled !== undefined) data.telegramEnabled = telegramEnabled;
+    if (stockAlertsEnabled !== undefined) data.stockAlertsEnabled = stockAlertsEnabled;
 
     const preference = await prisma.notificationPreference.upsert({
       where: { userId },
@@ -36,6 +38,7 @@ export const updateNotificationPreferences = authActionClient
       create: {
         userId,
         telegramEnabled: telegramEnabled ?? true,
+        ...(stockAlertsEnabled !== undefined && { stockAlertsEnabled }),
       },
       include: { subscriptions: { select: { brandCountryId: true } } },
     });
@@ -70,6 +73,7 @@ export const updateNotificationPreferences = authActionClient
       success: true as const,
       preference: {
         telegramEnabled: preference.telegramEnabled,
+        stockAlertsEnabled: preference.stockAlertsEnabled,
       },
     };
   });

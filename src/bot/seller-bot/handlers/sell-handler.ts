@@ -261,10 +261,21 @@ export async function handleCodesText(ctx: SellerContext) {
   }
 
   // Aggregate per-line reasons (in stable order).
+  // Amount inválido (0, negativo o no numérico): el parser acepta "CODE 0" pero
+  // publish.service los descarta — sin esto el conteo publicado difería del
+  // resumen confirmado por el seller, silenciosamente.
+  const invalidAmountLines = new Set<number>();
+  for (const c of cards) {
+    if (c.line === undefined) continue;
+    const amount = parseFloat(c.amount ?? '');
+    if (isNaN(amount) || amount <= 0) invalidAmountLines.add(c.line);
+  }
+
   const buildReason = (line: number): string | null => {
     const parts: string[] = [];
     if (intraPasteDuplicateLines.has(line)) parts.push('duplicate in paste');
     if (dbDuplicateLines.has(line)) parts.push('already exists in database');
+    if (invalidAmountLines.has(line)) parts.push('invalid amount');
     const rv = rangeViolationByLine.get(line);
     if (rv) {
       parts.push(rv.violation === 'below_min' ? `below min $${rv.minAmount!.toFixed(2)}` : `above max $${rv.maxAmount!.toFixed(2)}`);
@@ -285,7 +296,12 @@ export async function handleCodesText(ctx: SellerContext) {
 
   const validCards = cards.filter((c) => {
     if (c.line === undefined) return true;
-    return !intraPasteDuplicateLines.has(c.line) && !dbDuplicateLines.has(c.line) && !rangeViolationByLine.has(c.line);
+    return (
+      !intraPasteDuplicateLines.has(c.line) &&
+      !dbDuplicateLines.has(c.line) &&
+      !invalidAmountLines.has(c.line) &&
+      !rangeViolationByLine.has(c.line)
+    );
   });
 
   const renderPasteBlock = (): string => {

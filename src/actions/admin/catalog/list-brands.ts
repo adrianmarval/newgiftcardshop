@@ -34,7 +34,6 @@ export const listBrands = adminActionClient.outputSchema(listBrandsOutputSchema)
         maxAmount: bc.maxAmount ? Number(bc.maxAmount) : null,
         isActive: bc.isActive,
         claimCodePattern: bc.claimCodePattern ?? null,
-        stockDigestIntervalMinutes: bc.stockDigestIntervalMinutes ?? null,
         stockReminderIntervalMinutes: bc.stockReminderIntervalMinutes ?? null,
       })),
     })),

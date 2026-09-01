@@ -1,5 +1,6 @@
 'use server';
 
+import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
 import { undoIssueInputSchema, undoIssueOutputSchema } from './schemas';
@@ -23,6 +24,22 @@ export const undoIssue = buyerActionClient
   })
   .action(async ({ parsedInput: { giftcardId, orderId }, ctx }) => {
     await prisma.$transaction(async (tx) => {
+      // Guard atómico DENTRO de la tx (mismo patrón que deleteGiftcardIssue):
+      // lockea la fila de la orden y re-valida status — sin esto, un confirm
+      // cross-canal entre el useValidated y esta tx dejaba la card volviendo a
+      // UNUSED con isConfirmed=true, inflando el payout del seller.
+      try {
+        await tx.order.update({
+          where: { id: orderId, status: 'PENDING' },
+          data: { updatedAt: new Date() },
+        });
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+          throw new ActionError('No se pueden modificar reportes en una orden que ya fue confirmada');
+        }
+        throw err;
+      }
+
       const deleted = await tx.giftcardIssue.deleteMany({
         where: { giftcardId, orderId, reportedById: ctx.auth.user.id },
       });

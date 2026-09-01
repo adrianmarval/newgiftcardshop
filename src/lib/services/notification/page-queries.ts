@@ -13,7 +13,7 @@ export async function getNotificationPageData(userId: string): Promise<Notificat
     }),
     prisma.notificationPreference.findUnique({
       where: { userId },
-      select: { telegramEnabled: true, pushEnabled: true },
+      select: { telegramEnabled: true, pushEnabled: true, stockAlertsEnabled: true },
     }),
   ]);
 

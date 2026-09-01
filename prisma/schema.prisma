@@ -63,7 +63,6 @@ model User {
   notifications          Notification[]
   notificationLogs       NotificationLog[]
   pushSubscriptions      PushSubscription[]
-  stockDigestQueue       StockDigestQueue[]
   stockReminderState     StockReminderState[]
 
   // Deep link tokens para vinculación Telegram
@@ -229,9 +228,6 @@ model BrandCountry {
 
   claimCodePattern String?  // Regex to validate claim codes (tested against normalized code without hyphens/spaces)
 
-  // Intervalo (min) del digest de stock para Telegram/Push. null = default global (PlatformSettings)
-  stockDigestIntervalMinutes Int?
-
   // Intervalo (min) del recordatorio de stock varado. null = default global (PlatformSettings)
   // Es a la vez el umbral de "varado" y el cooldown por buyer (ver stock-reminder.service.ts)
   stockReminderIntervalMinutes Int?
@@ -242,9 +238,6 @@ model BrandCountry {
 
   // Suscripciones de Notificaciones de stock (buyers)
   subscriptions BrandCountrySubscription[]
-
-  // Cola de digest de stock pendiente por marca
-  stockDigestQueue StockDigestQueue[]
 
   // Cooldown del recordatorio de stock varado por buyer
   stockReminderState StockReminderState[]
@@ -671,6 +664,10 @@ model NotificationPreference {
   telegramEnabled Boolean  @default(true)
   pushEnabled     Boolean  @default(false) // Web Push (navegador)
 
+  // Alertas de stock nuevo (STOCK_AVAILABLE) por canales interruptivos (Telegram/Push).
+  // false = solo llegan in-app. In-app siempre es instantáneo.
+  stockAlertsEnabled Boolean @default(true)
+
   // Suscripciones explícitas a brand-countries (buyers que quieren Notificaciones de stock nuevo)
   subscriptions BrandCountrySubscription[]
 
@@ -742,26 +739,6 @@ model NotificationLog {
   @@unique([userId, type, referenceType, referenceId])
   @@index([userId, type])
   @@map("notification_log")
-}
-
-// Cola de digest de stock: STOCK_AVAILABLE no se envía al instante por Telegram/Push,
-// se acumula aquí y un sweep envía UN resumen por (user, brandCountry) cada X min
-// (X = BrandCountry.stockDigestIntervalMinutes ?? setting global)
-model StockDigestQueue {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brandCountryId String
-  brandCountry   BrandCountry @relation(fields: [brandCountryId], references: [id], onDelete: Cascade)
-  eventCount     Int      @default(1)
-  firstEventAt   DateTime @default(now()) // ventana fija — NO se toca en increments
-  claimedAt      DateTime? // claim atómico anti multi-instancia
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, brandCountryId])
-  @@map("stock_digest_queue")
 }
 
 // Cooldown del recordatorio de stock varado (STOCK_REMINDER) por (user, brandCountry).

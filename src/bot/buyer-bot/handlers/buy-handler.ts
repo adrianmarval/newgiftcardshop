@@ -15,6 +15,7 @@ import { getEscalationConfig } from '@/lib/settings/settings.service';
 import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
 import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
+import { withSerializableRetry } from '@/lib/utils/prisma-retry';
 import { publishToRole, publishToUser } from '@/lib/realtime/bus';
 import { getBrandsWithStock, getBrandWithCountries, getCountryById } from '@/lib/services/catalog/catalog';
 import { withSecurityGate } from './security-handler.js';
@@ -224,13 +225,15 @@ export async function handleAmountText(ctx: BuyerContext) {
   const result = findGiftcardCombination(
     allCards,
     amount,
-    Math.floor(Number(buyRate) * 100),
+    // floor(buyRate * 100) sobre el Decimal — Math.floor(0.57 * 100) === 56 por
+    // float artifact y el buyer perdería un tier silenciosamente.
+    buyRate.times(100).floor().toNumber(),
     user.minAmountPreference ? new Decimal(user.minAmountPreference) : undefined,
     user.maxAmountPreference ? new Decimal(user.maxAmountPreference) : undefined,
   );
 
   if (result.selectedCards.length === 0) {
-    const buyerRatePercent = Math.floor(Number(buyRate) * 100);
+    const buyerRatePercent = buyRate.times(100).floor().toNumber();
     const accessibleAmount = result.tierInfo.accessibleAmount;
     const inaccessibleAmount = result.tierInfo.inaccessibleAmount;
     const accessibleCards = result.tierInfo.accessibleCards.length;
@@ -330,7 +333,7 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     select: { id: true, amount: true, brandCountryId: true, escalationTier: true, claimCode: true, pinCode: true },
   });
 
-  const buyerBuyRate = Math.floor(Number(buyRate) * 100);
+  const buyerBuyRate = buyRate.times(100).floor().toNumber();
   const blockedCards = giftcards.filter((c) => c.escalationTier > buyerBuyRate);
   if (blockedCards.length > 0) {
     await ctx.answerCallbackQuery('Algunas tarjetas cambiaron de tier. Intenta de nuevo.');
@@ -346,38 +349,50 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     });
   }
 
+  // Guard anti-orden-parcial: si entre el preview y el confirm se vendió un
+  // SUBSET de las seleccionadas, el fetch filtrado las excluye y sin este check
+  // se creaba una orden con menos tarjetas (y menor total) sin avisar al buyer.
+  if (giftcards.length !== selectedGiftcardIds.length) {
+    await ctx.answerCallbackQuery('Algunas tarjetas ya no están disponibles');
+    return renderUI(ctx, '😔 Algunas tarjetas de tu selección ya fueron compradas. Intenta de nuevo con /buy.', {
+      reply_markup: new InlineKeyboard().text('🛒 Nueva búsqueda', 'buy_start'),
+    });
+  }
+
   const faceValueTotal = giftcards.reduce((s, c) => s.plus(c.amount), new Prisma.Decimal(0));
   const total = faceValueTotal.mul(buyRate);
 
   let order;
   try {
-    order = await prisma.$transaction(
-      async (tx) => {
-        // Revalidar crédito atómicamente dentro de la tx (race condition safe)
-        const creditCheck = await checkCreditLimit(ctx.user.id, faceValueTotal, tx);
-        if (!creditCheck.allowed) {
-          throw new Error('CREDIT_LIMIT_EXCEEDED');
-        }
+    order = await withSerializableRetry(() =>
+      prisma.$transaction(
+        async (tx) => {
+          // Revalidar crédito atómicamente dentro de la tx (race condition safe)
+          const creditCheck = await checkCreditLimit(ctx.user.id, faceValueTotal, tx);
+          if (!creditCheck.allowed) {
+            throw new Error('CREDIT_LIMIT_EXCEEDED');
+          }
 
-        const idempotencyKey = crypto.randomUUID();
-        const created = await tx.order.create({
-          data: {
-            userId: ctx.user.id,
-            brandCountryId: giftcards[0]?.brandCountryId,
-            total,
-            buyRate: buyRate,
-            status: 'PENDING',
-            idempotencyKey,
-          },
-        });
-        await reserveGiftcards(
-          tx,
-          giftcards.map((c) => c.id),
-          created.id,
-        );
-        return created;
-      },
-      { isolationLevel: 'Serializable' },
+          const idempotencyKey = crypto.randomUUID();
+          const created = await tx.order.create({
+            data: {
+              userId: ctx.user.id,
+              brandCountryId: giftcards[0]?.brandCountryId,
+              total,
+              buyRate: buyRate,
+              status: 'PENDING',
+              idempotencyKey,
+            },
+          });
+          await reserveGiftcards(
+            tx,
+            giftcards.map((c) => c.id),
+            created.id,
+          );
+          return created;
+        },
+        { isolationLevel: 'Serializable' },
+      ),
     );
   } catch (error) {
     if (error instanceof GiftcardReservationError) {

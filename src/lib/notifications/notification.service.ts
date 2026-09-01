@@ -151,7 +151,7 @@ export async function notifyBuyersStockAvailable(brandCountryId: string, initial
   const dispatches: Promise<void>[] = [];
 
   for (const buyer of eligibleBuyers) {
-    const buyerBuyRate = Math.floor(buyer.buyRate.toNumber() * 100);
+    const buyerBuyRate = buyer.buyRate.times(100).floor().toNumber();
     if (buyerBuyRate < effectiveTier) continue;
     if (alreadyNotified.has(buyer.userId)) continue;
     if (!shouldNotifyBySubscription(buyer.notificationPreference, brandCountryId)) continue;
@@ -215,7 +215,7 @@ export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<voi
 
     for (const event of groupEvents) {
       const buyersInCrossover = eligibleBuyers.filter((buyer) => {
-        const buyerBuyRate = Math.floor(buyer.buyRate.toNumber() * 100);
+        const buyerBuyRate = buyer.buyRate.times(100).floor().toNumber();
         return buyerBuyRate >= event.newTier && buyerBuyRate < event.oldTier;
       });
 
@@ -230,7 +230,7 @@ export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<voi
         if (alreadyNotified.has(buyer.userId)) continue;
         if (!shouldNotifyBySubscription(buyer.notificationPreference, brandCountryId)) continue;
 
-        const buyerBuyRate = Math.floor(buyer.buyRate.toNumber() * 100);
+        const buyerBuyRate = buyer.buyRate.times(100).floor().toNumber();
         const summary = computeSummary(allCards, buyerBuyRate);
         const flag = getCountryFlag(info.countryCode);
         const stockText =
@@ -258,7 +258,7 @@ export async function notifyBuyersTierDrop(events: TierDropEvent[]): Promise<voi
         notifiedBuyers.add(buyer.userId);
 
         for (const ev of groupEvents) {
-          const rate = Math.floor(buyer.buyRate.toNumber() * 100);
+          const rate = buyer.buyRate.times(100).floor().toNumber();
           if (rate >= ev.newTier && rate < ev.oldTier) {
             entriesToRecord.push({ userId: buyer.userId, type: 'TIER_DROP_ACCESS', referenceType: 'GIFTCARD', referenceId: ev.giftcardId });
           }

@@ -11,7 +11,7 @@ export const updateBrandCountryLimits = adminActionClient
   .inputSchema(updateBrandCountryLimitsInputSchema)
   .outputSchema(updateBrandCountryLimitsOutputSchema)
   .action(async ({ parsedInput }) => {
-    const { brandId, countryId, minAmount, maxAmount, isActive, claimCodePattern, stockDigestIntervalMinutes, stockReminderIntervalMinutes } = parsedInput;
+    const { brandId, countryId, minAmount, maxAmount, isActive, claimCodePattern, stockReminderIntervalMinutes } = parsedInput;
 
     await prisma.brandCountry.update({
       where: {
@@ -22,7 +22,6 @@ export const updateBrandCountryLimits = adminActionClient
         ...(maxAmount !== undefined && { maxAmount }),
         ...(isActive !== undefined && { isActive }),
         ...(claimCodePattern !== undefined && { claimCodePattern: claimCodePattern || null }),
-        ...(stockDigestIntervalMinutes !== undefined && { stockDigestIntervalMinutes }),
         ...(stockReminderIntervalMinutes !== undefined && { stockReminderIntervalMinutes }),
       },
     });

@@ -7,13 +7,11 @@ import { getUserRates } from '@/lib/services/pricing';
 import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
 import { checkCreditLimit } from '@/lib/services/payment/credit';
 import { publishToRole, publishToUser } from '@/lib/realtime/bus';
+import { withSerializableRetry } from '@/lib/utils/prisma-retry';
 import { logger } from '@/lib/logger';
 import { createOrderInputSchema, createOrderOutputSchema } from './schemas';
 
-function validateTierAccess(
-  cards: { id: string; escalationTier: number | null | undefined }[],
-  buyerBuyRate: number,
-): string | null {
+function validateTierAccess(cards: { id: string; escalationTier: number | null | undefined }[], buyerBuyRate: number): string | null {
   const blockedCards: string[] = [];
 
   for (const card of cards) {
@@ -46,6 +44,13 @@ export const createOrder = buyerActionClient
     if (!dbUser) throw new ActionError('Usuario no encontrado en la base de datos');
     if (giftcards.length === 0)
       throw new ActionError('Una o mas tarjetas de la orden ya no estan disponibles. Por favor regresa y busca tarjetas nuevamente');
+
+    // Todas las cards deben compartir UN brand-country: la tasa, el tier floor y
+    // el brandCountryId de la orden se derivan del primero — cards mezcladas de
+    // otro brand-country se pricearían con una tasa que el admin nunca asignó ahí.
+    const brandCountryIds = new Set(giftcards.map((card) => card.brandCountryId));
+    if (brandCountryIds.size > 1)
+      throw new ActionError('Las tarjetas de una orden deben pertenecer a la misma marca y país. Por favor regresa y busca nuevamente');
 
     return next({
       ctx: {
@@ -80,7 +85,9 @@ export const createOrder = buyerActionClient
       throw new ActionError('You do not have a rate assigned for this brand and country. Contact the administrator.');
     }
 
-    const buyerBuyRate = Math.floor(buyRate.toNumber() * 100);
+    // floor(buyRate * 100) sobre el Decimal — NUNCA toNumber() primero:
+    // Math.floor(0.57 * 100) === 56 por float artifact y el buyer perdería un tier.
+    const buyerBuyRate = buyRate.times(100).floor().toNumber();
 
     const tierError = validateTierAccess(ctx.giftcards, buyerBuyRate);
     if (tierError) {
@@ -95,27 +102,32 @@ export const createOrder = buyerActionClient
 
     let order;
     try {
-      order = await prisma.$transaction(async (tx) => {
-        const creditCheck = await checkCreditLimit(ctx.auth.user.id, faceValueTotal, tx);
-        if (!creditCheck.allowed) {
-          throw new ActionError('Límite de crédito insuficiente. Tenés pagos pendientes que bloquean esta compra.');
-        }
+      order = await withSerializableRetry(() =>
+        prisma.$transaction(
+          async (tx) => {
+            const creditCheck = await checkCreditLimit(ctx.auth.user.id, faceValueTotal, tx);
+            if (!creditCheck.allowed) {
+              throw new ActionError('Límite de crédito insuficiente. Tenés pagos pendientes que bloquean esta compra.');
+            }
 
-        const createdOrder = await tx.order.create({
-          data: {
-            userId: ctx.auth.user.id,
-            brandCountryId: firstCard.brandCountryId,
-            total: total,
-            buyRate: buyRate,
-            status: 'PENDING',
-            idempotencyKey,
+            const createdOrder = await tx.order.create({
+              data: {
+                userId: ctx.auth.user.id,
+                brandCountryId: firstCard.brandCountryId,
+                total: total,
+                buyRate: buyRate,
+                status: 'PENDING',
+                idempotencyKey,
+              },
+            });
+
+            await reserveGiftcards(tx, giftcardIds, createdOrder.id);
+
+            return createdOrder;
           },
-        });
-
-        await reserveGiftcards(tx, giftcardIds, createdOrder.id);
-
-        return createdOrder;
-      }, { isolationLevel: 'Serializable' });
+          { isolationLevel: 'Serializable' },
+        ),
+      );
     } catch (error) {
       if (error instanceof GiftcardReservationError) {
         logger.warn('Error de reserva en creación de orden', {
@@ -123,6 +135,22 @@ export const createOrder = buyerActionClient
           metadata: { giftcardIds, error: error.message },
         });
         throw new ActionError(error.message);
+      }
+      // Doble-submit concurrente con el mismo idempotencyKey: el pre-check de
+      // arriba es TOCTOU — ambos requests entran a la tx y el perdedor choca con
+      // el @unique. La orden del buyer YA existe: devolverla en vez de un 500.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002' && idempotencyKey) {
+        const existing = await prisma.order.findUnique({
+          where: { idempotencyKey },
+          select: { id: true },
+        });
+        if (existing) {
+          logger.info('Orden recuperada tras P2002 en idempotency key (doble submit concurrente)', {
+            userId: ctx.auth.user.id,
+            metadata: { orderId: existing.id, idempotencyKey },
+          });
+          return { success: true as const, orderId: existing.id };
+        }
       }
       logger.error('Error inesperado al crear orden', {
         userId: ctx.auth.user.id,

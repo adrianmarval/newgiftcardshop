@@ -9,7 +9,7 @@ export const reportIssueInputSchema = z.object({
   giftcardId: z.string(),
   orderId: z.string(),
   issueType: z.enum(GiftcardIssueType),
-  reportedAmount: z.number().optional(),
+  reportedAmount: z.number().positive().optional(),
   proofImageUrl: z.string().optional(),
 });
 

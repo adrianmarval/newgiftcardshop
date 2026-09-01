@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { Spinner } from '@/components/ui/spinner';
-import { Send, MessageCircle, Package, Check, Bell } from 'lucide-react';
+import { Send, MessageCircle, Package, Check, Bell, BellOff } from 'lucide-react';
 import Image from 'next/image';
 import { updateNotificationPreferences, sendTestPush } from '@/actions/notifications';
 import { generateTelegramLink } from '@/actions/auth/generate-telegram-link';
@@ -41,7 +41,9 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Receiving from all your brands (${n})`,
     receivingSome: (n: number, total: number) => `Receiving from ${n} of ${total} brands`,
     brandsHint: 'Brands where you have an assigned rate',
-    stockDigestHint: 'Stock alerts arrive on Telegram/Push as a periodic summary (frequency depends on the brand). If stock stays unsold, you get a periodic reminder. In the app everything arrives instantly.',
+    stockAlertsTitle: 'Stock alerts',
+    stockAlertsDesc: 'Get a Telegram/Push alert every time new stock is published for your brands. In the app everything always arrives instantly.',
+    stockReminderHint: 'If stock stays unsold, you get a periodic reminder. In the app everything arrives instantly.',
     save: 'Save',
   },
   buyer: {
@@ -70,7 +72,9 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Recibiendo de todas tus marcas (${n})`,
     receivingSome: (n: number, total: number) => `Recibiendo de ${n} de ${total} marcas`,
     brandsHint: 'Marcas donde tienes tarifa asignada',
-    stockDigestHint: 'Las alertas de stock llegan a Telegram/Push como un resumen periódico (la frecuencia depende de la marca). Si el stock no se vende, recibes un recordatorio periódico. En la app todo llega al instante.',
+    stockAlertsTitle: 'Alertas de stock',
+    stockAlertsDesc: 'Recibe un aviso en Telegram/Push cada vez que se publique stock nuevo de tus marcas. En la app siempre llega al instante.',
+    stockReminderHint: 'Si el stock no se vende, recibes un recordatorio periódico. En la app todo llega al instante.',
     save: 'Guardar',
   },
   admin: {
@@ -99,7 +103,9 @@ const SETTINGS_TEXTS = {
     receivingAll: (n: number) => `Recibiendo de todas tus marcas (${n})`,
     receivingSome: (n: number, total: number) => `Recibiendo de ${n} de ${total} marcas`,
     brandsHint: 'Marcas donde tienes tarifa asignada',
-    stockDigestHint: 'Las alertas de stock llegan a Telegram/Push como un resumen periódico (la frecuencia depende de la marca). Si el stock no se vende, recibes un recordatorio periódico. En la app todo llega al instante.',
+    stockAlertsTitle: 'Alertas de stock',
+    stockAlertsDesc: 'Recibe un aviso en Telegram/Push cada vez que se publique stock nuevo de tus marcas. En la app siempre llega al instante.',
+    stockReminderHint: 'Si el stock no se vende, recibes un recordatorio periódico. En la app todo llega al instante.',
     save: 'Guardar',
   },
 } as const;
@@ -110,6 +116,7 @@ export interface NotificationsSettingsProps {
   initialPreferences?: {
     telegramEnabled: boolean;
     pushEnabled: boolean;
+    stockAlertsEnabled?: boolean;
   };
   brandCountries?: SubscribedBrandCountry[];
 }
@@ -125,6 +132,9 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
   const [alert, setAlert] = useState<{ variant: 'success' | 'error'; title: string } | null>(null);
 
   const push = usePushSubscription(initialPreferences?.pushEnabled ?? false);
+
+  const [stockAlertsEnabled, setStockAlertsEnabled] = useState(initialPreferences?.stockAlertsEnabled ?? true);
+  const [stockAlertsLoading, setStockAlertsLoading] = useState(false);
 
   const [testPushLoading, setTestPushLoading] = useState(false);
 
@@ -180,6 +190,21 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
       }
     } else {
       await push.disable();
+    }
+  };
+
+  const handleToggleStockAlerts = async (enabled: boolean) => {
+    setAlert(null);
+    setStockAlertsEnabled(enabled); // optimista
+    setStockAlertsLoading(true);
+    try {
+      const res = await updateNotificationPreferences({ stockAlertsEnabled: enabled });
+      if (!res?.data?.success) {
+        setStockAlertsEnabled(!enabled); // revertir
+        setAlert({ variant: 'error', title: texts.errorSaving });
+      }
+    } finally {
+      setStockAlertsLoading(false);
     }
   };
 
@@ -321,6 +346,28 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
           {!push.supported && (
             <p className="text-muted-foreground pl-10 text-xs">{texts.pushUnsupported}</p>
           )}
+
+          {/* Alertas de stock por Telegram/Push — se aplica de inmediato (solo buyers) */}
+          {portal === 'buyer' && (
+            <label
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors ${
+                stockAlertsEnabled ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20'
+              }`}
+            >
+              <Checkbox
+                checked={stockAlertsEnabled}
+                disabled={stockAlertsLoading}
+                onCheckedChange={(v) => handleToggleStockAlerts(v === true)}
+                className="h-5 w-5"
+              />
+              {stockAlertsEnabled ? <Bell className="h-5 w-5 shrink-0 animate-pulse text-amber-400" /> : <BellOff className="text-muted-foreground h-5 w-5 shrink-0" />}
+              <div className="flex-1">
+                <p className="text-sm font-medium">{texts.stockAlertsTitle}</p>
+                <p className="text-muted-foreground text-xs">{texts.stockAlertsDesc}</p>
+              </div>
+              {stockAlertsLoading && <Spinner size="sm" />}
+            </label>
+          )}
         </section>
 
         {/* ── De qué marcas recibir Notificaciones (buyers) ── */}
@@ -375,7 +422,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
             </div>
 
             <p className="text-muted-foreground/60 text-[10px]">{texts.brandsHint}</p>
-            <p className="text-muted-foreground/60 text-[10px]">{texts.stockDigestHint}</p>
+            <p className="text-muted-foreground/60 text-[10px]">{texts.stockReminderHint}</p>
           </section>
         )}
 

@@ -18,7 +18,8 @@ export async function getInitialTier(brandCountryId: string): Promise<number | n
   });
 
   if (maxUserRate && maxUserRate.buyRate.gt(0)) {
-    return Math.floor(maxUserRate.buyRate.toNumber() * 100);
+    // floor sobre el Decimal (toNumber() primero = float artifact, ver pricing.ts)
+    return maxUserRate.buyRate.times(100).floor().toNumber();
   }
 
   return null;
@@ -32,7 +33,8 @@ async function getMinTierForBrandCountry(brandCountryId: string): Promise<number
   });
 
   if (minUserRate && minUserRate.buyRate.gt(0)) {
-    return Math.floor(minUserRate.buyRate.toNumber() * 100);
+    // floor sobre el Decimal (toNumber() primero = float artifact, ver pricing.ts)
+    return minUserRate.buyRate.times(100).floor().toNumber();
   }
 
   return 80;
@@ -114,13 +116,14 @@ export async function processEscalationTiers(): Promise<{ processed: number }> {
       });
 
     if (tierDropEvents.length > 0) {
-      notifyBuyersTierDrop(tierDropEvents)
-        .catch((err) => logger.error('Error al notificar tier drops (non-blocking)', {
+      notifyBuyersTierDrop(tierDropEvents).catch((err) =>
+        logger.error('Error al notificar tier drops (non-blocking)', {
           flow: 'batch',
           action: 'escalation-cron',
           metadata: { eventCount: tierDropEvents.length },
           error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown' },
-        }));
+        }),
+      );
 
       // Tier drops = más stock accesible → los grids de buyers se actualizan
       // en cuanto el cron corre (la frecuencia de detección sigue siendo la del cron)
@@ -139,7 +142,8 @@ export async function getTierInfoForBuyer(buyerId: string, brandCountryId: strin
 
   let buyerBuyRate: number;
   if (userRate) {
-    buyerBuyRate = Math.floor(userRate.buyRate.toNumber() * 100);
+    // floor sobre el Decimal (toNumber() primero = float artifact, ver pricing.ts)
+    buyerBuyRate = userRate.buyRate.times(100).floor().toNumber();
   } else {
     buyerBuyRate = 100;
   }

@@ -290,7 +290,7 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
   }, new Prisma.Decimal(0));
 
   const reportedCount = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED').length;
-    const warningText =
+  const warningText =
     reportedCount > 0 ? `\n <b>Tienes ${reportedCount} tarjeta(s) reportada(s)</b> - El pago se ajustará automáticamente.\n` : '';
 
   const firstCard = order.giftcards[0];
@@ -420,10 +420,14 @@ export async function handlePaymentText(ctx: BuyerContext) {
     if (err instanceof InvalidOrderStateError) {
       ctx.session.wizard.step = 'idle';
       ctx.session.wizard.orderId = undefined;
-      return renderUI(ctx, '⚠️ <b>Esta orden ya no está esperando pago.</b>\n\nEs posible que la hayas completado o cancelado desde otra sesión.', {
-        parse_mode: 'HTML',
-        reply_markup: new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders'),
-      });
+      return renderUI(
+        ctx,
+        '⚠️ <b>Esta orden ya no está esperando pago.</b>\n\nEs posible que la hayas completado o cancelado desde otra sesión.',
+        {
+          parse_mode: 'HTML',
+          reply_markup: new InlineKeyboard().text('📋 Ver mis órdenes', 'my_orders'),
+        },
+      );
     }
     if (err instanceof PaymentVerificationError) {
       return renderUI(
@@ -478,10 +482,14 @@ export async function handleReportIssues(ctx: BuyerContext) {
 
   const currency = orderWithBrand.giftcards[0]?.brandCountry?.country?.currency || 'USD';
 
+  // Security gate (mismo patrón que renderOrderDetail): si la orden tiene cards
+  // sin confirmar y no hay unlock vigente, NUNCA desencriptar — ni siquiera el
+  // sufijo (los últimos 4 chars ayudan a confirmar guesses en un robo/phishing).
+  const codesLocked = orderNeedsSecurityGate(order.giftcards) && !(await isSecurityUnlocked(ctx.user.id));
+
   for (const card of order.giftcards) {
     const isReported = card.status !== 'UNUSED' && card.status !== 'USED';
-    const claimCode = escapeHTML(decrypt(card.claimCode));
-    const suffix = claimCode.slice(-4);
+    const suffix = codesLocked ? '🔒 ••••' : escapeHTML(decrypt(card.claimCode)).slice(-4);
 
     let icon = '✅';
     let statusTxt = '(SIN REPORTAR)';

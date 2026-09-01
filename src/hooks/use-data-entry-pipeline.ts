@@ -19,21 +19,8 @@ interface UseDataEntryPipelineProps {
   setStep: (step: number) => void;
 }
 
-export function useDataEntryPipeline({
-  pasteContent,
-  localImages,
-  setLocalImages,
-  setStep,
-}: UseDataEntryPipelineProps) {
-  const {
-    addImage,
-    clearImages,
-    setGiftcards,
-    handleBulkImport,
-    ingestOCRDraft,
-    selectedBrandCountry,
-    brandCountryLimits,
-  } = useSellFlow();
+export function useDataEntryPipeline({ pasteContent, localImages, setLocalImages, setStep }: UseDataEntryPipelineProps) {
+  const { addImage, clearImages, setGiftcards, handleBulkImport, ingestOCRDraft, selectedBrandCountry, brandCountryLimits } = useSellFlow();
 
   const brandId = selectedBrandCountry?.split('|')[0] ?? '';
   const countryId = selectedBrandCountry?.split('|')[1] ?? '';
@@ -107,9 +94,7 @@ export function useDataEntryPipeline({
 
         const onlyMatchExisting = deduped.filter((c) => {
           const normCode = c.claimCode?.toUpperCase().replace(/[^A-Z0-9]/g, '') ?? '';
-          const existing = useSellFlow.getState().giftcards.filter(
-            (g) => g.claimCode.toUpperCase().replace(/[^A-Z0-9]/g, '') === normCode,
-          );
+          const existing = useSellFlow.getState().giftcards.filter((g) => g.claimCode.toUpperCase().replace(/[^A-Z0-9]/g, '') === normCode);
           if (existing.length > 0) {
             return true;
           } else {
@@ -122,9 +107,7 @@ export function useDataEntryPipeline({
         useSellFlow.getState().setUnmatchedImages(unmatchedImageIds.map((id) => ({ imageId: id })));
 
         if (onlyMatchExisting.length > 0) {
-          showAlert.toast.success(
-            `${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`,
-          );
+          showAlert.toast.success(`${onlyMatchExisting.length} card${onlyMatchExisting.length > 1 ? 's' : ''} linked from screenshots`);
         }
 
         const textCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
@@ -175,10 +158,7 @@ export function useDataEntryPipeline({
                 addImage(newImage);
                 uploaded++;
               } else {
-                showAlert.error(
-                  `Error with ${localImg.file.name}`,
-                  result.serverError || 'Upload failed',
-                );
+                showAlert.error(`Error with ${localImg.file.name}`, result.serverError || 'Upload failed');
               }
             } catch (_error) {
               showAlert.error(`Error with ${localImg.file.name}`, 'Critical upload error');
@@ -235,6 +215,15 @@ export function useDataEntryPipeline({
 
     const filesToUpload = [...localImages];
 
+    // Snapshot del batch cargado: si el re-procesamiento falla validación, se
+    // restaura — wipear el store ANTES de validar destruía el batch previo ante
+    // cualquier error del nuevo paste (pérdida silenciosa de 50 tarjetas).
+    const prevGiftcards = useSellFlow.getState().giftcards;
+    const prevImages = useSellFlow.getState().images;
+    const restorePreviousBatch = () => {
+      useSellFlow.setState({ giftcards: prevGiftcards, images: prevImages });
+    };
+
     setGiftcards([]);
     clearImages();
 
@@ -274,6 +263,7 @@ export function useDataEntryPipeline({
           `Máximo ${MAX_BATCH_SIZE} tarjetas por batch`,
           `Elimina líneas y vuelve a intentar. Puedes dividir en múltiples lotes.`,
         );
+        restorePreviousBatch();
         setStage('idle');
         return;
       }
@@ -283,6 +273,7 @@ export function useDataEntryPipeline({
 
         if (result.error) {
           showAlert.error('Límite excedido', result.error);
+          restorePreviousBatch();
           setStage('idle');
           return;
         }
@@ -292,10 +283,7 @@ export function useDataEntryPipeline({
         const allGiftcards = useSellFlow.getState().giftcards;
         const missingAmountErrors = allGiftcards
           .filter((g) => !g.amount || g.amount.trim() === '')
-          .map(
-            (g) =>
-              `Line ${g.id}: Missing amount for claim code ${g.claimCode}`,
-          );
+          .map((g) => `Line ${g.id}: Missing amount for claim code ${g.claimCode}`);
 
         if (missingAmountErrors.length > 0) {
           allErrors = [...allErrors, ...missingAmountErrors];
@@ -309,14 +297,8 @@ export function useDataEntryPipeline({
             brandCountryLimits,
           );
           if (violations.length > 0) {
-            const minMsg =
-              brandCountryLimits.minAmount !== null
-                ? `min $${brandCountryLimits.minAmount.toFixed(2)}`
-                : '';
-            const maxMsg =
-              brandCountryLimits.maxAmount !== null
-                ? `max $${brandCountryLimits.maxAmount.toFixed(2)}`
-                : '';
+            const minMsg = brandCountryLimits.minAmount !== null ? `min $${brandCountryLimits.minAmount.toFixed(2)}` : '';
+            const maxMsg = brandCountryLimits.maxAmount !== null ? `max $${brandCountryLimits.maxAmount.toFixed(2)}` : '';
             const range = [minMsg, maxMsg].filter(Boolean).join(', ');
             allErrors = [
               ...allErrors,
@@ -329,14 +311,14 @@ export function useDataEntryPipeline({
 
       if (allErrors.length > 0) {
         setValidationErrors(allErrors);
+        restorePreviousBatch();
         setStage('idle');
         return;
       }
 
       const allCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
       if (allCodes.length > 0) {
-        pendingDbCheckRef.current = () =>
-          proceedToImageUpload(filesToUpload, parsedCount);
+        pendingDbCheckRef.current = () => proceedToImageUpload(filesToUpload, parsedCount);
         pendingCodeToLineMapRef.current = codeToLineMap;
         runCheckExistingCodes({
           codes: allCodes,
@@ -366,9 +348,7 @@ export function useDataEntryPipeline({
 
   const handleFilesSelected = useCallback(
     (files: FileList | File[]) => {
-      const filesArray = Array.from(files).filter((f) =>
-        f.type.startsWith('image/'),
-      );
+      const filesArray = Array.from(files).filter((f) => f.type.startsWith('image/'));
       if (filesArray.length === 0) {
         showAlert.toast.error('Select valid images');
         return;
@@ -380,17 +360,8 @@ export function useDataEntryPipeline({
       for (const f of filesArray) {
         const isDuplicate =
           localImages.some(
-            (local) =>
-              local.file.name === f.name &&
-              local.file.size === f.size &&
-              local.file.lastModified === f.lastModified,
-          ) ||
-          uniqueFiles.some(
-            (u) =>
-              u.name === f.name &&
-              u.size === f.size &&
-              u.lastModified === f.lastModified,
-          );
+            (local) => local.file.name === f.name && local.file.size === f.size && local.file.lastModified === f.lastModified,
+          ) || uniqueFiles.some((u) => u.name === f.name && u.size === f.size && u.lastModified === f.lastModified);
 
         if (isDuplicate) {
           duplicateCount++;
@@ -405,12 +376,22 @@ export function useDataEntryPipeline({
       }
 
       if (duplicateCount > 0) {
-        showAlert.toast.info(
-          `${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} skipped`,
-        );
+        showAlert.toast.info(`${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} skipped`);
       }
 
-      const newImages = uniqueFiles.map((file) => ({
+      // Cap client-side (el server también valida): sin límite, cada imagen
+      // dispara hasta 3 llamadas pagas al provider de visión en el OCR.
+      const remainingSlots = MAX_BATCH_SIZE - localImages.length;
+      if (remainingSlots <= 0) {
+        showAlert.toast.info(`Máximo ${MAX_BATCH_SIZE} imágenes por batch`);
+        return;
+      }
+      const cappedFiles = uniqueFiles.slice(0, remainingSlots);
+      if (cappedFiles.length < uniqueFiles.length) {
+        showAlert.toast.info(`Máximo ${MAX_BATCH_SIZE} imágenes por batch — se omitieron ${uniqueFiles.length - cappedFiles.length}`);
+      }
+
+      const newImages = cappedFiles.map((file) => ({
         file,
         previewUrl: URL.createObjectURL(file),
       }));

@@ -87,10 +87,11 @@ export function batchSequentialSelection(data: PreprocessedBatchData, target: De
           const exactInNext = findExactInBatch(nextBatch.cards, gap);
           if (exactInNext.isExactMatch) {
             selected.push(...exactInNext.selectedCards);
+            const newTotal = total.add(exactInNext.total);
             return {
               selectedCards: selected,
-              total: target,
-              isExactMatch: true,
+              total: newTotal,
+              isExactMatch: newTotal.equals(target),
               isWithinToleranceRange: true,
             };
           }
@@ -127,7 +128,11 @@ export function batchSequentialSelection(data: PreprocessedBatchData, target: De
  * Selecciona tarjetas dentro de un lote sin exceder el targetRemaining.
  * Primero intenta greedy; si queda muy por debajo, intenta búsqueda exacta.
  */
-export function selectFromBatchWithTolerance(batchCards: Giftcard[], targetRemaining: Decimal, toleranceRange: Decimal): GiftcardSelectionResult {
+export function selectFromBatchWithTolerance(
+  batchCards: Giftcard[],
+  targetRemaining: Decimal,
+  toleranceRange: Decimal,
+): GiftcardSelectionResult {
   const selected: Giftcard[] = [];
   let total = new Decimal(0);
 

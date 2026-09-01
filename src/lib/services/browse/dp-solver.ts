@@ -10,6 +10,11 @@ const TOLERANCE_RANGE = new Decimal(5);
 const MAX_CARDS_EXACT_SEARCH = 30; // Consistente en todas las funciones
 const MAX_DP_TARGET = 10000;
 
+/** Suma los amounts REALES (Decimal, con centavos) de una selección de tarjetas. */
+function sumRealAmounts(cards: Giftcard[]): Decimal {
+  return cards.reduce((sum, card) => sum.add(card.amount), new Decimal(0));
+}
+
 // ─── Programación dinámica ─────────────────────────────────────────────────────
 
 /**
@@ -101,34 +106,44 @@ export function findExactInBatch(batchCards: Giftcard[], target: Decimal): Giftc
       }
     }
 
-    // Resultado exacto
+    // Resultado exacto (a nivel floored) — el DP opera sobre amounts FLOREADOS,
+    // así que hay que recomputar la suma REAL: puede exceder el target en centavos
+    // (ej. 2×$25.99 floorea a 25+25=50 pero suma $51.98). Nunca devolver una
+    // combinación cuyo total real supere el target — el buyer pagaría de más.
     if (dp[safeTarget] !== null) {
-      return {
-        selectedCards: dp[safeTarget]!,
-        total: new Decimal(safeTarget),
-        isExactMatch: true,
-        isWithinToleranceRange: true,
-      };
+      const selected = dp[safeTarget]!;
+      const realTotal = sumRealAmounts(selected);
+      if (realTotal.lte(target)) {
+        return {
+          selectedCards: selected,
+          total: realTotal,
+          isExactMatch: realTotal.equals(target),
+          isWithinToleranceRange: true,
+        };
+      }
+      // Si la suma real excede el target, caer a la aproximación por debajo.
+      // (Otra combinación con el mismo floored-sum podría ser válida, pero el DP
+      // conserva una sola por suma — tradeoff aceptado: nunca cobrar de más.)
     }
 
     // Mejor aproximación por debajo (dentro del rango de tolerancia)
-    let bestAmount = 0;
     const lowerBound = Math.max(0, safeTarget - TOLERANCE_RANGE.toNumber());
 
     for (let j = safeTarget - 1; j >= lowerBound; j--) {
-      if (dp[j] !== null && j > bestAmount) {
-        bestAmount = j;
-        break; // El primer encontrado desde arriba es el mejor
+      if (dp[j] !== null) {
+        const selected = dp[j]!;
+        const realTotal = sumRealAmounts(selected);
+        // Con n cards, la suma real puede superar el floored-sum en casi n dólares
+        // — revalidar contra el target real antes de aceptar.
+        if (realTotal.gt(0) && realTotal.lte(target)) {
+          return {
+            selectedCards: selected,
+            total: realTotal,
+            isExactMatch: realTotal.equals(target),
+            isWithinToleranceRange: true,
+          };
+        }
       }
-    }
-
-    if (bestAmount > 0) {
-      return {
-        selectedCards: dp[bestAmount]!,
-        total: new Decimal(bestAmount),
-        isExactMatch: false,
-        isWithinToleranceRange: true,
-      };
     }
 
     return emptyResult;
@@ -176,10 +191,11 @@ export function optimizeBatchSelection(
       // Solo buscar coincidencia exacta para completar el gap
       const exactMatch = findExactInBatch(availableCards, gap);
       if (exactMatch.isExactMatch) {
+        const newTotal = currentResult.total.add(exactMatch.total);
         return {
           selectedCards: [...currentResult.selectedCards, ...exactMatch.selectedCards],
-          total: target,
-          isExactMatch: true,
+          total: newTotal,
+          isExactMatch: newTotal.equals(target),
           isWithinToleranceRange: true,
         };
       }

@@ -40,11 +40,10 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
 
   const [newBrand, setNewBrand] = useState({ name: '', slug: '', icon: '📦', image: '' });
   const [newCountry, setNewCountry] = useState({ countryId: '', minAmount: '', maxAmount: '', claimCodePattern: '' });
-  const [countryLimits, setCountryLimits] = useState<{ minAmount: string; maxAmount: string; claimCodePattern: string; stockDigestInterval: string; stockReminderInterval: string }>({
+  const [countryLimits, setCountryLimits] = useState<{ minAmount: string; maxAmount: string; claimCodePattern: string; stockReminderInterval: string }>({
     minAmount: '',
     maxAmount: '',
     claimCodePattern: '',
-    stockDigestInterval: '',
     stockReminderInterval: '',
   });
 
@@ -154,7 +153,6 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
       minAmount: countryLimits.minAmount ? parseFloat(countryLimits.minAmount) : null,
       maxAmount: countryLimits.maxAmount ? parseFloat(countryLimits.maxAmount) : null,
       claimCodePattern: countryLimits.claimCodePattern || null,
-      stockDigestIntervalMinutes: countryLimits.stockDigestInterval ? parseInt(countryLimits.stockDigestInterval, 10) : null,
       stockReminderIntervalMinutes: countryLimits.stockReminderInterval ? parseInt(countryLimits.stockReminderInterval, 10) : null,
     });
   };
@@ -405,7 +403,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                         Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'}
                       </span>
                       <span className="text-muted-foreground block text-[10px]">
-                        Stock digest: {bc.stockDigestIntervalMinutes ? `${bc.stockDigestIntervalMinutes} min` : 'global'} | Reminder: {bc.stockReminderIntervalMinutes ? `${bc.stockReminderIntervalMinutes} min` : 'global'}
+                        Reminder: {bc.stockReminderIntervalMinutes ? `${bc.stockReminderIntervalMinutes} min` : 'global'}
                       </span>
                       {bc.claimCodePattern && (
                         <span className="text-muted-foreground block text-[10px]">
@@ -446,18 +444,6 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                             />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-muted-foreground text-[9px]">Digest (min)</span>
-                            <Input
-                              type="number"
-                              min={5}
-                              max={1440}
-                              placeholder="Global"
-                              value={countryLimits.stockDigestInterval}
-                              onChange={(e) => setCountryLimits((p) => ({ ...p, stockDigestInterval: e.target.value }))}
-                              className="h-8 w-20"
-                            />
-                          </div>
-                          <div className="flex flex-col">
                             <span className="text-muted-foreground text-[9px]">Reminder (min)</span>
                             <Input
                               type="number"
@@ -493,7 +479,6 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
                                 minAmount: bc.minAmount?.toString() || '',
                                 maxAmount: bc.maxAmount?.toString() || '',
                                 claimCodePattern: bc.claimCodePattern || '',
-                                stockDigestInterval: bc.stockDigestIntervalMinutes?.toString() || '',
                                 stockReminderInterval: bc.stockReminderIntervalMinutes?.toString() || '',
                               });
                             }}

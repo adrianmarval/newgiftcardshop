@@ -68,6 +68,7 @@ export interface NotificationPageData {
   preference: {
     telegramEnabled: boolean;
     pushEnabled: boolean;
+    stockAlertsEnabled: boolean;
   } | null;
 }
 

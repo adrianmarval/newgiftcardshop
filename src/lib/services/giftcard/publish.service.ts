@@ -28,18 +28,31 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     throw new Error('Brand and country are required');
   }
 
-  // Filter valid cards
+  // Filter valid cards. Amount estricto: solo dígitos con hasta 2 decimales —
+  // parseFloat aceptaba basura ("30abc" → 30, "1e2" → 100) y sub-cent amounts
+  // ("0.001") que Postgres numeric(10,2) redondeaba a $0.00 en stock.
+  const STRICT_AMOUNT_RE = /^\d+(\.\d{1,2})?$/;
   const validCards = cards.filter((card) => {
-    const amount = parseFloat(card.amount);
-    return !isNaN(amount) && amount > 0 && card.claimCode.trim().length > 0;
+    const trimmed = card.amount.trim();
+    return STRICT_AMOUNT_RE.test(trimmed) && parseFloat(trimmed) > 0 && card.claimCode.trim().length > 0;
   });
 
   if (validCards.length === 0) {
-    logger.warn('publishBatch: sin tarjetas válidas', { flow: 'sell', action: 'publish-batch', userId, metadata: { totalCards: cards.length } });
+    logger.warn('publishBatch: sin tarjetas válidas', {
+      flow: 'sell',
+      action: 'publish-batch',
+      userId,
+      metadata: { totalCards: cards.length },
+    });
     throw new Error('No valid cards were provided for processing.');
   }
   if (validCards.length > MAX_BATCH_SIZE) {
-    logger.warn('publishBatch: batch excede tamaño máximo', { flow: 'sell', action: 'publish-batch', userId, metadata: { validCards: validCards.length, max: MAX_BATCH_SIZE } });
+    logger.warn('publishBatch: batch excede tamaño máximo', {
+      flow: 'sell',
+      action: 'publish-batch',
+      userId,
+      metadata: { validCards: validCards.length, max: MAX_BATCH_SIZE },
+    });
     throw new Error(`Batch exceeds maximum size of ${MAX_BATCH_SIZE} cards.`);
   }
 
@@ -52,27 +65,29 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     };
   });
 
-  // Find brand-country
-  const brandCountry = await prisma.brandCountry.findUnique({
-    where: { brandId_countryId: { brandId, countryId } },
+  // Find brand-country (solo combos ACTIVOS — la UI y el bot listan solo
+  // activos, pero un call directo a la action podía publicar en uno desactivado)
+  const brandCountry = await prisma.brandCountry.findFirst({
+    where: { brandId, countryId, isActive: true },
   });
   if (!brandCountry) {
-    logger.warn('publishBatch: combinación brand-country inválida', { flow: 'sell', action: 'publish-batch', userId, metadata: { brandId, countryId } });
+    logger.warn('publishBatch: combinación brand-country inválida o inactiva', {
+      flow: 'sell',
+      action: 'publish-batch',
+      userId,
+      metadata: { brandId, countryId },
+    });
     throw new Error('Invalid brand-country combination');
   }
 
   // Validate claim code format using brand-country pattern (or default 14-15 alphanumeric)
-  const codeRegex = brandCountry.claimCodePattern
-    ? new RegExp(brandCountry.claimCodePattern)
-    : /^[A-Z0-9]{14,15}$/;
+  const codeRegex = brandCountry.claimCodePattern ? new RegExp(brandCountry.claimCodePattern) : /^[A-Z0-9]{14,15}$/;
   const invalidCodes = normalizedCards.filter((c) => {
     const raw = c.claimCode.replace(/[- ]/g, '');
     return !codeRegex.test(raw);
   });
   if (invalidCodes.length > 0) {
-    throw new Error(
-      `${invalidCodes.length} code(s) have invalid format. Claim codes must match pattern: ${codeRegex.source}`,
-    );
+    throw new Error(`${invalidCodes.length} code(s) have invalid format. Claim codes must match pattern: ${codeRegex.source}`);
   }
 
   // Validate card amounts against brand-country limits
@@ -108,7 +123,12 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
     select: { codeHash: true },
   });
   if (existingInDb.length > 0) {
-    logger.warn('publishBatch: códigos duplicados en DB', { flow: 'sell', action: 'publish-batch', userId, metadata: { duplicateCount: existingInDb.length } });
+    logger.warn('publishBatch: códigos duplicados en DB', {
+      flow: 'sell',
+      action: 'publish-batch',
+      userId,
+      metadata: { duplicateCount: existingInDb.length },
+    });
     throw new Error(`${existingInDb.length} code(s) already exist in inventory`);
   }
 
@@ -146,12 +166,15 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
 
   const duplicates: string[] = [];
   const uniqueCards: PublishCardInput[] = [];
-  requestDeduped.forEach((card, i) =>
-    existingHashes.has(hashedCodes[i]) ? duplicates.push(card.claimCode) : uniqueCards.push(card),
-  );
+  requestDeduped.forEach((card, i) => (existingHashes.has(hashedCodes[i]) ? duplicates.push(card.claimCode) : uniqueCards.push(card)));
 
   if (uniqueCards.length === 0) {
-    logger.warn('publishBatch: todas las tarjetas son duplicadas', { flow: 'sell', action: 'publish-batch', userId, metadata: { duplicates: duplicates.length } });
+    logger.warn('publishBatch: todas las tarjetas son duplicadas', {
+      flow: 'sell',
+      action: 'publish-batch',
+      userId,
+      metadata: { duplicates: duplicates.length },
+    });
     throw new Error('All provided cards already exist in the inventory.');
   }
 
@@ -197,64 +220,64 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
   let batch;
   try {
     batch = await prisma.$transaction(async (tx) => {
-    const createdBatch = await tx.giftcardBatch.create({
-      data: { userId, sellRate: sellRateSnapshot, isPaid: false },
-    });
-
-    for (const card of uniqueCards) {
-      const encryptedClaimCode = encrypt(card.claimCode);
-      const codeHash = hashCode(card.claimCode);
-      const encryptedPinCode = card.pinCode && card.pinCode.trim().length > 0 ? encrypt(card.pinCode.trim()) : null;
-
-      const createdGiftcard = await tx.giftcard.create({
-        data: {
-          claimCode: encryptedClaimCode,
-          codeHash,
-          pinCode: encryptedPinCode,
-          amount: new Prisma.Decimal(parseFloat(card.amount)),
-          ownerId: userId,
-          inStock: true,
-          status: 'UNUSED',
-          batchId: createdBatch.id,
-          brandCountryId: brandCountry.id,
-          ...(initialTier !== null ? { escalationTier: initialTier } : {}),
-        },
+      const createdBatch = await tx.giftcardBatch.create({
+        data: { userId, sellRate: sellRateSnapshot, isPaid: false },
       });
 
-      // Per-card provenance images (web only — bot doesn't send these)
-      if (card.compressedImageData) {
-        const rawBuffer = Buffer.from(card.compressedImageData, 'base64');
-        const { data: encryptedImageBuffer } = encryptBuffer(rawBuffer);
-        await tx.provenanceImage.create({
+      for (const card of uniqueCards) {
+        const encryptedClaimCode = encrypt(card.claimCode);
+        const codeHash = hashCode(card.claimCode);
+        const encryptedPinCode = card.pinCode && card.pinCode.trim().length > 0 ? encrypt(card.pinCode.trim()) : null;
+
+        const createdGiftcard = await tx.giftcard.create({
           data: {
-            data: new Uint8Array(encryptedImageBuffer),
-            mimeType: 'image/jpeg',
-            size: rawBuffer.length,
-            giftcardId: createdGiftcard.id,
-            batchId: createdBatch.id.toString(),
+            claimCode: encryptedClaimCode,
+            codeHash,
+            pinCode: encryptedPinCode,
+            amount: new Prisma.Decimal(card.amount.trim()),
+            ownerId: userId,
+            inStock: true,
+            status: 'UNUSED',
+            batchId: createdBatch.id,
+            brandCountryId: brandCountry.id,
+            ...(initialTier !== null ? { escalationTier: initialTier } : {}),
           },
         });
-      }
-    }
 
-    // Unmatched images (batch-level)
-    if (unmatchedImages && unmatchedImages.length > 0) {
-      for (const img of unmatchedImages) {
-        const rawBuffer = Buffer.from(img.data, 'base64');
-        const { data: encryptedImageBuffer } = encryptBuffer(rawBuffer);
-        await tx.provenanceImage.create({
-          data: {
-            data: new Uint8Array(encryptedImageBuffer),
-            mimeType: 'image/jpeg',
-            size: rawBuffer.length,
-            batchId: createdBatch.id.toString(),
-          },
-        });
+        // Per-card provenance images (web only — bot doesn't send these)
+        if (card.compressedImageData) {
+          const rawBuffer = Buffer.from(card.compressedImageData, 'base64');
+          const { data: encryptedImageBuffer } = encryptBuffer(rawBuffer);
+          await tx.provenanceImage.create({
+            data: {
+              data: new Uint8Array(encryptedImageBuffer),
+              mimeType: 'image/jpeg',
+              size: rawBuffer.length,
+              giftcardId: createdGiftcard.id,
+              batchId: createdBatch.id.toString(),
+            },
+          });
+        }
       }
-    }
 
-    return createdBatch;
-  });
+      // Unmatched images (batch-level)
+      if (unmatchedImages && unmatchedImages.length > 0) {
+        for (const img of unmatchedImages) {
+          const rawBuffer = Buffer.from(img.data, 'base64');
+          const { data: encryptedImageBuffer } = encryptBuffer(rawBuffer);
+          await tx.provenanceImage.create({
+            data: {
+              data: new Uint8Array(encryptedImageBuffer),
+              mimeType: 'image/jpeg',
+              size: rawBuffer.length,
+              batchId: createdBatch.id.toString(),
+            },
+          });
+        }
+      }
+
+      return createdBatch;
+    });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
       throw new Error(
@@ -273,14 +296,15 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
   publishToRole('ADMIN', ['batches']);
 
   // Non-blocking: notify buyers
-  notifyBuyersStockAvailable(brandCountry.id, initialTier, batch.id)
-    .catch((err) => logger.error('Error al notificar buyers post-publish (non-blocking)', {
+  notifyBuyersStockAvailable(brandCountry.id, initialTier, batch.id).catch((err) =>
+    logger.error('Error al notificar buyers post-publish (non-blocking)', {
       flow: 'sell',
       action: 'publish-batch',
       userId,
       metadata: { batchId: batch.id, brandCountryId: brandCountry.id },
       error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown' },
-    }));
+    }),
+  );
 
   return { batchId: batch.id, duplicates, totalPublished: uniqueCards.length };
 }

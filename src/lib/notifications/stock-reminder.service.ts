@@ -1,8 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Stock Reminder — recordatorio de stock VARADO (STOCK_REMINDER).
 //
-// Complementa al digest: el digest agrupa llegadas NUEVAS de stock; este sweep
-// cubre el caso contrario — stock que nadie compró. Semántica de UN solo knob
+// Cubre stock que nadie compró. Semántica de UN solo knob
 // por marca (BrandCountry.stockReminderIntervalMinutes ?? setting global,
 // default 60min): si TODO el stock accesible del buyer en la marca es más viejo
 // que el intervalo, recibe UN recordatorio (máx 1 por intervalo — el intervalo
@@ -10,8 +9,9 @@
 //
 // Anti-ruido: si el buyer tiene CUALQUIER tarjeta accesible más nueva que el
 // intervalo, se skipea — ese buyer ya fue nudgeado por el flujo normal
-// (STOCK_AVAILABLE in-app instantáneo + digest Telegram/Push). El reminder solo
-// dispara cuando el stock accesible está completamente quieto.
+// (STOCK_AVAILABLE in-app instantáneo + Telegram/Push si tiene activadas las
+// alertas de stock). El reminder solo dispara cuando el stock accesible está
+// completamente quieto.
 //
 // Envío via notificationDispatcher (persiste in-app + respeta telegramEnabled/
 // pushEnabled). El filtro de suscripciones se aplica AQUÍ (el dispatcher no lo
@@ -28,8 +28,8 @@ import { formatCurrency } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 /**
- * Claim atómico del cooldown (multi-instancia seguro, mismo patrón que el
- * digest): upsert garantiza la fila (lastSentAt en epoch si es nueva — un
+ * Claim atómico del cooldown (multi-instancia seguro, mismo patrón que telegram-topics):
+ * upsert garantiza la fila (lastSentAt en epoch si es nueva — un
  * buyer que nunca recibió reminder es elegible de inmediato) y el updateMany
  * guardado es el claim real. count===1 ⇒ este proceso ganó.
  */
@@ -60,8 +60,8 @@ async function releaseReminderClaim(userId: string, brandCountryId: string): Pro
 }
 
 /**
- * Sweep de recordatorios de stock varado. Corre en el mismo tick de 5min que
- * el digest (server.ts). Por cada (buyer, brandCountry) con TODO su stock
+ * Sweep de recordatorios de stock varado. Corre en un tick de 5min
+ * (server.ts). Por cada (buyer, brandCountry) con TODO su stock
  * accesible más viejo que el intervalo y cooldown vencido, envía UN reminder.
  */
 export async function sweepStockReminders(): Promise<{ sent: number; skipped: number }> {
@@ -115,7 +115,8 @@ export async function sweepStockReminders(): Promise<{ sent: number; skipped: nu
         continue;
       }
 
-      const buyerBuyRate = Math.floor(rate.buyRate.toNumber() * 100);
+      // floor sobre el Decimal (toNumber() primero = float artifact: 0.57 → 56)
+      const buyerBuyRate = rate.buyRate.times(100).floor().toNumber();
 
       const accessible = await prisma.giftcard.aggregate({
         where: { brandCountryId: bc.id, inStock: true, status: 'UNUSED', escalationTier: { lte: buyerBuyRate } },
@@ -128,7 +129,7 @@ export async function sweepStockReminders(): Promise<{ sent: number; skipped: nu
       const newest = accessible._max.createdAt;
 
       // Sin stock accesible, o hay stock FRESCO accesible (buyer ya nudgeado
-      // por STOCK_AVAILABLE/digest) → no es territorio del reminder
+      // por STOCK_AVAILABLE) → no es territorio del reminder
       if (cardCount === 0 || !newest || newest > cutoff) {
         skipped++;
         continue;

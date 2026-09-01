@@ -1,20 +1,24 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import NumberFlow from '@number-flow/react';
 import { IconArrowRight } from '@tabler/icons-react';
+import { Bell, BellOff } from 'lucide-react';
 import type { z } from 'zod';
 import type { liveAvailabilityItemSchema } from '@/actions/buyer/stats/schemas';
+import { updateNotificationPreferences } from '@/actions/notifications';
 import { Card, CardHeader, CardDescription } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
 import { getCountryFlag } from '@/lib/utils';
-import { cn } from '@/lib/ui';
+import { cn, showAlert } from '@/lib/ui';
 
 export type LiveAvailabilityItem = z.infer<typeof liveAvailabilityItemSchema>;
 
 interface LiveAvailabilityGridProps {
   items: LiveAvailabilityItem[];
+  stockAlertsEnabled: boolean;
 }
 
 function AnimatedMoney({ value, currency, className }: { value: number; currency: string; className?: string }) {
@@ -90,7 +94,56 @@ function AvailabilityCard({ item }: { item: LiveAvailabilityItem }) {
   );
 }
 
-export function LiveAvailabilityGrid({ items }: LiveAvailabilityGridProps) {
+/**
+ * Toggle de alertas de stock (Telegram/Push). Optimista con revert en error.
+ * La campana in-app SIEMPRE llega al instante — esto solo gobierna los canales
+ * interruptivos (ver dispatcher: STOCK_AVAILABLE + stockAlertsEnabled).
+ */
+function StockAlertsToggle({ initialEnabled }: { initialEnabled: boolean }) {
+  const [enabled, setEnabled] = useState(initialEnabled);
+  const [loading, setLoading] = useState(false);
+
+  const toggle = async () => {
+    const next = !enabled;
+    setEnabled(next);
+    setLoading(true);
+    try {
+      const res = await updateNotificationPreferences({ stockAlertsEnabled: next });
+      if (!res?.data?.success) {
+        setEnabled(!next);
+        showAlert.toast.error('No se pudo guardar. Intenta de nuevo.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={loading}
+      role="switch"
+      aria-checked={enabled}
+      title={enabled ? 'Alertas de stock activadas (Telegram/Push)' : 'Alertas de stock solo en la app'}
+      className={cn(
+        'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+        enabled ? 'border-amber-500/40 bg-amber-500/10 text-amber-500' : 'border-border text-muted-foreground hover:bg-muted/50',
+      )}
+    >
+      {loading ? (
+        <Spinner size="sm" />
+      ) : enabled ? (
+        <Bell className="h-4 w-4" />
+      ) : (
+        <BellOff className="h-4 w-4" />
+      )}
+      {enabled ? 'Alertas ON' : 'Alertas OFF'}
+    </button>
+  );
+}
+
+export function LiveAvailabilityGrid({ items, stockAlertsEnabled }: LiveAvailabilityGridProps) {
   const sorted = useMemo(
     () => [...items].sort((a, b) => b.accessibleAmount - a.accessibleAmount || b.totalAmount - a.totalAmount),
     [items],
@@ -98,12 +151,15 @@ export function LiveAvailabilityGrid({ items }: LiveAvailabilityGridProps) {
 
   return (
     <section className="space-y-2" data-tour="buy-explore">
-      <div className="flex items-center gap-2 p-1">
-        <h2 className="text-xl font-semibold">Stock en vivo</h2>
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-        </span>
+      <div className="flex items-center justify-between gap-2 p-1">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">Stock en vivo</h2>
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          </span>
+        </div>
+        <StockAlertsToggle initialEnabled={stockAlertsEnabled} />
       </div>
 
       {sorted.length > 0 ? (

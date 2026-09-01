@@ -137,7 +137,9 @@ export async function getBuyerBuyRate(userId: string, brandCountryId: string): P
   });
 
   if (userRate && userRate.buyRate.gt(0)) {
-    return Math.floor(userRate.buyRate.toNumber() * 100);
+    // floor sobre el Decimal — toNumber() primero introduce float artifacts
+    // (Math.floor(0.57 * 100) === 56) y el buyer pierde un tier.
+    return userRate.buyRate.times(100).floor().toNumber();
   }
 
   logger.warn('PricingError: Sin tarifa asignada (buyer)', {

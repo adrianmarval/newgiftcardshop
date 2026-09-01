@@ -23,15 +23,16 @@ async function initEscalationService() {
     const { getConfig, processEscalationTiers } = await import('./src/lib/services/giftcard/escalation');
     const log = await getServerLogger();
 
-    const config = await getConfig();
+    // Tick FIJO de 1 minuto — el mínimo que permite la validación del setting
+    // escalation_duration_minutes (min: 1). La config se re-lee en CADA tick:
+    // un setInterval congela su intervalo al crearse, así que derivarlo del
+    // setting dejaba el scheduler corriendo con la duración del boot aunque el
+    // admin la cambiara desde el panel (bug verificado: setting a 1min, ticks
+    // cada 5min hasta reiniciar el proceso).
+    const TICK_MS = 60 * 1000;
 
-    if (!config.enabled) {
-      log.info('[Escalation] Sistema deshabilitado via PlatformSettings');
-      return;
-    }
-
-    const intervalMs = config.durationMinutes * 60 * 1000;
-    log.info(`[Escalation] Iniciado - intervalo: ${config.durationMinutes}min`);
+    const initialConfig = await getConfig();
+    log.info(`[Escalation] Iniciado - tick: 1min, duración por tier: ${initialConfig.durationMinutes}min, habilitado: ${initialConfig.enabled}`);
 
     let escalationRunning = false;
 
@@ -42,6 +43,11 @@ async function initEscalationService() {
       }
       escalationRunning = true;
       try {
+        const config = await getConfig();
+        if (!config.enabled) {
+          return;
+        }
+
         const result = await processEscalationTiers();
         if (result.processed > 0) {
           log.action('batch', 'escalation-cron', `${result.processed} tarjetas procesadas en escalación`, {
@@ -68,7 +74,7 @@ async function initEscalationService() {
       } finally {
         escalationRunning = false;
       }
-    }, intervalMs);
+    }, TICK_MS);
   } catch (err) {
     const log = await getServerLogger();
     log.error('[Escalation] Error al iniciar', {
@@ -206,36 +212,31 @@ async function initAutoPayService() {
   }
 }
 
-// ── Stock Digest Sweep ────────────────────────────────────────────────────────
+// ── Stock Reminder Sweep ──────────────────────────────────────────────────────
 
-async function initStockDigestService() {
+async function initStockReminderService() {
   try {
-    const { sweepStockDigests } = await import('./src/lib/notifications/stock-digest.service');
     const { sweepStockReminders } = await import('./src/lib/notifications/stock-reminder.service');
     const log = await getServerLogger();
 
     const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes (la due-ness por marca se evalúa dentro)
-    log.info('[StockDigest] Iniciado - sweep cada 5min (digest + recordatorios de stock varado)');
+    log.info('[StockReminder] Iniciado - sweep cada 5min (recordatorios de stock varado)');
 
     let sweepRunning = false;
 
     setInterval(async () => {
       if (sweepRunning) {
-        log.info('[StockDigest] Skipping — previous sweep still active');
+        log.info('[StockReminder] Skipping — previous sweep still active');
         return;
       }
       sweepRunning = true;
       try {
-        const result = await sweepStockDigests();
-        if (result.sent > 0 || result.skipped > 0) {
-          log.info(`[StockDigest] Sweep: ${result.sent} resumen(es) enviado(s), ${result.skipped} descartado(s)`);
-        }
         const reminders = await sweepStockReminders();
         if (reminders.sent > 0) {
           log.info(`[StockReminder] Sweep: ${reminders.sent} recordatorio(s) enviado(s), ${reminders.skipped} descartado(s)`);
         }
       } catch (err) {
-        log.error('[StockDigest] Error en sweep', {
+        log.error('[StockReminder] Error en sweep', {
           error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
         });
       } finally {
@@ -244,7 +245,7 @@ async function initStockDigestService() {
     }, INTERVAL_MS);
   } catch (err) {
     const log = await getServerLogger();
-    log.error('[StockDigest] Error al iniciar', {
+    log.error('[StockReminder] Error al iniciar', {
       error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
     });
   }
@@ -349,8 +350,8 @@ await initBatchAutoCancelService();
 // ── Seller Auto-Pay + Payment Sync ────────────────────────────────────────────
 await initAutoPayService();
 
-// ── Stock Digest Sweep ────────────────────────────────────────────────────────
-await initStockDigestService();
+// ── Stock Reminder Sweep ──────────────────────────────────────────────────────
+await initStockReminderService();
 
 // Fail-fast ante puerto ocupado: una segunda instancia que no puede bindear
 // pero sigue viva es un ZOMBIE peligroso — sus crons y bots (long polling)

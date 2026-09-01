@@ -30,6 +30,7 @@ export default async function BuyerNotificationsPage() {
             ? {
                 telegramEnabled: preference.telegramEnabled,
                 pushEnabled: preference.pushEnabled,
+                stockAlertsEnabled: preference.stockAlertsEnabled,
               }
             : undefined,
           brandCountries,

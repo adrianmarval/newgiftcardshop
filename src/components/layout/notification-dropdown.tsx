@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, Settings, ExternalLink, ChevronRight } from 'lucide-react';
+import { Mail, Settings, ExternalLink, ChevronRight } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useNotifications } from '@/providers/notification-provider';
 import { listNotifications, markAsRead } from '@/actions/notifications';
@@ -109,7 +109,7 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
   return (
     <div ref={ref} className="relative">
       <button onClick={handleToggle} className={className}>
-        <Bell className="h-5 w-5" />
+        <Mail className="h-5 w-5" />
         {count > 0 && (
           <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-destructive-foreground animate-pulse">
             {count > 99 ? '99+' : count}
@@ -137,7 +137,7 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center py-8 text-center">
-                <Bell className="text-muted-foreground/30 mb-1 h-6 w-6" />
+                <Mail className="text-muted-foreground/30 mb-1 h-6 w-6" />
                 <p className="text-muted-foreground text-sm">{labels.empty}</p>
               </div>
             ) : (

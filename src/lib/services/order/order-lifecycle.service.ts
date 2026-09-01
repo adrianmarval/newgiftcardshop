@@ -66,10 +66,10 @@ export async function cancelOrder(orderId: string) {
 
   // Invalidación realtime (cross-canal: web y bot pasan por acá)
   publishToUser(order.userId, ['orders', 'stats']);
-  publishToUsers(cancelledBatches.map((b) => b.sellerId).filter((id): id is string => Boolean(id)), [
-    'batches',
-    'stats',
-  ]);
+  publishToUsers(
+    cancelledBatches.map((b) => b.sellerId).filter((id): id is string => Boolean(id)),
+    ['batches', 'stats'],
+  );
   publishToRole('ADMIN', ['orders']);
 
   // Auto-pay trigger (no-op when disabled, fire-and-forget)
@@ -140,10 +140,10 @@ export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal
 
   // Invalidación realtime (cross-canal: web y bot pasan por acá)
   publishToUser(order.userId, ['orders', 'stats']);
-  publishToUsers(cancelledBatches.map((b) => b.sellerId).filter((id): id is string => Boolean(id)), [
-    'batches',
-    'stats',
-  ]);
+  publishToUsers(
+    cancelledBatches.map((b) => b.sellerId).filter((id): id is string => Boolean(id)),
+    ['batches', 'stats'],
+  );
   publishToRole('ADMIN', ['orders']);
 
   // Auto-pay trigger (no-op when disabled, fire-and-forget)
@@ -158,6 +158,25 @@ export async function confirmOrderUsage(orderId: string, buyRate: Prisma.Decimal
  */
 export async function completeOrderPayment(orderId: string, txId: string) {
   try {
+    // Read + verificación Binance FUERA de la tx: la llamada HTTP a Binance no
+    // puede vivir dentro de la transacción — mantiene la conexión del pool (y
+    // cualquier lock) durante un round-trip de red. El status se re-valida
+    // DENTRO de la tx (fast-path aquí, guard real allá + update guardado).
+    const orderSnapshot = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!orderSnapshot) {
+      throw new OrderNotFoundError();
+    }
+    if (orderSnapshot.status !== 'AWAITING_PAYMENT') {
+      throw new InvalidOrderStateError('La orden debe estar en estado AWAITING_PAYMENT');
+    }
+    const paymentAmount = orderSnapshot.adjustedTotal ?? orderSnapshot.total;
+
+    // ── Verify TxID against Binance Pay API ──────────────────────────────
+    const verification = await validateBuyerPayment(txId, paymentAmount.toString(), orderId);
+    if (!verification.isValid) {
+      throw new PaymentVerificationError(verification.code, verification.message);
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({ where: { id: orderId } });
       if (!order) {
@@ -165,14 +184,6 @@ export async function completeOrderPayment(orderId: string, txId: string) {
       }
       if (order.status !== 'AWAITING_PAYMENT') {
         throw new InvalidOrderStateError('La orden debe estar en estado AWAITING_PAYMENT');
-      }
-
-      const paymentAmount = order.adjustedTotal ?? order.total;
-
-      // ── Verify TxID against Binance Pay API ──────────────────────────────
-      const verification = await validateBuyerPayment(txId, paymentAmount.toString(), orderId);
-      if (!verification.isValid) {
-        throw new PaymentVerificationError(verification.code, verification.message);
       }
 
       const updatedSettings = await tx.platformSettings.upsert({
@@ -228,18 +239,30 @@ export async function completeOrderPayment(orderId: string, txId: string) {
       throw err;
     }
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      logger.warn('OrderAlreadyProcessedError en completeOrderPayment', { flow: 'order', action: 'complete-payment', metadata: { orderId, txId } });
+      logger.warn('OrderAlreadyProcessedError en completeOrderPayment', {
+        flow: 'order',
+        action: 'complete-payment',
+        metadata: { orderId, txId },
+      });
       throw new OrderAlreadyProcessedError('La orden ya fue procesada por otra solicitud.');
     }
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      logger.warn('Duplicate binanceTxId en completeOrderPayment', { flow: 'order', action: 'complete-payment', metadata: { orderId, txId } });
+      logger.warn('Duplicate binanceTxId en completeOrderPayment', {
+        flow: 'order',
+        action: 'complete-payment',
+        metadata: { orderId, txId },
+      });
       throw new PaymentVerificationError('DUPLICATE', 'Este TxID ya fue utilizado para otro pago.');
     }
     logger.error('Error inesperado en transacción de completeOrderPayment', {
       flow: 'order',
       action: 'complete-payment',
       metadata: { orderId, txId },
-      error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : 'Unknown', stack: err instanceof Error ? err.stack : undefined },
+      error: {
+        name: err instanceof Error ? err.name : 'Error',
+        message: err instanceof Error ? err.message : 'Unknown',
+        stack: err instanceof Error ? err.stack : undefined,
+      },
     });
     throw err;
   }

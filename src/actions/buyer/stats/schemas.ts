@@ -51,4 +51,5 @@ export const liveAvailabilityItemSchema = z.object({
 
 export const liveAvailabilityOutputSchema = z.object({
   items: z.array(liveAvailabilityItemSchema),
+  stockAlertsEnabled: z.boolean(),
 });

@@ -2,15 +2,13 @@ import prisma from '@/lib/prisma';
 import type { NotificationChannelResult, NotificationContext, NotificationMessage } from './types';
 import { TelegramChannel } from './channels/telegram.channel';
 import { WebPushChannel } from './channels/webpush.channel';
-import { enqueueStockDigest } from './stock-digest.service';
 import { publishToUser } from '@/lib/realtime/bus';
 import type { NotificationType, Prisma } from '@/generated/prisma/client';
 import { logger } from '@/lib/logger';
 
-// Tipos que NUNCA salen por canales interruptivos (Telegram/Push) — solo in-app.
-// TIER_DROP_ACCESS: el buyer ya fue avisado por STOCK_AVAILABLE/digest cuando el
-// stock llegó; un tier drop es info incremental que no amerita interrumpir.
-const IN_APP_ONLY_TYPES: ReadonlySet<NotificationType> = new Set(['TIER_DROP_ACCESS']);
+// Tipos de alerta de stock: in-app queda instantáneo siempre; Telegram/Push
+// solo si el buyer activó las alertas de stock (stockAlertsEnabled).
+const STOCK_ALERT_TYPES: ReadonlySet<NotificationType> = new Set(['STOCK_AVAILABLE', 'TIER_DROP_ACCESS']);
 
 export class NotificationDispatcher {
   async dispatch(userId: string, message: NotificationMessage): Promise<void> {
@@ -41,30 +39,10 @@ export class NotificationDispatcher {
         },
       });
       // Invalidación realtime: la campana/lista in-app se actualiza en <1s.
-      // Aplica a TODOS los tipos (incluye STOCK_AVAILABLE — el digest solo
-      // gobierna Telegram/Push, la vista in-app es instantánea).
+      // Aplica a TODOS los tipos (la vista in-app es siempre instantánea).
       publishToUser(userId, ['notifications']);
     } catch (err) {
       logger.error(`[Notifications] Error persistiendo Notification (web):`, { error: { name: 'NotificationPersistError', message: String(err) } });
-    }
-
-    // STOCK_AVAILABLE: in-app queda instantáneo (persistido arriba), pero
-    // Telegram/Push van por digest periódico (anti-saturación — ver stock-digest.service)
-    if (message.type === 'STOCK_AVAILABLE') {
-      const brandCountryId = message.metadata?.brandCountryId;
-      if (typeof brandCountryId === 'string') {
-        await enqueueStockDigest(userId, brandCountryId).catch((err) => {
-          logger.error(`[Notifications] Error encolando digest de stock para user ${userId}:`, {
-            error: { name: 'StockDigestEnqueueError', message: String(err) },
-          });
-        });
-      }
-      return;
-    }
-
-    // In-app queda persistido arriba (con realtime); estos tipos no interrumpen.
-    if (IN_APP_ONLY_TYPES.has(message.type)) {
-      return;
     }
 
     const preference = await prisma.notificationPreference.upsert({
@@ -73,6 +51,12 @@ export class NotificationDispatcher {
       create: { userId },
       include: { subscriptions: true },
     });
+
+    // Alertas de stock (STOCK_AVAILABLE, TIER_DROP_ACCESS): in-app queda
+    // instantáneo (persistido arriba). Telegram/Push solo con alertas ON.
+    if (STOCK_ALERT_TYPES.has(message.type) && !preference.stockAlertsEnabled) {
+      return;
+    }
 
     if (preference.telegramEnabled) {
       const result = await TelegramChannel.send(ctx, message).catch((err): NotificationChannelResult => ({

@@ -25,6 +25,7 @@ interface BuyerDashboardProps {
   stats: BuyerStats;
   recentOrders: RecentOrder[];
   availability: LiveAvailabilityItem[];
+  stockAlertsEnabled: boolean;
 }
 
 function CreditUsageCard({
@@ -166,13 +167,13 @@ function RecentOrderRow({ order, onClick }: { order: RecentOrder; onClick: () =>
   );
 }
 
-export function BuyerDashboard({ stats, recentOrders, availability }: BuyerDashboardProps) {
+export function BuyerDashboard({ stats, recentOrders, availability, stockAlertsEnabled }: BuyerDashboardProps) {
   const router = useRouter();
   const { personal, orderBook } = stats;
 
   return (
     <div className="w-full space-y-2">
-      <LiveAvailabilityGrid items={availability} />
+      <LiveAvailabilityGrid items={availability} stockAlertsEnabled={stockAlertsEnabled} />
 
       <section className="space-y-2">
         <h2 className="text-xl font-semibold">Mis Estadísticas</h2>
