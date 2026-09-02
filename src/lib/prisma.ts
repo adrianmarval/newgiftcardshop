@@ -9,10 +9,13 @@ const globalForPrisma = global as unknown as {
 };
 
 const createPrismaClient = () => {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is not set. Ensure .env is loaded before the app starts.');
-  }
+  // Placeholder parseable para el build de Coolify: `next build` importa este módulo
+  // al recolectar page data y ahí DATABASE_URL no existe (es runtime-only). pg.Pool
+  // NO conecta al construirse — abre socket recién en la primera query, que ocurre
+  // en runtime donde DATABASE_URL está inyectada. Ninguna página estática consulta
+  // la DB en build (verificado: landing sin prisma; setup-passkey/account son
+  // dinámicas via headers()).
+  const connectionString = process.env.DATABASE_URL ?? 'postgresql://build:build@localhost:5432/build';
 
   const pool = new Pool({
     connectionString,
