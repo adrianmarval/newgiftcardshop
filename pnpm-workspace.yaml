@@ -1,6 +1,5 @@
 allowBuilds:
   '@prisma/engines': true
-  '@whiskeysockets/baileys': set this to true or false
   esbuild: true
   msw: true
   prisma: true
