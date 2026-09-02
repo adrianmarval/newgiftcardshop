@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '4mb',
     },
   },
-  allowedDevOrigins: ['giftcardshop.app', '*.trycloudflare.com'],
+  allowedDevOrigins: ['dev.giftcardshop.app', '*.trycloudflare.com'],
   images: {
     remotePatterns: [
       {
