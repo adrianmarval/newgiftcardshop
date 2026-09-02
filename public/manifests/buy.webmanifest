@@ -37,7 +37,7 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "https://dev.giftcardshop.app/manifests/buy.webmanifest",
+      "url": "https://giftcardshop.app/manifests/buy.webmanifest",
       "id": "/store/dashboard"
     }
   ],
