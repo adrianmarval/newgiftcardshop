@@ -13,8 +13,14 @@ const prisma = new PrismaClient({
 });
 
 export async function main() {
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    console.log(`[Seed] DB ya tiene ${userCount} usuario(s) — seed omitido.`);
+    return;
+  }
+
   const { coinData, networkData, userData, countryData, brandData, brandCountryData } = seedData;
-  console.log(`Iniciando el seed...`);
+  console.log(`[Seed] DB vacía — ejecutando seed inicial...`);
 
   // Limpiar base de datos (ordenado para evitar errores de claves foráneas)
   await prisma.payment.deleteMany();
