@@ -741,9 +741,11 @@ model NotificationLog {
   @@map("notification_log")
 }
 
-// Cooldown del recordatorio de stock varado (STOCK_REMINDER) por (user, brandCountry).
+// Cooldown + dedup del recordatorio de stock varado (STOCK_REMINDER) por (user, brandCountry).
 // La fila ES el dedup: el sweep hace claim atómico actualizando lastSentAt con guarda
-// (ver stock-reminder.service.ts). X = BrandCountry.stockReminderIntervalMinutes ?? global
+// (ver stock-reminder.service.ts). X = BrandCountry.stockReminderIntervalMinutes ?? global.
+// Anti-spam: lastFingerprint ("count:total:newestISO") detecta reminders idénticos y
+// consecutiveIdentical indexa la escalera de cooldown (base × [1,6,24], tope ×24).
 model StockReminderState {
   id             String   @id @default(cuid())
   userId         String
@@ -751,6 +753,9 @@ model StockReminderState {
   brandCountryId String
   brandCountry   BrandCountry @relation(fields: [brandCountryId], references: [id], onDelete: Cascade)
   lastSentAt     DateTime @default(now())
+
+  lastFingerprint      String?
+  consecutiveIdentical Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
