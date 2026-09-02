@@ -69,7 +69,7 @@ export const getLiveAvailability = buyerActionClient.outputSchema(liveAvailabili
       }),
     );
 
-    return { items, stockAlertsEnabled: preference?.stockAlertsEnabled ?? true };
+    return { items, stockAlertsEnabled: preference?.stockAlertsEnabled ?? false };
   } catch (error) {
     console.error('[getLiveAvailability]', error);
     throw new ActionError('Error al obtener la disponibilidad.');

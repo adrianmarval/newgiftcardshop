@@ -410,7 +410,7 @@ export function BatchTopRight({
         {formatCurrency(faceValueTotal, { currency: faceValueCurrency })}
       </span>
       <span className="text-muted-foreground text-xs md:text-sm">
-        A Pagar: {formatCurrency(estimatedPayout, { currency: payoutCurrency })}
+        Payout: {formatCurrency(estimatedPayout, { currency: payoutCurrency })}
       </span>
     </>
   );

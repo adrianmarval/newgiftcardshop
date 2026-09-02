@@ -133,7 +133,7 @@ export const NotificationsSettings = ({ portal, telegramLinked, initialPreferenc
 
   const push = usePushSubscription(initialPreferences?.pushEnabled ?? false);
 
-  const [stockAlertsEnabled, setStockAlertsEnabled] = useState(initialPreferences?.stockAlertsEnabled ?? true);
+  const [stockAlertsEnabled, setStockAlertsEnabled] = useState(initialPreferences?.stockAlertsEnabled ?? false);
   const [stockAlertsLoading, setStockAlertsLoading] = useState(false);
 
   const [testPushLoading, setTestPushLoading] = useState(false);

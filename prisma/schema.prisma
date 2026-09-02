@@ -666,7 +666,7 @@ model NotificationPreference {
 
   // Alertas de stock nuevo (STOCK_AVAILABLE) por canales interruptivos (Telegram/Push).
   // false = solo llegan in-app. In-app siempre es instantáneo.
-  stockAlertsEnabled Boolean @default(true)
+  stockAlertsEnabled Boolean @default(false)
 
   // Suscripciones explícitas a brand-countries (buyers que quieren Notificaciones de stock nuevo)
   subscriptions BrandCountrySubscription[]

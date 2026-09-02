@@ -6,7 +6,13 @@ import type { Session } from '@/types';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-/** Intervalo de heartbeat — proxies/NGINX cierran conexiones idle a los ~30-60s. */
+/**
+ * Intervalo de heartbeat — proxies/NGINX cierran conexiones idle a los ~30-60s.
+ * OJO: el heartbeat es un frame de DATA (`{"type":"ping"}`), NO un comentario
+ * SSE (`: ping`). Por spec, las líneas `:` nunca se entregan a `onmessage`, así
+ * que un heartbeat-comentario es INOBSERVABLE para el cliente — el watchdog del
+ * RealtimeProvider (anti half-open detrás de tunnels/proxies) necesita verlo.
+ */
 const HEARTBEAT_MS = 25_000;
 /**
  * Ventana de coalescing: ráfagas de eventos (ej. publicar un batch con N
@@ -63,7 +69,7 @@ export async function GET(request: Request): Promise<Response> {
         flushTimer ??= setTimeout(flush, COALESCE_MS);
       });
 
-      const heartbeat = setInterval(() => safeEnqueue(': ping\n\n'), HEARTBEAT_MS);
+      const heartbeat = setInterval(() => safeEnqueue(`data: ${JSON.stringify({ type: 'ping' })}\n\n`), HEARTBEAT_MS);
 
       // Frame inicial: confirma al cliente que el stream está vivo
       safeEnqueue(': connected\n\n');

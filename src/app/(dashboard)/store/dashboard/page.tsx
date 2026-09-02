@@ -48,7 +48,7 @@ export default async function BuyerDashboardPage() {
         stats={stats}
         recentOrders={recentOrdersList}
         availability={availabilityResult.data?.items ?? []}
-        stockAlertsEnabled={availabilityResult.data?.stockAlertsEnabled ?? true}
+        stockAlertsEnabled={availabilityResult.data?.stockAlertsEnabled ?? false}
       />
     </div>
   );
