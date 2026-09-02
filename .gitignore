@@ -45,12 +45,5 @@ next-env.d.ts
 
 /src/generated/prisma
 
-# pwa
-/public/sw.js
-/public/sw.js.map
-/public/workbox-*.js
-/public/workbox-*.js.map
-/public/worker-*.js
-/public/worker-*.js.map
-/public/fallback-*.js
-/public/fallback-*.js.map
+# NOTA: /public/sw.js es un archivo estático escrito a mano (no usamos next-pwa),
+# DEBE estar commiteado o el push falla en producción con 404 al registrar el SW.
