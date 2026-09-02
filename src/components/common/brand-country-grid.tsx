@@ -4,7 +4,18 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Globe } from 'lucide-react';
 import Image from 'next/image';
+import NumberFlow from '@number-flow/react';
 import type { BrandCountry } from '@/types';
+
+/**
+ * Monto animado para los badges del buy wizard (mismo NumberFlow del dashboard).
+ * `locales` pineado: sin esto el SSR formatea con el locale de Node y al hidratar
+ * se reformatea con el del browser (mismatch). Prefix `$` porque los badges
+ * siempre mostraron `$` hardcodeado (no countryCurrency).
+ */
+function AnimatedAmount({ value }: { value: number }) {
+  return <NumberFlow value={value} locales="en-US" prefix="$" />;
+}
 
 export interface BrandCountryGridProps {
   brandCountries: BrandCountry[];
@@ -113,15 +124,16 @@ export function BrandCountryGrid({
                   accessibleAmount > 0 ? (
                     <>
                       <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-green-600 md:text-xs dark:text-green-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />${accessibleAmount.toLocaleString()} a tu tasa
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        <AnimatedAmount value={accessibleAmount} /> a tu tasa
                       </span>
                       <span className="text-amber-500 text-[10px] font-semibold md:text-xs">
-                        ${bc.stockAmount.toLocaleString()} en plataforma
+                        <AnimatedAmount value={bc.stockAmount} /> en plataforma
                       </span>
                     </>
                   ) : (
                     <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold md:text-xs">
-                      ${bc.stockAmount.toLocaleString()} en plataforma
+                      <AnimatedAmount value={bc.stockAmount} /> en plataforma
                     </span>
                   )
                 ) : (
