@@ -5,16 +5,15 @@ import { OrdersList } from './orders-list';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { FiltersBar } from '@/components/common';
 import { orderSearchParamsParsers, buildBuyerOrdersInput } from '@/lib/search-params';
-import { listOrders } from '@/actions/buyer/orders/list-orders';
+import { apiQuery } from '@/lib/utils';
 import { useListQuery } from '@/hooks/use-list-query';
 import type { BuyerOrder, PaginationMeta } from '@/types';
 
 type BuyerOrdersInput = ReturnType<typeof buildBuyerOrdersInput>;
+type BuyerOrdersData = { success: true; items: BuyerOrder[]; pagination: PaginationMeta };
 
 async function fetchBuyerOrders(input: BuyerOrdersInput) {
-  const res = await listOrders(input);
-  if (!res.data?.success) throw new Error('Failed to load orders');
-  return res.data;
+  return apiQuery<BuyerOrdersData>('buyer-orders', input);
 }
 
 export interface BuyerOrdersViewProps {

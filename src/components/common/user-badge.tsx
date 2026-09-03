@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLongPress } from '@/hooks/use-long-press';
-import { getAdminTelegramPhoto } from '@/actions/admin/users';
+import { apiQuery } from '@/lib/utils';
 import { cn } from '@/lib/ui';
 
 export interface UserBadgeUser {
@@ -38,11 +38,13 @@ export function UserBadge({ user, size = 'md', onLongPress, hint, nameExtra, cla
   useEffect(() => {
     if (!telegram?.hasPhoto) return;
     let cancelled = false;
-    getAdminTelegramPhoto({ userId: user.id }).then((res) => {
-      if (!cancelled && res?.data?.success) {
-        setPhotoUrl(res.data.dataUrl);
-      }
-    });
+    apiQuery<{ success: boolean; dataUrl?: string }>('admin-telegram-photo', { userId: user.id })
+      .then((data) => {
+        if (!cancelled && data.success && data.dataUrl) {
+          setPhotoUrl(data.dataUrl);
+        }
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };

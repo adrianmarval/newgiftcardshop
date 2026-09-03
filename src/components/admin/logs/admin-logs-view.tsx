@@ -9,19 +9,19 @@ import { AdminLogsFilters } from './admin-logs-filters';
 import { AdminLogsList } from './admin-logs-list';
 import { showAlert } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
-import { purgeLogs, listLogs } from '@/actions/admin/logs';
+import { purgeLogs } from '@/actions/admin/logs';
 import { adminLogsSearchParamsParsers, buildAdminLogsInput } from '@/lib/search-params';
+import { apiQuery } from '@/lib/utils';
 import { useListQuery } from '@/hooks/use-list-query';
 import { Trash2 } from 'lucide-react';
 import type { AppLogItem } from '@/types';
 import type { PaginationMeta } from '@/types';
 
 type AdminLogsInput = ReturnType<typeof buildAdminLogsInput>;
+type AdminLogsData = { success: true; items: AppLogItem[]; pagination: PaginationMeta };
 
 async function fetchAdminLogs(input: AdminLogsInput) {
-  const res = await listLogs(input);
-  if (!res.data?.success) throw new Error('Failed to load logs');
-  return res.data;
+  return apiQuery<AdminLogsData>('admin-logs', input);
 }
 
 interface AdminLogsViewProps {

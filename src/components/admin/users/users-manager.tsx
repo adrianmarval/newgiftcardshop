@@ -25,23 +25,22 @@ import { FiltersBar, UserBadge } from '@/components/common';
 import { cn } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
-import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTelegram, listUsers } from '@/actions/admin/users/';
+import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTelegram } from '@/actions/admin/users/';
 import { listBrands } from '@/actions/admin/catalog';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { adminUsersSearchParamsParsers, buildAdminUsersInput } from '@/lib/search-params';
 import { useListQuery } from '@/hooks/use-list-query';
 import { Power, Loader2, ChevronsUpDown, Check, Link2Off, Wallet, Copy, Pencil, X } from 'lucide-react';
-import { copyToClipboard } from '@/lib/utils';
+import { copyToClipboard, apiQuery } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { BrandCountrySummary, BrandWithCountries } from '@/types';
-import type { User, UserRate } from '@/types';
+import type { User, UserRate, PaginationMeta } from '@/types';
 
 type AdminUsersInput = ReturnType<typeof buildAdminUsersInput>;
+type AdminUsersData = { success: true; items: User[]; pagination: PaginationMeta };
 
 async function fetchAdminUsers(input: AdminUsersInput) {
-  const res = await listUsers(input);
-  if (!res.data?.success) throw new Error('Failed to load users');
-  return res.data;
+  return apiQuery<AdminUsersData>('admin-users', input);
 }
 
 interface UsersManagerProps {

@@ -3,8 +3,7 @@
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getUnreadCount } from '@/actions/notifications';
-import { getPortalSwScope } from '@/lib/utils';
+import { getPortalSwScope, apiQuery } from '@/lib/utils';
 
 interface NotificationContextValue {
   unreadCounts: Record<string, number>;
@@ -22,9 +21,8 @@ interface NotificationProviderProps {
 }
 
 async function fetchUnreadCount() {
-  const res = await getUnreadCount();
-  if (!res.data?.success) throw new Error('Failed to load unread count');
-  return res.data.count;
+  const data = await apiQuery<{ success: true; count: number }>('unread-counts');
+  return data.count;
 }
 
 export function NotificationProvider({ children, badgeKey, initialUnreadCount }: NotificationProviderProps) {

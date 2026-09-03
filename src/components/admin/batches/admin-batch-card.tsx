@@ -30,7 +30,7 @@ export function AdminBatchCard({
   onToggle = () => {},
 }: AdminBatchCardProps) {
   const { remove, isDeleting } = useDeleteBatchAction();
-  const { cancel, isCancelling } = useCancelBatchAction();
+  const { cancel, isCancelling } = useCancelBatchAction(['admin-batches']);
   const isCancelled = Boolean(batch.cancelledAt);
   const canPay = !batch.isPaid && !isCancelled && batch.confirmedCount === batch.cardsCount && batch.cardsCount > 0 && batch.estimatedPayout > 0;
   const canDelete = !isCancelled && batch.giftcards.every((c) => !c.orderId);

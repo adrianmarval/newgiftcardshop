@@ -5,16 +5,15 @@ import { FiltersBar } from '@/components/common';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { AdminIssuesList } from './admin-issues-list';
 import { adminIssuesSearchParamsParsers, buildAdminIssuesInput } from '@/lib/search-params';
-import { listIssues } from '@/actions/admin/issues';
+import { apiQuery } from '@/lib/utils';
 import { useListQuery } from '@/hooks/use-list-query';
 import type { AdminGiftcardIssue, PaginationMeta } from '@/types';
 
 type AdminIssuesInput = ReturnType<typeof buildAdminIssuesInput>;
+type AdminIssuesData = { success: true; items: AdminGiftcardIssue[]; pagination: PaginationMeta };
 
 async function fetchAdminIssues(input: AdminIssuesInput) {
-  const res = await listIssues(input);
-  if (!res.data?.success) throw new Error('Failed to load issues');
-  return res.data;
+  return apiQuery<AdminIssuesData>('admin-issues', input);
 }
 
 interface AdminIssuesViewProps {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { GiftcardItem } from '@/components/common';
 import { UnlockGate } from '@/components/buy/security/unlock-gate';
 import type { BuyerOrder } from '@/types';
@@ -10,14 +10,19 @@ export interface OrderDetailsProps {
 }
 
 export function OrderDetails({ order }: OrderDetailsProps) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Post-unlock: invalidar la query de la lista (buyer-orders) — el refetch via
+  // /api/query revela los códigos (isSecurityUnlocked ya es true). NUNCA
+  // router.refresh(): aborta navegaciones en vuelo (ver lib/utils/api-query).
+  const handleUnlocked = () => queryClient.invalidateQueries({ queryKey: ['buyer-orders'] });
 
   // El anchor vive en el wrapper para que el tour lo encuentre también cuando
   // los códigos están bloqueados (el UnlockGate es parte de la explicación).
   return (
     <div data-tour="order-details">
       {order.codesLocked ? (
-        <UnlockGate onUnlocked={() => router.refresh()} description="Verificá tu identidad para ver los códigos." />
+        <UnlockGate onUnlocked={handleUnlocked} description="Verificá tu identidad para ver los códigos." />
       ) : (
         <div className="space-y-3">
           <div className="mb-3 flex items-center justify-between">

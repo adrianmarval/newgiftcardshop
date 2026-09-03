@@ -16,19 +16,19 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Label } from '@/components/ui/label';
 import { FiltersBar } from '@/components/common';
 import { adminPaymentsSearchParamsParsers, buildAdminPaymentsInput } from '@/lib/search-params';
-import { listPayments } from '@/actions/admin/payments/list-payments';
 import { syncPendingWithdrawals } from '@/actions/admin/binance';
 import { useAction } from 'next-safe-action/hooks';
 import { useListQuery } from '@/hooks/use-list-query';
 import { cn } from '@/lib/ui';
+import { apiQuery } from '@/lib/utils';
 import type { Payment, PaginationMeta } from '@/types';
 
 type AdminPaymentsInput = ReturnType<typeof buildAdminPaymentsInput>;
 
+type AdminPaymentsData = { success: true; items: Payment[]; pagination: PaginationMeta };
+
 async function fetchAdminPayments(input: AdminPaymentsInput) {
-  const res = await listPayments(input);
-  if (!res.data?.success) throw new Error('Failed to load payments');
-  return res.data;
+  return apiQuery<AdminPaymentsData>('admin-payments', input);
 }
 
 interface AdminPaymentsViewProps {

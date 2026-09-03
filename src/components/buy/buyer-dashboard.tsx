@@ -21,8 +21,8 @@ import { formatCurrency } from '@/lib/utils';
 import type { BuyerStats, OrderBookEntry, RecentOrder } from '@/types';
 import { timeAgo } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { getBuyerStats } from '@/actions/buyer/stats';
-import { recentOrders } from '@/actions/buyer/orders';
+import { apiQuery } from '@/lib/utils';
+import type { getBuyerStats as getBuyerStatsService, getRecentOrders as getRecentOrdersService } from '@/lib/services/stats';
 
 interface BuyerDashboardProps {
   initialStats: BuyerStats;
@@ -31,16 +31,17 @@ interface BuyerDashboardProps {
   stockAlertsEnabled: boolean;
 }
 
+type BuyerStatsData = Awaited<ReturnType<typeof getBuyerStatsService>>;
+type RecentOrdersData = Awaited<ReturnType<typeof getRecentOrdersService>>;
+
 async function fetchBuyerStats(): Promise<BuyerStats> {
-  const res = await getBuyerStats();
-  if (!res.data) throw new Error('Failed to load buyer stats');
-  return { orderBook: res.data.orderBook, personal: res.data.personal };
+  const data = await apiQuery<BuyerStatsData>('buyer-dashboard-stats');
+  return { orderBook: data.orderBook, personal: data.personal };
 }
 
 async function fetchRecentOrders(): Promise<RecentOrder[]> {
-  const res = await recentOrders();
-  if (!res.data) throw new Error('Failed to load recent orders');
-  return res.data.map((order) => ({
+  const data = await apiQuery<RecentOrdersData>('buyer-recent-orders');
+  return data.map((order) => ({
     id: order.id,
     status: order.status,
     total: order.total,

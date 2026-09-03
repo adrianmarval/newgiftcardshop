@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { AdminWithdrawDialog } from './admin-withdraw-dialog';
 
@@ -10,7 +10,7 @@ import { AdminWithdrawDialog } from './admin-withdraw-dialog';
  * Self-contained: el diálogo self-fetchea balances e info del destino al abrirse.
  */
 export const AdminWithdrawButton = () => {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
   return (
@@ -23,7 +23,10 @@ export const AdminWithdrawButton = () => {
         onOpenChange={setOpen}
         onSuccess={() => {
           setOpen(false);
-          router.refresh();
+          // Feedback vía React Query — NUNCA router.refresh() (aborta navs en vuelo)
+          void queryClient.invalidateQueries({ queryKey: ['admin-payments'] });
+          void queryClient.invalidateQueries({ queryKey: ['platform-balance'] });
+          void queryClient.invalidateQueries({ queryKey: ['admin-binance-balance'] });
         }}
       />
     </>

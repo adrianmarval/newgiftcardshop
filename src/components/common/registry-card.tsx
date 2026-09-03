@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, MouseEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, AlertTriangle, Copy, Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
@@ -161,8 +161,8 @@ export function useCopyId(id: string | number, shareText?: string) {
   };
 }
 
-export function useCancelOrderAction() {
-  const router = useRouter();
+export function useCancelOrderAction(queryKeys: string[]) {
+  const queryClient = useQueryClient();
   const [isCancelling, setIsCancelling] = useState(false);
   const cancel = async (orderId: string, e: MouseEvent) => {
     e.stopPropagation();
@@ -175,7 +175,8 @@ export function useCancelOrderAction() {
         showAlert.error('Error al cancelar la orden');
       } else {
         showAlert.toast.success('Orden cancelada con éxito');
-        router.refresh();
+        // Feedback vía React Query — NUNCA router.refresh() (aborta navs en vuelo)
+        for (const key of queryKeys) void queryClient.invalidateQueries({ queryKey: [key] });
       }
     } catch {
       showAlert.error('Error al cancelar');
@@ -211,8 +212,8 @@ export function useDeleteBatchAction() {
   return { remove, isDeleting };
 }
 
-export function useCancelBatchAction() {
-  const router = useRouter();
+export function useCancelBatchAction(queryKeys: string[]) {
+  const queryClient = useQueryClient();
   const [isCancelling, setIsCancelling] = useState(false);
   const cancel = async (batchId: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -228,7 +229,8 @@ export function useCancelBatchAction() {
         showAlert.error(result.serverError || 'Error al cancelar el lote');
       } else {
         showAlert.toast.success('Lote cancelado con éxito');
-        router.refresh();
+        // Feedback vía React Query — NUNCA router.refresh() (aborta navs en vuelo)
+        for (const key of queryKeys) void queryClient.invalidateQueries({ queryKey: [key] });
       }
     } catch {
       showAlert.error('Error al cancelar');

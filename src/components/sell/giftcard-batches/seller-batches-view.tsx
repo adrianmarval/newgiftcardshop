@@ -6,15 +6,14 @@ import { BatchesList } from './batches-list';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { FiltersBar } from '@/components/common';
 import { sellerBatchesSearchParamsParsers, buildSellerBatchesInput } from '@/lib/search-params';
-import { listBatches } from '@/actions/seller/batches';
+import { apiQuery } from '@/lib/utils';
 import { useListQuery } from '@/hooks/use-list-query';
 
 type SellerBatchesInput = ReturnType<typeof buildSellerBatchesInput>;
+type SellerBatchesData = { success: true; items: SellerBatch[]; pagination: PaginationMeta };
 
 async function fetchSellerBatches(input: SellerBatchesInput) {
-  const res = await listBatches(input);
-  if (!res.data?.success) throw new Error('Failed to load batches');
-  return res.data;
+  return apiQuery<SellerBatchesData>('seller-batches', input);
 }
 
 export interface SellerBatchesViewProps {

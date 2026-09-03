@@ -14,15 +14,14 @@ import { IconCurrencyDollar } from '@tabler/icons-react';
 import { formatCurrency } from '@/lib/utils';
 import { FiltersBar } from '@/components/common';
 import { adminBatchesSearchParamsParsers, buildAdminBatchesInput } from '@/lib/search-params';
-import { listBatches } from '@/actions/admin/batches';
+import { apiQuery } from '@/lib/utils';
 import { useListQuery } from '@/hooks/use-list-query';
 
 type AdminBatchesInput = ReturnType<typeof buildAdminBatchesInput>;
+type AdminBatchesData = { success: true; items: AdminBatch[]; pagination: PaginationMeta };
 
 async function fetchAdminBatches(input: AdminBatchesInput) {
-  const res = await listBatches(input);
-  if (!res.data?.success) throw new Error('Failed to load batches');
-  return res.data;
+  return apiQuery<AdminBatchesData>('admin-batches', input);
 }
 
 interface AdminBatchesViewProps {

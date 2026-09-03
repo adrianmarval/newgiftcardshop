@@ -71,8 +71,9 @@ export const Verify2FAForm = ({ portal }: Verify2FAFormProps) => {
 
       // La página de setup-passkey es self-guarding: si el usuario ya tiene
       // passkeys o la dismissió, redirige al dashboard sin renderizar.
+      // SIN router.refresh(): la cookie de sesión ya está seteada y un refresh
+      // acá podría abortar el push (misma race documentada en api-query).
       router.push(`/${portal}/auth/setup-passkey`);
-      router.refresh();
     } catch (err) {
       console.error('2FA verification error:', err);
       showAlert.error('Error', isSpanish ? 'Error inesperado' : 'Unexpected error');

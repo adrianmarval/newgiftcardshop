@@ -15,7 +15,7 @@ import {
   type TourId,
   type TourPortal,
 } from '@/lib/tour';
-import { getToursSeen } from '@/actions/tours';
+import { apiQuery } from '@/lib/utils';
 import { useOverlayArbiter } from '@/hooks/use-overlay-arbiter';
 import { showAlert } from '@/lib/ui';
 
@@ -84,9 +84,9 @@ function TopbarTourButtonInner({ tourId }: { tourId: TourId }) {
       }
     };
 
-    getToursSeen()
-      .then((res) => {
-        if (cancelled || res?.data?.toursSeen.includes(tourId)) return;
+    apiQuery<{ success: true; toursSeen: string[] }>('tours-seen')
+      .then((data) => {
+        if (cancelled || data.toursSeen.includes(tourId)) return;
         // Delay inicial para no competir con la animación de entrada de la página.
         timerRef.current = setTimeout(tryStart, 1200);
       })

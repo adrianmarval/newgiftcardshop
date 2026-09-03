@@ -9,14 +9,18 @@ import { IconArrowRight } from '@tabler/icons-react';
 import { Bell, BellOff } from 'lucide-react';
 import type { z } from 'zod';
 import type { liveAvailabilityItemSchema } from '@/actions/buyer/stats/schemas';
-import { getLiveAvailability } from '@/actions/buyer/stats/get-live-availability';
 import { updateNotificationPreferences } from '@/actions/notifications';
 import { Card, CardHeader, CardDescription } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
-import { getCountryFlag } from '@/lib/utils';
+import { getCountryFlag, apiQuery } from '@/lib/utils';
 import { cn, showAlert } from '@/lib/ui';
 
 export type LiveAvailabilityItem = z.infer<typeof liveAvailabilityItemSchema>;
+
+interface LiveAvailabilityData {
+  items: LiveAvailabilityItem[];
+  stockAlertsEnabled: boolean;
+}
 
 interface LiveAvailabilityGridProps {
   items: LiveAvailabilityItem[];
@@ -24,9 +28,7 @@ interface LiveAvailabilityGridProps {
 }
 
 async function fetchLiveAvailability() {
-  const res = await getLiveAvailability();
-  if (!res.data) throw new Error('Failed to load availability');
-  return res.data;
+  return apiQuery<LiveAvailabilityData>('live-availability');
 }
 
 function AnimatedMoney({ value, currency, className }: { value: number; currency: string; className?: string }) {

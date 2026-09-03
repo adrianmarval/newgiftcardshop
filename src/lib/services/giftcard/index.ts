@@ -3,3 +3,4 @@ export { getConfig as getEscalationConfig, getInitialTier, processEscalationTier
 export { reserveGiftcards, GiftcardReservationError } from './reservation';
 export { extractGiftCardData } from './vision.service';
 export { listBatchesService } from './batch-list.service';
+export { listAdminIssues, type ListAdminIssuesInput } from './issue-list.service';

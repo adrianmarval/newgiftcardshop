@@ -9,29 +9,30 @@ import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/
 import type { SellerStats, RecentBatch } from '@/types';
 import { StatCard } from '@/components/common';
 import { formatCurrency } from '@/lib/utils';
-import { getSellerStats } from '@/actions/seller/stats';
-import { recentBatches } from '@/actions/seller/batches';
+import { apiQuery } from '@/lib/utils';
+import type { getSellerStats as getSellerStatsService, getRecentBatches as getRecentBatchesService } from '@/lib/services/stats';
 
 interface SellerDashboardClientProps {
   initialStats: SellerStats;
   initialRecentBatches: RecentBatch[];
 }
 
+type SellerStatsData = Awaited<ReturnType<typeof getSellerStatsService>>;
+type RecentBatchesData = Awaited<ReturnType<typeof getRecentBatchesService>>;
+
 async function fetchSellerStats(): Promise<SellerStats> {
-  const res = await getSellerStats();
-  if (!res.data) throw new Error('Failed to load seller stats');
+  const data = await apiQuery<SellerStatsData>('seller-dashboard-stats');
   return {
-    pendingPayout: res.data.pendingPayout,
-    totalEarned: res.data.totalEarned,
-    inStockValue: res.data.inStockValue,
-    problemCards: res.data.problemCards,
+    pendingPayout: data.pendingPayout,
+    totalEarned: data.totalEarned,
+    inStockValue: data.inStockValue,
+    problemCards: data.problemCards,
   };
 }
 
 async function fetchRecentBatches(): Promise<RecentBatch[]> {
-  const res = await recentBatches();
-  if (!res.data) throw new Error('Failed to load recent batches');
-  return res.data.map((batch) => ({
+  const data = await apiQuery<RecentBatchesData>('seller-recent-batches');
+  return data.map((batch) => ({
     id: batch.id,
     sellRate: batch.sellRate,
     isPaid: batch.isPaid,

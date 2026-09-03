@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAction } from 'next-safe-action/hooks';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,6 @@ interface SettingsSectionProps {
 }
 
 export function SettingsSection({ groupId, initialValues }: SettingsSectionProps) {
-  const router = useRouter();
   const group = SETTING_GROUPS[groupId];
   const definitions = useMemo(
     () => getSettingsByGroup(groupId).filter((d) => !d.auditOnly && d.editable !== false),
@@ -44,7 +42,7 @@ export function SettingsSection({ groupId, initialValues }: SettingsSectionProps
   const [draft, setDraft] = useState<Record<SettingKey, unknown>>(baseline);
   const [errors, setErrors] = useState<Partial<Record<SettingKey, string>>>({});
 
-  // Sync cuando el server re-valida (router.refresh)
+  // Sync si el server entrega nuevos initialValues (navegación full, etc.)
   React.useEffect(() => {
     setSavedValues(baseline);
     setDraft(baseline);
@@ -112,7 +110,8 @@ export function SettingsSection({ groupId, initialValues }: SettingsSectionProps
       if (result?.data?.success) {
         setSavedValues((prev) => ({ ...prev, ...values }));
         showAlert.toast.success('Configuración guardada', group.title);
-        router.refresh();
+        // Sin router.refresh(): savedValues ya actualiza la UI local y un
+        // refresh post-mutación puede abortar una navegación en vuelo.
       }
     } catch {
       showAlert.toast.error('Error inesperado', 'No se pudo guardar la configuración.');

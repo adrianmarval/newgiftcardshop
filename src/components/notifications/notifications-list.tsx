@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, ExternalLink } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
-import { listNotifications, markAsRead } from '@/actions/notifications';
+import { markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
 import { NotificationIcon } from '@/components/common';
-import { timeAgo } from '@/lib/utils';
+import { timeAgo, apiQuery } from '@/lib/utils';
 import type { NotificationItem } from '@/types';
 
 export interface NotificationsListProps {
@@ -29,9 +29,12 @@ const LIST_TEXTS = {
 const PAGE_LIMIT = 50;
 
 async function fetchNotifications(): Promise<NotificationItem[]> {
-  const res = await listNotifications({ page: 1, limit: PAGE_LIMIT, filter: 'all' });
-  if (!res.data) throw new Error('Failed to load notifications');
-  return res.data.notifications as NotificationItem[];
+  const data = await apiQuery<{ success: true; notifications: NotificationItem[] }>('notifications-page', {
+    page: 1,
+    limit: PAGE_LIMIT,
+    filter: 'all',
+  });
+  return data.notifications;
 }
 
 export function NotificationsList({ portal, initialNotifications }: NotificationsListProps) {

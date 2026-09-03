@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { InventoryChart, ProfitChart } from '@/components/admin/charts';
 import { StockAgingTable } from '@/components/admin/stock-aging-table';
 import { AdminWithdrawButton } from '@/components/admin/payments';
-import { getBinanceBalances } from '@/actions/admin/binance';
-import { getPlatformBalance } from '@/actions/platform';
-import { getInventoryStats, getProfitStats, getStockAgingReport } from '@/actions/admin/stats';
-import { formatCurrency } from '@/lib/utils';
+import { apiQuery, formatCurrency } from '@/lib/utils';
+import type {
+  getProfitStats as getProfitStatsService,
+  getInventoryStats as getInventoryStatsService,
+  getStockAgingReport as getStockAgingReportService,
+} from '@/lib/services/stats';
 
 /**
  * Secciones del admin home dashboard. Data viva via React Query: los eventos
@@ -21,39 +23,40 @@ import { formatCurrency } from '@/lib/utils';
  */
 
 async function fetchBinanceBalance() {
-  const [binanceRes, platformBalanceRes] = await Promise.all([getBinanceBalances(), getPlatformBalance()]);
+  const [binance, platform] = await Promise.all([
+    apiQuery<{ total: string | number }>('binance-balances'),
+    apiQuery<{ success: true; balance: number }>('platform-balance'),
+  ]);
   return {
-    total: binanceRes.data?.total || 0,
-    serverError: binanceRes.serverError,
-    platformBalance: platformBalanceRes.data?.balance || 0,
+    total: binance.total || 0,
+    serverError: undefined as string | undefined,
+    platformBalance: platform.balance || 0,
   };
 }
 
 async function fetchPlatformBalance() {
-  const res = await getPlatformBalance();
-  return res.data?.balance || 0;
+  const data = await apiQuery<{ success: true; balance: number }>('platform-balance');
+  return data.balance || 0;
 }
 
+type ProfitStatsData = Awaited<ReturnType<typeof getProfitStatsService>>;
+type InventoryStatsData = Awaited<ReturnType<typeof getInventoryStatsService>>;
+type StockAgingData = Awaited<ReturnType<typeof getStockAgingReportService>>;
+
 async function fetchProfitStats() {
-  const res = await getProfitStats();
-  if (!res.data) throw new Error('Failed to load profit stats');
-  return res.data;
+  return apiQuery<ProfitStatsData>('admin-profit-stats');
 }
 
 async function fetchInventoryStats() {
-  const res = await getInventoryStats();
-  return res.data || [];
+  return apiQuery<InventoryStatsData>('admin-inventory-stats');
 }
 
 async function fetchStockAging() {
-  const res = await getStockAgingReport();
-  return res.data || [];
+  return apiQuery<StockAgingData>('admin-stock-aging');
 }
 
 export type BinanceBalanceData = Awaited<ReturnType<typeof fetchBinanceBalance>>;
-export type ProfitStatsData = Awaited<ReturnType<typeof fetchProfitStats>>;
-export type InventoryStatsData = Awaited<ReturnType<typeof fetchInventoryStats>>;
-export type StockAgingData = Awaited<ReturnType<typeof fetchStockAging>>;
+export type { ProfitStatsData, InventoryStatsData, StockAgingData };
 
 export function BinanceBalanceSection({ initial }: { initial: BinanceBalanceData }) {
   const { data } = useQuery({

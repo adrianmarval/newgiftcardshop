@@ -10,16 +10,15 @@ import { AdminSellerDialog } from '@/components/admin/batches/admin-seller-dialo
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { FiltersBar } from '@/components/common';
 import { adminOrdersSearchParamsParsers, buildAdminOrdersInput } from '@/lib/search-params';
-import { listOrders } from '@/actions/admin/orders';
+import { apiQuery } from '@/lib/utils';
 import { useListQuery } from '@/hooks/use-list-query';
 import type { Giftcard, AdminOrder, PaginationMeta, AdminBuyerSummary, AdminSellerSummary } from '@/types';
 
 type AdminOrdersInput = ReturnType<typeof buildAdminOrdersInput>;
+type AdminOrdersData = { success: true; items: AdminOrder[]; pagination: PaginationMeta };
 
 async function fetchAdminOrders(input: AdminOrdersInput) {
-  const res = await listOrders(input);
-  if (!res.data?.success) throw new Error('Failed to load orders');
-  return res.data;
+  return apiQuery<AdminOrdersData>('admin-orders', input);
 }
 
 interface AdminOrdersViewProps {
