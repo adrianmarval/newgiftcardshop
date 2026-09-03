@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { IconCurrencyDollar, IconChartBar, IconCalendarEvent, IconCreditCard } from '@tabler/icons-react';
 import { Bitcoin, CircleDollarSignIcon, Equal, TrendingDown, TrendingUp } from 'lucide-react';
-import { Decimal } from '@prisma/client/runtime/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { InventoryChart, ProfitChart } from '@/components/admin/charts';
 import { StockAgingTable } from '@/components/admin/stock-aging-table';
@@ -63,8 +62,9 @@ export function BinanceBalanceSection({ initial }: { initial: BinanceBalanceData
     initialData: initial,
   });
 
-  const differential = new Decimal(data.total).minus(new Decimal(data.platformBalance));
-  const diffColor = differential.greaterThan(0) ? 'text-green-400' : differential.lessThan(0) ? 'text-red-400' : 'text-white/80';
+  // data.total viene como string desde la action (schema z.string())
+  const differential = Number(data.total) - data.platformBalance;
+  const diffColor = differential > 0 ? 'text-green-400' : differential < 0 ? 'text-red-400' : 'text-white/80';
 
   return (
     <Card className="bg-muted/50 flex flex-col justify-between gap-1">
@@ -80,14 +80,14 @@ export function BinanceBalanceSection({ initial }: { initial: BinanceBalanceData
           <span className="text-4xl font-bold">{formatCurrency(data.total)}</span>
           {!data.serverError && (
             <div className={`mt-1 flex items-center text-xs font-medium ${diffColor}`}>
-              {differential.greaterThan(0) ? (
+              {differential > 0 ? (
                 <TrendingUp className="mr-1 h-3 w-3" />
-              ) : differential.lessThan(0) ? (
+              ) : differential < 0 ? (
                 <TrendingDown className="mr-1 h-3 w-3" />
               ) : (
                 <Equal className="mr-1 h-3 w-3" />
               )}
-              <span>{formatCurrency(differential.abs().toNumber())} diff</span>
+              <span>{formatCurrency(Math.abs(differential))} diff</span>
             </div>
           )}
         </div>
