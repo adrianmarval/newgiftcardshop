@@ -1,6 +1,6 @@
 import { listBatches } from '@/actions/seller/batches';
 import { SellerBatchesView } from '@/components/sell/giftcard-batches';
-import { sellerBatchesSearchParamsCache } from '@/lib/search-params';
+import { sellerBatchesSearchParamsCache, buildSellerBatchesInput } from '@/lib/search-params';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,11 +11,9 @@ export const metadata: Metadata = {
 export default async function SellerCardsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const parsed = sellerBatchesSearchParamsCache.parse(params);
+  const input = buildSellerBatchesInput(parsed);
 
-  const { page, status, sort } = parsed;
-  const search = parsed.search || undefined;
-
-  const result = await listBatches({ page, status, search, sort });
+  const result = await listBatches(input);
 
   if (!result.data?.success) throw new Error('An error occurred while loading the GiftCard Batches.');
 
@@ -24,7 +22,7 @@ export default async function SellerCardsPage({ searchParams }: { searchParams: 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Batch History</h1>
-      <SellerBatchesView batches={items} pagination={pagination} search={search} />
+      <SellerBatchesView batches={items} pagination={pagination} initialInput={input} />
     </div>
   );
 }

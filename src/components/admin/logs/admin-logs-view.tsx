@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryStates } from 'nuqs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -8,18 +9,40 @@ import { AdminLogsFilters } from './admin-logs-filters';
 import { AdminLogsList } from './admin-logs-list';
 import { showAlert } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
-import { purgeLogs } from '@/actions/admin/logs';
+import { purgeLogs, listLogs } from '@/actions/admin/logs';
+import { adminLogsSearchParamsParsers, buildAdminLogsInput } from '@/lib/search-params';
+import { useListQuery } from '@/hooks/use-list-query';
 import { Trash2 } from 'lucide-react';
 import type { AppLogItem } from '@/types';
 import type { PaginationMeta } from '@/types';
+
+type AdminLogsInput = ReturnType<typeof buildAdminLogsInput>;
+
+async function fetchAdminLogs(input: AdminLogsInput) {
+  const res = await listLogs(input);
+  if (!res.data?.success) throw new Error('Failed to load logs');
+  return res.data;
+}
 
 interface AdminLogsViewProps {
   logs: AppLogItem[];
   pagination: PaginationMeta;
   users: Array<{ id: string; name: string; email: string }>;
+  /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
+  initialInput: AdminLogsInput;
 }
 
-export const AdminLogsView = ({ logs, pagination, users }: AdminLogsViewProps) => {
+export const AdminLogsView = ({ logs, pagination, users, initialInput }: AdminLogsViewProps) => {
+  const [params] = useQueryStates(adminLogsSearchParamsParsers);
+  const input = buildAdminLogsInput(params);
+
+  const { data } = useListQuery({
+    queryKey: 'admin-logs',
+    input,
+    fetcher: fetchAdminLogs,
+    initialInput,
+    initialData: { success: true as const, items: logs, pagination },
+  });
   const purgeAction = useAction(purgeLogs, {
     onSuccess: (result: { data?: { success?: boolean; deletedCount?: number } }) => {
       if (result.data?.success) {
@@ -94,11 +117,11 @@ export const AdminLogsView = ({ logs, pagination, users }: AdminLogsViewProps) =
           </DropdownMenu>
         </div>
         <CardContent className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
-          <AdminLogsList logs={logs} totalPages={pagination.totalPages} totalCount={pagination.totalCount} />
+          <AdminLogsList logs={data.items} totalPages={data.pagination.totalPages} totalCount={data.pagination.totalCount} />
         </CardContent>
       </Card>
       <div className="shrink-0">
-        <UrlPagination totalPages={pagination.totalPages} />
+        <UrlPagination totalPages={data.pagination.totalPages} />
       </div>
     </div>
   );

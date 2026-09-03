@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getUnreadCount } from '@/actions/notifications';
 import { getPortalSwScope } from '@/lib/utils';
 
 interface NotificationContextValue {
@@ -13,13 +15,29 @@ const NotificationContext = React.createContext<NotificationContextValue | null>
 
 interface NotificationProviderProps {
   children: React.ReactNode;
-  initialUnreadCounts?: Record<string, number>;
+  /** Badge key del portal actual (buyer | seller | admin). */
+  badgeKey: string;
+  /** Count server-rendered del primer paint (portal actual). */
+  initialUnreadCount: number;
 }
 
-export function NotificationProvider({ children, initialUnreadCounts }: NotificationProviderProps) {
-  const [unreadCounts, setUnreadCounts] = React.useState<Record<string, number>>(
-    initialUnreadCounts ?? { buyer: 0, seller: 0, admin: 0 },
-  );
+async function fetchUnreadCount() {
+  const res = await getUnreadCount();
+  if (!res.data?.success) throw new Error('Failed to load unread count');
+  return res.data.count;
+}
+
+export function NotificationProvider({ children, badgeKey, initialUnreadCount }: NotificationProviderProps) {
+  const queryClient = useQueryClient();
+
+  // Source of truth del badge: query ['unread-counts']. Los eventos SSE
+  // 'notifications' la invalidan (refetch en el lugar, sin router.refresh);
+  // los updates optimistas (dropdown/list) escriben directo en el cache.
+  const { data: count } = useQuery({
+    queryKey: ['unread-counts'],
+    queryFn: fetchUnreadCount,
+    initialData: initialUnreadCount,
+  });
 
   // Registrar el service worker de Web Push (sin pedir permiso — eso se hace desde Settings).
   // Se registra con el scope del portal: INVARIANTE para que Android atribuya las
@@ -33,19 +51,17 @@ export function NotificationProvider({ children, initialUnreadCounts }: Notifica
     }
   }, [pathname]);
 
-  // Sync with server-provided counts when auto-refresh re-renders the parent
-  React.useEffect(() => {
-    if (initialUnreadCounts) {
-      setUnreadCounts(initialUnreadCounts);
-    }
-  }, [initialUnreadCounts]);
+  const unreadCounts = React.useMemo(
+    () => ({ buyer: 0, seller: 0, admin: 0, [badgeKey]: count }),
+    [badgeKey, count],
+  );
 
-  const setUnreadCount = React.useCallback((portal: string, count: number) => {
-    setUnreadCounts((prev) => {
-      if (prev[portal] === count) return prev;
-      return { ...prev, [portal]: count };
-    });
-  }, []);
+  const setUnreadCount = React.useCallback(
+    (_portal: string, next: number) => {
+      queryClient.setQueryData(['unread-counts'], next);
+    },
+    [queryClient],
+  );
 
   const value = React.useMemo(
     () => ({ unreadCounts, setUnreadCount }),

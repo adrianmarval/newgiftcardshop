@@ -28,7 +28,7 @@ export const AdminLogsFilters = ({ users }: AdminLogsFiltersProps) => {
       dateTo: adminLogsSearchParamsParsers.dateTo,
     },
     {
-      shallow: false,
+      shallow: true,
       limitUrlUpdates: debounce(400),
     },
   );

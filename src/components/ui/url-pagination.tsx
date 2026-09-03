@@ -4,9 +4,13 @@ import { useQueryState, parseAsInteger } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+// shallow: la paginación ya NO es una navegación server — la URL cambia al
+// instante y el cambio de queryKey dispara el refetch client-side
+// (useListQuery). Varios clicks rápidos = UN fetch final, sin cola de
+// navegaciones RSC que "caminan hacia atrás".
 const pageParser = parseAsInteger
   .withDefault(1)
-  .withOptions({ shallow: false });
+  .withOptions({ shallow: true });
 
 const LABELS = {
   es: { previous: 'Anterior', next: 'Siguiente', page: 'Página', of: 'de' },

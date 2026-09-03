@@ -1,20 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useQueryStates } from 'nuqs';
+import { useQueryClient } from '@tanstack/react-query';
 import { AdminOrdersList } from './admin-orders-list';
 import { AdminReportDialog } from './admin-report-dialog';
 import { AdminBuyerDialog } from './admin-buyer-dialog';
 import { AdminSellerDialog } from '@/components/admin/batches/admin-seller-dialog';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { FiltersBar } from '@/components/common';
-import { adminOrdersSearchParamsParsers } from '@/lib/search-params';
+import { adminOrdersSearchParamsParsers, buildAdminOrdersInput } from '@/lib/search-params';
+import { listOrders } from '@/actions/admin/orders';
+import { useListQuery } from '@/hooks/use-list-query';
 import type { Giftcard, AdminOrder, PaginationMeta, AdminBuyerSummary, AdminSellerSummary } from '@/types';
+
+type AdminOrdersInput = ReturnType<typeof buildAdminOrdersInput>;
+
+async function fetchAdminOrders(input: AdminOrdersInput) {
+  const res = await listOrders(input);
+  if (!res.data?.success) throw new Error('Failed to load orders');
+  return res.data;
+}
 
 interface AdminOrdersViewProps {
   orders: AdminOrder[];
   buyers: Array<{ id: string; name: string; email: string }>;
   pagination: PaginationMeta;
+  /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
+  initialInput: AdminOrdersInput;
 }
 
 const FILTERS_DEFAULTS = {
@@ -25,8 +38,22 @@ const FILTERS_DEFAULTS = {
   dateTo: '',
 };
 
-export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewProps) => {
-  const router = useRouter();
+export const AdminOrdersView = ({ orders, buyers, pagination, initialInput }: AdminOrdersViewProps) => {
+  const queryClient = useQueryClient();
+  const [params] = useQueryStates(adminOrdersSearchParamsParsers);
+  const input = buildAdminOrdersInput(params);
+
+  const { data } = useListQuery({
+    queryKey: 'admin-orders',
+    input,
+    fetcher: fetchAdminOrders,
+    initialInput,
+    initialData: { success: true as const, items: orders, pagination },
+  });
+
+  const items = data.items;
+  const paginationMeta = data.pagination;
+
   const [reportDialog, setReportDialog] = useState<{
     card: Giftcard | null;
     mode: 'ADD' | 'EDIT' | 'DELETE' | null;
@@ -36,7 +63,7 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
   const [buyerDialog, setBuyerDialog] = useState<{ buyer: AdminBuyerSummary | null }>({ buyer: null });
   const [sellerDialog, setSellerDialog] = useState<{ seller: AdminSellerSummary | null }>({ seller: null });
 
-  const findOrderForCard = (card: Giftcard) => orders.find((o) => o.giftcards.some((g) => g.id === card.id));
+  const findOrderForCard = (card: Giftcard) => items.find((o) => o.giftcards.some((g) => g.id === card.id));
 
   const handleAddReport = (card: Giftcard) => {
     const order = findOrderForCard(card);
@@ -62,7 +89,7 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
   };
 
   const handleReportSuccess = () => {
-    router.refresh();
+    queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
   };
 
   return (
@@ -95,8 +122,8 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
       />
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         <AdminOrdersList
-          orders={orders}
-          totalPages={pagination.totalPages}
+          orders={items}
+          totalPages={paginationMeta.totalPages}
           onViewBuyer={handleViewBuyer}
           onViewSeller={handleViewSeller}
           onAddReport={handleAddReport}
@@ -105,7 +132,7 @@ export const AdminOrdersView = ({ orders, buyers, pagination }: AdminOrdersViewP
         />
       </div>
       <div className="shrink-0">
-        <UrlPagination totalPages={pagination.totalPages} />
+        <UrlPagination totalPages={paginationMeta.totalPages} />
       </div>
       <AdminReportDialog
         card={reportDialog.card}

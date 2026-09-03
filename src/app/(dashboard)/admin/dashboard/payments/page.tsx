@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { listPayments } from '@/actions/admin/payments/list-payments';
 import { getUsersByRole } from '@/actions/admin/users';
 import { AdminPaymentsView } from '@/components/admin/payments/admin-payments-view';
-import { adminPaymentsSearchParamsCache } from '@/lib/search-params';
+import { adminPaymentsSearchParamsCache, buildAdminPaymentsInput } from '@/lib/search-params';
 
 export const metadata: Metadata = {
   title: `Admin Payments | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
@@ -16,17 +16,10 @@ export default async function AdminPaymentsPage({
 }) {
   const params = await searchParams;
   const parsed = adminPaymentsSearchParamsCache.parse(params);
-
-  const { page, limit } = parsed;
-  const direction = parsed.direction === 'ALL' ? undefined : parsed.direction;
-  const category = parsed.category === 'ALL' ? undefined : parsed.category;
-  const userId = parsed.userId || null;
-  const search = parsed.search || undefined;
-  const dateFrom = parsed.dateFrom || null;
-  const dateTo = parsed.dateTo || null;
+  const input = buildAdminPaymentsInput(parsed);
 
   const [paymentsResult, sellersResult, buyersResult, adminsResult] = await Promise.all([
-    listPayments({ page, limit, direction, category, userId, search, dateFrom, dateTo }),
+    listPayments(input),
     getUsersByRole({ role: 'SELLER' }),
     getUsersByRole({ role: 'BUYER' }),
     getUsersByRole({ role: 'ADMIN' }),
@@ -49,6 +42,7 @@ export default async function AdminPaymentsPage({
         sellers={sellers}
         buyers={buyers}
         admins={admins}
+        initialInput={input}
       />
     </div>
   );

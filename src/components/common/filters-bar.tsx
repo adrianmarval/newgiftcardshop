@@ -75,9 +75,11 @@ export function FiltersBar({
   customContent,
   labels = {},
 }: FiltersBarProps) {
+  // shallow: los filtros viven en la URL sin navegación server; la data se
+  // re-fetchea client-side via useListQuery (queryKey = input derivado).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [params, setParams] = useQueryStates(parsers as any, {
-    shallow: false,
+    shallow: true,
     limitUrlUpdates: debounce(400),
   }) as [Params, (values: Record<string, unknown>) => void];
 

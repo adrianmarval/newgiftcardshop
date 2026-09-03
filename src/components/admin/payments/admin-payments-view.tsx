@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useQueryStates, debounce } from 'nuqs';
+import { useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronsUpDown, Loader2, RefreshCw } from 'lucide-react';
 import { showAlert } from '@/lib/ui';
 import { AdminPaymentsList } from './admin-payments-list';
@@ -15,11 +15,21 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
 import { FiltersBar } from '@/components/common';
-import { adminPaymentsSearchParamsParsers } from '@/lib/search-params';
+import { adminPaymentsSearchParamsParsers, buildAdminPaymentsInput } from '@/lib/search-params';
+import { listPayments } from '@/actions/admin/payments/list-payments';
 import { syncPendingWithdrawals } from '@/actions/admin/binance';
 import { useAction } from 'next-safe-action/hooks';
+import { useListQuery } from '@/hooks/use-list-query';
 import { cn } from '@/lib/ui';
 import type { Payment, PaginationMeta } from '@/types';
+
+type AdminPaymentsInput = ReturnType<typeof buildAdminPaymentsInput>;
+
+async function fetchAdminPayments(input: AdminPaymentsInput) {
+  const res = await listPayments(input);
+  if (!res.data?.success) throw new Error('Failed to load payments');
+  return res.data;
+}
 
 interface AdminPaymentsViewProps {
   payments: Payment[];
@@ -27,6 +37,8 @@ interface AdminPaymentsViewProps {
   sellers: Array<{ id: string; name: string; email: string }>;
   buyers: Array<{ id: string; name: string; email: string }>;
   admins: Array<{ id: string; name: string; email: string }>;
+  /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
+  initialInput: AdminPaymentsInput;
 }
 
 const FILTERS_DEFAULTS = {
@@ -50,7 +62,7 @@ function UserGroupedCombobox({
     {
       userId: adminPaymentsSearchParamsParsers.userId,
     },
-    { shallow: false, limitUrlUpdates: debounce(400) },
+    { shallow: true, limitUrlUpdates: debounce(400) },
   );
   const [open, setOpen] = useState(false);
   const selectedId = params.userId || '';
@@ -130,14 +142,30 @@ function UserGroupedCombobox({
   );
 }
 
-export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: AdminPaymentsViewProps) => {
-  const router = useRouter();
+export const AdminPaymentsView = ({ payments, pagination, sellers, buyers, initialInput }: AdminPaymentsViewProps) => {
+  const queryClient = useQueryClient();
+  const [params] = useQueryStates(adminPaymentsSearchParamsParsers);
+  const input = buildAdminPaymentsInput(params);
+
+  const { data } = useListQuery({
+    queryKey: 'admin-payments',
+    input,
+    fetcher: fetchAdminPayments,
+    initialInput,
+    initialData: { success: true as const, items: payments, pagination },
+  });
+
+  const items = data.items;
+  const paginationMeta = data.pagination;
+
   const [depositOpen, setDepositOpen] = useState(false);
   const [refundOpen, setRefundOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
+  const invalidatePayments = () => queryClient.invalidateQueries({ queryKey: ['admin-payments'] });
+
   const handleSuccess = () => {
-    router.refresh();
+    invalidatePayments();
     setDepositOpen(false);
     setRefundOpen(false);
     setWithdrawOpen(false);
@@ -168,7 +196,7 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
           </p>
         </div>,
       );
-      router.refresh();
+      invalidatePayments();
     },
     onError: () => {
       showAlert.error('Error de Sincronización', 'Hubo un problema al conectar con Binance o actualizar la DB.');
@@ -209,10 +237,10 @@ export const AdminPaymentsView = ({ payments, pagination, sellers, buyers }: Adm
         }}
       />
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-        <AdminPaymentsList payments={payments} totalPages={pagination.totalPages} />
+        <AdminPaymentsList payments={items} totalPages={paginationMeta.totalPages} />
       </div>
       <div className="shrink-0">
-        <UrlPagination totalPages={pagination.totalPages} />
+        <UrlPagination totalPages={paginationMeta.totalPages} />
       </div>
       <div className="flex gap-1">
         <Button onClick={() => setDepositOpen(true)}>+ Registrar Depósito</Button>

@@ -26,14 +26,12 @@ const PORTAL_BADGE_KEY: Record<AppSection, 'buyer' | 'seller' | 'admin'> = {
 export const DashboardLayout = async ({ children, portal, requiredRoles }: DashboardLayoutProps) => {
   const session = await authorizeByRequiredRole(requiredRoles);
 
-  let initialUnreadCounts: Record<string, number> | undefined;
+  let initialUnreadCount = 0;
   let telegramPhotoDataUrl: string | null = null;
   try {
-    const unreadCount = await prisma.notification.count({
+    initialUnreadCount = await prisma.notification.count({
       where: { userId: session.user.id, read: false },
     });
-    const badgeKey = PORTAL_BADGE_KEY[portal];
-    initialUnreadCounts = { buyer: 0, seller: 0, admin: 0, [badgeKey]: unreadCount };
 
     if (session.user.telegramUser?.hasPhoto) {
       telegramPhotoDataUrl = await getDecryptedTelegramPhotoUrl(session.user.id);
@@ -43,7 +41,7 @@ export const DashboardLayout = async ({ children, portal, requiredRoles }: Dashb
   }
 
   return (
-    <NotificationProvider initialUnreadCounts={initialUnreadCounts}>
+    <NotificationProvider initialUnreadCount={initialUnreadCount} badgeKey={PORTAL_BADGE_KEY[portal]}>
       <RealtimeProvider>
         <div className="flex h-svh flex-col ring-0 md:px-4 lg:flex-row lg:gap-1 lg:py-14 2xl:px-40">
           {/*main content*/}

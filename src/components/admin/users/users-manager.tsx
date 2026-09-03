@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, startTransition, type ComponentType, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useQueryStates } from 'nuqs';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -24,15 +25,24 @@ import { FiltersBar, UserBadge } from '@/components/common';
 import { cn } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
-import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTelegram } from '@/actions/admin/users/';
+import { updateUser, getUserRates, updateUserRates, deleteUserRates, unlinkTelegram, listUsers } from '@/actions/admin/users/';
 import { listBrands } from '@/actions/admin/catalog';
 import { UrlPagination } from '@/components/ui/url-pagination';
-import { adminUsersSearchParamsParsers } from '@/lib/search-params';
+import { adminUsersSearchParamsParsers, buildAdminUsersInput } from '@/lib/search-params';
+import { useListQuery } from '@/hooks/use-list-query';
 import { Power, Loader2, ChevronsUpDown, Check, Link2Off, Wallet, Copy, Pencil, X } from 'lucide-react';
 import { copyToClipboard } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { BrandCountrySummary, BrandWithCountries } from '@/types';
 import type { User, UserRate } from '@/types';
+
+type AdminUsersInput = ReturnType<typeof buildAdminUsersInput>;
+
+async function fetchAdminUsers(input: AdminUsersInput) {
+  const res = await listUsers(input);
+  if (!res.data?.success) throw new Error('Failed to load users');
+  return res.data;
+}
 
 interface UsersManagerProps {
   initialUsers: User[];
@@ -41,10 +51,27 @@ interface UsersManagerProps {
     totalPages: number;
     totalCount: number;
   };
+  /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
+  initialInput: AdminUsersInput;
 }
 
-export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
-  const router = useRouter();
+export function UsersManager({ initialUsers, pagination, initialInput }: UsersManagerProps) {
+  const queryClient = useQueryClient();
+  const [params] = useQueryStates(adminUsersSearchParamsParsers);
+  const input = buildAdminUsersInput(params);
+
+  const { data } = useListQuery({
+    queryKey: 'admin-users',
+    input,
+    fetcher: fetchAdminUsers,
+    initialInput,
+    initialData: { success: true as const, items: initialUsers, pagination },
+  });
+
+  const users = data.items;
+  const paginationMeta = data.pagination;
+
+  const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: ['admin-users'] });
   const isMobile = useIsMobile();
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({
@@ -65,7 +92,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const { execute: executeUpdate, status: updateStatus } = useAction(updateUser, {
     onSuccess: () => {
       showAlert.toast.success('Usuario actualizado');
-      router.refresh();
+      invalidateUsers();
       setEditUser(null);
     },
     onError: (e) => showAlert.toast.error('Error actualizando usuario: ' + (e.error?.serverError || 'Unknown error')),
@@ -74,7 +101,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const { execute: executeToggle, status: toggleStatus } = useAction(updateUser, {
     onSuccess: () => {
       showAlert.toast.success('Estado actualizado');
-      router.refresh();
+      invalidateUsers();
       setEditUser(null);
     },
     onError: (e) => showAlert.toast.error('Error actualizando usuario: ' + (e.error?.serverError || 'Unknown error')),
@@ -83,7 +110,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
   const { execute: executeUnlink, status: unlinkStatus } = useAction(unlinkTelegram, {
     onSuccess: () => {
       showAlert.toast.success('Telegram desvinculado');
-      router.refresh();
+      invalidateUsers();
       setUnlinkTarget(null);
       setEditUser(null);
     },
@@ -276,7 +303,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
       />
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto custom-scrollbar">
-        {initialUsers.map((user) => (
+        {users.map((user) => (
           <Card
             key={user.id}
             onClick={() => openEditDialog(user)}
@@ -302,7 +329,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
           </Card>
         ))}
 
-        {initialUsers.length === 0 && (
+        {users.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-muted-foreground">No se encontraron usuarios.</p>
           </div>
@@ -310,7 +337,7 @@ export function UsersManager({ initialUsers, pagination }: UsersManagerProps) {
       </div>
 
       <div className="shrink-0">
-        <UrlPagination totalPages={pagination.totalPages} />
+        <UrlPagination totalPages={paginationMeta.totalPages} />
       </div>
 
       <EditRoot open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>

@@ -1,15 +1,28 @@
 'use client';
 
+import { useQueryStates } from 'nuqs';
 import { OrdersList } from './orders-list';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { FiltersBar } from '@/components/common';
-import { orderSearchParamsParsers } from '@/lib/search-params';
+import { orderSearchParamsParsers, buildBuyerOrdersInput } from '@/lib/search-params';
+import { listOrders } from '@/actions/buyer/orders/list-orders';
+import { useListQuery } from '@/hooks/use-list-query';
 import type { BuyerOrder, PaginationMeta } from '@/types';
+
+type BuyerOrdersInput = ReturnType<typeof buildBuyerOrdersInput>;
+
+async function fetchBuyerOrders(input: BuyerOrdersInput) {
+  const res = await listOrders(input);
+  if (!res.data?.success) throw new Error('Failed to load orders');
+  return res.data;
+}
 
 export interface BuyerOrdersViewProps {
   orders: BuyerOrder[];
   pagination: PaginationMeta;
   search?: string;
+  /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
+  initialInput: BuyerOrdersInput;
 }
 
 const FILTERS_DEFAULTS = {
@@ -18,7 +31,17 @@ const FILTERS_DEFAULTS = {
   sort: 'newest',
 };
 
-export const BuyerOrdersView = ({ orders, pagination, search }: BuyerOrdersViewProps) => {
+export const BuyerOrdersView = ({ orders, pagination, initialInput }: BuyerOrdersViewProps) => {
+  const [params] = useQueryStates(orderSearchParamsParsers);
+  const input = buildBuyerOrdersInput(params);
+
+  const { data } = useListQuery({
+    queryKey: 'buyer-orders',
+    input,
+    fetcher: fetchBuyerOrders,
+    initialInput,
+    initialData: { success: true as const, items: orders, pagination },
+  });
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <div data-tour="orders-filters">
@@ -50,10 +73,10 @@ export const BuyerOrdersView = ({ orders, pagination, search }: BuyerOrdersViewP
         />
       </div>
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-        <OrdersList orders={orders} totalPages={pagination.totalPages} search={search} />
+        <OrdersList orders={data.items} totalPages={data.pagination.totalPages} search={input.search} />
       </div>
       <div className="shrink-0">
-        <UrlPagination totalPages={pagination.totalPages} />
+        <UrlPagination totalPages={data.pagination.totalPages} />
       </div>
     </div>
   );

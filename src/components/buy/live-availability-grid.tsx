@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NumberFlow from '@number-flow/react';
 import { IconArrowRight } from '@tabler/icons-react';
 import { Bell, BellOff } from 'lucide-react';
 import type { z } from 'zod';
 import type { liveAvailabilityItemSchema } from '@/actions/buyer/stats/schemas';
+import { getLiveAvailability } from '@/actions/buyer/stats/get-live-availability';
 import { updateNotificationPreferences } from '@/actions/notifications';
 import { Card, CardHeader, CardDescription } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -19,6 +21,12 @@ export type LiveAvailabilityItem = z.infer<typeof liveAvailabilityItemSchema>;
 interface LiveAvailabilityGridProps {
   items: LiveAvailabilityItem[];
   stockAlertsEnabled: boolean;
+}
+
+async function fetchLiveAvailability() {
+  const res = await getLiveAvailability();
+  if (!res.data) throw new Error('Failed to load availability');
+  return res.data;
 }
 
 function AnimatedMoney({ value, currency, className }: { value: number; currency: string; className?: string }) {
@@ -100,6 +108,7 @@ function AvailabilityCard({ item }: { item: LiveAvailabilityItem }) {
  * interruptivos (ver dispatcher: STOCK_AVAILABLE + stockAlertsEnabled).
  */
 function StockAlertsToggle({ initialEnabled }: { initialEnabled: boolean }) {
+  const queryClient = useQueryClient();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [loading, setLoading] = useState(false);
 
@@ -112,6 +121,11 @@ function StockAlertsToggle({ initialEnabled }: { initialEnabled: boolean }) {
       if (!res?.data?.success) {
         setEnabled(!next);
         showAlert.toast.error('No se pudo guardar. Intenta de nuevo.');
+      } else {
+        // Persistir el flag en el cache para que sobreviva remounts
+        queryClient.setQueryData(['live-availability'], (old: { items: LiveAvailabilityItem[]; stockAlertsEnabled: boolean } | undefined) =>
+          old ? { ...old, stockAlertsEnabled: next } : old,
+        );
       }
     } finally {
       setLoading(false);
@@ -144,9 +158,18 @@ function StockAlertsToggle({ initialEnabled }: { initialEnabled: boolean }) {
 }
 
 export function LiveAvailabilityGrid({ items, stockAlertsEnabled }: LiveAvailabilityGridProps) {
+  // Data viva via React Query: los eventos SSE 'availability' invalidan
+  // ['live-availability'] y el grid se actualiza EN EL LUGAR (sin
+  // router.refresh, sin re-render de la página completa).
+  const { data } = useQuery({
+    queryKey: ['live-availability'],
+    queryFn: fetchLiveAvailability,
+    initialData: { items, stockAlertsEnabled },
+  });
+
   const sorted = useMemo(
-    () => [...items].sort((a, b) => b.accessibleAmount - a.accessibleAmount || b.totalAmount - a.totalAmount),
-    [items],
+    () => [...data.items].sort((a, b) => b.accessibleAmount - a.accessibleAmount || b.totalAmount - a.totalAmount),
+    [data.items],
   );
 
   return (
@@ -159,7 +182,7 @@ export function LiveAvailabilityGrid({ items, stockAlertsEnabled }: LiveAvailabi
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
         </div>
-        <StockAlertsToggle initialEnabled={stockAlertsEnabled} />
+        <StockAlertsToggle initialEnabled={data.stockAlertsEnabled} />
       </div>
 
       {sorted.length > 0 ? (

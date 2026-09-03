@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { listOrders } from '@/actions/admin/orders';
 import { getUsersByRole } from '@/actions/admin/users';
 import { AdminOrdersView } from '@/components/admin/orders';
-import { adminOrdersSearchParamsCache } from '@/lib/search-params';
+import { adminOrdersSearchParamsCache, buildAdminOrdersInput } from '@/lib/search-params';
 
 export const metadata: Metadata = {
   title: `Admin Orders | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
@@ -12,16 +12,10 @@ export const metadata: Metadata = {
 export default async function AdminOrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const parsed = adminOrdersSearchParamsCache.parse(params);
-
-  const { page, limit } = parsed;
-  const search = parsed.search || undefined;
-  const status = parsed.status === 'ALL' ? undefined : parsed.status;
-  const buyerId = parsed.buyerId || null;
-  const dateFrom = parsed.dateFrom || null;
-  const dateTo = parsed.dateTo || null;
+  const input = buildAdminOrdersInput(parsed);
 
   const [ordersResult, buyersResult] = await Promise.all([
-    listOrders({ page, limit, search, status, buyerId, dateFrom, dateTo }),
+    listOrders(input),
     getUsersByRole({ role: 'BUYER' }),
   ]);
 
@@ -34,7 +28,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Orders</h1>
-      <AdminOrdersView orders={ordersResult.data.items} buyers={buyers} pagination={ordersResult.data.pagination} />
+      <AdminOrdersView orders={ordersResult.data.items} buyers={buyers} pagination={ordersResult.data.pagination} initialInput={input} />
     </div>
   );
 }

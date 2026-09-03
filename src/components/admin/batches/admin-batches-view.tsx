@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useQueryStates } from 'nuqs';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { AdminBatchesList } from './admin-batches-list';
@@ -12,12 +13,24 @@ import type { AdminBatch, AdminBuyerSummary, AdminSellerSummary, PaginationMeta 
 import { IconCurrencyDollar } from '@tabler/icons-react';
 import { formatCurrency } from '@/lib/utils';
 import { FiltersBar } from '@/components/common';
-import { adminBatchesSearchParamsParsers } from '@/lib/search-params';
+import { adminBatchesSearchParamsParsers, buildAdminBatchesInput } from '@/lib/search-params';
+import { listBatches } from '@/actions/admin/batches';
+import { useListQuery } from '@/hooks/use-list-query';
+
+type AdminBatchesInput = ReturnType<typeof buildAdminBatchesInput>;
+
+async function fetchAdminBatches(input: AdminBatchesInput) {
+  const res = await listBatches(input);
+  if (!res.data?.success) throw new Error('Failed to load batches');
+  return res.data;
+}
 
 interface AdminBatchesViewProps {
   batches: AdminBatch[];
   sellers: Array<{ id: string; name: string; email?: string }>;
   pagination: PaginationMeta;
+  /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
+  initialInput: AdminBatchesInput;
 }
 
 const FILTERS_DEFAULTS = {
@@ -27,14 +40,28 @@ const FILTERS_DEFAULTS = {
   sellerId: '',
 };
 
-export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesViewProps) {
-  const router = useRouter();
+export function AdminBatchesView({ batches, sellers, pagination, initialInput }: AdminBatchesViewProps) {
+  const queryClient = useQueryClient();
+  const [params] = useQueryStates(adminBatchesSearchParamsParsers);
+  const input = buildAdminBatchesInput(params);
+
+  const { data } = useListQuery({
+    queryKey: 'admin-batches',
+    input,
+    fetcher: fetchAdminBatches,
+    initialInput,
+    initialData: { success: true as const, items: batches, pagination },
+  });
+
+  const items = data.items;
+  const paginationMeta = data.pagination;
+
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [sellerDialog, setSellerDialog] = useState<{ seller: AdminSellerSummary | null }>({ seller: null });
   const [buyerDialog, setBuyerDialog] = useState<{ buyer: AdminBuyerSummary | null }>({ buyer: null });
 
-  const selectedBatches = batches.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount && b.estimatedPayout > 0);
+  const selectedBatches = items.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount && b.estimatedPayout > 0);
   const showFloatingBar = useMemo(() => selectedBatches.length > 0, [selectedBatches.length]);
 
   const handleSelect = (id: number, selected: boolean) => {
@@ -55,12 +82,12 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
   };
 
   const handleDeleted = () => {
-    router.refresh();
+    queryClient.invalidateQueries({ queryKey: ['admin-batches'] });
   };
 
   const handlePaid = () => {
     setSelectedIds(new Set());
-    router.refresh();
+    queryClient.invalidateQueries({ queryKey: ['admin-batches'] });
   };
 
   return (
@@ -104,7 +131,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
 
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         <AdminBatchesList
-          batches={batches}
+          batches={items}
           selectedIds={selectedIds}
           onSelect={handleSelect}
           onDeleted={handleDeleted}
@@ -114,7 +141,7 @@ export function AdminBatchesView({ batches, sellers, pagination }: AdminBatchesV
       </div>
 
       <div className="shrink-0">
-        <UrlPagination totalPages={pagination.totalPages} />
+        <UrlPagination totalPages={paginationMeta.totalPages} />
       </div>
 
       <AdminPayDialog batches={selectedBatches} open={payDialogOpen} onOpenChange={setPayDialogOpen} onPaid={handlePaid} />

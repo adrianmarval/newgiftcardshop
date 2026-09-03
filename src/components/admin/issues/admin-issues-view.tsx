@@ -1,16 +1,29 @@
 'use client';
 
+import { useQueryStates } from 'nuqs';
 import { FiltersBar } from '@/components/common';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { AdminIssuesList } from './admin-issues-list';
-import { adminIssuesSearchParamsParsers } from '@/lib/search-params';
+import { adminIssuesSearchParamsParsers, buildAdminIssuesInput } from '@/lib/search-params';
+import { listIssues } from '@/actions/admin/issues';
+import { useListQuery } from '@/hooks/use-list-query';
 import type { AdminGiftcardIssue, PaginationMeta } from '@/types';
+
+type AdminIssuesInput = ReturnType<typeof buildAdminIssuesInput>;
+
+async function fetchAdminIssues(input: AdminIssuesInput) {
+  const res = await listIssues(input);
+  if (!res.data?.success) throw new Error('Failed to load issues');
+  return res.data;
+}
 
 interface AdminIssuesViewProps {
   issues: AdminGiftcardIssue[];
   sellers: Array<{ id: string; name: string; email?: string }>;
   buyers: Array<{ id: string; name: string; email?: string }>;
   pagination: PaginationMeta;
+  /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
+  initialInput: AdminIssuesInput;
 }
 
 const FILTERS_DEFAULTS = {
@@ -23,7 +36,17 @@ const FILTERS_DEFAULTS = {
   dateTo: '',
 };
 
-export function AdminIssuesView({ issues, sellers, buyers, pagination }: AdminIssuesViewProps) {
+export function AdminIssuesView({ issues, sellers, buyers, pagination, initialInput }: AdminIssuesViewProps) {
+  const [params] = useQueryStates(adminIssuesSearchParamsParsers);
+  const input = buildAdminIssuesInput(params);
+
+  const { data } = useListQuery({
+    queryKey: 'admin-issues',
+    input,
+    fetcher: fetchAdminIssues,
+    initialInput,
+    initialData: { success: true as const, items: issues, pagination },
+  });
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <FiltersBar
@@ -69,11 +92,11 @@ export function AdminIssuesView({ issues, sellers, buyers, pagination }: AdminIs
       />
 
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-        <AdminIssuesList issues={issues} />
+        <AdminIssuesList issues={data.items} />
       </div>
 
       <div className="shrink-0">
-        <UrlPagination totalPages={pagination.totalPages} />
+        <UrlPagination totalPages={data.pagination.totalPages} />
       </div>
     </div>
   );

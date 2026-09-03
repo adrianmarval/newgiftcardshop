@@ -1,6 +1,6 @@
 import { listOrders } from '@/actions/buyer/orders/list-orders';
 import { BuyerOrdersView } from '@/components/buy/giftcard-orders';
-import { orderSearchParamsCache } from '@/lib/search-params';
+import { orderSearchParamsCache, buildBuyerOrdersInput } from '@/lib/search-params';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,17 +11,9 @@ export const metadata: Metadata = {
 export default async function BuyerOrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const parsed = orderSearchParamsCache.parse(params);
+  const input = buildBuyerOrdersInput(parsed);
 
-  const { page, sort } = parsed;
-  const status = parsed.status === 'ALL' ? undefined : parsed.status;
-  const search = parsed.search || undefined;
-
-  const result = await listOrders({
-    page,
-    status: status as 'PENDING' | 'AWAITING_PAYMENT' | 'COMPLETED' | 'CANCELLED' | undefined,
-    search,
-    sort,
-  });
+  const result = await listOrders(input);
 
   if (!result.data) throw new Error('Ocurrio un error al cargar las ordenes');
 
@@ -30,7 +22,7 @@ export default async function BuyerOrdersPage({ searchParams }: { searchParams: 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Mis Órdenes</h1>
-      <BuyerOrdersView orders={items} pagination={pagination} search={search} />
+      <BuyerOrdersView orders={items} pagination={pagination} initialInput={input} />
     </div>
   );
 }

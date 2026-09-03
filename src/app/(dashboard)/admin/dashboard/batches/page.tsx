@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { listBatches } from '@/actions/admin/batches';
 import { getUsersByRole } from '@/actions/admin/users';
 import { AdminBatchesView } from '@/components/admin/batches/admin-batches-view';
-import { adminBatchesSearchParamsCache } from '@/lib/search-params';
+import { adminBatchesSearchParamsCache, buildAdminBatchesInput } from '@/lib/search-params';
 
 export const metadata: Metadata = {
   title: `Admin Batches | ${process.env.NEXT_PUBLIC_APP_NAME || 'GiftCardShop'}`,
@@ -12,17 +12,10 @@ export const metadata: Metadata = {
 export default async function AdminBatchesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const parsed = adminBatchesSearchParamsCache.parse(params);
-
-  const { page, limit, sort, status } = parsed;
-  const search = parsed.search || undefined;
-  const sellerId = parsed.sellerId || null;
-  const dateFrom = parsed.dateFrom || null;
-  const dateTo = parsed.dateTo || null;
-  const amountMin = parsed.amountMin ? Number(parsed.amountMin) : null;
-  const amountMax = parsed.amountMax ? Number(parsed.amountMax) : null;
+  const input = buildAdminBatchesInput(parsed);
 
   const [batchesResult, sellersResult] = await Promise.all([
-    listBatches({ page, limit, search, sort, sellerId, status, dateFrom, dateTo, amountMin, amountMax }),
+    listBatches(input),
     getUsersByRole({ role: 'SELLER' }),
   ]);
 
@@ -35,7 +28,7 @@ export default async function AdminBatchesPage({ searchParams }: { searchParams:
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Batches</h1>
-      <AdminBatchesView batches={batchesResult.data.items} sellers={sellers} pagination={batchesResult.data.pagination} />
+      <AdminBatchesView batches={batchesResult.data.items} sellers={sellers} pagination={batchesResult.data.pagination} initialInput={input} />
     </div>
   );
 }
