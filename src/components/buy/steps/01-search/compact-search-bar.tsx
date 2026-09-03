@@ -61,9 +61,7 @@ export function CompactSearchBar({
   }, [brandCountries]);
 
   return (
-    <div
-      className={cn('bg-card/50 flex flex-col items-center rounded-xl border p-1.5 backdrop-blur-sm', className)}
-    >
+    <div className={cn('bg-card/50 flex flex-col items-center rounded-xl border p-1.5 backdrop-blur-sm', className)}>
       {/* Country */}
       <div className="flex w-full flex-col">
         <span className="text-muted-foreground text-xs font-medium">País</span>
@@ -91,33 +89,34 @@ export function CompactSearchBar({
         <span className="text-muted-foreground text-xs font-medium">Monto</span>
         <div className="relative flex w-full items-center">
           <DollarSign className="text-muted-foreground/50 absolute left-3 h-4 w-4 shrink-0 md:h-5 md:w-5" />
-          <Input
-            type="number"
-            placeholder="Ingresa el monto..."
-            value={targetAmount}
-            onChange={(e) => onAmountChange(e.target.value)}
-            autoFocus={autoFocusAmount}
-            aria-invalid={!!amountError}
-            className={cn(
-              'bg-muted/40 placeholder:text-muted-foreground/50 h-10 w-full border-0 pl-9 text-sm font-medium focus:ring-0 md:h-11 md:pl-11 md:text-base',
-              amountError && 'ring-destructive/50 focus:ring-destructive/50 ring-2 focus:ring-2',
+          <div className="flex w-full items-center justify-between gap-2">
+            <Input
+              type="number"
+              placeholder="Ingresa el monto..."
+              value={targetAmount}
+              onChange={(e) => onAmountChange(e.target.value)}
+              autoFocus={autoFocusAmount}
+              aria-invalid={!!amountError}
+              className={cn(
+                'bg-muted/40 placeholder:text-muted-foreground/50 h-10 w-full border-0 pl-9 text-sm font-medium focus:ring-0 md:h-11 md:pl-11 md:text-base',
+                amountError && 'ring-destructive/50 focus:ring-destructive/50 ring-2 focus:ring-2',
+              )}
+            />
+            {showAdvancedButton && (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={onOpenAdvanced} 
+                className="text-muted-foreground hover:text-foreground h-10 flex shrink-0 items-center gap-1.5 px-3 text-xs font-medium md:gap-2 md:text-sm"
+              >
+                <Settings className="h-4 w-4 md:h-4.5 md:w-4.5" />
+                <span>Ajustes</span>
+              </Button>
             )}
-          />
+          </div>
         </div>
         <FieldError message={amountError} className="w-full" />
       </div>
-
-      {showAdvancedButton && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onOpenAdvanced}
-          className="text-muted-foreground hover:text-foreground h-9 w-9 shrink-0 md:h-10 md:w-10"
-        >
-          <Settings className="h-4 w-4 md:h-4.5 md:w-4.5" />
-          <span className="sr-only">Ajustes avanzados</span>
-        </Button>
-      )}
 
       {/*
         Row 3: Brand search — HIDDEN (pocas marcas por ahora).
