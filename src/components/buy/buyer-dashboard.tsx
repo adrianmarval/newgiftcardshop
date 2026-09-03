@@ -20,12 +20,37 @@ import { orderStatusConfig } from '@/lib/config';
 import { formatCurrency } from '@/lib/utils';
 import type { BuyerStats, OrderBookEntry, RecentOrder } from '@/types';
 import { timeAgo } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { getBuyerStats } from '@/actions/buyer/stats';
+import { recentOrders } from '@/actions/buyer/orders';
 
 interface BuyerDashboardProps {
-  stats: BuyerStats;
-  recentOrders: RecentOrder[];
+  initialStats: BuyerStats;
+  initialRecentOrders: RecentOrder[];
   availability: LiveAvailabilityItem[];
   stockAlertsEnabled: boolean;
+}
+
+async function fetchBuyerStats(): Promise<BuyerStats> {
+  const res = await getBuyerStats();
+  if (!res.data) throw new Error('Failed to load buyer stats');
+  return { orderBook: res.data.orderBook, personal: res.data.personal };
+}
+
+async function fetchRecentOrders(): Promise<RecentOrder[]> {
+  const res = await recentOrders();
+  if (!res.data) throw new Error('Failed to load recent orders');
+  return res.data.map((order) => ({
+    id: order.id,
+    status: order.status,
+    total: order.total,
+    adjustedTotal: order.adjustedTotal,
+    createdAt: order.createdAt,
+    cardsCount: order.cardsCount,
+    faceValueTotal: order.faceValueTotal,
+    effectiveTotal: order.effectiveTotal,
+    giftcards: order.giftcards,
+  }));
 }
 
 function CreditUsageCard({
@@ -167,8 +192,23 @@ function RecentOrderRow({ order, onClick }: { order: RecentOrder; onClick: () =>
   );
 }
 
-export function BuyerDashboard({ stats, recentOrders, availability, stockAlertsEnabled }: BuyerDashboardProps) {
+export function BuyerDashboard({ initialStats, initialRecentOrders, availability, stockAlertsEnabled }: BuyerDashboardProps) {
   const router = useRouter();
+
+  // Data viva via React Query: los eventos SSE 'stats'/'orders' invalidan
+  // estas queries y el dashboard se actualiza EN EL LUGAR (sin
+  // router.refresh, sin races con la navegación).
+  const { data: stats } = useQuery({
+    queryKey: ['buyer-dashboard-stats'],
+    queryFn: fetchBuyerStats,
+    initialData: initialStats,
+  });
+  const { data: recentOrders } = useQuery({
+    queryKey: ['buyer-recent-orders'],
+    queryFn: fetchRecentOrders,
+    initialData: initialRecentOrders,
+  });
+
   const { personal, orderBook } = stats;
 
   return (

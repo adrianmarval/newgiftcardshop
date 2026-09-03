@@ -1,17 +1,16 @@
 import { Suspense } from 'react';
-import { IconCurrencyDollar, IconChartBar, IconCalendarEvent, IconCreditCard } from '@tabler/icons-react';
-import { formatCurrency } from '@/lib/utils';
 import { Metadata } from 'next';
 import { getBinanceBalances } from '@/actions/admin/binance';
 import { getPlatformBalance } from '@/actions/platform';
 import { getInventoryStats, getProfitStats, getStockAgingReport } from '@/actions/admin/stats';
-import { InventoryChart, ProfitChart } from '@/components/admin/charts';
-import { StockAgingTable } from '@/components/admin/stock-aging-table';
-import { AdminWithdrawButton } from '@/components/admin/payments';
-
-import { Bitcoin, CircleDollarSignIcon, Equal, TrendingDown, TrendingUp } from 'lucide-react';
-import { Decimal } from '@prisma/client/runtime/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  BinanceBalanceSection,
+  PlatformBalanceSection,
+  ProfitSummarySection,
+  ChartsSection,
+  AgingSection,
+} from '@/components/admin/dashboard-sections';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const metadata: Metadata = {
@@ -47,150 +46,44 @@ function ChartSkeleton() {
   );
 }
 
+// Wrappers async server: fetchean el primer paint (streaming via Suspense) y
+// lo pasan como initialData a las secciones client, que mantienen la data
+// viva via React Query + invalidación SSE (el router nunca participa).
+
 async function BinanceBalanceCard() {
   const [binanceRes, platformBalanceResponse] = await Promise.all([getBinanceBalances(), getPlatformBalance()]);
-
-  const { data: binanceBalance, serverError } = binanceRes;
-  const platformBalance = platformBalanceResponse.data?.balance || 0;
-  const differential = new Decimal(binanceBalance?.total || 0).minus(new Decimal(platformBalance));
-  const diffColor = differential.greaterThan(0) ? 'text-green-400' : differential.lessThan(0) ? 'text-red-400' : 'text-white/80';
-
   return (
-    <Card className="bg-muted/50 flex flex-col justify-between gap-1">
-      <CardHeader>
-        <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
-          <Bitcoin className="h-5 w-5" />
-          Balance Binance
-        </CardTitle>
-        <CardDescription className="sr-only">Saldo en Binance</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex gap-1">
-          <span className="text-4xl font-bold">{formatCurrency(binanceBalance?.total || 0)}</span>
-          {!serverError && (
-            <div className={`mt-1 flex items-center text-xs font-medium ${diffColor}`}>
-              {differential.greaterThan(0) ? (
-                <TrendingUp className="mr-1 h-3 w-3" />
-              ) : differential.lessThan(0) ? (
-                <TrendingDown className="mr-1 h-3 w-3" />
-              ) : (
-                <Equal className="mr-1 h-3 w-3" />
-              )}
-              <span>{formatCurrency(differential.abs().toNumber())} diff</span>
-            </div>
-          )}
-        </div>
-        <div className="mt-2">
-          <AdminWithdrawButton />
-        </div>
-      </CardContent>
-    </Card>
+    <BinanceBalanceSection
+      initial={{
+        total: binanceRes.data?.total || 0,
+        serverError: binanceRes.serverError,
+        platformBalance: platformBalanceResponse.data?.balance || 0,
+      }}
+    />
   );
 }
 
 async function PlatformBalanceCard() {
   const platformBalanceResponse = await getPlatformBalance();
-  const platformBalance = platformBalanceResponse.data?.balance || 0;
-
-  return (
-    <Card className="bg-muted/50 flex flex-col justify-between gap-1">
-      <CardHeader>
-        <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
-          <CircleDollarSignIcon className="h-5 w-5" />
-          Balance Plataforma
-        </CardTitle>
-        <CardDescription className="sr-only">Saldo en la plataforma</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <span className="text-4xl font-bold">{formatCurrency(platformBalance)}</span>
-      </CardContent>
-    </Card>
-  );
+  return <PlatformBalanceSection initial={platformBalanceResponse.data?.balance || 0} />;
 }
 
 async function ProfitSummaryCards() {
   const profitRes = await getProfitStats();
-  const summary = profitRes.data?.summary || { today: 0, week: 0, month: 0, todayVolume: 0 };
-
-  return (
-    <>
-      <Card className="bg-muted/50 flex flex-col justify-between gap-1">
-        <CardHeader>
-          <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
-            <IconCreditCard className="h-5 w-5" />
-            Volumen de Giftcards (HOY)
-          </CardTitle>
-          <CardDescription className="sr-only">Volumen transaccionado hoy</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <span className="text-4xl font-bold">{formatCurrency(summary.todayVolume)}</span>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-muted/50 flex flex-col justify-between gap-1">
-        <CardHeader>
-          <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
-            <IconCurrencyDollar className="h-5 w-5" />
-            Ganancia (Hoy)
-          </CardTitle>
-          <CardDescription className="sr-only">Ganancia de hoy</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <span className="text-4xl font-bold text-green-500">{formatCurrency(summary.today)}</span>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-muted/50 flex flex-col justify-between gap-1">
-        <CardHeader>
-          <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
-            <IconChartBar className="h-5 w-5" />
-            Ganancia (Semana)
-          </CardTitle>
-          <CardDescription className="sr-only">Ganancia de la semana</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <span className="text-4xl font-bold text-green-500">{formatCurrency(summary.week)}</span>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-muted/50 flex flex-col justify-between gap-1">
-        <CardHeader>
-          <CardTitle className="text-muted-foreground flex items-center gap-1 text-base font-medium">
-            <IconCalendarEvent className="h-5 w-5" />
-            Ganancia (Mes)
-          </CardTitle>
-          <CardDescription className="sr-only">Ganancia del mes</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <span className="text-4xl font-bold text-green-500">{formatCurrency(summary.month)}</span>
-        </CardContent>
-      </Card>
-    </>
-  );
+  if (!profitRes.data) throw new Error('Failed to load profit stats');
+  return <ProfitSummarySection initial={profitRes.data} />;
 }
 
-async function ChartsSection() {
+async function ChartsSectionCard() {
   // Ambas pegan al cache de 60s tras el primer fetch — no duplican trabajo real
   const [inventoryRes, profitRes] = await Promise.all([getInventoryStats(), getProfitStats()]);
-
-  const inventoryData = inventoryRes.data || [];
-  const charts = profitRes.data?.charts || { daily: [], monthly: [], yearly: [] };
-
-  return (
-    <>
-      <div className="col-span-1 md:col-span-1 lg:col-span-3">
-        <InventoryChart data={inventoryData} />
-      </div>
-      <div className="col-span-1 md:col-span-1 lg:col-span-3">
-        <ProfitChart charts={charts} />
-      </div>
-    </>
-  );
+  if (!profitRes.data) throw new Error('Failed to load profit stats');
+  return <ChartsSection initialInventory={inventoryRes.data || []} initialProfit={profitRes.data} />;
 }
 
-async function AgingSection() {
+async function AgingSectionCard() {
   const agingRes = await getStockAgingReport();
-  return <StockAgingTable data={agingRes.data || []} />;
+  return <AgingSection initial={agingRes.data || []} />;
 }
 
 export default function AdminDashboardPage() {
@@ -227,12 +120,12 @@ export default function AdminDashboardPage() {
             </>
           }
         >
-          <ChartsSection />
+          <ChartsSectionCard />
         </Suspense>
       </div>
 
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <AgingSection />
+        <AgingSectionCard />
       </Suspense>
     </div>
   );

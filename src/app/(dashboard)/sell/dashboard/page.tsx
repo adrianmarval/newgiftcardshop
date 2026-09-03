@@ -44,7 +44,7 @@ export default async function SellerDashboardPage() {
     <div className="w-full">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Seller Dashboard</h1>
 
-      <SellerDashboardClient stats={stats} recentBatches={recentBatchesList} />
+      <SellerDashboardClient initialStats={stats} initialRecentBatches={recentBatchesList} />
     </div>
   );
 }

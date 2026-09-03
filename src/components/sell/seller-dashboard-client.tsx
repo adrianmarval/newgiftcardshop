@@ -3,15 +3,45 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { IconPlus, IconGift, IconCurrencyDollar, IconCircleCheck, IconPackage, IconAlertTriangle, IconChevronRight } from '@tabler/icons-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 import type { SellerStats, RecentBatch } from '@/types';
 import { StatCard } from '@/components/common';
 import { formatCurrency } from '@/lib/utils';
+import { getSellerStats } from '@/actions/seller/stats';
+import { recentBatches } from '@/actions/seller/batches';
 
 interface SellerDashboardClientProps {
-  stats: SellerStats;
-  recentBatches: RecentBatch[];
+  initialStats: SellerStats;
+  initialRecentBatches: RecentBatch[];
+}
+
+async function fetchSellerStats(): Promise<SellerStats> {
+  const res = await getSellerStats();
+  if (!res.data) throw new Error('Failed to load seller stats');
+  return {
+    pendingPayout: res.data.pendingPayout,
+    totalEarned: res.data.totalEarned,
+    inStockValue: res.data.inStockValue,
+    problemCards: res.data.problemCards,
+  };
+}
+
+async function fetchRecentBatches(): Promise<RecentBatch[]> {
+  const res = await recentBatches();
+  if (!res.data) throw new Error('Failed to load recent batches');
+  return res.data.map((batch) => ({
+    id: batch.id,
+    sellRate: batch.sellRate,
+    isPaid: batch.isPaid,
+    cancelledAt: batch.cancelledAt,
+    createdAt: batch.createdAt,
+    giftcards: batch.giftcards,
+    cardsCount: batch.cardsCount,
+    confirmedCount: batch.confirmedCount,
+    effectiveTotal: batch.effectiveTotal,
+  }));
 }
 
 function getBatchStatus(batch: RecentBatch): { label: string; className: string } {
@@ -28,8 +58,22 @@ function getBatchStatus(batch: RecentBatch): { label: string; className: string 
   return { label: 'Pending', className: 'border border-amber-500/30 bg-amber-500/20 text-amber-500' };
 }
 
-export function SellerDashboardClient({ stats, recentBatches }: SellerDashboardClientProps) {
+export function SellerDashboardClient({ initialStats, initialRecentBatches }: SellerDashboardClientProps) {
   const router = useRouter();
+
+  // Data viva via React Query: los eventos SSE 'stats'/'batches' invalidan
+  // estas queries y el dashboard se actualiza EN EL LUGAR (sin
+  // router.refresh, sin races con la navegación).
+  const { data: stats } = useQuery({
+    queryKey: ['seller-dashboard-stats'],
+    queryFn: fetchSellerStats,
+    initialData: initialStats,
+  });
+  const { data: recentBatches } = useQuery({
+    queryKey: ['seller-recent-batches'],
+    queryFn: fetchRecentBatches,
+    initialData: initialRecentBatches,
+  });
 
   return (
     <div className="w-full space-y-2">

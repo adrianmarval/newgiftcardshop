@@ -4,8 +4,9 @@ import { EventEmitter } from 'node:events';
  * Bus de eventos realtime (invalidación dirigida).
  *
  * El socket NUNCA transporta data de dominio — solo señales `{ keys }`.
- * La fuente de verdad sigue siendo el servidor (RSC + Prisma + gates);
- * el cliente reacciona con un router.refresh() dirigido.
+ * La fuente de verdad sigue siendo el servidor (Prisma + gates vía server
+ * actions); el cliente reacciona invalidando el cache de TanStack Query
+ * (NUNCA router.refresh — ver realtime-provider.tsx).
  *
  * Singleton en globalThis (mismo patrón que BotRegistry / prisma):
  * - Sobrevive al HMR de Next en dev (sin listeners duplicados).
@@ -22,8 +23,6 @@ export const REALTIME_KEYS = [
   'payments',
   'stats',
   'users',
-  'catalog',
-  'settings',
 ] as const;
 
 export type RealtimeKey = (typeof REALTIME_KEYS)[number];

@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, ExternalLink } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
-import { markAsRead } from '@/actions/notifications';
+import { listNotifications, markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
 import { NotificationIcon } from '@/components/common';
 import { timeAgo } from '@/lib/utils';
@@ -25,24 +25,41 @@ const LIST_TEXTS = {
   admin: { empty: 'Sin Notificaciones', unread: 'sin leer', markRead: 'Marcar leídas', view: 'Ver' },
 } as const;
 
-export function NotificationsList({ portal, initialNotifications, initialUnreadCount: _initialUnreadCount }: NotificationsListProps) {
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
+/** Debe matchear el `take` de getNotificationPageData (primer paint server). */
+const PAGE_LIMIT = 50;
+
+async function fetchNotifications(): Promise<NotificationItem[]> {
+  const res = await listNotifications({ page: 1, limit: PAGE_LIMIT, filter: 'all' });
+  if (!res.data) throw new Error('Failed to load notifications');
+  return res.data.notifications as NotificationItem[];
+}
+
+export function NotificationsList({ portal, initialNotifications }: NotificationsListProps) {
+  const queryClient = useQueryClient();
   const { setUnreadCount } = useNotifications();
   const router = useRouter();
   const texts = LIST_TEXTS[portal];
 
-  // Sync with server props when parent re-renders (auto-refresh)
-  useEffect(() => {
-    setNotifications(initialNotifications);
-  }, [initialNotifications]);
+  // Data viva via React Query: los eventos SSE 'notifications' invalidan
+  // ['notifications-page'] y la lista se actualiza EN EL LUGAR (sin
+  // router.refresh, sin races con la navegación).
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications-page'],
+    queryFn: fetchNotifications,
+    initialData: initialNotifications,
+  });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const { execute: executeMarkAsRead } = useAction(markAsRead);
 
+  const setItems = (updater: (prev: NotificationItem[]) => NotificationItem[]) => {
+    queryClient.setQueryData<NotificationItem[]>(['notifications-page'], (old) => updater(old ?? []));
+  };
+
   const handleClick = (item: NotificationItem) => {
     if (!item.read) {
-      setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
+      setItems((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
       setUnreadCount(portal, notifications.filter((n) => !n.read && n.id !== item.id).length);
       executeMarkAsRead({ notificationId: item.id });
     }
@@ -52,12 +69,12 @@ export function NotificationsList({ portal, initialNotifications, initialUnreadC
   };
 
   const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(portal, 0);
     executeMarkAsRead({ all: true });
   };
 
-  if (initialNotifications.length === 0) {
+  if (notifications.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="border-border bg-muted/40 mb-3 rounded-full border p-5">

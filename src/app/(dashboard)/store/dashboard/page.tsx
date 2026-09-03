@@ -45,8 +45,8 @@ export default async function BuyerDashboardPage() {
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Panel de Comprador</h1>
 
       <BuyerDashboard
-        stats={stats}
-        recentOrders={recentOrdersList}
+        initialStats={stats}
+        initialRecentOrders={recentOrdersList}
         availability={availabilityResult.data?.items ?? []}
         stockAlertsEnabled={availabilityResult.data?.stockAlertsEnabled ?? false}
       />
