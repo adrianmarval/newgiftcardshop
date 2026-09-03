@@ -1,9 +1,60 @@
 'use server';
 
+import { unstable_cache } from 'next/cache';
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
 import { startOfDay, startOfWeek, startOfMonth, subDays, subMonths, format } from 'date-fns';
 import { getProfitStatsOutputSchema } from './schemas';
+
+interface DailyProfitRow {
+  dayKey: string;
+  profit: number;
+  volume: number;
+}
+
+// Timezone del servidor, para que el bucketing por día en SQL matchee exactamente
+// el bucketing que antes hacía date-fns en Node (mismo comportamiento que antes).
+const SERVER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+// Monto efectivo de la venta (misma regla de negocio que antes):
+// WRONG_AMOUNT con reportedAmount -> reportedAmount; INVALID/ALREADY_USED/DEACTIVATED -> 0; resto -> amount
+// Se inlinnea en el template (los `${}` de $queryRaw son PARÁMETROS, no fragmentos SQL)
+// Agregación por día en la DB: la historia completa de ventas colapsa a ~365 filas/año
+// en vez de traer TODAS las giftcards vendidas a Node. Cache 60s — data solo-admin.
+const fetchDailyProfit = unstable_cache(
+  async (): Promise<DailyProfitRow[]> => {
+    return prisma.$queryRaw<DailyProfitRow[]>`
+      SELECT
+        -- createdAt es TIMESTAMP(3) sin tz y Prisma escribe el wall-clock UTC:
+        -- AT TIME ZONE 'UTC' lo reinterpreta como instante real, y el segundo
+        -- AT TIME ZONE lo convierte al wall-clock local del servidor (mismo
+        -- bucketing por día que hacía date-fns en Node antes de esta query)
+        to_char((o."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${SERVER_TZ}, 'YYYY-MM-DD') AS "dayKey",
+        SUM(
+          (CASE
+            WHEN g.status = 'WRONG_AMOUNT' AND g."reportedAmount" IS NOT NULL THEN g."reportedAmount"
+            WHEN g.status IN ('INVALID', 'ALREADY_USED', 'DEACTIVATED') THEN 0
+            ELSE g.amount
+          END) * (o."buyRate" - b."sellRate")
+        )::float8 AS profit,
+        SUM(
+          CASE
+            WHEN g.status = 'WRONG_AMOUNT' AND g."reportedAmount" IS NOT NULL THEN g."reportedAmount"
+            WHEN g.status IN ('INVALID', 'ALREADY_USED', 'DEACTIVATED') THEN 0
+            ELSE g.amount
+          END
+        )::float8 AS volume
+      FROM giftcard g
+      JOIN "order" o ON o.id = g."orderId"
+      JOIN giftcard_batch b ON b.id = g."batchId"
+      WHERE o.status = 'COMPLETED' AND g."batchId" IS NOT NULL
+      GROUP BY 1
+      ORDER BY 1
+    `;
+  },
+  ['admin-profit-stats'],
+  { revalidate: 60 },
+);
 
 export const getProfitStats = adminActionClient.outputSchema(getProfitStatsOutputSchema).action(async () => {
   try {
@@ -12,53 +63,17 @@ export const getProfitStats = adminActionClient.outputSchema(getProfitStatsOutpu
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const monthStart = startOfMonth(now);
 
-    // Sin filtro de fecha: el chart anual necesita el historial completo
-    const soldGiftcards = await prisma.giftcard.findMany({
-      where: {
-        orderId: { not: null },
-        order: { status: 'COMPLETED' },
-        batchId: { not: null },
-      },
-      select: {
-        amount: true,
-        reportedAmount: true,
-        status: true,
-        order: { select: { buyRate: true, createdAt: true } },
-        batch: { select: { sellRate: true } },
-      },
-    });
+    // Límites como day keys ISO (comparación lexicográfica válida en YYYY-MM-DD)
+    const todayKey = format(todayStart, 'yyyy-MM-dd');
+    const weekKey = format(weekStart, 'yyyy-MM-dd');
+    const monthKey = format(monthStart, 'yyyy-MM-dd');
+
+    const dailyRows = await fetchDailyProfit();
 
     let todayProfit = 0;
     let weekProfit = 0;
     let monthProfit = 0;
     let todayVolume = 0;
-
-    const sales: { profit: number; date: Date }[] = [];
-
-    for (const gc of soldGiftcards) {
-      if (!gc.order || !gc.batch) continue;
-
-      let effectiveAmount = gc.amount.toNumber();
-      if (gc.status === 'WRONG_AMOUNT' && gc.reportedAmount !== null) {
-        effectiveAmount = gc.reportedAmount.toNumber();
-      } else if (['INVALID', 'ALREADY_USED', 'DEACTIVATED'].includes(gc.status)) {
-        effectiveAmount = 0;
-      }
-      const buyRate = gc.order.buyRate.toNumber();
-      const sellRate = gc.batch.sellRate.toNumber();
-
-      const profit = effectiveAmount * buyRate - effectiveAmount * sellRate;
-      const saleDate = gc.order.createdAt;
-
-      if (saleDate >= todayStart) {
-        todayProfit += profit;
-        todayVolume += effectiveAmount;
-      }
-      if (saleDate >= weekStart) weekProfit += profit;
-      if (saleDate >= monthStart) monthProfit += profit;
-
-      sales.push({ profit, date: saleDate });
-    }
 
     // Buckets: 30 días (diario), 12 meses (mensual), desde la primera venta (anual)
     const dailyMap: Record<string, number> = {};
@@ -72,20 +87,28 @@ export const getProfitStats = adminActionClient.outputSchema(getProfitStatsOutpu
     }
 
     const currentYear = now.getFullYear();
-    const firstYear = sales.length > 0 ? Math.min(...sales.map((s) => s.date.getFullYear())) : currentYear;
+    const firstYear = dailyRows.length > 0 ? Number(dailyRows[0].dayKey.slice(0, 4)) : currentYear;
     const yearlyMap: Record<string, number> = {};
     for (let y = firstYear; y <= currentYear; y++) {
       yearlyMap[String(y)] = 0;
     }
 
-    for (const sale of sales) {
-      const dayKey = format(sale.date, 'yyyy-MM-dd');
-      if (dailyMap[dayKey] !== undefined) dailyMap[dayKey] += sale.profit;
+    for (const row of dailyRows) {
+      const { dayKey, profit, volume } = row;
 
-      const monthKey = format(sale.date, 'yyyy-MM');
-      if (monthlyMap[monthKey] !== undefined) monthlyMap[monthKey] += sale.profit;
+      if (dayKey >= todayKey) {
+        todayProfit += profit;
+        todayVolume += volume;
+      }
+      if (dayKey >= weekKey) weekProfit += profit;
+      if (dayKey >= monthKey) monthProfit += profit;
 
-      yearlyMap[String(sale.date.getFullYear())] += sale.profit;
+      if (dailyMap[dayKey] !== undefined) dailyMap[dayKey] += profit;
+
+      const rowMonthKey = dayKey.slice(0, 7);
+      if (monthlyMap[rowMonthKey] !== undefined) monthlyMap[rowMonthKey] += profit;
+
+      yearlyMap[dayKey.slice(0, 4)] += profit;
     }
 
     const toChartData = (map: Record<string, number>) =>
