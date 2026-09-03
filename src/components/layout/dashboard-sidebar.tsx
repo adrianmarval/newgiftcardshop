@@ -20,14 +20,14 @@ const NAV_ITEMS: Record<AppSection, NavItem[]> = {
     { title: 'Home', url: '/admin/dashboard', icon: 'home' },
     { title: 'Users', url: '/admin/dashboard/users', icon: 'users' },
     { title: 'Orders', url: '/admin/dashboard/orders', icon: 'cart' },
-    { title: 'Issues', url: '/admin/dashboard/issues', icon: 'alert' },
     { title: 'Lotes', url: '/admin/dashboard/batches', icon: 'cards' },
     { title: 'Pagos', url: '/admin/dashboard/payments', icon: 'cash' },
+    { title: 'Platform', url: '/admin/dashboard/config', icon: 'settings' },
     { title: 'Brands', url: '/admin/dashboard/brands', icon: 'tag' },
     { title: 'Coins', url: '/admin/dashboard/coins', icon: 'coins' },
     { title: 'Logs', url: '/admin/dashboard/logs', icon: 'logs' },
-    { title: 'Platform', url: '/admin/dashboard/config', icon: 'settings' },
     { title: 'Account', url: '/admin/dashboard/account', icon: 'user' },
+    { title: 'Issues', url: '/admin/dashboard/issues', icon: 'alert' },
   ],
 };
 

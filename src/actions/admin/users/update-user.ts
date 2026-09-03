@@ -1,7 +1,9 @@
 'use server';
 
+import { revalidateTag } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
+import { ADMIN_USERS_CACHE_TAG } from '@/lib/constants';
 import { updateUserInputSchema, updateUserOutputSchema } from './schemas';
 
 export const updateUser = adminActionClient
@@ -33,6 +35,9 @@ export const updateUser = adminActionClient
         },
         select: { id: true },
       });
+
+      // Invalida el cache de los combobox de filtros (getUsersByRole)
+      revalidateTag(ADMIN_USERS_CACHE_TAG, 'max');
 
       return { success: true as const, userId: updated.id };
     } catch (error) {

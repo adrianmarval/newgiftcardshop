@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { startTransition, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import type { RealtimeKey } from '@/lib/realtime/bus';
 
@@ -11,6 +11,13 @@ import type { RealtimeKey } from '@/lib/realtime/bus';
  * router.refresh() SOLO si las keys del evento intersectan las de la ruta
  * actual. El socket nunca transporta data — la fuente de verdad sigue
  * siendo el servidor (RSC + Prisma + gates).
+ *
+ * INVARIANTE — TODO router.refresh() de fondo va dentro de startTransition:
+ * un refresh que cae mientras hay una navegación del usuario en vuelo (Link
+ * click, paginación nuqs con shallow:false) la ABORTA y la URL revierte al
+ * último estado commiteado (bug conocido del App Router). Marcado como
+ * transition de baja prioridad, la navegación del usuario lo preempta.
+ * NUNCA llamar router.refresh() directo en este archivo.
  *
  * Safety nets:
  * - Reconexión: EventSource reintenta solo; en `onopen` tras una caída se
@@ -30,19 +37,7 @@ import type { RealtimeKey } from '@/lib/realtime/bus';
  * Las keys de la ruta actual viven en un ref que onmessage lee en vivo.
  */
 
-const ALL_KEYS: RealtimeKey[] = [
-  'notifications',
-  'orders',
-  'batches',
-  'availability',
-  'payments',
-  'stats',
-  'users',
-  'catalog',
-  'settings',
-];
-
-/** Mapa ruta → keys que esa ruta consume. Match por prefijo. */
+/** Mapa ruta → keys que esa ruta consume. Match por prefijo, gana el primero. */
 const ROUTE_KEYS: Array<[prefix: string, keys: RealtimeKey[]]> = [
   ['/sell/dashboard/sell-cards', ['batches', 'stats', 'notifications']],
   ['/sell/dashboard/cards', ['batches', 'stats', 'notifications']],
@@ -50,7 +45,19 @@ const ROUTE_KEYS: Array<[prefix: string, keys: RealtimeKey[]]> = [
   ['/store/dashboard/browse-cards', ['availability', 'orders', 'notifications']],
   ['/store/dashboard/orders', ['orders', 'notifications']],
   ['/store/dashboard', ['availability', 'orders', 'stats', 'notifications']],
-  ['/admin/dashboard', [...ALL_KEYS]],
+  // Admin: keys granulares por subruta. Antes TODO el portal consumía todas
+  // las keys — cualquier evento del marketplace disparaba un refresh (con
+  // throttle de 1s), maximizando la colisión con navegaciones en vuelo.
+  ['/admin/dashboard/orders', ['orders', 'notifications']],
+  ['/admin/dashboard/batches', ['batches', 'notifications']],
+  ['/admin/dashboard/payments', ['payments', 'notifications']],
+  ['/admin/dashboard/users', ['users', 'notifications']],
+  ['/admin/dashboard/brands', ['catalog', 'notifications']],
+  ['/admin/dashboard/coins', ['catalog', 'notifications']],
+  ['/admin/dashboard/config', ['settings', 'notifications']],
+  ['/admin/dashboard/issues', ['orders', 'notifications']],
+  ['/admin/dashboard/logs', ['notifications']],
+  ['/admin/dashboard', ['stats', 'orders', 'batches', 'payments', 'notifications']],
 ];
 
 const DEFAULT_KEYS: RealtimeKey[] = ['notifications'];
@@ -98,14 +105,15 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       const now = Date.now();
       if (now - lastRefreshAt.current < REFRESH_THROTTLE_MS) return;
       lastRefreshAt.current = now;
-      router.refresh();
+      // En transition: update de fondo, la navegación del usuario preempta
+      startTransition(() => router.refresh());
     };
 
     // Al volver al tab: resync por si hubo eventos mientras estaba oculto
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         lastRefreshAt.current = 0;
-        router.refresh();
+        startTransition(() => router.refresh());
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
@@ -125,7 +133,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           // Resync: entre la caída y el reconnect pudimos perder frames
           hadDisconnect = false;
           lastRefreshAt.current = 0;
-          router.refresh();
+          startTransition(() => router.refresh());
         }
       };
 

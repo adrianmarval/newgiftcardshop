@@ -38,3 +38,11 @@ export const PIN_RESET_OTP_MINUTES = 10;
 /** Seconds before a new PIN-reset OTP can be requested (Resend anti-spam). */
 export const PIN_RESET_COOLDOWN_SECONDS = 60;
 
+/**
+ * Cache tag (unstable_cache/revalidateTag) para la lista de usuarios por rol
+ * que alimenta los combobox de filtros del admin. Se invalida al mutar un
+ * usuario desde el panel (update-user); las altas nuevas por registro web/bot
+ * quedan cubiertas por el TTL corto del cache.
+ */
+export const ADMIN_USERS_CACHE_TAG = 'admin-users-by-role';
+
