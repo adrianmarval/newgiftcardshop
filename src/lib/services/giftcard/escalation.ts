@@ -70,19 +70,28 @@ export async function processEscalationTiers(): Promise<{ processed: number }> {
     return { processed: 0 };
   }
 
-  const updates: { id: string; newTier: number }[] = [];
+  const cycleMs = config.durationMinutes * 60 * 1000;
+  const updates: { id: string; newTier: number; newTierStartedAt: Date }[] = [];
 
   for (const card of cardsToEscalate) {
     const minTier = minTiersByBrandCountry.get(card.brandCountryId) ?? 80;
     if (card.escalationTier > minTier) {
       const newTier = card.escalationTier - config.dropAmount;
-      updates.push({ id: card.id, newTier: Math.max(newTier, minTier) });
+      // Schedule ANCLADO: el nuevo tier arranca en el VENCIMIENTO del ciclo
+      // (tierStartedAt + 1 ciclo), no en el tiempo del tick. Resetear a now()
+      // acumulaba el atraso del tick (hasta 60s) en CADA ciclo — con
+      // duration=1min la espera real llegaba a ~2x la estimada. Anclado, un
+      // cron atrasado se pone al día solo: si la card va N ciclos vencida,
+      // sigue elegible y el próximo tick la vuelve a dropear.
+      updates.push({ id: card.id, newTier: Math.max(newTier, minTier), newTierStartedAt: new Date(card.tierStartedAt.getTime() + cycleMs) });
     } else if (card.escalationTier === minTier) {
       const timeInMinTier = Date.now() - card.tierStartedAt.getTime();
-      const minTierTimeout = config.durationMinutes * 60 * 1000 * 3;
+      const minTierTimeout = cycleMs * 3;
       if (timeInMinTier >= minTierTimeout) {
         const newTier = card.escalationTier - config.dropAmount;
-        updates.push({ id: card.id, newTier: Math.max(newTier, 0) });
+        // Anclado al vencimiento del timeout (3 ciclos) — el próximo drop
+        // vence un ciclo después, no 3 (el grace period ya se cumplió).
+        updates.push({ id: card.id, newTier: Math.max(newTier, 0), newTierStartedAt: new Date(card.tierStartedAt.getTime() + minTierTimeout) });
       }
     }
   }
@@ -94,7 +103,7 @@ export async function processEscalationTiers(): Promise<{ processed: number }> {
           where: { id: u.id },
           data: {
             escalationTier: u.newTier,
-            tierStartedAt: new Date(),
+            tierStartedAt: u.newTierStartedAt,
           },
         }),
       ),

@@ -39,7 +39,11 @@ export function estimateTimeToAccess(
   if (minMinutes === Infinity) return null;
 
   return {
-    minMinutes: Math.ceil(minMinutes),
+    // Mínimo 1: ceil(0) mostraba "~0 min" durante toda la ventana entre el
+    // vencimiento de la card y el próximo tick del cron (hasta 60s) — el
+    // buyer veía "0 min" y la tarjeta no aparecía. Con el schedule anclado
+    // (escalation.ts) la estimación es exacta ±1 tick.
+    minMinutes: Math.max(1, Math.ceil(minMinutes)),
     nextCardTier,
     totalInaccessible: inaccessibleCards.length,
     totalInaccessibleAmount,
