@@ -81,7 +81,7 @@ export const auth = betterAuth({
   },
 
   plugins: [
-    customSession(async ({ user }) => {
+    customSession(async ({ user, session }) => {
       const telegramUser = await prisma.telegramUser.findUnique({
         where: { userId: user.id },
         select: {
@@ -94,11 +94,17 @@ export const auth = betterAuth({
         },
       });
 
+      // IMPORTANTE: retornar `session` también — el plugin customSession
+      // reemplaza el response de getSession con EXACTAMENTE lo que el callback
+      // retorna. Omitir `session` deja getSession() como { user } sin session
+      // en toda la app (rompió unlockWithPasskey, que lee session.createdAt
+      // para el gate de sesión fresca).
       return {
         user: {
           ...user,
           telegramUser: telegramUser ? { ...telegramUser, hasPhoto: !!telegramUser.photoData, photoData: undefined } : undefined,
         },
+        session,
       };
     }),
     twoFactor({

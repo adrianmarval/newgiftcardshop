@@ -3,12 +3,35 @@ import type { NotificationChannelResult, NotificationContext, NotificationMessag
 import { TelegramChannel } from './channels/telegram.channel';
 import { WebPushChannel } from './channels/webpush.channel';
 import { publishToUser } from '@/lib/realtime/bus';
-import type { NotificationType, Prisma } from '@/generated/prisma/client';
+import { Prisma, type NotificationType } from '@/generated/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Tipos de alerta de stock: in-app queda instantáneo siempre; Telegram/Push
 // solo si el buyer activó las alertas de stock (stockAlertsEnabled).
 const STOCK_ALERT_TYPES: ReadonlySet<NotificationType> = new Set(['STOCK_AVAILABLE', 'TIER_DROP_ACCESS']);
+
+// El upsert de Prisma NO es atómico (SELECT + INSERT/UPDATE dentro de una tx):
+// dos dispatches concurrentes para el mismo usuario (payout + sync cron,
+// stock sweep + tier drop, etc.) pueden ambos no encontrar la fila y ambos
+// INSERT → el segundo recibe P2002. Al reintentar, la fila ya existe (la creó
+// el dispatch competidor) y el retry siempre resuelve como update.
+const MAX_UPSERT_ATTEMPTS = 3;
+
+async function upsertPreference(userId: string) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await prisma.notificationPreference.upsert({
+        where: { userId },
+        update: {},
+        create: { userId },
+        include: { subscriptions: true },
+      });
+    } catch (err) {
+      const isUniqueRace = err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002';
+      if (!isUniqueRace || attempt >= MAX_UPSERT_ATTEMPTS) throw err;
+    }
+  }
+}
 
 export class NotificationDispatcher {
   async dispatch(userId: string, message: NotificationMessage): Promise<void> {
@@ -45,12 +68,7 @@ export class NotificationDispatcher {
       logger.error(`[Notifications] Error persistiendo Notification (web):`, { error: { name: 'NotificationPersistError', message: String(err) } });
     }
 
-    const preference = await prisma.notificationPreference.upsert({
-      where: { userId },
-      update: {},
-      create: { userId },
-      include: { subscriptions: true },
-    });
+    const preference = await upsertPreference(userId);
 
     // Alertas de stock (STOCK_AVAILABLE, TIER_DROP_ACCESS): in-app queda
     // instantáneo (persistido arriba). Telegram/Push solo con alertas ON.

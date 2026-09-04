@@ -21,9 +21,9 @@ export const unlockWithPasskey = buyerActionClient.outputSchema(unlockOutputSche
   const passkeyCount = await prisma.passkey.count({ where: { userId: ctx.auth.user.id } });
   if (passkeyCount === 0) throw new ActionError('No tienes una passkey registrada. Usa tu PIN de seguridad.');
 
-  // ctx.auth es el authData completo de getSession() ({ session, user }) en
-  // runtime; el tipo inferido por next-safe-action solo expone user.
-  const sessionCreatedAt = new Date((ctx.auth as unknown as { session: { createdAt: Date | string } }).session.createdAt).getTime();
+  // Gate de frescura: ctx.auth.session viene tipado de $Infer.Session (el
+  // callback de customSession en auth-server retorna { user, session }).
+  const sessionCreatedAt = new Date(ctx.auth.session.createdAt).getTime();
   if (Number.isNaN(sessionCreatedAt) || Date.now() - sessionCreatedAt > FRESH_SESSION_WINDOW_MS) {
     throw new ActionError('La verificación con passkey expiró. Intenta de nuevo.');
   }

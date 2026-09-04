@@ -31,7 +31,11 @@ export type SessionUser = {
 export type Session = {
   session: {
     id: string;
+    token: string;
+    userId: string;
     expiresAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
     ipAddress: string | null;
     userAgent: string | null;
   };
