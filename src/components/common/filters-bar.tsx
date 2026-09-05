@@ -90,9 +90,12 @@ export function FiltersBar({
     (k) => (params[k] ?? '') !== (defaults[k] ?? ''),
   );
 
-  const setParam = (key: string, value: unknown) => setParams({ [key]: value });
+  // Toda vista de listas incluye `page` en sus parsers: al cambiar cualquier
+  // filtro se resetea a página 1 (page=1 es el default → nuqs lo limpia de la
+  // URL). Sin esto, filtrar estando en una página alta cae en página vacía.
+  const setParam = (key: string, value: unknown) => setParams({ [key]: value, page: 1 });
 
-  const handleClear = () => setParams(defaults);
+  const handleClear = () => setParams({ ...defaults, page: 1 });
 
   const getParam = (key: string) => (params[key] as string) || '';
 

@@ -29,6 +29,48 @@ function buildBatchWhere(input: ListBatchesServiceInput): Prisma.GiftcardBatchWh
     if (input.dateTo) where.createdAt.lte = new Date(input.dateTo);
   }
 
+  // Filtro de estado a nivel SQL — el status del batch es derivado de sus cards,
+  // pero todas las derivaciones son expresables como filtros de relación Prisma.
+  // CRÍTICO: debe vivir en el where (NO post-filtrar la página) para que
+  // count/findMany/paginación sean consistentes.
+  if (input.status && input.status !== 'ALL') {
+    switch (input.status) {
+      case 'PROCESSING':
+        // confirmedCount < cardsCount ⇔ al menos una card sin confirmar
+        where.isPaid = false;
+        where.cancelledAt = null;
+        where.giftcards = { some: { isConfirmed: false } };
+        break;
+      case 'CONFIRMED': {
+        // confirmedCount === cardsCount ⇔ todas confirmadas (every sobre set
+        // vacío es true vacuamente → exigir al menos 1 card con some: {})
+        where.isPaid = false;
+        where.cancelledAt = null;
+        const confirmedClauses: Prisma.GiftcardBatchWhereInput[] = [
+          { giftcards: { every: { isConfirmed: true } } },
+          { giftcards: { some: {} } },
+        ];
+        // Seller scope además excluye batches con issues (admin los ve como CONFIRMED)
+        if (input.scope === 'seller') {
+          confirmedClauses.push({ giftcards: { none: { issues: { some: {} } } } });
+        }
+        where.AND = confirmedClauses;
+        break;
+      }
+      case 'PAID':
+        where.isPaid = true;
+        where.cancelledAt = null;
+        break;
+      case 'CANCELLED':
+        where.cancelledAt = { not: null };
+        break;
+      case 'REPORTED':
+      case 'WITH_ISSUES':
+        where.giftcards = { some: { issues: { some: {} } } };
+        break;
+    }
+  }
+
   if (input.search) {
     const isNumericSearch = !isNaN(Number(input.search));
     const hashedSearch = hashCode(input.search.trim().toUpperCase());
@@ -368,39 +410,14 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
     };
   });
 
-  // Post-filter by status (computed from batch fields, not queryable in SQL efficiently)
+  // Admin-only: post-filter by amount range.
+  // DEUDA CONOCIDA: esto filtra la página YA paginada (el where no incluye el
+  // rango porque effectiveTotal es un agregado condicional de cards), así que
+  // totalCount/páginas no reflejan el filtro. Hoy es inalcanzable desde la UI
+  // (ningún FiltersBar expone amountMin/amountMax — el builder siempre manda
+  // null, lo que evalúa como no-op 0..Infinity). Si se expone en UI, migrar a
+  // pre-query de IDs con $queryRaw (SUM(CASE...) GROUP BY batchId HAVING...).
   let filtered = items;
-  if (input.status && input.status !== 'ALL') {
-    filtered = filtered.filter((b) => {
-      const batch = b as {
-        isPaid: boolean;
-        cancelledAt: string | null;
-        confirmedCount: number;
-        cardsCount: number;
-        hasIssues: boolean;
-      };
-      switch (input.status) {
-        case 'PROCESSING':
-          return !batch.isPaid && !batch.cancelledAt && batch.confirmedCount < batch.cardsCount;
-        case 'CONFIRMED':
-          if (input.scope === 'admin') {
-            return !batch.isPaid && !batch.cancelledAt && batch.confirmedCount === batch.cardsCount;
-          }
-          return !batch.isPaid && !batch.cancelledAt && batch.confirmedCount === batch.cardsCount && !batch.hasIssues;
-        case 'PAID':
-          return batch.isPaid && !batch.cancelledAt;
-        case 'CANCELLED':
-          return Boolean(batch.cancelledAt);
-        case 'REPORTED':
-        case 'WITH_ISSUES':
-          return batch.hasIssues;
-        default:
-          return true;
-      }
-    });
-  }
-
-  // Admin-only: post-filter by amount range
   if (input.scope === 'admin' && (input.amountMin !== undefined || input.amountMax !== undefined)) {
     const min = input.amountMin ?? 0;
     const max = input.amountMax ?? Infinity;

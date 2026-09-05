@@ -280,6 +280,8 @@ El `NotificationDispatcher` (`src/lib/notifications/dispatcher.ts`) despacha por
 - `sendOtpEmail` swallowa errores (dead catch blocks)
 - Locks en memoria (`sequentialize`) inútiles en serverless multi-instancia
 - Refactor pendiente: extraer `OrderService`, `PaymentService` compartidos bot+web
+- Sort `amount_high`/`amount_low` de lotes ordena por `createdAt`, NO por monto (`batch-list.service.ts` — `effectiveTotal` es agregado post-query; arreglarlo requiere ordenar por agregado SQL)
+- `amountMin`/`amountMax` de lotes post-filtran la página YA paginada (totales/páginas no reflejan el filtro). Hoy inalcanzable desde UI (el builder siempre manda `null` → no-op `0..Infinity`); si se expone en UI, migrar a pre-query de IDs con `$queryRaw` (`SUM(CASE...)` replicando `computeFaceValueTotal`, `GROUP BY "batchId" HAVING...`)
 
 ## Comandos útiles
 
