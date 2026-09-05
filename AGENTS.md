@@ -295,7 +295,7 @@ El `NotificationDispatcher` (`src/lib/notifications/dispatcher.ts`) despacha por
 ```bash
 npx tsc --noEmit          # Typecheck (limpio = OK)
 npm run lint              # ESLint (77 errores pre-existentes, todos no-explicit-any en bots)
-npx prisma db push --accept-data-loss  # Push schema a DB local
+npx prisma migrate dev    # Cambios de schema en local: crea Y aplica la migración (NUNCA db push — prod corre `migrate deploy` en el start y un cambio sin archivo de migración jamás llega a prod; además deja dev en drift pidiendo reset)
 npx prisma generate       # Regenerar client
 docker compose up -d database  # Levantar Postgres local (puerto 5444)
 pnpm tsx --tsconfig tsconfig.json scripts/seed-test-data.ts  # Datos de carga para testear listas (idempotente; RESET_TEST_DATA=1 regenera). Crea test-load-seller/buyer@test.local (pass: Test1234.) + 45 users + 160 batches + 130 órdenes
