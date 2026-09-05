@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ComponentType, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Search, Edit2, X, Check, Globe } from 'lucide-react';
+import { Trash2, Plus, Search, Edit2, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
+import { useIsMobile } from '@/hooks/use-mobile';
 import Image from 'next/image';
 import {
   listBrands,
@@ -31,12 +33,13 @@ interface BrandsManagerProps {
 }
 
 export function BrandsManager({ brands: initialBrands, countries }: BrandsManagerProps) {
+  const isMobile = useIsMobile();
   const [brands, setBrands] = useState(initialBrands);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isAddCountryDialogOpen, setIsAddCountryDialogOpen] = useState(false);
-  const [editingCountryId, setEditingCountryId] = useState<string | null>(null);
+  const [editingCountry, setEditingCountry] = useState<BrandCountrySummary | null>(null);
 
   const [newBrand, setNewBrand] = useState({ name: '', slug: '', icon: '📦', image: '' });
   const [newCountry, setNewCountry] = useState({ countryId: '', minAmount: '', maxAmount: '', claimCodePattern: '' });
@@ -79,7 +82,7 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
   const { execute: executeUpdateLimits, status: updateLimitsStatus } = useAction(updateBrandCountryLimits, {
     onSuccess: () => {
       showAlert.toast.success('Limits updated');
-      setEditingCountryId(null);
+      setEditingCountry(null);
       refreshBrands();
     },
     onError: (e) => showAlert.toast.error('Error updating limits: ' + (e.error?.serverError || 'Unknown error')),
@@ -145,17 +148,157 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
     });
   };
 
-  const handleUpdateLimits = (bc: BrandCountrySummary) => {
-    if (!selectedBrand) return;
+  const openEditCountry = (bc: BrandCountrySummary) => {
+    setEditingCountry(bc);
+    setCountryLimits({
+      minAmount: bc.minAmount?.toString() || '',
+      maxAmount: bc.maxAmount?.toString() || '',
+      claimCodePattern: bc.claimCodePattern || '',
+      stockReminderInterval: bc.stockReminderIntervalMinutes?.toString() || '',
+    });
+  };
+
+  const handleUpdateLimits = () => {
+    if (!selectedBrand || !editingCountry) return;
     executeUpdateLimits({
       brandId: selectedBrand.id,
-      countryId: bc.countryId,
+      countryId: editingCountry.countryId,
       minAmount: countryLimits.minAmount ? parseFloat(countryLimits.minAmount) : null,
       maxAmount: countryLimits.maxAmount ? parseFloat(countryLimits.maxAmount) : null,
       claimCodePattern: countryLimits.claimCodePattern || null,
       stockReminderIntervalMinutes: countryLimits.stockReminderInterval ? parseInt(countryLimits.stockReminderInterval, 10) : null,
     });
   };
+
+  // Contenedor adaptativo: Drawer bottom en mobile / Dialog centrado en desktop (patrón PromptDrawer)
+  const FormRoot: ComponentType<{ open: boolean; onOpenChange: (open: boolean) => void; children?: ReactNode }> = isMobile
+    ? Drawer
+    : Dialog;
+  const FormContent: ComponentType<{ className?: string; children?: ReactNode }> = isMobile ? DrawerContent : DialogContent;
+  const FormHeader: ComponentType<{ className?: string; children?: ReactNode }> = isMobile ? DrawerHeader : DialogHeader;
+  const FormTitle: ComponentType<{ className?: string; children?: ReactNode }> = isMobile ? DrawerTitle : DialogTitle;
+  const FormDescription: ComponentType<{ className?: string; children?: ReactNode }> = isMobile
+    ? DrawerDescription
+    : DialogDescription;
+  const FormFooter: ComponentType<{ className?: string; children?: ReactNode }> = isMobile ? DrawerFooter : DialogFooter;
+
+  const brandDetail = selectedBrand ? (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+            {selectedBrand.image ? (
+              <Image
+                src={selectedBrand.image}
+                alt={selectedBrand.name}
+                width={40}
+                height={40}
+                className="rounded object-contain"
+                style={{ width: 'auto', height: 'auto' }}
+              />
+            ) : (
+              <span className="text-3xl">{selectedBrand.icon}</span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <CardTitle className="truncate">{selectedBrand.name}</CardTitle>
+            <span className="text-muted-foreground text-sm">/{selectedBrand.slug}</span>
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <Button
+            variant={selectedBrand.isActive ? 'outline' : 'default'}
+            size="sm"
+            onClick={() => executeToggleBrand({ id: selectedBrand.id, isActive: !selectedBrand.isActive })}
+            disabled={toggleBrandStatus === 'executing'}
+          >
+            {selectedBrand.isActive ? 'Disable' : 'Enable'}
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={async () => {
+              if (await showAlert.confirm('Delete brand', 'Delete this brand?')) {
+                executeDelete({ id: selectedBrand.id });
+              }
+            }}
+            disabled={deleteStatus === 'executing'}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-4 mb-2 flex items-center justify-between">
+        <h3 className="font-semibold">Countries ({selectedBrand.countries.length})</h3>
+        <Button size="sm" className="gap-1" disabled={availableCountries.length === 0} onClick={() => setIsAddCountryDialogOpen(true)}>
+          <Plus className="h-4 w-4" /> Add Country
+        </Button>
+      </div>
+
+      <div className="space-y-1">
+        {selectedBrand.countries.map((bc) => (
+          <div
+            key={bc.id}
+            className={`flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center ${
+              bc.isActive ? 'border-border' : 'border-amber-500/30 bg-amber-500/5'
+            }`}
+          >
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded">
+                <Globe className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1">
+                  <span className="font-medium">{bc.countryName}</span>
+                  <span className="text-muted-foreground text-xs">({bc.countryCode})</span>
+                  {!bc.isActive && (
+                    <Badge variant="outline" className="border-amber-500 text-xs text-amber-500">
+                      Inactive
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-muted-foreground block text-xs">
+                  Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'}
+                </span>
+                <span className="text-muted-foreground block text-[10px]">
+                  Reminder: {bc.stockReminderIntervalMinutes ? `${bc.stockReminderIntervalMinutes} min` : 'global'}
+                </span>
+                {bc.claimCodePattern && (
+                  <span className="text-muted-foreground block text-[10px] break-all">Code pattern: {bc.claimCodePattern}</span>
+                )}
+              </div>
+            </div>
+            <div className="flex shrink-0 gap-1 self-end sm:self-auto">
+              <Button size="sm" variant="outline" onClick={() => openEditCountry(bc)}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant={bc.isActive ? 'outline' : 'default'}
+                onClick={() => executeToggleCountry({ brandId: selectedBrand.id, countryId: bc.countryId, isActive: !bc.isActive })}
+                disabled={toggleCountryStatus === 'executing'}
+              >
+                {bc.isActive ? 'Disable' : 'Enable'}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={async () => {
+                  if (await showAlert.confirm('Remove country', 'Remove this country from brand?')) {
+                    executeRemoveCountry({ brandId: selectedBrand.id, countryId: bc.countryId });
+                  }
+                }}
+                disabled={removeCountryStatus === 'executing'}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  ) : null;
 
   return (
     <div className="flex h-full flex-col gap-1 md:flex-row">
@@ -164,49 +307,9 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle>Brands</CardTitle>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-1">
-                  <Plus className="h-4 w-4" /> New
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Brand</DialogTitle>
-                  <DialogDescription className="sr-only">Detalles de la nueva marca</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-1 py-4">
-                  <div>
-                    <Label>Name</Label>
-                    <Input
-                      value={newBrand.name}
-                      onChange={(e) => setNewBrand((p) => ({ ...p, name: e.target.value }))}
-                      placeholder="Amazon"
-                    />
-                  </div>
-                  <div>
-                    <Label>Slug</Label>
-                    <Input
-                      value={newBrand.slug}
-                      onChange={(e) => setNewBrand((p) => ({ ...p, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
-                      placeholder="amazon"
-                    />
-                  </div>
-                  <div>
-                    <Label>Icon (Emoji)</Label>
-                    <Input value={newBrand.icon} onChange={(e) => setNewBrand((p) => ({ ...p, icon: e.target.value }))} placeholder="📦" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateBrand} disabled={createStatus === 'executing'}>
-                    Create
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button size="sm" className="gap-1" onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4" /> New
+            </Button>
           </div>
           <div className="relative mt-2">
             <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -256,274 +359,198 @@ export function BrandsManager({ brands: initialBrands, countries }: BrandsManage
         </CardContent>
       </Card>
 
-      {/* Right Panel: Brand Details */}
-      <Card className="w-full flex-1 md:w-auto">
-        {selectedBrand ? (
-          <>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
-                    {selectedBrand.image ? (
-                      <Image
-                        src={selectedBrand.image}
-                        alt={selectedBrand.name}
-                        width={40}
-                        height={40}
-                        className="rounded object-contain"
-                        style={{ width: 'auto', height: 'auto' }}
-                      />
-                    ) : (
-                      <span className="text-3xl">{selectedBrand.icon}</span>
-                    )}
-                  </div>
-                  <div>
-                    <CardTitle>{selectedBrand.name}</CardTitle>
-                    <span className="text-muted-foreground text-sm">/{selectedBrand.slug}</span>
-                  </div>
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    variant={selectedBrand.isActive ? 'outline' : 'default'}
-                    size="sm"
-                    onClick={() => executeToggleBrand({ id: selectedBrand.id, isActive: !selectedBrand.isActive })}
-                    disabled={toggleBrandStatus === 'executing'}
-                  >
-                    {selectedBrand.isActive ? 'Disable' : 'Enable'}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={async () => {
-                      if (await showAlert.confirm('Delete brand', 'Delete this brand?')) {
-                        executeDelete({ id: selectedBrand.id });
-                      }
-                    }}
-                    disabled={deleteStatus === 'executing'}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="font-semibold">Countries ({selectedBrand.countries.length})</h3>
-                <Dialog open={isAddCountryDialogOpen} onOpenChange={setIsAddCountryDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="gap-1" disabled={availableCountries.length === 0}>
-                      <Plus className="h-4 w-4" /> Add Country
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Country to {selectedBrand.name}</DialogTitle>
-                      <DialogDescription className="sr-only">Configuración del país a añadir</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-1 py-4">
-                      <div>
-                        <Label>Country</Label>
-                        <Select value={newCountry.countryId} onValueChange={(v) => setNewCountry((p) => ({ ...p, countryId: v }))}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select country" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableCountries.map((c) => (
-                              <SelectItem key={c.id} value={c.id}>
-                                {c.name} ({c.code})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1">
-                        <div>
-                          <Label>Min Amount (optional)</Label>
-                          <Input
-                            type="number"
-                            value={newCountry.minAmount}
-                            onChange={(e) => setNewCountry((p) => ({ ...p, minAmount: e.target.value }))}
-                            placeholder="5"
-                          />
-                        </div>
-                        <div>
-                          <Label>Max Amount (optional)</Label>
-                          <Input
-                            type="number"
-                            value={newCountry.maxAmount}
-                            onChange={(e) => setNewCountry((p) => ({ ...p, maxAmount: e.target.value }))}
-                            placeholder="500"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label>Claim Code Pattern (optional)</Label>
-                        <Input
-                          value={newCountry.claimCodePattern}
-                          onChange={(e) => setNewCountry((p) => ({ ...p, claimCodePattern: e.target.value }))}
-                          placeholder="^[A-Z0-9]{14,15}$"
-                        />
-                        <p className="text-muted-foreground mt-1 text-[10px]">
-                          Regex applied to normalized code (no hyphens/spaces). Default: ^[A-Z0-9]&#123;14,15&#125;$
-                        </p>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddCountryDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleAddCountry} disabled={addCountryStatus === 'executing' || !newCountry.countryId}>
-                        Add
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              <div className="space-y-1">
-                {selectedBrand.countries.map((bc) => (
-                  <div
-                    key={bc.id}
-                    className={`flex items-center gap-1 rounded-lg border p-3 ${bc.isActive ? 'border-border' : 'border-amber-500/30 bg-amber-500/5'}`}
-                  >
-                    <div className="bg-muted flex h-8 w-8 items-center justify-center rounded">
-                      <Globe className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium">{bc.countryName}</span>
-                        <span className="text-muted-foreground text-xs">({bc.countryCode})</span>
-                        {!bc.isActive && (
-                          <Badge variant="outline" className="border-amber-500 text-xs text-amber-500">
-                            Inactive
-                          </Badge>
-                        )}
-                      </div>
-                      <span className="text-muted-foreground block text-xs">
-                        Limits: ${bc.minAmount ?? '—'} - ${bc.maxAmount ?? '—'}
-                      </span>
-                      <span className="text-muted-foreground block text-[10px]">
-                        Reminder: {bc.stockReminderIntervalMinutes ? `${bc.stockReminderIntervalMinutes} min` : 'global'}
-                      </span>
-                      {bc.claimCodePattern && (
-                        <span className="text-muted-foreground block text-[10px]">
-                          Code pattern: {bc.claimCodePattern}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      {editingCountryId === bc.id ? (
-                        <div className="flex flex-wrap items-center gap-1">
-                          <div className="flex flex-col">
-                            <span className="text-muted-foreground text-[9px]">Min ($)</span>
-                            <Input
-                              type="number"
-                              placeholder="Min"
-                              value={countryLimits.minAmount}
-                              onChange={(e) => setCountryLimits((p) => ({ ...p, minAmount: e.target.value }))}
-                              className="h-8 w-16"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-muted-foreground text-[9px]">Max ($)</span>
-                            <Input
-                              type="number"
-                              placeholder="Max"
-                              value={countryLimits.maxAmount}
-                              onChange={(e) => setCountryLimits((p) => ({ ...p, maxAmount: e.target.value }))}
-                              className="h-8 w-16"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-muted-foreground text-[9px]">Code Pattern</span>
-                            <Input
-                              placeholder="^[A-Z0-9]{14,15}$"
-                              value={countryLimits.claimCodePattern}
-                              onChange={(e) => setCountryLimits((p) => ({ ...p, claimCodePattern: e.target.value }))}
-                              className="h-8 w-40"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-muted-foreground text-[9px]">Reminder (min)</span>
-                            <Input
-                              type="number"
-                              min={15}
-                              max={1440}
-                              placeholder="Global"
-                              value={countryLimits.stockReminderInterval}
-                              onChange={(e) => setCountryLimits((p) => ({ ...p, stockReminderInterval: e.target.value }))}
-                              className="h-8 w-20"
-                            />
-                          </div>
-                          <div className="mt-4 flex items-end gap-1">
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateLimits(bc)}
-                              disabled={updateLimitsStatus === 'executing'}
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => setEditingCountryId(null)}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setEditingCountryId(bc.id);
-                              setCountryLimits({
-                                minAmount: bc.minAmount?.toString() || '',
-                                maxAmount: bc.maxAmount?.toString() || '',
-                                claimCodePattern: bc.claimCodePattern || '',
-                                stockReminderInterval: bc.stockReminderIntervalMinutes?.toString() || '',
-                              });
-                            }}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={bc.isActive ? 'outline' : 'default'}
-                            onClick={() =>
-                              executeToggleCountry({ brandId: selectedBrand.id, countryId: bc.countryId, isActive: !bc.isActive })
-                            }
-                            disabled={toggleCountryStatus === 'executing'}
-                          >
-                            {bc.isActive ? 'Disable' : 'Enable'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={async () => {
-                              if (await showAlert.confirm('Remove country', 'Remove this country from brand?')) {
-                                executeRemoveCountry({ brandId: selectedBrand.id, countryId: bc.countryId });
-                              }
-                            }}
-                            disabled={removeCountryStatus === 'executing'}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
+      {/* Right Panel (desktop): Brand Details */}
+      {!isMobile && (
+        <Card className="w-full flex-1 md:w-auto">
+          {selectedBrand ? (
+            <CardContent className="custom-scrollbar h-full overflow-y-auto pt-6">{brandDetail}</CardContent>
+          ) : (
+            <CardContent className="flex h-full items-center justify-center">
+              <div className="text-muted-foreground text-center">
+                <Globe className="mx-auto h-12 w-12 opacity-30" />
+                <p>Select a brand to view details</p>
               </div>
             </CardContent>
-          </>
-        ) : (
-          <CardContent className="flex h-full items-center justify-center">
-            <div className="text-muted-foreground text-center">
-              <Globe className="mx-auto h-12 w-12 opacity-30" />
-              <p>Select a brand to view details</p>
+          )}
+        </Card>
+      )}
+
+      {/* Brand Details (mobile): bottom Drawer */}
+      {isMobile && (
+        <Drawer open={!!selectedBrand} onOpenChange={(open) => !open && setSelectedBrandId(null)}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader className="sr-only">
+              <DrawerTitle>{selectedBrand?.name ?? 'Brand details'}</DrawerTitle>
+              <DrawerDescription>Brand countries and limits</DrawerDescription>
+            </DrawerHeader>
+            <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-4">{brandDetail}</div>
+          </DrawerContent>
+        </Drawer>
+      )}
+
+      {/* Create Brand */}
+      <FormRoot open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <FormContent>
+          <FormHeader className={isMobile ? 'items-start text-left' : undefined}>
+            <FormTitle>Create New Brand</FormTitle>
+            <FormDescription className="sr-only">Detalles de la nueva marca</FormDescription>
+          </FormHeader>
+          <div className={isMobile ? 'custom-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-2' : 'space-y-2 py-4'}>
+            <div>
+              <Label>Name</Label>
+              <Input value={newBrand.name} onChange={(e) => setNewBrand((p) => ({ ...p, name: e.target.value }))} placeholder="Amazon" />
             </div>
-          </CardContent>
-        )}
-      </Card>
+            <div>
+              <Label>Slug</Label>
+              <Input
+                value={newBrand.slug}
+                onChange={(e) => setNewBrand((p) => ({ ...p, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
+                placeholder="amazon"
+              />
+            </div>
+            <div>
+              <Label>Icon (Emoji)</Label>
+              <Input value={newBrand.icon} onChange={(e) => setNewBrand((p) => ({ ...p, icon: e.target.value }))} placeholder="📦" />
+            </div>
+          </div>
+          <FormFooter className={isMobile ? undefined : 'flex-row justify-end gap-2'}>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateBrand} disabled={createStatus === 'executing'}>
+              Create
+            </Button>
+          </FormFooter>
+        </FormContent>
+      </FormRoot>
+
+      {/* Add Country */}
+      <FormRoot open={isAddCountryDialogOpen} onOpenChange={setIsAddCountryDialogOpen}>
+        <FormContent>
+          <FormHeader className={isMobile ? 'items-start text-left' : undefined}>
+            <FormTitle>Add Country to {selectedBrand?.name}</FormTitle>
+            <FormDescription className="sr-only">Configuración del país a añadir</FormDescription>
+          </FormHeader>
+          <div className={isMobile ? 'custom-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-2' : 'space-y-2 py-4'}>
+            <div>
+              <Label>Country</Label>
+              <Select value={newCountry.countryId} onValueChange={(v) => setNewCountry((p) => ({ ...p, countryId: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCountries.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} ({c.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Min Amount (optional)</Label>
+                <Input
+                  type="number"
+                  value={newCountry.minAmount}
+                  onChange={(e) => setNewCountry((p) => ({ ...p, minAmount: e.target.value }))}
+                  placeholder="5"
+                />
+              </div>
+              <div>
+                <Label>Max Amount (optional)</Label>
+                <Input
+                  type="number"
+                  value={newCountry.maxAmount}
+                  onChange={(e) => setNewCountry((p) => ({ ...p, maxAmount: e.target.value }))}
+                  placeholder="500"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Claim Code Pattern (optional)</Label>
+              <Input
+                value={newCountry.claimCodePattern}
+                onChange={(e) => setNewCountry((p) => ({ ...p, claimCodePattern: e.target.value }))}
+                placeholder="^[A-Z0-9]{14,15}$"
+              />
+              <p className="text-muted-foreground mt-1 text-[10px]">
+                Regex applied to normalized code (no hyphens/spaces). Default: ^[A-Z0-9]&#123;14,15&#125;$
+              </p>
+            </div>
+          </div>
+          <FormFooter className={isMobile ? undefined : 'flex-row justify-end gap-2'}>
+            <Button variant="outline" onClick={() => setIsAddCountryDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCountry} disabled={addCountryStatus === 'executing' || !newCountry.countryId}>
+              Add
+            </Button>
+          </FormFooter>
+        </FormContent>
+      </FormRoot>
+
+      {/* Edit Country Limits */}
+      <FormRoot open={!!editingCountry} onOpenChange={(open) => !open && setEditingCountry(null)}>
+        <FormContent>
+          <FormHeader className={isMobile ? 'items-start text-left' : undefined}>
+            <FormTitle>
+              Edit {editingCountry?.countryName} ({editingCountry?.countryCode})
+            </FormTitle>
+            <FormDescription className="sr-only">Límites y configuración del país</FormDescription>
+          </FormHeader>
+          <div className={isMobile ? 'custom-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-2' : 'space-y-2 py-4'}>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Min Amount ($)</Label>
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={countryLimits.minAmount}
+                  onChange={(e) => setCountryLimits((p) => ({ ...p, minAmount: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>Max Amount ($)</Label>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={countryLimits.maxAmount}
+                  onChange={(e) => setCountryLimits((p) => ({ ...p, maxAmount: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Claim Code Pattern</Label>
+              <Input
+                placeholder="^[A-Z0-9]{14,15}$"
+                value={countryLimits.claimCodePattern}
+                onChange={(e) => setCountryLimits((p) => ({ ...p, claimCodePattern: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Stock Reminder Interval (min)</Label>
+              <Input
+                type="number"
+                min={15}
+                max={1440}
+                placeholder="Global"
+                value={countryLimits.stockReminderInterval}
+                onChange={(e) => setCountryLimits((p) => ({ ...p, stockReminderInterval: e.target.value }))}
+              />
+              <p className="text-muted-foreground mt-1 text-[10px]">Leave empty to use the global setting.</p>
+            </div>
+          </div>
+          <FormFooter className={isMobile ? undefined : 'flex-row justify-end gap-2'}>
+            <Button variant="outline" onClick={() => setEditingCountry(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateLimits} disabled={updateLimitsStatus === 'executing'}>
+              Save
+            </Button>
+          </FormFooter>
+        </FormContent>
+      </FormRoot>
     </div>
   );
 }

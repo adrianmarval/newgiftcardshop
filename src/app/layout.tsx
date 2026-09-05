@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Aldrich, Lora, IBM_Plex_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
-import Script from 'next/script';
 import './globals.css';
 import { Providers } from '@/components/providers';
 import { AppAlertHost } from '@/components/common';
@@ -23,6 +22,32 @@ const fontMono = IBM_Plex_Mono({
   variable: '--font-mono',
   weight: '400',
 });
+
+/*
+  Captura GLOBAL de beforeinstallprompt ANTES de React: el evento dispara una
+  sola vez, apenas el SW está activo (antes de la hidratación). Cualquier
+  listener montado por un componente llega tarde en visitas repetidas y el
+  evento NO se re-emite — la install landing (/tg-open) y cualquier futuro CTA
+  de instalación in-app consumen window.__pwaInstallPrompt / el evento
+  'pwa-installable'.
+  Se inyecta como HTML crudo via dangerouslySetInnerHTML (NUNCA next/script ni
+  un host element <script> en JSX): en SSR el browser lo parsea y ejecuta
+  inline antes de la hidratación; en client renders del RootLayout (ej. el
+  boundary raíz unauthorized.tsx en soft-nav) React solo setea innerHTML y no
+  ve ningún <script> — next/script beforeInteractive SIEMPRE renderiza un
+  script inline y React 19 advierte "Encountered a script tag..." en ese path.
+*/
+const PWA_INSTALL_CAPTURE_SCRIPT = `<script>
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  window.__pwaInstallPrompt = e;
+  window.dispatchEvent(new Event('pwa-installable'));
+});
+window.addEventListener('appinstalled', function () {
+  window.__pwaInstallPrompt = null;
+  window.dispatchEvent(new Event('pwa-installed'));
+});
+</script>`;
 
 export const viewport: Viewport = {
   themeColor: '#000000',
@@ -60,27 +85,8 @@ export default async function RootLayout({
   return (
     <html lang="en" className={theme} translate="no" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
-        {/*
-          Captura GLOBAL de beforeinstallprompt ANTES de React: el evento
-          dispara una sola vez, apenas el SW está activo (antes de la
-          hidratación). Cualquier listener montado por un componente llega
-          tarde en visitas repetidas y el evento NO se re-emite — la install
-          landing (/tg-open) y cualquier futuro CTA de instalación in-app
-          consumen window.__pwaInstallPrompt / el evento 'pwa-installable'.
-        */}
-        <Script id="pwa-install-capture" strategy="beforeInteractive">
-          {`
-            window.addEventListener('beforeinstallprompt', function (e) {
-              e.preventDefault();
-              window.__pwaInstallPrompt = e;
-              window.dispatchEvent(new Event('pwa-installable'));
-            });
-            window.addEventListener('appinstalled', function () {
-              window.__pwaInstallPrompt = null;
-              window.dispatchEvent(new Event('pwa-installed'));
-            });
-          `}
-        </Script>
+        {/* Captura temprana de beforeinstallprompt — ver PWA_INSTALL_CAPTURE_SCRIPT */}
+        <div id="pwa-install-capture" dangerouslySetInnerHTML={{ __html: PWA_INSTALL_CAPTURE_SCRIPT }} />
         <Providers>{children}</Providers>
         <AppAlertHost />
         <Toaster

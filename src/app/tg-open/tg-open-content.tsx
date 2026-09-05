@@ -102,10 +102,11 @@ export function TgOpenContent({ target, intentInstall }: TgOpenContentProps) {
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // El evento beforeinstallprompt lo captura el script beforeInteractive
-    // del root layout (dispara UNA vez, antes de que este componente exista —
-    // un listener local llegaría tarde en visitas repetidas). Aquí solo
-    // adoptamos el stash global y escuchamos el anuncio 'pwa-installable'.
+    // El evento beforeinstallprompt lo captura el script inline del root
+    // layout (#pwa-install-capture — dispara UNA vez, antes de que este
+    // componente exista; un listener local llegaría tarde en visitas
+    // repetidas). Aquí solo adoptamos el stash global y escuchamos el
+    // anuncio 'pwa-installable'.
     const adopt = () => {
       const ev = window.__pwaInstallPrompt;
       if (ev) {
