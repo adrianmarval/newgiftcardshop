@@ -321,12 +321,7 @@ export async function notifySellerBatchDeleted(sellerId: string, batchId: number
   await notificationDispatcher.dispatch(sellerId, message);
 }
 
-export async function notifyAdminBatchProfitRealized(
-  batchId: number,
-  collected: number,
-  paidOut: number,
-  profit: number,
-): Promise<void> {
+export async function notifyAdminBatchProfitRealized(batchId: number, collected: number, paidOut: number, profit: number): Promise<void> {
   const admin = await prisma.user.findFirst({
     where: { role: 'ADMIN' },
     select: { id: true },
@@ -338,7 +333,7 @@ export async function notifyAdminBatchProfitRealized(
 
   const message: NotificationMessage = {
     type: 'PROFIT_REALIZED',
-    title: `📈 Ganancia realizada — Lote #${batchId}`,
+    title: `📈 Reporte de Ganancia! — Lote #${batchId}`,
     description: `Cobrado a buyers: ${formatCurrency(collected)} — Pagado al seller: ${formatCurrency(paidOut)} — Ganancia: ${formatCurrency(profit)}`,
     actionUrl: `/admin/dashboard/batches?search=${batchId}`,
     metadata: { batchId, collected, paidOut, profit },
