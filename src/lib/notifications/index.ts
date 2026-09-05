@@ -5,6 +5,7 @@ export { WebPushChannel } from './channels/webpush.channel';
 export { NotificationDispatcher, notificationDispatcher } from './dispatcher';
 export { sweepStockReminders } from './stock-reminder.service';
 export { sweepPaymentReminders } from './payment-reminder.service';
+export { sweepPendingOrderAlerts } from './pending-order-alert.service';
 export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid, notifySellerBatchPayoutSent, notifySellerBatchCancelled, notifySellerBatchDeleted, notifyAdminBatchProfitRealized, notifyAdminPayoutFailed, notifySellerWalletRequired } from './notification.service';
 export { getSubscribedBrandCountries } from './get-subscribed-brand-countries';
 export {

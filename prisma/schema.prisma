@@ -261,6 +261,11 @@ model Order {
   // el claim — el sweep la actualiza con updateMany guardado (multi-instancia).
   lastPaymentReminderAt DateTime?
 
+  // Dedup one-shot de la alerta al admin por orden sin confirmar
+  // (PENDING_ORDER_ALERT): se setea al enviar y solo vuelve a null si el
+  // dispatch falla (reintento en el próximo ciclo del sweep).
+  lastPendingOrderAlertAt DateTime?
+
   userId         String
   brandCountryId String?
   user           User            @relation(fields: [userId], references: [id])
@@ -779,6 +784,7 @@ enum NotificationType {
   TIER_DROP_ACCESS
   PAYMENT_PENDING // DEPRECADO: ya no se emite (el admin no recibe aviso por cada pago). Queda en el enum para las filas históricas de Notification.
   PAYMENT_REMINDER
+  PENDING_ORDER_ALERT
   PROFIT_REALIZED
   ORDER_COMPLETED
   BATCH_PAID

@@ -136,3 +136,7 @@ export async function getStockReminderIntervalMinutes(): Promise<number> {
 export async function getPaymentReminderIntervalMinutes(): Promise<number> {
   return getSetting<number>(SETTING_KEYS.PAYMENT_REMINDER_INTERVAL_MINUTES);
 }
+
+export async function getPendingOrderAlertMinutes(): Promise<number> {
+  return getSetting<number>(SETTING_KEYS.PENDING_ORDER_ALERT_MINUTES);
+}

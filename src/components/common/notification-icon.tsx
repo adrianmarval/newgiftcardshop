@@ -12,6 +12,7 @@ export function NotificationIcon({ type, size = 'h-4 w-4' }: { type: Notificatio
       return <TrendingUp className={`${size} text-emerald-500`} />;
     case 'PAYMENT_PENDING':
     case 'PAYMENT_REMINDER':
+    case 'PENDING_ORDER_ALERT':
       return <Bell className={`${size} text-orange-500`} />;
     case 'STOCK_REMINDER':
       return <Bell className={`${size} text-amber-500`} />;

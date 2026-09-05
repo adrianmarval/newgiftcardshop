@@ -290,6 +290,45 @@ async function initPaymentReminderService() {
   }
 }
 
+// ── Pending Order Alert Sweep ─────────────────────────────────────────────────
+
+async function initPendingOrderAlertService() {
+  try {
+    const { sweepPendingOrderAlerts } = await import('./src/lib/notifications/pending-order-alert.service');
+    const log = await getServerLogger();
+
+    const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes (el umbral por orden se evalúa dentro con el setting)
+    log.info('[PendingOrderAlert] Iniciado - sweep cada 5min (alertas al admin por órdenes sin confirmar)');
+
+    let sweepRunning = false;
+
+    setInterval(async () => {
+      if (sweepRunning) {
+        log.info('[PendingOrderAlert] Skipping — previous sweep still active');
+        return;
+      }
+      sweepRunning = true;
+      try {
+        const alerts = await sweepPendingOrderAlerts();
+        if (alerts.sent > 0) {
+          log.info(`[PendingOrderAlert] Sweep: ${alerts.sent} alerta(s) enviada(s), ${alerts.skipped} descartada(s)`);
+        }
+      } catch (err) {
+        log.error('[PendingOrderAlert] Error en sweep', {
+          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+        });
+      } finally {
+        sweepRunning = false;
+      }
+    }, INTERVAL_MS);
+  } catch (err) {
+    const log = await getServerLogger();
+    log.error('[PendingOrderAlert] Error al iniciar', {
+      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+    });
+  }
+}
+
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
@@ -394,6 +433,9 @@ await initStockReminderService();
 
 // ── Payment Reminder Sweep ────────────────────────────────────────────────────
 await initPaymentReminderService();
+
+// ── Pending Order Alert Sweep ─────────────────────────────────────────────────
+await initPendingOrderAlertService();
 
 // Fail-fast ante puerto ocupado: una segunda instancia que no puede bindear
 // pero sigue viva es un ZOMBIE peligroso — sus crons y bots (long polling)

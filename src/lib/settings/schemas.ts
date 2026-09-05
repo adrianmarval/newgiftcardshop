@@ -9,6 +9,7 @@ export const SETTING_KEYS = {
   AUTO_PAY_SELLERS: 'auto_pay_sellers',
   STOCK_REMINDER_INTERVAL_MINUTES: 'stock_reminder_interval_minutes',
   PAYMENT_REMINDER_INTERVAL_MINUTES: 'payment_reminder_interval_minutes',
+  PENDING_ORDER_ALERT_MINUTES: 'pending_order_alert_minutes',
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -33,6 +34,10 @@ export const SETTING_GROUPS = {
   notifications: {
     title: 'Notificaciones',
     description: 'Recordatorios de stock varado para Telegram/Push. Cada brand-country puede tener su propio intervalo.',
+  },
+  adminAlerts: {
+    title: 'Alertas del admin',
+    description: 'Avisos al admin cuando algo requiere atención.',
   },
 } as const;
 
@@ -183,6 +188,21 @@ export const SETTING_DEFINITIONS: Record<SettingKey, SettingDefinition> = {
       max: 1440,
     },
   },
+  [SETTING_KEYS.PENDING_ORDER_ALERT_MINUTES]: {
+    key: SETTING_KEYS.PENDING_ORDER_ALERT_MINUTES,
+    type: 'number',
+    group: 'adminAlerts',
+    label: 'Alerta de orden sin confirmar',
+    description: 'Si una orden lleva más de X min en PENDING (códigos entregados, sin confirmar uso), el admin recibe UNA alerta por orden.',
+    default: 60,
+    input: 'number',
+    unit: 'min',
+    step: 5,
+    validation: {
+      min: 15,
+      max: 1440,
+    },
+  },
 };
 
 /** Definiciones de un grupo, en el orden declarado en el registry */
@@ -206,6 +226,7 @@ export const SETTING_SCHEMAS: Record<SettingKey, z.ZodTypeAny> = {
   [SETTING_KEYS.AUTO_PAY_SELLERS]: booleanSchema,
   [SETTING_KEYS.STOCK_REMINDER_INTERVAL_MINUTES]: numberSchema,
   [SETTING_KEYS.PAYMENT_REMINDER_INTERVAL_MINUTES]: numberSchema,
+  [SETTING_KEYS.PENDING_ORDER_ALERT_MINUTES]: numberSchema,
 };
 
 export function parseSettingValue<T>(key: SettingKey, rawValue: string | null | undefined): T {
