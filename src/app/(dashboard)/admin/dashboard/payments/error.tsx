@@ -1,11 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { reportClientError } from '@/lib/utils';
 import { useEffect } from 'react';
 
 export default function PaymentsError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('Payments error:', error);
+    reportClientError(error, 'admin-payments');
   }, [error]);
 
   return (

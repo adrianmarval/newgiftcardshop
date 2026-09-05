@@ -1,11 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { reportClientError } from '@/lib/utils';
 import { useEffect } from 'react';
 
 export default function AdminDashboardError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('Admin dashboard error:', error);
+    reportClientError(error, 'admin-dashboard');
   }, [error]);
 
   return (

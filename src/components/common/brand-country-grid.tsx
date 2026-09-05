@@ -14,7 +14,13 @@ import type { BrandCountry } from '@/types';
  * siempre mostraron `$` hardcodeado (no countryCurrency).
  */
 function AnimatedAmount({ value }: { value: number }) {
-  return <NumberFlow value={value} locales="en-US" prefix="$" />;
+  // `notranslate`: defensa extra contra Google Translate forzado — Translate
+  // muta text nodes y NumberFlow (DOM directo) crashea con removeChild.
+  return (
+    <span translate="no" className="notranslate">
+      <NumberFlow value={value} locales="en-US" prefix="$" />
+    </span>
+  );
 }
 
 export interface BrandCountryGridProps {

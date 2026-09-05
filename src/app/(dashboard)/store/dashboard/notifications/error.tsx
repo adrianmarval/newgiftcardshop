@@ -1,11 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { reportClientError } from '@/lib/utils';
 import { useEffect } from 'react';
 
 export default function NotificationsError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('Notifications error:', error);
+    reportClientError(error, 'buyer-notifications');
   }, [error]);
 
   return (

@@ -1,11 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { reportClientError } from '@/lib/utils';
 import { useEffect } from 'react';
 
 export default function UsersError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('Users error:', error);
+    reportClientError(error, 'admin-users');
   }, [error]);
 
   return (

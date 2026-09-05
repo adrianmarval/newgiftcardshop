@@ -34,13 +34,17 @@ async function fetchLiveAvailability() {
 function AnimatedMoney({ value, currency, className }: { value: number; currency: string; className?: string }) {
   // `locales` pineado: sin esto el SSR formatea con el locale de Node (en-US → "$240")
   // y al hidratar NumberFlow reformatea con el locale del browser (es-419 → "USD 240").
+  // `notranslate`: defensa extra contra Google Translate forzado manualmente —
+  // Translate muta text nodes y NumberFlow (DOM directo) crashea con removeChild.
   return (
-    <NumberFlow
-      value={value}
-      locales="en-US"
-      format={{ style: 'currency', currency, currencyDisplay: 'symbol', trailingZeroDisplay: 'stripIfInteger' }}
-      className={className}
-    />
+    <span translate="no" className="notranslate">
+      <NumberFlow
+        value={value}
+        locales="en-US"
+        format={{ style: 'currency', currency, currencyDisplay: 'symbol', trailingZeroDisplay: 'stripIfInteger' }}
+        className={className}
+      />
+    </span>
   );
 }
 

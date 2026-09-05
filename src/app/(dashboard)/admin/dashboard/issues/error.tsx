@@ -2,10 +2,12 @@
 
 import { useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { reportClientError } from '@/lib/utils';
 
-export default function Error({ error, reset }: { error: React.ErrorInfo; reset: () => void }) {
+export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('Issues page error:', error);
+    reportClientError(error, 'admin-issues');
   }, [error]);
 
   return (

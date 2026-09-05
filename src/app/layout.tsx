@@ -43,6 +43,11 @@ export const metadata: Metadata = {
     icon: '/icon-192.png',
     apple: '/icon-512.png',
   },
+  // La UI ya está en el idioma de cada rol (seller EN / buyer ES) — nadie depende
+  // de Google Translate. Bloquearlo es la defensa RAÍZ contra los crashes
+  // "Failed to execute 'removeChild' on 'Node'": Translate envuelve text nodes
+  // en <font> y React/NumberFlow/framer-motion revientan al actualizar el DOM.
+  other: { google: 'notranslate' },
 };
 
 export default async function RootLayout({
@@ -53,7 +58,7 @@ export default async function RootLayout({
   const theme = await getServerTheme();
 
   return (
-    <html lang="en" className={theme} suppressHydrationWarning>
+    <html lang="en" className={theme} translate="no" suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
         {/*
           Captura GLOBAL de beforeinstallprompt ANTES de React: el evento

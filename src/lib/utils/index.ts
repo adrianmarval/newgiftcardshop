@@ -12,3 +12,4 @@ export { timeAgo } from './time-ago';
 export { getPortalSwScope } from './portal-sw-scope';
 export { serializeDates, deserializeDates } from './json-payload';
 export { apiQuery } from './api-query';
+export { reportClientError } from './report-client-error';
