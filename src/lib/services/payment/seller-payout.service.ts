@@ -510,6 +510,21 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
           }
           publishToRole('ADMIN', ['payments']);
 
+          // Ganancia realizada: la pata seller de este batch ya cerró. Si los
+          // buyers también pagaron, el batch queda saldado y se notifica la
+          // ganancia al admin (fire-and-forget, dedup por batch).
+          if (payment.batchId) {
+            const { checkAndNotifySettledBatch } = await import('./batch-profit.service');
+            checkAndNotifySettledBatch(payment.batchId).catch((err) =>
+              logger.error('Error en check de batch saldado post-sync', {
+                flow: 'payment',
+                action: 'settled-batch-check',
+                metadata: { batchId: payment.batchId },
+                error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+              }),
+            );
+          }
+
           return { type: 'resolved' as const };
         }
 

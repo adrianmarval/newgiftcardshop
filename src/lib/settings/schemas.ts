@@ -8,6 +8,7 @@ export const SETTING_KEYS = {
   ESCALATION_DROP_AMOUNT: 'escalation_drop_amount',
   AUTO_PAY_SELLERS: 'auto_pay_sellers',
   STOCK_REMINDER_INTERVAL_MINUTES: 'stock_reminder_interval_minutes',
+  PAYMENT_REMINDER_INTERVAL_MINUTES: 'payment_reminder_interval_minutes',
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -167,6 +168,21 @@ export const SETTING_DEFINITIONS: Record<SettingKey, SettingDefinition> = {
       max: 1440,
     },
   },
+  [SETTING_KEYS.PAYMENT_REMINDER_INTERVAL_MINUTES]: {
+    key: SETTING_KEYS.PAYMENT_REMINDER_INTERVAL_MINUTES,
+    type: 'number',
+    group: 'notifications',
+    label: 'Intervalo del recordatorio de pago',
+    description: 'Un buyer con una orden PENDING o AWAITING_PAYMENT recibe un recordatorio cada X min hasta que pague o cancele.',
+    default: 60,
+    input: 'number',
+    unit: 'min',
+    step: 5,
+    validation: {
+      min: 15,
+      max: 1440,
+    },
+  },
 };
 
 /** Definiciones de un grupo, en el orden declarado en el registry */
@@ -189,6 +205,7 @@ export const SETTING_SCHEMAS: Record<SettingKey, z.ZodTypeAny> = {
   [SETTING_KEYS.ESCALATION_DROP_AMOUNT]: numberSchema,
   [SETTING_KEYS.AUTO_PAY_SELLERS]: booleanSchema,
   [SETTING_KEYS.STOCK_REMINDER_INTERVAL_MINUTES]: numberSchema,
+  [SETTING_KEYS.PAYMENT_REMINDER_INTERVAL_MINUTES]: numberSchema,
 };
 
 export function parseSettingValue<T>(key: SettingKey, rawValue: string | null | undefined): T {

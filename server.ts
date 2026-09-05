@@ -251,6 +251,45 @@ async function initStockReminderService() {
   }
 }
 
+// ── Payment Reminder Sweep ────────────────────────────────────────────────────
+
+async function initPaymentReminderService() {
+  try {
+    const { sweepPaymentReminders } = await import('./src/lib/notifications/payment-reminder.service');
+    const log = await getServerLogger();
+
+    const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes (la cadencia por orden se evalúa dentro con el setting)
+    log.info('[PaymentReminder] Iniciado - sweep cada 5min (recordatorios de pago pendiente)');
+
+    let sweepRunning = false;
+
+    setInterval(async () => {
+      if (sweepRunning) {
+        log.info('[PaymentReminder] Skipping — previous sweep still active');
+        return;
+      }
+      sweepRunning = true;
+      try {
+        const reminders = await sweepPaymentReminders();
+        if (reminders.sent > 0) {
+          log.info(`[PaymentReminder] Sweep: ${reminders.sent} recordatorio(s) enviado(s), ${reminders.skipped} descartado(s)`);
+        }
+      } catch (err) {
+        log.error('[PaymentReminder] Error en sweep', {
+          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+        });
+      } finally {
+        sweepRunning = false;
+      }
+    }, INTERVAL_MS);
+  } catch (err) {
+    const log = await getServerLogger();
+    log.error('[PaymentReminder] Error al iniciar', {
+      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
+    });
+  }
+}
+
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
@@ -352,6 +391,9 @@ await initAutoPayService();
 
 // ── Stock Reminder Sweep ──────────────────────────────────────────────────────
 await initStockReminderService();
+
+// ── Payment Reminder Sweep ────────────────────────────────────────────────────
+await initPaymentReminderService();
 
 // Fail-fast ante puerto ocupado: una segunda instancia que no puede bindear
 // pero sigue viva es un ZOMBIE peligroso — sus crons y bots (long polling)

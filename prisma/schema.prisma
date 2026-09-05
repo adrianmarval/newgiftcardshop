@@ -257,6 +257,10 @@ model Order {
   status        OrderStatus
   idempotencyKey String?  @unique
 
+  // Dedup del recordatorio de pago pendiente (PAYMENT_REMINDER): la columna ES
+  // el claim — el sweep la actualiza con updateMany guardado (multi-instancia).
+  lastPaymentReminderAt DateTime?
+
   userId         String
   brandCountryId String?
   user           User            @relation(fields: [userId], references: [id])
@@ -278,6 +282,11 @@ model GiftcardBatch {
   sellRate    Decimal    @db.Decimal(10, 4)
   isPaid      Boolean    @default(false)
   cancelledAt DateTime?
+
+  // Dedup de la notificación de ganancia realizada (PROFIT_REALIZED): se setea
+  // con updateMany guardado la primera vez que el batch queda saldado (buyers
+  // pagaron + payout al seller confirmado). Una sola notificación por batch.
+  profitNotifiedAt DateTime?
 
   // Relaciones
   user      User?      @relation(fields: [userId], references: [id])
@@ -768,7 +777,9 @@ enum NotificationType {
   STOCK_AVAILABLE
   STOCK_REMINDER
   TIER_DROP_ACCESS
-  PAYMENT_PENDING
+  PAYMENT_PENDING // DEPRECADO: ya no se emite (el admin no recibe aviso por cada pago). Queda en el enum para las filas históricas de Notification.
+  PAYMENT_REMINDER
+  PROFIT_REALIZED
   ORDER_COMPLETED
   BATCH_PAID
   BATCH_CANCELLED

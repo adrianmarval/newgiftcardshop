@@ -132,3 +132,7 @@ export async function setAutoPaySellers(enabled: boolean): Promise<void> {
 export async function getStockReminderIntervalMinutes(): Promise<number> {
   return getSetting<number>(SETTING_KEYS.STOCK_REMINDER_INTERVAL_MINUTES);
 }
+
+export async function getPaymentReminderIntervalMinutes(): Promise<number> {
+  return getSetting<number>(SETTING_KEYS.PAYMENT_REMINDER_INTERVAL_MINUTES);
+}

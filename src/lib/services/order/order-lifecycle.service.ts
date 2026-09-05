@@ -212,22 +212,26 @@ export async function completeOrderPayment(orderId: string, txId: string) {
       return { orderId: order.id, paymentAmount: paymentAmount.toNumber(), userId: order.userId };
     });
 
-    // ── Notify admin (fire-and-forget — outside tx) ──────────────────────────
-    const { notifyAdminPaymentReceived } = await import('@/lib/notifications/notification.service');
-    const buyer = await prisma.user.findUnique({
-      where: { id: result.userId },
-      select: { name: true, email: true },
+    // ── Ganancia realizada: la pata buyer de las órdenes de este pago ya cerró.
+    // Si el payout al seller también está confirmado, el batch queda saldado y
+    // se notifica la ganancia al admin (fire-and-forget, dedup por batch).
+    const batchIds = await prisma.giftcard.findMany({
+      where: { orderId: result.orderId, batchId: { not: null } },
+      select: { batchId: true },
+      distinct: ['batchId'],
     });
-    const buyerName = buyer?.name || buyer?.email || 'Buyer';
-
-    notifyAdminPaymentReceived(result.orderId, buyerName, result.paymentAmount, txId).catch((err) =>
-      logger.error('Error notificando admin sobre pago recibido', {
-        flow: 'order',
-        action: 'complete-payment',
-        metadata: { orderId: result.orderId, userId: result.userId },
-        error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
-      }),
-    );
+    const { checkAndNotifySettledBatch } = await import('@/lib/services/payment/batch-profit.service');
+    for (const { batchId } of batchIds) {
+      if (batchId === null) continue;
+      checkAndNotifySettledBatch(batchId).catch((err) =>
+        logger.error('Error en check de batch saldado post-pago', {
+          flow: 'payment',
+          action: 'settled-batch-check',
+          metadata: { batchId, orderId: result.orderId },
+          error: { name: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) },
+        }),
+      );
+    }
 
     // Invalidación realtime: orden completada + payment CREDIT registrado
     publishToUser(result.userId, ['orders', 'stats']);
