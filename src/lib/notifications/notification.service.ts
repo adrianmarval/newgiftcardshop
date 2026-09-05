@@ -331,10 +331,12 @@ export async function notifyAdminBatchProfitRealized(batchId: number, collected:
     return;
   }
 
+  // Título CORTO (se recorta por espacio en Android) y la ganancia como PRIMER
+  // dato de la descripción: es lo que siempre se lee bajo el título.
   const message: NotificationMessage = {
     type: 'PROFIT_REALIZED',
-    title: `📈 Reporte de Ganancia! — Lote #${batchId}`,
-    description: `Cobrado a buyers: ${formatCurrency(collected)} — Pagado al seller: ${formatCurrency(paidOut)} — Ganancia: ${formatCurrency(profit)}`,
+    title: `📈 Ganancia — Lote #${batchId}`,
+    description: `${formatCurrency(profit)} de ganancia — Cobrado a buyers: ${formatCurrency(collected)} — Pagado al seller: ${formatCurrency(paidOut)}`,
     actionUrl: `/admin/dashboard/batches?search=${batchId}`,
     metadata: { batchId, collected, paidOut, profit },
   };
