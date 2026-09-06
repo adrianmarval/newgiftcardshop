@@ -32,7 +32,7 @@ export const AdminOrderCard = ({
   onToggle,
 }: AdminOrderCardProps) => {
   const { progressPercentage } = useCardProgress(order);
-  const { cancel, isCancelling } = useCancelOrderAction(['admin-orders']);
+  const { cancel, isCancelling } = useCancelOrderAction(['admin-orders'], 'admin');
   const canCancel = order.effectiveTotal === 0 && (order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT');
   const isActionable = order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT';
   const hasReports = getOrderHasReports(order.giftcards);

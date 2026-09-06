@@ -19,7 +19,7 @@ export interface OrderCardProps {
 export const OrderCard = ({ order, isExpanded = false, isHighlighted = false, onToggle = () => {} }: OrderCardProps) => {
   const router = useRouter();
   const { progressPercentage } = useCardProgress(order);
-  const { cancel, isCancelling } = useCancelOrderAction(['buyer-orders']);
+  const { cancel, isCancelling } = useCancelOrderAction(['buyer-orders'], 'buyer');
   const canCancel = order.effectiveTotal === 0 && (order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT');
   const isActionable = order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT';
   const currency = useCardCurrency(order.giftcards);

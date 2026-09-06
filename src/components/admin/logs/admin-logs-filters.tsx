@@ -126,6 +126,7 @@ export const AdminLogsFilters = ({ users }: AdminLogsFiltersProps) => {
                   <SelectItem value="batch">Lote</SelectItem>
                   <SelectItem value="auth">Autenticación</SelectItem>
                   <SelectItem value="admin">Administración</SelectItem>
+                  <SelectItem value="pricing">Tarifas</SelectItem>
                 </SelectContent>
               </Select>
             </div>

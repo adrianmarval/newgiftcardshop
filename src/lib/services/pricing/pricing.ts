@@ -90,7 +90,7 @@ export async function getUserRates(userId: string, params: { brandCountryId?: st
 
   if (!brandCountryId) {
     logger.warn('PricingError: Combinación de marca y país no válida', {
-      flow: 'sell',
+      flow: 'pricing',
       action: 'get-user-rates',
       userId,
       metadata: { brandId, countryId, brandCountryId },
@@ -117,7 +117,7 @@ export async function getUserRates(userId: string, params: { brandCountryId?: st
   }
 
   logger.warn('PricingError: Sin tasa asignada', {
-    flow: 'sell',
+    flow: 'pricing',
     action: 'get-user-rates',
     userId,
     metadata: { brandCountryId },

@@ -106,7 +106,13 @@ export const ResultsStep = () => {
       const brandId = selectedBrand.split('|')[0];
       executeGetBrandById({ id: brandId });
     }
-    executeGetUserBuyRate({ brandId: selectedBrand.split('|')[0], countryId: selectedCountry });
+    // El store no persiste: si el wizard monta sin estado (refresh/re-entry),
+    // selectedBrand/selectedCountry vienen vacíos y la action loguea un
+    // PricingError de ruido. No llamar sin selección real.
+    const brandId = selectedBrand.split('|')[0];
+    if (brandId && selectedCountry) {
+      executeGetUserBuyRate({ brandId, countryId: selectedCountry });
+    }
   }, [selectedBrand, selectedCountry, executeGetBrandById, executeGetUserBuyRate]);
 
   const idempotencyKeyRef = useRef(crypto.randomUUID());

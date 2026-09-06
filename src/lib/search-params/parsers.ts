@@ -85,7 +85,7 @@ export const adminLogsSearchParamsParsers = {
   limit: parseAsInteger.withDefault(10),
   level: parseAsStringLiteral(['ALL', 'info', 'warn', 'error', 'debug'] as const).withDefault('ALL'),
   source: parseAsStringLiteral(['ALL', 'web', 'seller-bot', 'buyer-bot', 'cron', 'system'] as const).withDefault('ALL'),
-  flow: parseAsStringLiteral(['ALL', 'sell', 'buy', 'order', 'payment', 'batch', 'auth', 'admin'] as const).withDefault('ALL'),
+  flow: parseAsStringLiteral(['ALL', 'sell', 'buy', 'order', 'payment', 'batch', 'auth', 'admin', 'pricing'] as const).withDefault('ALL'),
   search: parseAsString.withDefault(''),
   userId: parseAsString.withDefault(''),
   dateFrom: parseAsString.withDefault(''),
