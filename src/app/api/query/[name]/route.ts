@@ -17,6 +17,8 @@ import {
   getProfitStats,
   getInventoryStats,
   getStockAgingReport,
+  getVolumeStats,
+  getAdminLiveStock,
   getLiveAvailability,
   getRecentOrders,
   getRecentBatches,
@@ -37,6 +39,7 @@ import { listUsersInputSchema as adminUsersSchema } from '@/actions/admin/users/
 import { listBatchesInputSchema as sellerBatchesSchema } from '@/actions/seller/batches/schemas';
 import { listOrdersInputSchema as buyerOrdersSchema } from '@/actions/buyer/orders/schemas';
 import { listNotificationsInputSchema as notificationsSchema } from '@/actions/notifications/schemas';
+import { getVolumeStatsInputSchema as adminVolumeStatsSchema } from '@/actions/admin/stats/schemas';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,6 +157,12 @@ const QUERY_REGISTRY: Record<string, QueryDef> = {
   'admin-profit-stats': { roles: ADMIN, run: () => getProfitStats() },
   'admin-inventory-stats': { roles: ADMIN, run: () => getInventoryStats() },
   'admin-stock-aging': { roles: ADMIN, run: () => getStockAgingReport() },
+  'admin-volume-stats': {
+    roles: ADMIN,
+    schema: adminVolumeStatsSchema,
+    run: (i) => getVolumeStats(i.brandCountryId ?? null),
+  },
+  'admin-live-stock': { roles: ADMIN, run: () => getAdminLiveStock() },
 
   // ── Misc client-side reads ───────────────────────────────────────────────
   'tours-seen': {

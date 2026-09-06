@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { getBinanceBalances } from '@/actions/admin/binance';
 import { getPlatformBalance } from '@/actions/platform';
-import { getInventoryStats, getProfitStats, getStockAgingReport } from '@/actions/admin/stats';
+import { getInventoryStats, getProfitStats, getStockAgingReport, getVolumeStats, getAdminLiveStock } from '@/actions/admin/stats';
 import {
   BinanceBalanceSection,
   PlatformBalanceSection,
@@ -10,6 +10,10 @@ import {
   ChartsSection,
   AgingSection,
 } from '@/components/admin/dashboard-sections';
+import { VolumeChart } from '@/components/admin/charts';
+import { AdminLiveStockGrid } from '@/components/admin/live-stock-grid';
+import { authorizeByRequiredRole } from '@/lib/auth/authorization';
+import prisma from '@/lib/prisma';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -86,11 +90,48 @@ async function AgingSectionCard() {
   return <AgingSection initial={agingRes.data || []} />;
 }
 
+async function VolumeChartCard() {
+  // Guard explícito: este wrapper lee prisma directo (lista de brand-countries
+  // para el filtro) — los layouts NO se re-ejecutan en soft-nav entre páginas
+  // hermanas, la data nunca puede depender solo del layout.
+  await authorizeByRequiredRole(['ADMIN']);
+  const [volumeRes, brandCountries] = await Promise.all([
+    getVolumeStats({}),
+    // TODAS las brand-countries (puede haber ventas históricas en inactivas)
+    prisma.brandCountry.findMany({
+      include: { brand: { select: { name: true } }, country: { select: { name: true, code: true } } },
+      orderBy: [{ brand: { name: 'asc' } }, { country: { name: 'asc' } }],
+    }),
+  ]);
+  if (!volumeRes.data) throw new Error('Failed to load volume stats');
+  return (
+    <VolumeChart
+      initial={volumeRes.data}
+      brandCountries={brandCountries.map((bc) => ({
+        id: bc.id,
+        brandName: bc.brand.name,
+        countryName: bc.country.name,
+        countryCode: bc.country.code,
+      }))}
+    />
+  );
+}
+
+async function LiveStockCard() {
+  const stockRes = await getAdminLiveStock();
+  return <AdminLiveStockGrid initial={stockRes.data || { items: [] }} />;
+}
+
 export default function AdminDashboardPage() {
   return (
     <div className="w-full space-y-2">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Admin Dashboard</h1>
-      <div className="grid auto-rows-min gap-1 md:grid-cols-3">
+
+      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+        <LiveStockCard />
+      </Suspense>
+
+      <div className="grid auto-rows-min grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
         <Suspense fallback={<StatCardSkeleton />}>
           <BinanceBalanceCard />
         </Suspense>
@@ -110,6 +151,10 @@ export default function AdminDashboardPage() {
           <ProfitSummaryCards />
         </Suspense>
       </div>
+
+      <Suspense fallback={<ChartSkeleton />}>
+        <VolumeChartCard />
+      </Suspense>
 
       <div className="grid gap-1 md:grid-cols-2 lg:grid-cols-6">
         <Suspense

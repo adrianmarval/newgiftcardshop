@@ -15,8 +15,15 @@ import type { RealtimeKey } from './bus';
  * actualizaciones realtime — no existe fallback.
  */
 export const REALTIME_QUERY_KEYS: Partial<Record<RealtimeKey, readonly string[]>> = {
-  orders: ['admin-orders', 'buyer-orders', 'buyer-recent-orders', 'admin-profit-stats'],
-  batches: ['admin-batches', 'seller-batches', 'seller-recent-batches', 'admin-inventory-stats', 'admin-stock-aging'],
+  orders: ['admin-orders', 'buyer-orders', 'buyer-recent-orders', 'admin-profit-stats', 'admin-volume-stats', 'admin-live-stock'],
+  batches: [
+    'admin-batches',
+    'seller-batches',
+    'seller-recent-batches',
+    'admin-inventory-stats',
+    'admin-stock-aging',
+    'admin-live-stock',
+  ],
   payments: ['admin-payments', 'platform-balance', 'admin-binance-balance', 'admin-profit-stats'],
   users: ['admin-users'],
   notifications: ['unread-counts', 'notifications-page'],
