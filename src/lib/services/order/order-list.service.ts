@@ -35,9 +35,12 @@ function buildOrderWhere(input: ListOrdersServiceInput): Prisma.OrderWhereInput 
   if (input.status && input.status !== 'ALL') where.status = input.status as Prisma.OrderWhereInput['status'];
 
   if (input.search) {
-    const hashedSearch = hashCode(input.search.trim().toUpperCase());
+    // Normalizar: trim + quitar '@' inicial (usernames de Telegram sin '@').
+    const term = input.search.trim().replace(/^@+/, '');
+    if (!term) return where;
+    const hashedSearch = hashCode(term.toUpperCase());
     where.OR = [
-      { id: { contains: input.search, mode: 'insensitive' } },
+      { id: { contains: term, mode: 'insensitive' } },
       {
         giftcards: {
           some: {
@@ -45,16 +48,17 @@ function buildOrderWhere(input: ListOrdersServiceInput): Prisma.OrderWhereInput 
               { codeHash: hashedSearch },
               {
                 brandCountry: {
-                  brand: { name: { contains: input.search, mode: 'insensitive' } },
+                  brand: { name: { contains: term, mode: 'insensitive' } },
                 },
               },
             ],
           },
         },
       },
-      { user: { email: { contains: input.search, mode: 'insensitive' } } },
-      { user: { telegramUser: { username: { contains: input.search, mode: 'insensitive' } } } },
-      { user: { telegramUser: { firstName: { contains: input.search, mode: 'insensitive' } } } },
+      { user: { name: { contains: term, mode: 'insensitive' } } },
+      { user: { email: { contains: term, mode: 'insensitive' } } },
+      { user: { telegramUser: { username: { contains: term, mode: 'insensitive' } } } },
+      { user: { telegramUser: { firstName: { contains: term, mode: 'insensitive' } } } },
     ];
   }
 

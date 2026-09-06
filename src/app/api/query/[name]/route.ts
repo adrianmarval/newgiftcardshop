@@ -10,7 +10,7 @@ import { listOrdersService } from '@/lib/services/order/order-list.service';
 import { listBatchesService, listAdminIssues } from '@/lib/services/giftcard';
 import { listAdminPayments, getCachedUsdtBalances } from '@/lib/services/payment';
 import { listAppLogs } from '@/lib/services/logs';
-import { listAdminUsers } from '@/lib/services/user';
+import { listAdminUsers, searchAdminUsers } from '@/lib/services/user';
 import {
   getBuyerStats,
   getSellerStats,
@@ -98,6 +98,17 @@ const QUERY_REGISTRY: Record<string, QueryDef> = {
   'admin-issues': { roles: ADMIN, schema: adminIssuesSchema, run: (i) => listResult(listAdminIssues(i)) },
   'admin-logs': { roles: ADMIN, schema: adminLogsSchema, run: (i) => listResult(listAppLogs(i)) },
   'admin-users': { roles: ADMIN, schema: adminUsersSchema, run: (i) => listResult(listAdminUsers(i)) },
+  // Búsqueda server-side para los combobox de usuarios (reemplaza la carga
+  // total de getUsersByRole — take acotado en el service).
+  'admin-user-search': {
+    roles: ADMIN,
+    schema: z.object({
+      role: z.enum(['SELLER', 'BUYER', 'ADMIN', 'ALL']).optional(),
+      query: z.string().optional(),
+      id: z.string().optional(),
+    }),
+    run: (i) => searchAdminUsers(i),
+  },
 
   // ── Listas seller / buyer ────────────────────────────────────────────────
   'seller-batches': {

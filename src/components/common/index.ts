@@ -29,6 +29,8 @@ export { RegistryList, useRegistryAutoExpand } from './registry-list';
 export type { RegistryListProps } from './registry-list';
 export { FiltersBar } from './filters-bar';
 export type { FiltersBarProps, FiltersBarConfig, SelectOption, ComboboxOption } from './filters-bar';
+export { AsyncUserCombobox } from './async-user-combobox';
+export type { AsyncUserRole } from './async-user-combobox';
 export { StatCard } from './stat-card';
 export type { StatCardProps } from './stat-card';
 export { TelegramAvatar } from './telegram-avatar';

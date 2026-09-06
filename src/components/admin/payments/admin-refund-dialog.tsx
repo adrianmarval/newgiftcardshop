@@ -5,16 +5,15 @@ import { createRefund } from '@/actions/admin/payments';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AsyncUserCombobox } from '@/components/common';
 
 interface AdminRefundDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  sellers: Array<{ id: string; name: string; email: string }>;
-  buyers: Array<{ id: string; name: string; email: string }>;
   onSuccess: () => void;
 }
 
-export const AdminRefundDialog = ({ open, onOpenChange, sellers, buyers, onSuccess }: AdminRefundDialogProps) => {
+export const AdminRefundDialog = ({ open, onOpenChange, onSuccess }: AdminRefundDialogProps) => {
   const [refundType, setRefundType] = useState<'BUYER' | 'SELLER'>('BUYER');
   const [amount, setAmount] = useState('');
   const [userId, setUserId] = useState('');
@@ -27,6 +26,12 @@ export const AdminRefundDialog = ({ open, onOpenChange, sellers, buyers, onSucce
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!userId) {
+      setError('Selecciona un usuario.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -55,7 +60,7 @@ export const AdminRefundDialog = ({ open, onOpenChange, sellers, buyers, onSucce
     }
   };
 
-  const users = refundType === 'BUYER' ? buyers : sellers;
+  const role = refundType === 'BUYER' ? 'BUYER' : 'SELLER';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,19 +90,15 @@ export const AdminRefundDialog = ({ open, onOpenChange, sellers, buyers, onSucce
 
           <div>
             <label className="mb-1 block text-sm font-medium">{refundType === 'BUYER' ? 'Buyer' : 'Seller'}</label>
-            <select
+            <AsyncUserCombobox
+              key={role}
               value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              required
-              className="bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-            >
-              <option value="">Seleccionar...</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.email})
-                </option>
-              ))}
-            </select>
+              onChange={setUserId}
+              role={role}
+              allLabel="Seleccionar..."
+              emptyLabel="No se encontraron usuarios."
+              searchPlaceholder="Buscar por nombre, email o @username..."
+            />
           </div>
 
           <div>

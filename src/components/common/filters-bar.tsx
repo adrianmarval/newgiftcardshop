@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/ui';
+import { AsyncUserCombobox, type AsyncUserRole } from './async-user-combobox';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,18 @@ export interface FiltersBarConfig {
     emptyLabel: string;
   };
   status?: { label: string; paramKey: string; options: SelectOption[] };
+  /**
+   * Comboboxes de usuarios con búsqueda SERVER-SIDE (admin-user-search).
+   * Usar SIEMPRE este modo para filtros por usuario — el modo `combobox`
+   * estático precarga la lista completa y no escala.
+   */
+  userComboboxes?: Array<{
+    label: string;
+    paramKey: string;
+    role?: AsyncUserRole;
+    allLabel: string;
+    emptyLabel: string;
+  }>;
   selects?: Array<{ label: string; paramKey: string; options: SelectOption[] }>;
   sort?: { label: string; paramKey: string; options: SelectOption[] };
   dateRange?: {
@@ -207,6 +220,20 @@ export function FiltersBar({
                 </div>
               );
             })()}
+
+            {config.userComboboxes?.map((ucb) => (
+              <div key={ucb.paramKey} className="flex flex-col space-y-1">
+                <Label className="text-xs">{ucb.label}</Label>
+                <AsyncUserCombobox
+                  value={getParam(ucb.paramKey)}
+                  onChange={(id) => setParam(ucb.paramKey, id)}
+                  role={ucb.role}
+                  allLabel={ucb.allLabel}
+                  emptyLabel={ucb.emptyLabel}
+                  searchPlaceholder={`Buscar ${ucb.label.toLowerCase()}...`}
+                />
+              </div>
+            ))}
 
             {config.status && (
               <div className="space-y-1">

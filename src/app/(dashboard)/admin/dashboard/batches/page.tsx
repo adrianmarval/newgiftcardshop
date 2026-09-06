@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { listBatches } from '@/actions/admin/batches';
-import { getUsersByRole } from '@/actions/admin/users';
 import { AdminBatchesView } from '@/components/admin/batches/admin-batches-view';
 import { adminBatchesSearchParamsCache, buildAdminBatchesInput } from '@/lib/search-params';
 
@@ -14,21 +13,16 @@ export default async function AdminBatchesPage({ searchParams }: { searchParams:
   const parsed = adminBatchesSearchParamsCache.parse(params);
   const input = buildAdminBatchesInput(parsed);
 
-  const [batchesResult, sellersResult] = await Promise.all([
-    listBatches(input),
-    getUsersByRole({ role: 'SELLER' }),
-  ]);
+  const batchesResult = await listBatches(input);
 
   if (!batchesResult.data?.success) {
     throw new Error('Failed to load batches');
   }
 
-  const sellers = sellersResult.data?.success ? sellersResult.data.users : [];
-
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Batches</h1>
-      <AdminBatchesView batches={batchesResult.data.items} sellers={sellers} pagination={batchesResult.data.pagination} initialInput={input} />
+      <AdminBatchesView batches={batchesResult.data.items} pagination={batchesResult.data.pagination} initialInput={input} />
     </div>
   );
 }

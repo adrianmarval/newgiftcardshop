@@ -29,10 +29,16 @@ export async function listAdminUsers(input: ListAdminUsersInput) {
   }
 
   if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ];
+    // Normalizar: trim + quitar '@' inicial (usernames de Telegram sin '@').
+    const term = search.trim().replace(/^@+/, '');
+    if (term) {
+      where.OR = [
+        { name: { contains: term, mode: 'insensitive' } },
+        { email: { contains: term, mode: 'insensitive' } },
+        { telegramUser: { username: { contains: term, mode: 'insensitive' } } },
+        { telegramUser: { firstName: { contains: term, mode: 'insensitive' } } },
+      ];
+    }
   }
 
   const items = await prisma.user.findMany({

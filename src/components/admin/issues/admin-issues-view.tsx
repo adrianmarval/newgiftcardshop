@@ -18,8 +18,6 @@ async function fetchAdminIssues(input: AdminIssuesInput) {
 
 interface AdminIssuesViewProps {
   issues: AdminGiftcardIssue[];
-  sellers: Array<{ id: string; name: string; email?: string }>;
-  buyers: Array<{ id: string; name: string; email?: string }>;
   pagination: PaginationMeta;
   /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
   initialInput: AdminIssuesInput;
@@ -35,7 +33,7 @@ const FILTERS_DEFAULTS = {
   dateTo: '',
 };
 
-export function AdminIssuesView({ issues, sellers, buyers, pagination, initialInput }: AdminIssuesViewProps) {
+export function AdminIssuesView({ issues, pagination, initialInput }: AdminIssuesViewProps) {
   const [params] = useQueryStates(adminIssuesSearchParamsParsers);
   const input = buildAdminIssuesInput(params);
 
@@ -53,18 +51,20 @@ export function AdminIssuesView({ issues, sellers, buyers, pagination, initialIn
         defaults={FILTERS_DEFAULTS}
         config={{
           search: { placeholder: 'Buscar por orden, código, marca o comprador...', paramKey: 'search' },
-          combobox: {
-            label: 'Vendedor',
-            paramKey: 'sellerId',
-            options: sellers,
-            allLabel: 'Todos los vendedores',
-            emptyLabel: 'No se encontraron vendedores.',
-          },
-          selects: [
+          userComboboxes: [
+            {
+              label: 'Vendedor',
+              paramKey: 'sellerId',
+              role: 'SELLER',
+              allLabel: 'Todos los vendedores',
+              emptyLabel: 'No se encontraron vendedores.',
+            },
             {
               label: 'Comprador',
               paramKey: 'buyerId',
-              options: [{ value: 'ALL', label: 'Todos los compradores' }, ...buyers.map((b) => ({ value: b.id, label: b.name }))],
+              role: 'BUYER',
+              allLabel: 'Todos los compradores',
+              emptyLabel: 'No se encontraron compradores.',
             },
           ],
           status: {

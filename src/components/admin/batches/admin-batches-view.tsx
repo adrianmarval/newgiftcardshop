@@ -26,7 +26,6 @@ async function fetchAdminBatches(input: AdminBatchesInput) {
 
 interface AdminBatchesViewProps {
   batches: AdminBatch[];
-  sellers: Array<{ id: string; name: string; email?: string }>;
   pagination: PaginationMeta;
   /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
   initialInput: AdminBatchesInput;
@@ -39,7 +38,7 @@ const FILTERS_DEFAULTS = {
   sellerId: '',
 };
 
-export function AdminBatchesView({ batches, sellers, pagination, initialInput }: AdminBatchesViewProps) {
+export function AdminBatchesView({ batches, pagination, initialInput }: AdminBatchesViewProps) {
   const queryClient = useQueryClient();
   const [params] = useQueryStates(adminBatchesSearchParamsParsers);
   const input = buildAdminBatchesInput(params);
@@ -96,13 +95,15 @@ export function AdminBatchesView({ batches, sellers, pagination, initialInput }:
         defaults={FILTERS_DEFAULTS}
         config={{
           search: { placeholder: 'Buscar por ID de lote o vendedor...', paramKey: 'search' },
-          combobox: {
-            label: 'Vendedor',
-            paramKey: 'sellerId',
-            options: sellers,
-            allLabel: 'Todos los vendedores',
-            emptyLabel: 'No se encontraron vendedores.',
-          },
+          userComboboxes: [
+            {
+              label: 'Vendedor',
+              paramKey: 'sellerId',
+              role: 'SELLER',
+              allLabel: 'Todos los vendedores',
+              emptyLabel: 'No se encontraron vendedores.',
+            },
+          ],
           status: {
             label: 'Estado',
             paramKey: 'status',

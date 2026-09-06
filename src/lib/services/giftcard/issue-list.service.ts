@@ -54,15 +54,23 @@ function buildWhere(input: {
   }
 
   if (input.search) {
-    const search = input.search.trim();
+    // Normalizar: trim + quitar '@' inicial (usernames de Telegram sin '@').
+    const search = input.search.trim().replace(/^@+/, '');
+    if (!search) return where;
     const hashedSearch = hashCode(search.toUpperCase());
     where.OR = [
       { orderId: { contains: search, mode: 'insensitive' } },
       { giftcard: { codeHash: hashedSearch } },
       { giftcard: { brandCountry: { brand: { name: { contains: search, mode: 'insensitive' } } } } },
+      { reportedBy: { name: { contains: search, mode: 'insensitive' } } },
       { reportedBy: { email: { contains: search, mode: 'insensitive' } } },
       { reportedBy: { telegramUser: { username: { contains: search, mode: 'insensitive' } } } },
       { reportedBy: { telegramUser: { firstName: { contains: search, mode: 'insensitive' } } } },
+      // Seller del batch de la card reportada
+      { giftcard: { batch: { user: { name: { contains: search, mode: 'insensitive' } } } } },
+      { giftcard: { batch: { user: { email: { contains: search, mode: 'insensitive' } } } } },
+      { giftcard: { batch: { user: { telegramUser: { username: { contains: search, mode: 'insensitive' } } } } } },
+      { giftcard: { batch: { user: { telegramUser: { firstName: { contains: search, mode: 'insensitive' } } } } } },
     ];
   }
 

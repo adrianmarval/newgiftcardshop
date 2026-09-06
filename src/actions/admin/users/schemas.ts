@@ -59,13 +59,6 @@ export const updateUserOutputSchema = z.object({
   userId: z.string(),
 });
 
-export const getUsersByRoleInputSchema = z.object({ role: z.enum(['BUYER', 'SELLER', 'ADMIN']) });
-
-export const getUsersByRoleOutputSchema = z.object({
-  success: z.literal(true),
-  users: z.array(z.object({ id: z.string(), name: z.string(), email: z.string() })),
-});
-
 export const getUserRatesInputSchema = z.object({ userId: z.string() });
 
 export const getUserRatesOutputSchema = z.object({

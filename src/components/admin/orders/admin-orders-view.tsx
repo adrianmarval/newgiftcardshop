@@ -23,7 +23,6 @@ async function fetchAdminOrders(input: AdminOrdersInput) {
 
 interface AdminOrdersViewProps {
   orders: AdminOrder[];
-  buyers: Array<{ id: string; name: string; email: string }>;
   pagination: PaginationMeta;
   /** Input exacto que usó el server page (para que el initialData aplique solo al primer paint). */
   initialInput: AdminOrdersInput;
@@ -37,7 +36,7 @@ const FILTERS_DEFAULTS = {
   dateTo: '',
 };
 
-export const AdminOrdersView = ({ orders, buyers, pagination, initialInput }: AdminOrdersViewProps) => {
+export const AdminOrdersView = ({ orders, pagination, initialInput }: AdminOrdersViewProps) => {
   const queryClient = useQueryClient();
   const [params] = useQueryStates(adminOrdersSearchParamsParsers);
   const input = buildAdminOrdersInput(params);
@@ -98,13 +97,15 @@ export const AdminOrdersView = ({ orders, buyers, pagination, initialInput }: Ad
         defaults={FILTERS_DEFAULTS}
         config={{
           search: { placeholder: 'Buscar orden...', paramKey: 'search' },
-          combobox: {
-            label: 'Comprador',
-            paramKey: 'buyerId',
-            options: buyers,
-            allLabel: 'Todos los compradores',
-            emptyLabel: 'No se encontraron compradores.',
-          },
+          userComboboxes: [
+            {
+              label: 'Comprador',
+              paramKey: 'buyerId',
+              role: 'BUYER',
+              allLabel: 'Todos los compradores',
+              emptyLabel: 'No se encontraron compradores.',
+            },
+          ],
           status: {
             label: 'Estado',
             paramKey: 'status',

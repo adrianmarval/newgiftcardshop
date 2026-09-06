@@ -72,16 +72,25 @@ function buildBatchWhere(input: ListBatchesServiceInput): Prisma.GiftcardBatchWh
   }
 
   if (input.search) {
-    const isNumericSearch = !isNaN(Number(input.search));
-    const hashedSearch = hashCode(input.search.trim().toUpperCase());
+    // Normalizar: trim + quitar '@' inicial (los usernames de Telegram se
+    // guardan SIN '@'; si el admin tipea '@carlos' nunca matchearía).
+    const term = input.search.trim().replace(/^@+/, '');
+    // Solo dígitos = posible ID de lote. !isNaN(Number(...)) acepta
+    // "Infinity"/"1e3"/"0x.." y rompe Prisma con id: Infinity (500).
+    const isNumericSearch = /^\d+$/.test(term);
+    const hashedSearch = hashCode(term.toUpperCase());
+
+    if (!term) return where;
 
     const searchClauses: Prisma.GiftcardBatchWhereInput[] = [
-      ...(isNumericSearch ? [{ id: Number(input.search) }] : []),
+      ...(isNumericSearch ? [{ id: Number(term) }] : []),
     ];
     if (input.scope === 'admin') {
       searchClauses.push(
-        { user: { name: { contains: input.search, mode: 'insensitive' } } },
-        { user: { email: { contains: input.search, mode: 'insensitive' } } },
+        { user: { name: { contains: term, mode: 'insensitive' } } },
+        { user: { email: { contains: term, mode: 'insensitive' } } },
+        { user: { telegramUser: { username: { contains: term, mode: 'insensitive' } } } },
+        { user: { telegramUser: { firstName: { contains: term, mode: 'insensitive' } } } },
       );
     }
     searchClauses.push({
@@ -91,7 +100,7 @@ function buildBatchWhere(input: ListBatchesServiceInput): Prisma.GiftcardBatchWh
             { codeHash: hashedSearch },
             {
               brandCountry: {
-                brand: { name: { contains: input.search, mode: 'insensitive' } },
+                brand: { name: { contains: term, mode: 'insensitive' } },
               },
             },
           ],

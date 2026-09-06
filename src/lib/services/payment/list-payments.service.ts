@@ -36,12 +36,34 @@ export async function listAdminPayments(input: ListAdminPaymentsInput) {
   }
 
   if (search) {
-    where.OR = [
-      { id: { contains: search, mode: 'insensitive' } },
-      { transactionId: { contains: search, mode: 'insensitive' } },
-      { binanceTxId: { contains: search, mode: 'insensitive' } },
-      { notes: { contains: search, mode: 'insensitive' } },
-    ];
+    // Normalizar: trim + quitar '@' inicial (usernames de Telegram sin '@').
+    const term = search.trim().replace(/^@+/, '');
+    if (term) {
+      // El usuario relacionado se alcanza via order.user o batch.user
+      // (relatedUserId es scalar sin relación en el schema).
+      const userWhere = {
+        name: { contains: term, mode: 'insensitive' as const },
+        email: { contains: term, mode: 'insensitive' as const },
+        telegramUser: {
+          username: { contains: term, mode: 'insensitive' as const },
+          firstName: { contains: term, mode: 'insensitive' as const },
+        },
+      };
+      where.OR = [
+        { id: { contains: term, mode: 'insensitive' } },
+        { transactionId: { contains: term, mode: 'insensitive' } },
+        { binanceTxId: { contains: term, mode: 'insensitive' } },
+        { notes: { contains: term, mode: 'insensitive' } },
+        { order: { user: { name: userWhere.name } } },
+        { order: { user: { email: userWhere.email } } },
+        { order: { user: { telegramUser: { username: userWhere.telegramUser.username } } } },
+        { order: { user: { telegramUser: { firstName: userWhere.telegramUser.firstName } } } },
+        { batch: { user: { name: userWhere.name } } },
+        { batch: { user: { email: userWhere.email } } },
+        { batch: { user: { telegramUser: { username: userWhere.telegramUser.username } } } },
+        { batch: { user: { telegramUser: { firstName: userWhere.telegramUser.firstName } } } },
+      ];
+    }
   }
 
   const payments = await prisma.payment.findMany({

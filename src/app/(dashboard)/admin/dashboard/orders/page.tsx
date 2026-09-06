@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { listOrders } from '@/actions/admin/orders';
-import { getUsersByRole } from '@/actions/admin/users';
 import { AdminOrdersView } from '@/components/admin/orders';
 import { adminOrdersSearchParamsCache, buildAdminOrdersInput } from '@/lib/search-params';
 
@@ -14,21 +13,16 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   const parsed = adminOrdersSearchParamsCache.parse(params);
   const input = buildAdminOrdersInput(parsed);
 
-  const [ordersResult, buyersResult] = await Promise.all([
-    listOrders(input),
-    getUsersByRole({ role: 'BUYER' }),
-  ]);
+  const ordersResult = await listOrders(input);
 
   if (!ordersResult.data?.success) {
     throw new Error('Failed to load orders');
   }
 
-  const buyers = buyersResult.data?.success ? buyersResult.data.users : [];
-
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="text-center text-2xl font-bold tracking-tight md:text-3xl">Orders</h1>
-      <AdminOrdersView orders={ordersResult.data.items} buyers={buyers} pagination={ordersResult.data.pagination} initialInput={input} />
+      <AdminOrdersView orders={ordersResult.data.items} pagination={ordersResult.data.pagination} initialInput={input} />
     </div>
   );
 }
