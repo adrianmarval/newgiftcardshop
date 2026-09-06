@@ -69,7 +69,9 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
     },
     onError: ({ error }) => {
       const valError = error.validationErrors ? (Object.values(error.validationErrors).flat()[0] as string) : null;
-      showAlert.toast.error(error.serverError || valError || 'Failed to publish batch');
+      const msg = error.serverError || valError || 'Failed to publish batch';
+      const [title, ...rest] = msg.split('\n');
+      showAlert.toast.error(title, rest.join('\n') || undefined);
     },
   });
 

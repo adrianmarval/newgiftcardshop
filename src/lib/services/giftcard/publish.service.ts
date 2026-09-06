@@ -206,9 +206,10 @@ export async function publishBatch(ctx: PublishContext): Promise<PublishResult> 
         metadata: { totalAmount, sellRate: Number(sellRateSnapshot), estimatedPayout, min: WALLET_MIN_PAYOUT_EXTERNAL },
       });
       throw new Error(
-        `External wallets require a minimum estimated payout of $${WALLET_MIN_PAYOUT_EXTERNAL}. ` +
-          `Your batch total: $${totalAmount.toFixed(2)} × ${(Number(sellRateSnapshot) * 100).toFixed(1)}% = $${estimatedPayout.toFixed(2)} payout. ` +
-          `Add more cards or use a Binance wallet.`,
+        `This batch was NOT published\n` +
+          `Your payout for this batch is $${estimatedPayout.toFixed(2)}, ` +
+          `but the minimum payout to your wallet is $${WALLET_MIN_PAYOUT_EXTERNAL}. ` +
+          `Add more cards or switch your payment method to Binance.`,
       );
     }
   }
