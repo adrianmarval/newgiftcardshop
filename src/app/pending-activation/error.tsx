@@ -1,13 +1,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { reportClientError } from '@/lib/utils';
+import { isChunkLoadError, reloadForChunkError, reportClientError } from '@/lib/utils';
 import { useEffect } from 'react';
 
 export default function PendingActivationError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('Pending activation error:', error);
     reportClientError(error, 'pending-activation');
+    if (isChunkLoadError(error)) reloadForChunkError();
   }, [error]);
 
   return (

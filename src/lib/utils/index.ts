@@ -13,3 +13,4 @@ export { getPortalSwScope } from './portal-sw-scope';
 export { serializeDates, deserializeDates } from './json-payload';
 export { apiQuery } from './api-query';
 export { reportClientError } from './report-client-error';
+export { isChunkLoadError, reloadForChunkError } from './chunk-load-recovery';

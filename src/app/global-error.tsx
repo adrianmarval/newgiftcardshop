@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { reportClientError } from '@/lib/utils';
+import { isChunkLoadError, reloadForChunkError, reportClientError } from '@/lib/utils';
 
 /**
  * Error boundary del ROOT layout. Next reemplaza el layout entero, así que
@@ -13,6 +13,8 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   useEffect(() => {
     console.error('Global error:', error);
     reportClientError(error, 'global-error');
+    // Chunk stale post-deploy: la única cura es full reload (one-shot con guard)
+    if (isChunkLoadError(error)) reloadForChunkError();
   }, [error]);
 
   return (
