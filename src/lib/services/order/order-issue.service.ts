@@ -63,19 +63,22 @@ export async function reportGiftcardIssue(params: ReportIssueParams) {
     throw new Error('La tarjeta no pertenece a esta orden');
   }
 
-  // El monto reportado alimenta DIRECTO el adjustedTotal del buyer y el payout
-  // del seller (computeEffectiveTotal/computeFaceValueTotal) — sin este bound,
-  // un reportedAmount > valor facial infla el payout del seller.
+  // El monto reportado es el saldo REAL de la tarjeta y alimenta DIRECTO el
+  // adjustedTotal del buyer, el payout del seller y el profit del admin
+  // (computeEffectiveTotal/computeFaceValueTotal — las 3 patas ya computan sobre
+  // reportedAmount consistentemente). Regla de negocio (sept 2026): el saldo real
+  // puede ser MAYOR o menor al valor facial declarado (seller under/over-declared)
+  // — NO hay bound superior. Solo se rechaza nulo o <= 0.
   if (issueType === 'WRONG_AMOUNT') {
     const reported = reportedAmount != null ? new Prisma.Decimal(reportedAmount) : null;
-    if (!reported || reported.lte(0) || reported.gt(card.amount)) {
-      logger.warn('reportGiftcardIssue: monto reportado fuera de rango', {
+    if (!reported || reported.lte(0)) {
+      logger.warn('reportGiftcardIssue: monto reportado inválido', {
         flow: 'order',
         action: 'report-issue',
         userId,
         metadata: { giftcardId, orderId, reportedAmount, cardAmount: card.amount.toString() },
       });
-      throw new Error('El monto reportado debe ser mayor a 0 y no puede superar el valor de la tarjeta');
+      throw new Error('El monto reportado debe ser mayor a 0');
     }
   }
 
