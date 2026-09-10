@@ -1,4 +1,4 @@
-import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useBuyFlow } from '@/components/buy/use-buy-flow';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 

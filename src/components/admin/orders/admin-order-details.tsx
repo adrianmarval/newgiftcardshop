@@ -2,7 +2,8 @@
 
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { CardFooter } from '@/components/ui/card';
-import { GiftcardItem, UserBadge } from '@/components/common';
+import {GiftcardItem} from '@/components/common';
+import { UserBadge } from '@/components/admin/user-badge';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import type { Giftcard } from '@/types';
 import type { AdminOrder, AdminSellerSummary } from '@/types';

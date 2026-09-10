@@ -16,7 +16,7 @@
 
 import { Decimal } from '@prisma/client/runtime/client';
 import prisma from '@/lib/prisma';
-import binance from '@/lib/services/payment/binance.service';
+import binance from '@/lib/services/payment/binance';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { publishToRole, publishToUser } from '@/lib/realtime/bus';
 import { logger } from '@/lib/logger';
@@ -514,7 +514,7 @@ export async function syncPendingSellerPayments(): Promise<SyncResult> {
           // buyers también pagaron, el batch queda saldado y se notifica la
           // ganancia al admin (fire-and-forget, dedup por batch).
           if (payment.batchId) {
-            const { checkAndNotifySettledBatch } = await import('./batch-profit.service');
+            const { checkAndNotifySettledBatch } = await import('./batch-profit');
             checkAndNotifySettledBatch(payment.batchId).catch((err) =>
               logger.error('Error en check de batch saldado post-sync', {
                 flow: 'payment',

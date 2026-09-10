@@ -6,7 +6,7 @@
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { hashCode } from '@/lib/encryption';
-import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { decryptGiftcardCodes } from '@/lib/encryption';
 import { logger } from '@/lib/logger';
 import type { AdminGiftcardIssue } from '@/types';
 

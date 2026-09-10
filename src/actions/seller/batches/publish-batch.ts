@@ -1,7 +1,7 @@
 'use server';
 
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
-import { publishBatch as publishBatchService } from '@/lib/services/giftcard/publish.service';
+import { publishBatch as publishBatchService } from '@/lib/services/giftcard/publish';
 import { logger } from '@/lib/logger';
 import { publishBatchInputSchema, publishBatchOutputSchema } from './schemas';
 

@@ -17,6 +17,8 @@ import {
   PaymentVerificationError,
 } from '@/lib/services/order';
 import { orderNeedsSecurityGate, isSecurityUnlocked } from '@/lib/services/security';
+import { computeFaceValueTotal } from '@/lib/services/pricing';
+import { listBuyerOrdersPage } from '@/lib/services/order/order-list';
 
 import { Prisma } from '@/generated/prisma/client';
 import { strike } from '@/bot/shared/formatters';
@@ -34,16 +36,7 @@ export async function handleOrders(ctx: BuyerContext) {
   const page = pageMatch ? parseInt(pageMatch[1]) : 1;
   const skip = (page - 1) * PAGE_SIZE;
 
-  const [orders, totalCount] = await Promise.all([
-    prisma.order.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: PAGE_SIZE,
-      include: { _count: { select: { giftcards: true } } },
-    }),
-    prisma.order.count({ where: { userId } }),
-  ]);
+  const { orders, totalCount } = await listBuyerOrdersPage(userId, page, PAGE_SIZE);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -145,11 +138,7 @@ export async function renderOrderDetail(ctx: BuyerContext, orderId: string, from
   const nullifiedCards = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED' && c.status !== 'WRONG_AMOUNT');
   const availableCards = order.giftcards.filter((c) => c.status === 'UNUSED' || c.status === 'USED' || c.status === 'WRONG_AMOUNT');
 
-  const totalGiftcardAmount = order.giftcards.reduce((sum, c) => {
-    if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)) return sum;
-    const amt = c.reportedAmount ?? c.amount;
-    return sum.plus(amt);
-  }, new Prisma.Decimal(0));
+  const totalGiftcardAmount = computeFaceValueTotal(order.giftcards);
 
   const totalToPay = order.status === 'PENDING' ? totalGiftcardAmount.mul(order.buyRate) : (order.adjustedTotal ?? order.total);
 
@@ -284,10 +273,7 @@ export async function handleConfirmUsage(ctx: BuyerContext) {
 
   if (order.status !== 'PENDING') return ctx.answerCallbackQuery('Estado inválido');
 
-  const totalEffectiveFaceValue = order.giftcards.reduce((sum, c) => {
-    if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(c.status)) return sum;
-    return sum.plus(c.reportedAmount ?? c.amount);
-  }, new Prisma.Decimal(0));
+  const totalEffectiveFaceValue = computeFaceValueTotal(order.giftcards);
 
   const reportedCount = order.giftcards.filter((c) => c.status !== 'UNUSED' && c.status !== 'USED').length;
   const warningText =

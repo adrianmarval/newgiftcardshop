@@ -1,7 +1,7 @@
 'use server';
 
 import { adminActionClient, ActionError } from '@/lib/safe-action';
-import { executeSellerPayout } from '@/lib/services/payment/seller-payout.service';
+import { executeSellerPayout } from '@/lib/services/payment/seller-payout';
 import { logger } from '@/lib/logger';
 import { payBatchInputSchema, payBatchOutputSchema } from './schemas';
 

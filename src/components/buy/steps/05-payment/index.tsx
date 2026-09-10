@@ -7,10 +7,10 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useBuyFlow } from '@/components/buy/use-buy-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
-import { completeOrder } from '@/actions/buyer/orders/complete-order';
-import { getBinancePayPaymentId } from '@/actions/platform';
+import { completeOrder } from '@/actions/buyer/orders';
+import { apiQuery } from '@/lib/utils';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
 import { copyToClipboard } from '@/lib/utils/clipboard';
@@ -28,25 +28,20 @@ export const PaymentStep = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [binancePayId, setBinancePayId] = useState<string>('—');
 
-  const { execute: executeGetPlatformSetting } = useAction(getBinancePayPaymentId, {
-    onSuccess: ({ data }) => {
-      if (data?.success) {
-        const binancePayIdSetting = data.binancePayId;
-        if (!binancePayIdSetting) {
+  useEffect(() => {
+    // GET plano via route handler — nunca una server action en mount (race nav-abort)
+    apiQuery<{ success: true; binancePayId: string }>('binance-pay-id')
+      .then((data) => {
+        if (!data.binancePayId) {
           showAlert.error('Configuración faltante', 'No se encontró la configuración de Binance Pay');
           return;
         }
-        setBinancePayId(binancePayIdSetting);
-      }
-    },
-    onError: () => {
-      showAlert.error('Error', 'Error al obtener la configuración de Binance Pay');
-    },
-  });
-
-  useEffect(() => {
-    executeGetPlatformSetting();
-  }, [executeGetPlatformSetting]);
+        setBinancePayId(data.binancePayId);
+      })
+      .catch(() => {
+        showAlert.error('Error', 'Error al obtener la configuración de Binance Pay');
+      });
+  }, []);
 
   // Fix #7: Detect if order status changed externally and redirect accordingly
   useEffect(() => {

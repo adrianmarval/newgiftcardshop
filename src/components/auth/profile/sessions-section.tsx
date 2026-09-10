@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MonitorSmartphone, LogOut } from 'lucide-react';
 import { LogoutButton } from '@/components/auth/logout-button';
-import { getActiveSessions } from '@/actions/auth/get-active-sessions';
-import { revokeOtherSessions } from '@/actions/auth/revoke-other-sessions';
+import { revokeOtherSessions } from '@/actions/auth';
+import { apiQuery } from '@/lib/utils';
 import { useAction } from 'next-safe-action/hooks';
 import { Spinner } from '@/components/ui/spinner';
 import { showAlert } from '@/lib/ui';
-import { useLocale } from '@/hooks/use-locale';
+import { useLocale } from '@/components/auth/profile/use-locale';
 
 function parseUserAgent(ua: string | null): { icon: string; label: string } {
   if (!ua) return { icon: '🌐', label: 'Unknown device' };
@@ -48,15 +48,6 @@ export const SessionsSection = () => {
   >([]);
   const [sessionsLoaded, setSessionsLoaded] = useState(false);
 
-  const { execute: executeGetSessions, status: sessionsStatus } = useAction(getActiveSessions, {
-    onSuccess: ({ data }) => {
-      if (data?.success) {
-        setSessions(data.sessions);
-        setSessionsLoaded(true);
-      }
-    },
-  });
-
   const { execute: executeRevoke, status: revokeStatus } = useAction(revokeOtherSessions, {
     onSuccess: ({ data }) => {
       if (data?.success) {
@@ -67,7 +58,16 @@ export const SessionsSection = () => {
   });
 
   useEffect(() => {
-    executeGetSessions();
+    // GET plano via route handler — nunca una server action en mount (race nav-abort)
+    apiQuery<{
+      success: true;
+      sessions: Array<{ id: string; ipAddress: string | null; userAgent: string | null; createdAt: Date; expiresAt: Date }>;
+    }>('active-sessions')
+      .then((data) => {
+        setSessions(data.sessions);
+        setSessionsLoaded(true);
+      })
+      .catch(() => setSessionsLoaded(true));
   }, []);
 
   return (
@@ -84,7 +84,7 @@ export const SessionsSection = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
-        {sessionsStatus === 'executing' && !sessionsLoaded ? (
+        {!sessionsLoaded ? (
           <Spinner size="sm" />
         ) : (
           <div className="space-y-1.5">

@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { CircleHelp } from 'lucide-react';
 import type { DriveStep } from 'driver.js';
-import { useTour } from '@/hooks/use-tour';
+import { useTour } from '@/components/common/tour/use-tour';
 import {
   SELL_DASHBOARD_STEPS,
   SELL_WIZARD_STEPS,

@@ -1,7 +1,7 @@
 'use server';
 
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { verifyPinAndUnlock, SecurityPinError } from '@/lib/services';
+import { verifyPinAndUnlock, SecurityPinError } from '@/lib/services/security';
 import { unlockWithPinInputSchema, unlockOutputSchema } from './schemas';
 
 export const unlockWithPin = buyerActionClient

@@ -1,1 +1,1 @@
-export { getToursSeenForUser } from './tours.service';
+export { getToursSeenForUser } from './tours';

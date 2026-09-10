@@ -8,7 +8,7 @@ import { Decimal } from '@prisma/client/runtime/client';
 import prisma from '@/lib/prisma';
 import { hashCode } from '@/lib/encryption';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
-import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { decryptGiftcardCodes } from '@/lib/encryption';
 import type { ListBatchesServiceInput } from '@/types';
 import { logger } from '@/lib/logger';
 
@@ -447,4 +447,28 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
     items: filtered,
     pagination: { currentPage: page, totalPages, totalCount },
   };
+}
+/**
+ * Paginado simple de batches del seller para el seller-bot (sin filtros ni
+ * serialización — el bot formatea para Telegram). La web usa listBatchesService.
+ */
+export async function listSellerBatchesPage(userId: string, page: number, pageSize: number) {
+  const skip = (page - 1) * pageSize;
+  const [batches, totalCount] = await Promise.all([
+    prisma.giftcardBatch.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+      select: {
+        id: true,
+        isPaid: true,
+        cancelledAt: true,
+        createdAt: true,
+        giftcards: { select: { isConfirmed: true } },
+      },
+    }),
+    prisma.giftcardBatch.count({ where: { userId } }),
+  ]);
+  return { batches, totalCount };
 }

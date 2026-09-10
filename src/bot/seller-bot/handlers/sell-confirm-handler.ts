@@ -7,7 +7,7 @@ import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
 import prisma from '@/lib/prisma';
-import { publishBatch } from '@/lib/services/giftcard/publish.service';
+import { publishBatch } from '@/lib/services/giftcard/publish';
 import type { ParsedGiftcard } from '@/types';
 import { createLogger } from '@/lib/logger';
 

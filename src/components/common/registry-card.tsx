@@ -1,24 +1,25 @@
 'use client';
 
-import { ReactNode, MouseEvent, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { ReactNode, MouseEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, AlertTriangle, Copy, Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { formatDateTime, formatCurrency, reportClientError } from '@/lib/utils';
+import { formatDateTime, formatCurrency } from '@/lib/utils';
 import type { GiftcardStatus } from '@/generated/prisma/enums';
 import type { OrderStatus } from '@/generated/prisma/enums';
 import { showAlert } from '@/lib/ui';
 import { orderStatusConfig } from '@/lib/config/ui-config';
-import { cancelOrder as cancelOrderAdmin } from '@/actions/admin/orders';
-import { cancelOrder as cancelOrderBuyer } from '@/actions/buyer/orders';
-import { deleteBatch, cancelBatch } from '@/actions/admin/batches';
 import Image from 'next/image';
 import type { AdminBatch, Giftcard, SellerBatch } from '@/types';
 
 // ── RegistryCard shell ────────────────────────────────────────────────────────
+
+// Hooks extraídos a ./hooks/ — re-exportados para no romper consumidores.
+import { useCopyId } from './hooks/use-card-utils';
+export { useCardProgress, useCardCurrency, useCopyId } from './hooks/use-card-utils';
+export { useCancelOrderAction, useDeleteBatchAction, useCancelBatchAction } from './hooks/use-card-actions';
 
 export interface RegistryCardProps {
   id: string | number;
@@ -141,117 +142,6 @@ export function RegistryCard({
 }
 
 // ── Shared hooks for cards (orders + batches) ─────────────────────────────────
-
-export function useCardProgress<T extends { giftcards: { isConfirmed: boolean; status: GiftcardStatus }[] }>(item: T) {
-  const confirmedCount = item.giftcards.filter((g) => g.isConfirmed).length;
-  const totalItems = item.giftcards.length;
-  const progressPercentage = totalItems > 0 ? (confirmedCount / totalItems) * 100 : 0;
-  return { confirmedCount, totalItems, progressPercentage };
-}
-
-export function useCardCurrency(giftcards: { country?: { currency: string | null } | null }[]) {
-  return giftcards[0]?.country?.currency || 'USD';
-}
-
-export function useCopyId(id: string | number, shareText?: string) {
-  return (e: MouseEvent) => {
-    e.stopPropagation();
-    const textToCopy = shareText || String(id);
-    navigator.clipboard.writeText(textToCopy);
-    showAlert.toast.success(shareText ? 'Copiado para compartir' : 'ID copiado');
-  };
-}
-
-export function useCancelOrderAction(queryKeys: string[], scope: 'admin' | 'buyer') {
-  const queryClient = useQueryClient();
-  const [isCancelling, setIsCancelling] = useState(false);
-  // La action admin es adminActionClient (rol ADMIN únicamente) — un buyer que
-  // la invoca recibe unauthorized() y el cancel falla SIEMPRE. Cada scope debe
-  // usar su action: la de buyer valida ownership (findOrderForUser).
-  const cancelOrderAction = scope === 'admin' ? cancelOrderAdmin : cancelOrderBuyer;
-  const cancel = async (orderId: string, e: MouseEvent) => {
-    e.stopPropagation();
-    const confirmed = await showAlert.confirm('¿Seguro que quieres cancelar esta orden?', 'Esta acción no se puede deshacer.');
-    if (!confirmed) return;
-    setIsCancelling(true);
-    try {
-      const result = await cancelOrderAction({ orderId });
-      if (result.serverError || result.validationErrors) {
-        showAlert.error(result.serverError || 'Error al cancelar la orden');
-      } else {
-        showAlert.toast.success('Orden cancelada con éxito');
-        // Feedback vía React Query — NUNCA router.refresh() (aborta navs en vuelo)
-        for (const key of queryKeys) void queryClient.invalidateQueries({ queryKey: [key] });
-      }
-    } catch (error) {
-      // Fallo de transporte (action stale tras redeploy, red caída): la request
-      // nunca ejecutó la action — reportar a app_log o el fallo es invisible.
-      console.error(error);
-      reportClientError(error instanceof Error ? error : new Error(String(error)), 'cancel-order');
-      showAlert.error('Error al cancelar');
-    } finally {
-      setIsCancelling(false);
-    }
-  };
-  return { cancel, isCancelling };
-}
-
-export function useDeleteBatchAction() {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const remove = async (batchId: number, onDeleted: () => void, e: MouseEvent) => {
-    e.stopPropagation();
-    const confirmed = await showAlert.confirm('Eliminar lote', `¿Eliminar lote #${batchId}?`);
-    if (!confirmed) return;
-    setIsDeleting(true);
-    try {
-      const result = await deleteBatch({ batchId });
-      if (result.serverError) {
-        showAlert.error('Error', result.serverError);
-      } else {
-        showAlert.toast.success('Lote eliminado');
-        onDeleted();
-      }
-    } catch (error) {
-      console.error(error);
-      reportClientError(error instanceof Error ? error : new Error(String(error)), 'delete-batch');
-      showAlert.error('Error', 'Error al eliminar');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-  return { remove, isDeleting };
-}
-
-export function useCancelBatchAction(queryKeys: string[]) {
-  const queryClient = useQueryClient();
-  const [isCancelling, setIsCancelling] = useState(false);
-  const cancel = async (batchId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const confirmed = await showAlert.confirm(
-      '¿Cancelar lote?',
-      'El lote se marcará como cancelado. El seller será notificado. Esta acción no se puede deshacer.',
-    );
-    if (!confirmed) return;
-    setIsCancelling(true);
-    try {
-      const result = await cancelBatch({ batchId });
-      if (result.serverError || result.validationErrors) {
-        showAlert.error(result.serverError || 'Error al cancelar el lote');
-      } else {
-        showAlert.toast.success('Lote cancelado con éxito');
-        // Feedback vía React Query — NUNCA router.refresh() (aborta navs en vuelo)
-        for (const key of queryKeys) void queryClient.invalidateQueries({ queryKey: [key] });
-      }
-    } catch (error) {
-      console.error(error);
-      reportClientError(error instanceof Error ? error : new Error(String(error)), 'cancel-batch');
-      showAlert.error('Error al cancelar');
-    } finally {
-      setIsCancelling(false);
-    }
-  };
-  return { cancel, isCancelling };
-}
 
 // ── Order config helpers ─────────────────────────────────────────────────────
 

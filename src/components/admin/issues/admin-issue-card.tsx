@@ -1,6 +1,7 @@
 'use client';
 
-import { RegistryCard, BrandIcon, UserBadge, getOrderStatusLabel } from '@/components/common';
+import {RegistryCard, BrandIcon, getOrderStatusLabel} from '@/components/common';
+import { UserBadge } from '@/components/admin/user-badge';
 import { Badge } from '@/components/ui/badge';
 import { giftcardIssueTypeConfig } from '@/lib/config';
 import { formatCurrency, formatDateTime } from '@/lib/utils';

@@ -1,10 +1,10 @@
 import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { computeEffectiveTotalDecimal } from '@/lib/services/pricing';
-import { autoCancelEligibleBatchesForOrder } from '@/lib/services/giftcard/batch-cancel.service';
-import { triggerAutoPayForOrder } from '@/lib/services/payment/auto-pay.service';
+import { autoCancelEligibleBatchesForOrder } from '@/lib/services/giftcard/batch-cancel';
+import { triggerAutoPayForOrder } from '@/lib/services/payment/auto-pay';
 import { OrderNotFoundError, InvalidOrderStateError, OrderAlreadyProcessedError, PaymentVerificationError } from './order-errors';
-import { validateBuyerPayment } from '@/lib/services/payment/buyer-payment.service';
+import { validateBuyerPayment } from '@/lib/services/payment/buyer-payment';
 import { publishToRole, publishToUser, publishToUsers } from '@/lib/realtime/bus';
 import { logger } from '@/lib/logger';
 
@@ -220,7 +220,7 @@ export async function completeOrderPayment(orderId: string, txId: string) {
       select: { batchId: true },
       distinct: ['batchId'],
     });
-    const { checkAndNotifySettledBatch } = await import('@/lib/services/payment/batch-profit.service');
+    const { checkAndNotifySettledBatch } = await import('@/lib/services/payment/batch-profit');
     for (const { batchId } of batchIds) {
       if (batchId === null) continue;
       checkAndNotifySettledBatch(batchId).catch((err) =>

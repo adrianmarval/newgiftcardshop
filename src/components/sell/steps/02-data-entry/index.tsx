@@ -7,10 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useSellFlow } from '@/hooks/use-sell-flow';
+import { useSellFlow } from '@/components/sell/use-sell-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { FieldError } from '@/components/common';
-import { useDataEntryPipeline } from '@/hooks/use-data-entry-pipeline';
+import { useDataEntryPipeline } from '@/components/sell/steps/02-data-entry/use-data-entry-pipeline';
 import { FileDropZone } from './file-drop-zone';
 import { ProcessingProgress } from './processing-progress';
 import { cn } from '@/lib/ui';

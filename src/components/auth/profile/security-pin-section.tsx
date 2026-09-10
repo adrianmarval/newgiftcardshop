@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { ShieldCheck, Mail } from 'lucide-react';
 import { showAlert } from '@/lib/ui';
-import { useLocale } from '@/hooks/use-locale';
+import { apiQuery } from '@/lib/utils';
+import { useLocale } from '@/components/auth/profile/use-locale';
 import {
-  getSecurityStatusAction,
   setSecurityPinAction,
   changeSecurityPinAction,
   requestPinResetAction,
@@ -36,13 +36,14 @@ export const SecurityPinSection = () => {
   const [otp, setOtp] = useState('');
 
   useEffect(() => {
-    getSecurityStatusAction().then((result) => {
-      if (result?.data?.success) {
-        setHasPin(result.data.hasPin);
-        setPinLocked(result.data.pinLocked);
-      }
-      setLoading(false);
-    });
+    // GET plano via route handler — nunca una server action en mount (race nav-abort)
+    apiQuery<{ success: true; hasPin: boolean; pinLocked: boolean }>('security-status')
+      .then((data) => {
+        setHasPin(data.hasPin);
+        setPinLocked(data.pinLocked);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const resetFields = () => {

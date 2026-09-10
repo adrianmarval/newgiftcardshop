@@ -1,6 +1,7 @@
 'use client';
 
-import { RegistryCard, useDeleteBatchAction, useCancelBatchAction, useCardCurrency, getBatchProgressConfig, getBatchActiveBg, getBatchStatusLabel, CopyableId, DeleteIcon, BatchTopRight, UserBadge } from '@/components/common';
+import {RegistryCard, useDeleteBatchAction, useCancelBatchAction, useCardCurrency, getBatchProgressConfig, getBatchActiveBg, getBatchStatusLabel, CopyableId, DeleteIcon, BatchTopRight} from '@/components/common';
+import { UserBadge } from '@/components/admin/user-badge';
 import { formatDateTime, formatBatchShareText } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AdminBatchDetails } from './admin-batch-details';

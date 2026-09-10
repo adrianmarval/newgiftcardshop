@@ -3,12 +3,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSession } from '@/lib/auth/auth-client';
 import { Card, CardContent } from '@/components/ui/card';
-import { useBuyFlow, type BuyFlowTierInfo } from '@/hooks/use-buy-flow';
+import { useBuyFlow, type BuyFlowTierInfo } from '@/components/buy/use-buy-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
-import { searchGiftcards } from '@/actions/buyer/giftcards/search-giftcards';
+import { searchGiftcards } from '@/actions/buyer/giftcards';
 import { useAction } from 'next-safe-action/hooks';
-import { getUserSearchPreferences, updateSearchPreferences, updateBuyRate } from '@/actions/buyer/preferences';
-import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
+import { updateSearchPreferences, updateBuyRate } from '@/actions/buyer/preferences';
+import { apiQuery } from '@/lib/utils';
+import { getUserBuyRate } from '@/actions/buyer/orders';
 import { showAlert, cn } from '@/lib/ui';
 import { formatCurrency } from '@/lib/utils';
 import type { BrandCountry } from '@/types';
@@ -51,9 +52,23 @@ export function SearchStep({ brandCountries, accessibility }: SearchStepProps) {
   const [attempted, setAttempted] = useState(false);
   const [amountTouched, setAmountTouched] = useState(false);
 
-  const { execute: executeGetPrefs } = useAction(getUserSearchPreferences, {
-    onSuccess: ({ data }) => {
-      if (data?.success) {
+  const selectedBc = useMemo(() => {
+    if (!selectedBrand) return null;
+    const [bId, cId] = selectedBrand.split('|');
+    return brandCountries.find((bc) => bc.brandId === bId && bc.countryId === cId) || null;
+  }, [selectedBrand, brandCountries]);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    // GET plano via route handler — nunca una server action en mount (race nav-abort)
+    apiQuery<{
+      success: true;
+      minAmount: number | null;
+      maxAmount: number | null;
+      allowSearchPreferences: boolean;
+      allowBuyRateAdjustment: boolean;
+    }>('search-preferences')
+      .then((data) => {
         const minStr = data.minAmount?.toString() || '';
         const maxStr = data.maxAmount?.toString() || '';
         setPrefMin(minStr);
@@ -62,20 +77,8 @@ export function SearchStep({ brandCountries, accessibility }: SearchStepProps) {
         setSavedMax(maxStr);
         setAllowSearchPreferences(data.allowSearchPreferences || false);
         setAllowBuyRateAdjustment(data.allowBuyRateAdjustment || false);
-      }
-    },
-  });
-
-  const selectedBc = useMemo(() => {
-    if (!selectedBrand) return null;
-    const [bId, cId] = selectedBrand.split('|');
-    return brandCountries.find((bc) => bc.brandId === bId && bc.countryId === cId) || null;
-  }, [selectedBrand, brandCountries]);
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      executeGetPrefs();
-    }
+      })
+      .catch(() => {});
   }, [session?.user?.id]);
 
   // Auto-select US on first mount if nothing selected

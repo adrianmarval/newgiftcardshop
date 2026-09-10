@@ -1,7 +1,7 @@
 'use server';
 
 import { authActionClient } from '@/lib/safe-action';
-import { listUserNotifications } from '@/lib/services/notification';
+import { listUserNotifications } from '@/lib/notifications/queries/list-queries';
 import { listNotificationsInputSchema, listNotificationsOutputSchema } from './schemas';
 
 export const listNotifications = authActionClient

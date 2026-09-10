@@ -5,18 +5,15 @@ import { decrypt } from '@/lib/encryption';
 import type { BuyerContext } from '@/bot/shared/types.js';
 import { fmt$ } from '@/bot/shared/formatters.js';
 import { findGiftcardCombination } from '@/lib/services/browse/card-combinator';
+import { createHash } from 'node:crypto';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
-import { Prisma } from '@/generated/prisma/client';
 import { getUserRates } from '@/lib/services/pricing';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { formatCurrency } from '@/lib/utils';
 import { estimateTimeToAccess } from '@/lib/services/pricing/tier-estimation';
 import { getEscalationConfig } from '@/lib/settings/settings.service';
-import { reserveGiftcards, GiftcardReservationError } from '@/lib/services/giftcard/reservation';
 import { AVAILABLE_GIFTCARD_WHERE } from '@/lib/constants';
-import { checkCreditLimit } from '@/lib/services/payment/credit';
-import { withSerializableRetry } from '@/lib/utils/prisma-retry';
-import { publishToRole, publishToUser } from '@/lib/realtime/bus';
+import { createOrderForBuyer, OrderCreationError } from '@/lib/services/order/order-creation';
 import { getBrandsWithStock, getBrandWithCountries, getCountryById } from '@/lib/services/catalog/catalog';
 import { withSecurityGate } from './security-handler.js';
 import { createLogger } from '@/lib/logger';
@@ -313,128 +310,58 @@ export async function handleBuyConfirm(ctx: BuyerContext) {
     return;
   }
 
-  let buyRate: Prisma.Decimal;
+  // La creación de orden vive en el servicio compartido con la web — mismas
+  // reglas (stock completo, brand-country único, tier, crédito en tx, reserva
+  // atómica, realtime). El bot solo mapea errores a su UI.
+  // Idempotencia: la key se deriva de la selección — un doble-tap en confirmar
+  // NO crea una orden duplicada (antes generaba un UUID por tap).
+  const idempotencyKey = `bot_${ctx.user.id}_${createHash('sha1')
+    .update([...selectedGiftcardIds].sort().join(','))
+    .digest('hex')}`;
+
+  let orderId: string;
   try {
-    const rates = await getUserRates(ctx.user.id, { brandId, countryId });
-    buyRate = rates.buyRate as Prisma.Decimal;
-  } catch (error: any) {
-    await ctx.answerCallbackQuery('Error al obtener la tasa de compra');
-    return renderUI(
-      ctx,
-      `❌ ${escapeHTML(error.message || 'You do not have a rate assigned for this brand and country. Contact the administrator.')}`,
-      {
-        reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
-      },
-    );
-  }
-
-  const giftcards = await prisma.giftcard.findMany({
-    where: { id: { in: selectedGiftcardIds }, ...AVAILABLE_GIFTCARD_WHERE },
-    select: { id: true, amount: true, brandCountryId: true, escalationTier: true, claimCode: true, pinCode: true },
-  });
-
-  const buyerBuyRate = buyRate.times(100).floor().toNumber();
-  const blockedCards = giftcards.filter((c) => c.escalationTier > buyerBuyRate);
-  if (blockedCards.length > 0) {
-    await ctx.answerCallbackQuery('Algunas tarjetas cambiaron de tier. Intenta de nuevo.');
-    return renderUI(ctx, '😔 Algunas tarjetas ya no están disponibles para tu tasa. Intenta de nuevo con /buy.', {
-      reply_markup: new InlineKeyboard().text('🛒 Nueva búsqueda', 'buy_start'),
+    const result = await createOrderForBuyer({
+      userId: ctx.user.id,
+      giftcardIds: selectedGiftcardIds,
+      idempotencyKey,
+      source: 'bot',
     });
-  }
-
-  if (giftcards.length === 0) {
-    await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
-    return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intenta de nuevo con /buy.', {
-      reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
-    });
-  }
-
-  // Guard anti-orden-parcial: si entre el preview y el confirm se vendió un
-  // SUBSET de las seleccionadas, el fetch filtrado las excluye y sin este check
-  // se creaba una orden con menos tarjetas (y menor total) sin avisar al buyer.
-  if (giftcards.length !== selectedGiftcardIds.length) {
-    await ctx.answerCallbackQuery('Algunas tarjetas ya no están disponibles');
-    return renderUI(ctx, '😔 Algunas tarjetas de tu selección ya fueron compradas. Intenta de nuevo con /buy.', {
-      reply_markup: new InlineKeyboard().text('🛒 Nueva búsqueda', 'buy_start'),
-    });
-  }
-
-  const faceValueTotal = giftcards.reduce((s, c) => s.plus(c.amount), new Prisma.Decimal(0));
-  const total = faceValueTotal.mul(buyRate);
-
-  let order;
-  try {
-    order = await withSerializableRetry(() =>
-      prisma.$transaction(
-        async (tx) => {
-          // Revalidar crédito atómicamente dentro de la tx (race condition safe)
-          const creditCheck = await checkCreditLimit(ctx.user.id, faceValueTotal, tx);
-          if (!creditCheck.allowed) {
-            throw new Error('CREDIT_LIMIT_EXCEEDED');
-          }
-
-          const idempotencyKey = crypto.randomUUID();
-          const created = await tx.order.create({
-            data: {
-              userId: ctx.user.id,
-              brandCountryId: giftcards[0]?.brandCountryId,
-              total,
-              buyRate: buyRate,
-              status: 'PENDING',
-              idempotencyKey,
-            },
-          });
-          await reserveGiftcards(
-            tx,
-            giftcards.map((c) => c.id),
-            created.id,
-          );
-          return created;
-        },
-        { isolationLevel: 'Serializable' },
-      ),
-    );
+    orderId = result.orderId;
   } catch (error) {
-    if (error instanceof GiftcardReservationError) {
-      buyerLogger.warn('Reserva fallida en bot buy', {
-        userId: ctx.user.id,
-        metadata: { giftcardIds: selectedGiftcardIds, error: error.message },
-      });
-      await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
-      return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intenta de nuevo con /buy.', {
-        reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
-      });
-    }
-    if (error instanceof Error && error.message === 'CREDIT_LIMIT_EXCEEDED') {
-      buyerLogger.warn('Crédito insuficiente en bot buy', {
-        userId: ctx.user.id,
-        metadata: { total: total.toString() },
-      });
-      await ctx.answerCallbackQuery('Crédito insuficiente');
-      return renderUI(ctx, '❌ Límite de crédito insuficiente. Completa tus pagos pendientes primero.', {
-        reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
-      });
+    if (error instanceof OrderCreationError) {
+      switch (error.code) {
+        case 'TIER_BLOCKED':
+          await ctx.answerCallbackQuery('Algunas tarjetas cambiaron de tier. Intenta de nuevo.');
+          return renderUI(ctx, '😔 Algunas tarjetas ya no están disponibles para tu tasa. Intenta de nuevo con /buy.', {
+            reply_markup: new InlineKeyboard().text('🛒 Nueva búsqueda', 'buy_start'),
+          });
+        case 'CREDIT_LIMIT':
+          await ctx.answerCallbackQuery('Crédito insuficiente');
+          return renderUI(ctx, '❌ Límite de crédito insuficiente. Completa tus pagos pendientes primero.', {
+            reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
+          });
+        case 'NO_RATE':
+          await ctx.answerCallbackQuery('Error al obtener la tasa de compra');
+          return renderUI(ctx, `❌ ${escapeHTML(error.message)}`, {
+            reply_markup: new InlineKeyboard().text('🏠 Volver', 'start'),
+          });
+        default: // NO_STOCK, MIXED_BRAND_COUNTRY, RESERVATION_FAILED
+          await ctx.answerCallbackQuery('Las tarjetas ya no están disponibles');
+          return renderUI(ctx, '😔 Las tarjetas ya fueron compradas por otra persona. Intenta de nuevo con /buy.', {
+            reply_markup: new InlineKeyboard().text('⬅️ Intentar de nuevo', 'buy_start'),
+          });
+      }
     }
     throw error;
   }
-
-  buyerLogger.action('buy', 'bot-create-order', `Orden ${order.id} creada via bot con ${giftcards.length} tarjetas`, {
-    userId: ctx.user.id,
-    metadata: { orderId: order.id, giftcardCount: giftcards.length, total: total.toString() },
-  });
-
-  // Invalidación realtime: si el buyer tiene la web abierta ve su orden al
-  // instante; el stock baja para todos los buyers conectados
-  publishToUser(ctx.user.id, ['orders', 'stats']);
-  publishToRole('BUYER', ['availability']);
-  publishToRole('ADMIN', ['orders']);
 
   ctx.session.wizard.selectedGiftcardIds = undefined;
 
   // Security gate: los códigos solo se revelan tras verificar PIN (o si la orden
   // ya está confirmada). La orden YA existe — el gate no interfiere con la compra.
-  const gated = await withSecurityGate(ctx, order.id, 'buy');
-  if (!gated) await renderOrderCreatedReveal(ctx, order.id);
+  const gated = await withSecurityGate(ctx, orderId, 'buy');
+  if (!gated) await renderOrderCreatedReveal(ctx, orderId);
 }
 
 /**

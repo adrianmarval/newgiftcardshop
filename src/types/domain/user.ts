@@ -4,13 +4,10 @@
 
 import type { Role } from '@/generated/prisma/enums';
 import { z } from 'zod';
+import type { TelegramUserSessionData } from '@/types/auth/session';
 
-export interface TelegramUserInfo {
-  telegramId: string;
-  username: string | null;
-  firstName: string | null;
-  hasPhoto: boolean;
-}
+/** Proyección de TelegramUser para listas admin — derivada del shape de sesión (no duplicar campos). */
+export type TelegramUserInfo = Pick<TelegramUserSessionData, 'telegramId' | 'username' | 'firstName' | 'hasPhoto'>;
 
 /** Full buyer shape used by admin order cards, per-giftcard buyer info, and the buyer dialog. */
 export interface AdminBuyerSummary {

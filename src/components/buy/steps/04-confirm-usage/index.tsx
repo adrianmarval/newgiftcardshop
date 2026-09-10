@@ -5,12 +5,12 @@ import { motion } from 'framer-motion';
 import { Check, XCircle, Ban, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useBuyFlow } from '@/components/buy/use-buy-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
-import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
-import { getOrderCards } from '@/actions/buyer/giftcards/get-order-cards';
-import { confirmUsage } from '@/actions/buyer/orders/confirm-usage';
-import { cancelOrder } from '@/actions/buyer/orders/cancel-order';
+import { getUserBuyRate } from '@/actions/buyer/orders';
+import { apiQuery } from '@/lib/utils';
+import type { BuyFlowCard } from '@/types';
+import { confirmUsage, cancelOrder } from '@/actions/buyer/orders';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 import { showAlert } from '@/lib/ui';
@@ -61,14 +61,15 @@ export const ConfirmUsageStep = () => {
   }, [executeGetUserBuyRate, selectedBrand, selectedCountry, orderBuyRate]);
 
   // Refetch cards from server on mount to stay in sync with external mutations
+  // (GET plano via route handler — nunca una server action en mount: race nav-abort)
   useEffect(() => {
     if (!orderId) return;
-    getOrderCards({ orderId }).then((result) => {
-      if (result?.data?.success && result.data.giftcards) {
-        setFoundGiftcards(result.data.giftcards);
-      }
-    });
-  }, [orderId]);
+    apiQuery<{ success: true; giftcards: BuyFlowCard[] }>('order-cards', { orderId })
+      .then((data) => {
+        if (data.giftcards) setFoundGiftcards(data.giftcards);
+      })
+      .catch(() => {});
+  }, [orderId, setFoundGiftcards]);
 
   // Fix #6: Detect if order was already confirmed externally and redirect to payment
   useEffect(() => {

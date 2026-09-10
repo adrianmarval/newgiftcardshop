@@ -1,7 +1,7 @@
 'use server';
 
 import { adminActionClient, ActionError } from '@/lib/safe-action';
-import { listOrdersService } from '@/lib/services/order/order-list.service';
+import { listOrdersService } from '@/lib/services/order/order-list';
 import { listOrdersInputSchema, listOrdersOutputSchema } from './schemas';
 
 export const listOrders = adminActionClient

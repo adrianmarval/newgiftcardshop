@@ -13,10 +13,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useSellFlow } from '@/hooks/use-sell-flow';
+import { useSellFlow } from '@/components/sell/use-sell-flow';
 import { publishBatch } from '@/actions/seller/batches';
 import { getSellerRate } from '@/actions/seller/rates';
-import { getPaymentMethod } from '@/actions/seller/payment-method';
+import { apiQuery } from '@/lib/utils';
 import { BrandStep } from '@/components/sell/steps/01-config';
 import { DataEntryStep } from '@/components/sell/steps/02-data-entry';
 import { ReviewStep } from '@/components/sell/steps/03-review';
@@ -41,13 +41,13 @@ export const SellBatchManager = ({ brandCountries, sellRate: sellRateProp }: Sel
   const router = useRouter();
 
   useEffect(() => {
-    getPaymentMethod().then((res) => {
-      if (res?.data?.success) {
-        const hasWallet = res.data.paymentMethod !== null;
-        setWalletConfigured(hasWallet);
-        setIsBinanceWallet(res.data.paymentMethod?.isBinanceWallet ?? false);
-      }
-    });
+    // GET plano via route handler — nunca una server action en mount (race nav-abort)
+    apiQuery<{ success: true; paymentMethod: { isBinanceWallet: boolean } | null }>('payment-method')
+      .then((data) => {
+        setWalletConfigured(data.paymentMethod !== null);
+        setIsBinanceWallet(data.paymentMethod?.isBinanceWallet ?? false);
+      })
+      .catch(() => setWalletConfigured(null));
   }, []);
 
   const selectedBrandCountryData = useMemo(() => {

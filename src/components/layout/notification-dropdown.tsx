@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Mail, Settings, ExternalLink, ChevronRight } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useNotifications } from '@/providers/notification-provider';
-import { listNotifications, markAsRead } from '@/actions/notifications';
+import { markAsRead } from '@/actions/notifications';
 import { useAction } from 'next-safe-action/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { apiQuery } from '@/lib/utils';
 import { NotificationIcon } from '@/components/common';
 import { timeAgo } from '@/lib/utils';
 import type { NotificationItem } from '@/types';
@@ -43,19 +45,25 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
   const labels = PORTAL_LABELS[portal];
   const routes = PORTAL_ROUTES[portal];
 
-  const { execute: executeList, status: listStatus } = useAction(listNotifications, {
-    onSuccess: ({ data }) => {
-      if (data?.success) {
-        setNotifications(
-          data.notifications.map((n) => ({
-            ...n,
-            createdAt: new Date(n.createdAt),
-          })) as NotificationItem[],
-        );
-        setLoaded(true);
-      }
-    },
+  // Lectura via route handler (GET plano) — NUNCA una server action desde un
+  // queryFn/refetch: una action en vuelo + navegación = nav abortada por el router.
+  const listQuery = useQuery({
+    queryKey: ['notifications-dropdown'],
+    queryFn: () => apiQuery<{ success: true; notifications: NotificationItem[] }>('notifications-page', { limit: 8, filter: 'all' }),
+    enabled: open,
   });
+
+  useEffect(() => {
+    if (listQuery.data?.success) {
+      setNotifications(
+        listQuery.data.notifications.map((n) => ({
+          ...n,
+          createdAt: new Date(n.createdAt),
+        })) as NotificationItem[],
+      );
+      setLoaded(true);
+    }
+  }, [listQuery.data]);
 
   const { execute: executeMarkAsRead } = useAction(markAsRead);
 
@@ -71,22 +79,19 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
   }, [open]);
 
   const handleToggle = () => {
-    const next = !open;
-    setOpen(next);
-    if (next) {
-      executeList({ limit: 8, filter: 'all' });
-    }
+    setOpen((prev) => !prev);
   };
 
   // Refetch en vivo: si el badge sube mientras el dropdown está abierto, llegó
-  // una notificación nueva (vía auto-refresh de 15s) — traerla sin request extra.
+  // una notificación nueva (via SSE) — traerla sin request extra.
   const prevCountRef = useRef(count);
   useEffect(() => {
     if (open && loaded && count > prevCountRef.current) {
-      executeList({ limit: 8, filter: 'all' });
+      listQuery.refetch();
     }
     prevCountRef.current = count;
-  }, [count, open, loaded, executeList]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count, open, loaded]);
 
   const handleClick = (item: NotificationItem) => {
     if (!item.read) {
@@ -131,7 +136,7 @@ export function NotificationDropdown({ portal, badgeKey, href: _href, className 
 
           {/* List */}
           <div className="custom-scrollbar max-h-80 overflow-y-auto">
-            {listStatus === 'executing' && !loaded ? (
+            {listQuery.isPending && !loaded ? (
               <div className="flex items-center justify-center py-8">
                 <Spinner size="sm" />
               </div>

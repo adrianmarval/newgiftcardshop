@@ -118,3 +118,28 @@ export function decryptBuffer(encryptedBuffer: Buffer): Buffer {
     throw new Error('Buffer decryption failed — ciphertext may be corrupted or tampered');
   }
 }
+
+/**
+ * Decrypts claimCode and pinCode from a giftcard record.
+ * Handles legacy unencrypted data gracefully (returns raw value on decrypt failure).
+ */
+export function decryptGiftcardCodes(card: {
+  claimCode: string;
+  pinCode: string | null;
+}): { claimCode: string; pinCode: string | null } {
+  let claimCode = card.claimCode;
+  let pinCode = card.pinCode ?? null;
+  try {
+    claimCode = decrypt(card.claimCode);
+  } catch {
+    /* legacy unencrypted */
+  }
+  if (card.pinCode) {
+    try {
+      pinCode = decrypt(card.pinCode);
+    } catch {
+      pinCode = card.pinCode;
+    }
+  }
+  return { claimCode, pinCode };
+}

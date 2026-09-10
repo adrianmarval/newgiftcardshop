@@ -2,10 +2,10 @@
 
 import prisma from '@/lib/prisma';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { decryptGiftcardCodes } from '@/lib/encryption';
 import { computeOrderGiftcardTotals } from '@/lib/services/pricing';
-import { orderNeedsSecurityGate, isSecurityUnlocked } from '@/lib/services';
-import { MASKED_CLAIM_CODE } from '@/lib/services/order/order-list.service';
+import { orderNeedsSecurityGate, isSecurityUnlocked } from '@/lib/services/security';
+import { MASKED_CLAIM_CODE } from '@/lib/services/order/order-list';
 import { GiftcardStatus, OrderStatus } from '@/generated/prisma/enums';
 import { getOrderByIdInputSchema, getOrderByIdOutputSchema } from './schemas';
 

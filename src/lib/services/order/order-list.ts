@@ -7,7 +7,7 @@ import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { hashCode } from '@/lib/encryption';
 import { computeOrderGiftcardTotals } from '@/lib/services/pricing';
-import { decryptGiftcardCodes } from '@/lib/utils/action-helpers';
+import { decryptGiftcardCodes } from '@/lib/encryption';
 import { orderNeedsSecurityGate } from '@/lib/services/security';
 import type { AdminOrder, BuyerOrder, GiftcardForList, ListOrdersServiceInput } from '@/types';
 import { logger } from '@/lib/logger';
@@ -92,7 +92,7 @@ function serializeGiftcard(
   search: string | undefined,
   maskCodes = false,
   sellerBatchCounts?: Map<string, number>,
-) {
+): GiftcardForList {
   const { claimCode, pinCode } = maskCodes ? { claimCode: MASKED_CLAIM_CODE, pinCode: null } : decryptGiftcardCodes(card);
 
   let isSearchMatch = false;
@@ -145,7 +145,7 @@ function serializeGiftcard(
             : null,
         }
       : null,
-  } as GiftcardForList;
+  } satisfies GiftcardForList;
 }
 
 // ── Public service ───────────────────────────────────────────────────────────
@@ -306,4 +306,22 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
     items: items as unknown as AdminOrder[] | BuyerOrder[],
     pagination: { currentPage: page, totalPages, totalCount },
   };
+}
+/**
+ * Paginado simple de órdenes del buyer para el buyer-bot (sin filtros ni
+ * serialización — el bot formatea para Telegram). La web usa listOrdersService.
+ */
+export async function listBuyerOrdersPage(userId: string, page: number, pageSize: number) {
+  const skip = (page - 1) * pageSize;
+  const [orders, totalCount] = await Promise.all([
+    prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+      include: { _count: { select: { giftcards: true } } },
+    }),
+    prisma.order.count({ where: { userId } }),
+  ]);
+  return { orders, totalCount };
 }

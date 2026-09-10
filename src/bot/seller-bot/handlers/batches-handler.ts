@@ -5,6 +5,9 @@ import type { SellerContext } from '@/bot/shared/types.js';
 import { fmt$, fmtDate, fmtRate, fmtBatchStatus } from '@/bot/shared/formatters.js';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { strike } from '@/bot/shared/formatters';
+import { computeFaceValueTotal } from '@/lib/services/pricing';
+import { listSellerBatchesPage } from '@/lib/services/giftcard/batch-list';
+import { Prisma } from '@/generated/prisma/client';
 
 const PAGE_SIZE = 5;
 
@@ -17,24 +20,7 @@ export async function handleBatches(ctx: SellerContext) {
   const page = pageMatch ? parseInt(pageMatch[1]) : 1;
   const skip = (page - 1) * PAGE_SIZE;
 
-  const [batches, totalCount] = await Promise.all([
-    prisma.giftcardBatch.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: PAGE_SIZE,
-      select: {
-        id: true,
-        isPaid: true,
-        cancelledAt: true,
-        createdAt: true,
-        giftcards: {
-          select: { isConfirmed: true },
-        },
-      },
-    }),
-    prisma.giftcardBatch.count({ where: { userId } }),
-  ]);
+  const { batches, totalCount } = await listSellerBatchesPage(userId, page, PAGE_SIZE);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
@@ -132,8 +118,6 @@ export async function handleViewBatch(ctx: SellerContext) {
     return ctx.answerCallbackQuery('Batch not found');
   }
 
-  const { Prisma } = await import('@/generated/prisma/client');
-
   // Obtener brand y currency del primer card (asumimos que todos son del mismo brandCountry)
   const firstCard = batch.giftcards[0];
   const brandName = firstCard?.brandCountry?.brand?.name || 'Unknown';
@@ -141,15 +125,8 @@ export async function handleViewBatch(ctx: SellerContext) {
   const countryName = firstCard?.brandCountry?.country?.name || 'Unknown';
   const countryCurrency = firstCard?.brandCountry?.country?.currency || 'USD';
 
-  const faceValueTotal = batch.giftcards.reduce((sum, card) => {
-    // Si la tarjeta está anulada por un reporte, no suma nada
-    if (['ALREADY_USED', 'INVALID', 'DEACTIVATED'].includes(card.status)) {
-      return sum;
-    }
-    // Si tiene un monto corregido (WRONG_AMOUNT), usamos ese. Si no, el original.
-    const amt = card.reportedAmount ?? card.amount;
-    return sum.plus(amt);
-  }, new Prisma.Decimal(0));
+  // Regla única de face value efectivo (status-aware) — compartida con web y services
+  const faceValueTotal = computeFaceValueTotal(batch.giftcards);
 
   const sellRate = new Prisma.Decimal(batch.sellRate);
   const pendingPayment = faceValueTotal.mul(sellRate);

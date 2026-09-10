@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { listUsers } from '@/actions/admin/users/';
+import { listUsers } from '@/actions/admin/users';
 import { UsersManager } from '@/components/admin/users/users-manager';
 import { adminUsersSearchParamsCache, buildAdminUsersInput } from '@/lib/search-params';
 

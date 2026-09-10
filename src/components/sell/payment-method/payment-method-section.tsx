@@ -11,7 +11,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { Wallet, Trash2, CheckCircle, Pencil, Copy } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { showAlert } from '@/lib/ui';
-import { getPaymentMethod, upsertPaymentMethod, deletePaymentMethod, listCoinsForSeller } from '@/actions/seller/payment-method';
+import { upsertPaymentMethod, deletePaymentMethod } from '@/actions/seller/payment-method';
+import { apiQuery } from '@/lib/utils';
 import type { CoinWithNetworks } from '@/types';
 
 interface PaymentMethodSectionProps {
@@ -38,21 +39,29 @@ export function PaymentMethodSection({ isSeller }: PaymentMethodSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
+    // GET plano via route handler — nunca server actions en mount (race nav-abort)
     async function load() {
-      const [coinsResult, pmResult] = await Promise.all([listCoinsForSeller(), getPaymentMethod()]);
-      if (coinsResult.data?.success) setCoins(coinsResult.data.coins as CoinWithNetworks[]);
-      if (pmResult.data?.success && pmResult.data.paymentMethod) {
-        const pm = pmResult.data.paymentMethod;
-        setCurrentPm(pm);
-        setSelectedCoinId(pm.coinId);
-        setSelectedNetworkId(pm.networkId);
-        setAddress(pm.address);
-        setIsBinanceWallet(pm.isBinanceWallet);
+      try {
+        const [coinsData, pmData] = await Promise.all([
+          apiQuery<{ success: true; coins: CoinWithNetworks[] }>('seller-coins'),
+          apiQuery<{ success: true; paymentMethod: typeof currentPm }>('payment-method'),
+        ]);
+        setCoins(coinsData.coins);
+        if (pmData.paymentMethod) {
+          const pm = pmData.paymentMethod;
+          setCurrentPm(pm);
+          setSelectedCoinId(pm.coinId);
+          setSelectedNetworkId(pm.networkId);
+          setAddress(pm.address);
+          setIsBinanceWallet(pm.isBinanceWallet);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     if (isSeller) load();
     else setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSeller]);
 
   const selectedCoin = coins.find((c) => c.id === selectedCoinId);

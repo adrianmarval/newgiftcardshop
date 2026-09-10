@@ -3,6 +3,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Prisma } from '@/generated/prisma/client';
+import type { Giftcard as PrismaGiftcard } from '@/generated/prisma/client';
+import type { Decimal } from '@prisma/client/runtime/client';
 import type { GiftcardStatus } from '@/generated/prisma/enums';
 
 // ── Batch Publish ───────────────────────────────────────────────────────────
@@ -94,3 +96,49 @@ export type GiftcardLike = {
   amount: Prisma.Decimal;
   reportedAmount: Prisma.Decimal | null;
 };
+// ── Claim Code Parsing (output del claim-code-parser, compartido web/bot) ────
+
+export interface ParsedGiftcard {
+  amount?: string;
+  claimCode: string;
+  pinCode?: string;
+  line?: number;
+}
+
+export interface ParseClaimCodesResult {
+  parsed: ParsedGiftcard[];
+  errors: string[];
+  duplicateCount: number;
+  duplicates: string[];
+}
+
+// ── Browse / Selection (internals del subset-sum DP de services/browse) ──────
+
+export interface GiftcardSelectionResult {
+  selectedCards: PrismaGiftcard[];
+  total: Decimal;
+  isExactMatch: boolean;
+  isWithinToleranceRange: boolean;
+}
+
+export interface BatchInfo {
+  createdAt: Date;
+  cards: PrismaGiftcard[];
+  totalValue: Decimal;
+}
+
+export interface PreprocessedBatchData {
+  batches: BatchInfo[];
+  allCardsByAge: PrismaGiftcard[];
+  totalCards: number;
+}
+
+export interface GiftcardSelectionWithTierInfo extends GiftcardSelectionResult {
+  tierInfo: {
+    accessibleCards: PrismaGiftcard[];
+    inaccessibleCards: PrismaGiftcard[];
+    accessibleAmount: Decimal;
+    inaccessibleAmount: Decimal;
+    buyerBuyRate: number;
+  };
+}

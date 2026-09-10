@@ -2,13 +2,13 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useAction } from 'next-safe-action/hooks';
-import { uploadImage } from '@/actions/seller/ocr/upload-image';
-import { extractDraft } from '@/actions/seller/ocr/extract-draft';
+import { uploadImage } from '@/actions/seller/ocr';
+import { extractDraft } from '@/actions/seller/ocr';
 import { checkCodes } from '@/actions/seller/batches';
 import { parseClaimCodes, normalizeClaimCode } from '@/lib/utils/claim-code-parser';
 import { validateAmountsAgainstRange, formatAmountRangeViolation } from '@/lib/utils/amount-range-validator';
 import { showAlert } from '@/lib/ui';
-import { useSellFlow } from '@/hooks/use-sell-flow';
+import { useSellFlow } from '@/components/sell/use-sell-flow';
 import { SellFlowImage, type ProcessingStage, type LocalImage } from '@/types';
 import { MAX_BATCH_SIZE } from '@/lib/constants';
 

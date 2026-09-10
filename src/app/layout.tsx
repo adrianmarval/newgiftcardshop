@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Aldrich, Lora, IBM_Plex_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
-import { Providers } from '@/components/providers';
+import { Providers } from '@/providers/providers';
 import { AppAlertHost } from '@/components/common';
 import { getServerTheme } from '@/lib/ui/theme-utils';
 

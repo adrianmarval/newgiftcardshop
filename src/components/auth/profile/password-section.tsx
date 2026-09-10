@@ -9,10 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { KeyRound } from 'lucide-react';
-import { updateProfile } from '@/actions/auth/update-profile';
+import { updateProfile } from '@/actions/auth';
 import { useAction } from 'next-safe-action/hooks';
 import { Spinner } from '@/components/ui/spinner';
-import { useLocale } from '@/hooks/use-locale';
+import { useLocale } from '@/components/auth/profile/use-locale';
 
 interface PasswordFormValues {
   currentPassword: string;

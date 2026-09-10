@@ -11,14 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TelegramAvatar } from '@/components/common';
+import { TelegramAvatar } from '@/components/auth/profile/telegram-avatar';
 import { CheckCircle, MessageCircle, Link2, Calendar, CreditCard } from 'lucide-react';
-import { updateProfile } from '@/actions/auth/update-profile';
-import { generateTelegramLink } from '@/actions/auth/generate-telegram-link';
+import { updateProfile, generateTelegramLink } from '@/actions/auth';
 import { useAction } from 'next-safe-action/hooks';
 import type { AppSection } from '@/types';
 import Link from 'next/link';
-import { useLocale } from '@/hooks/use-locale';
+import { useLocale } from '@/components/auth/profile/use-locale';
 
 const profileNameSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters'),

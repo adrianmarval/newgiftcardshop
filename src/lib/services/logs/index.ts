@@ -1,1 +1,1 @@
-export { listAppLogs, type ListAppLogsInput } from './log-list.service';
+export { listAppLogs, type ListAppLogsInput } from './log-list';

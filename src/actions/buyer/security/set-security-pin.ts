@@ -1,7 +1,7 @@
 'use server';
 
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { setSecurityPin, SecurityPinError } from '@/lib/services';
+import { setSecurityPin, SecurityPinError } from '@/lib/services/security';
 import { setSecurityPinInputSchema, pinMutationOutputSchema } from './schemas';
 
 export const setSecurityPinAction = buyerActionClient

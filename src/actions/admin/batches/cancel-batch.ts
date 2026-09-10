@@ -2,7 +2,7 @@
 
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import prisma from '@/lib/prisma';
-import { cancelBatch, canCancelBatch } from '@/lib/services/giftcard/batch-cancel.service';
+import { cancelBatch, canCancelBatch } from '@/lib/services/giftcard/batch-cancel';
 import { logger } from '@/lib/logger';
 import { cancelBatchInputSchema, cancelBatchOutputSchema } from './schemas';
 
@@ -42,7 +42,7 @@ export const cancelBatchAction = adminActionClient
 
       // Notify seller
       if (batch.userId) {
-        const { notifySellerBatchCancelled } = await import('@/lib/notifications/notification.service');
+        const { notifySellerBatchCancelled } = await import('@/lib/notifications/notify');
         notifySellerBatchCancelled(batch.userId, batchId).catch((err) =>
           logger.error('Error notificando seller post-cancel', {
             flow: 'batch',

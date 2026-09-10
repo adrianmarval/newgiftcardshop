@@ -1,7 +1,7 @@
 'use server';
 
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { getSecurityStatus, SecurityPinError } from '@/lib/services';
+import { getSecurityStatus, SecurityPinError } from '@/lib/services/security';
 import { getSecurityStatusOutputSchema } from './schemas';
 
 export const getSecurityStatusAction = buyerActionClient

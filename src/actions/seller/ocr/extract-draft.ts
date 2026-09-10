@@ -1,7 +1,7 @@
 'use server';
 
 import { ActionError, sellerActionClient } from '@/lib/safe-action';
-import { extractGiftCardData } from '@/lib/services/giftcard/vision.service';
+import { extractGiftCardData } from '@/lib/services/giftcard/vision';
 import { extractDraftInputSchema } from './schemas';
 
 const chunk = <T>(arr: T[], size: number): T[][] => {

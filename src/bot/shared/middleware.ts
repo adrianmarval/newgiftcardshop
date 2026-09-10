@@ -36,118 +36,82 @@ export function sequentialize(getSessionKey: (ctx: any) => string | undefined) {
   };
 }
 
-// ── Seller middleware ─────────────────────────────────────────────────────────
+// ── Auth middleware (parametrizado por rol) ───────────────────────────────────
 
-export const authenticateSeller = async (ctx: SellerContext, next: NextFunction) => {
-  // Usuarios en wizard de registro no necesitan auth — el wizard es self-service
-  // Flow de venta y wallet SÍ requieren auth (necesitan ctx.user.id)
-  if ((REG_WIZARD_STEPS as readonly string[]).includes(ctx.session.wizard.step)) return next();
+type BotRole = 'SELLER' | 'BUYER';
 
-  if (!ctx.from) return renderUI(ctx, '❌ Error inesperado. Intentá de nuevo.');
-
-  const telegramId = ctx.from.id.toString();
-
-  let telegramUser = await prisma.telegramUser.findUnique({
-    where: { telegramId },
-    include: { user: { select: { id: true, name: true, role: true, isActive: true } } },
-  });
-
-  // Retry una vez si la query falla transitoriamente (DB pool agotado, alta carga por notificaciones masivas)
-  if (!telegramUser) {
-    logger.warn(`[Auth] TelegramUser no encontrado para seller ${telegramId}, reintentando...`);
-    await new Promise((r) => setTimeout(r, 100));
-    telegramUser = await prisma.telegramUser.findUnique({
-      where: { telegramId },
-      include: { user: { select: { id: true, name: true, role: true, isActive: true } } },
-    });
-    if (telegramUser) {
-      logger.info(`[Auth] TelegramUser encontrado en retry para seller ${telegramId}`);
-    }
-  }
-
-  const user = telegramUser?.user;
-
-  if (!user) {
-    logger.warn(`[Auth] Seller no vinculado: telegramId=${telegramId}, telegramUserExiste=${!!telegramUser}`);
-    return renderUI(
-      ctx,
-      '🔗 <b>Your account is not linked.</b>\n\nIf your account is active, try again in a few seconds or contact @' +
-        ADMIN_USERNAME +
-        '.',
-      { parse_mode: 'HTML' },
-    );
-  }
-
-  if (!user.isActive) {
-    return renderUI(ctx, '⏸ <b>Your account is deactivated.</b>\n\n' + `Contact @${ADMIN_USERNAME} to activate it.`, {
-      parse_mode: 'HTML',
-    });
-  }
-
-  if (user.role !== 'SELLER' && user.role !== 'ADMIN') {
-    return renderUI(ctx, '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot.', {
-      parse_mode: 'HTML',
-    });
-  }
-
-  ctx.user = user as any;
-  await next();
+const ROLE_COPY: Record<
+  BotRole,
+  { notLinked: string; deactivated: string; denied: string; allowedRoles: string[] }
+> = {
+  SELLER: {
+    allowedRoles: ['SELLER', 'ADMIN'],
+    notLinked:
+      '🔗 <b>Your account is not linked.</b>\n\nIf your account is active, try again in a few seconds or contact @',
+    deactivated: '⏸ <b>Your account is deactivated.</b>\n\n',
+    denied: '🚫 <b>Access denied.</b>\n\nYour account is not authorized to use this bot.',
+  },
+  BUYER: {
+    allowedRoles: ['BUYER', 'ADMIN'],
+    notLinked:
+      '🔗 <b>Tu cuenta no está vinculada.</b>\n\nSi tu cuenta está activa, intenta de nuevo en unos segundos o contacta a @',
+    deactivated: '⏸ <b>Tu cuenta está desactivada.</b>\n\n',
+    denied: '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot.',
+  },
 };
 
-// ── Buyer middleware ──────────────────────────────────────────────────────────
+function authenticate(role: BotRole) {
+  const copy = ROLE_COPY[role];
+  const label = role.toLowerCase();
 
-export const authenticateBuyer = async (ctx: BuyerContext, next: NextFunction) => {
-  // Usuarios en wizard de registro no necesitan auth — el wizard es self-service
-  // Flow de compra SÍ requiere auth (necesita ctx.user.id)
-  if ((REG_WIZARD_STEPS as readonly string[]).includes(ctx.session.wizard.step)) return next();
+  return async (ctx: SellerContext | BuyerContext, next: NextFunction) => {
+    // Usuarios en wizard de registro no necesitan auth — el wizard es self-service
+    // Los flujos post-auth SÍ la requieren (necesitan ctx.user.id)
+    if ((REG_WIZARD_STEPS as readonly string[]).includes(ctx.session.wizard.step)) return next();
 
-  if (!ctx.from) return renderUI(ctx, '❌ Error inesperado. Intentá de nuevo.');
+    if (!ctx.from) return renderUI(ctx, '❌ Error inesperado. Intentá de nuevo.');
 
-  const telegramId = ctx.from.id.toString();
+    const telegramId = ctx.from.id.toString();
+    const userInclude = { user: { select: { id: true, name: true, role: true, isActive: true } } } as const;
 
-  let telegramUser = await prisma.telegramUser.findUnique({
-    where: { telegramId },
-    include: { user: { select: { id: true, name: true, role: true, isActive: true } } },
-  });
-
-  // Retry una vez si la query falla transitoriamente (DB pool agotado, alta carga por notificaciones masivas)
-  if (!telegramUser) {
-    logger.warn(`[Auth] TelegramUser no encontrado para ${telegramId}, reintentando...`);
-    await new Promise((r) => setTimeout(r, 100));
-    telegramUser = await prisma.telegramUser.findUnique({
+    let telegramUser = await prisma.telegramUser.findUnique({
       where: { telegramId },
-      include: { user: { select: { id: true, name: true, role: true, isActive: true } } },
+      include: userInclude,
     });
-    if (telegramUser) {
-      logger.info(`[Auth] TelegramUser encontrado en retry para ${telegramId}`);
+
+    // Retry una vez si la query falla transitoriamente (DB pool agotado, alta carga por notificaciones masivas)
+    if (!telegramUser) {
+      logger.warn(`[Auth] TelegramUser no encontrado para ${label} ${telegramId}, reintentando...`);
+      await new Promise((r) => setTimeout(r, 100));
+      telegramUser = await prisma.telegramUser.findUnique({
+        where: { telegramId },
+        include: userInclude,
+      });
+      if (telegramUser) {
+        logger.info(`[Auth] TelegramUser encontrado en retry para ${label} ${telegramId}`);
+      }
     }
-  }
 
-  const user = telegramUser?.user;
+    const user = telegramUser?.user;
 
-  if (!user) {
-    logger.warn(`[Auth] Buyer no vinculado: telegramId=${telegramId}, telegramUserExiste=${!!telegramUser}`);
-    return renderUI(
-      ctx,
-      '🔗 <b>Tu cuenta no está vinculada.</b>\n\nSi tu cuenta está activa, intenta de nuevo en unos segundos o contacta a @' +
-        ADMIN_USERNAME +
-        '.',
-      { parse_mode: 'HTML' },
-    );
-  }
+    if (!user) {
+      logger.warn(`[Auth] ${role} no vinculado: telegramId=${telegramId}, telegramUserExiste=${!!telegramUser}`);
+      return renderUI(ctx, copy.notLinked + ADMIN_USERNAME + '.', { parse_mode: 'HTML' });
+    }
 
-  if (!user.isActive) {
-    return renderUI(ctx, '⏸ <b>Tu cuenta está desactivada.</b>\n\n' + `Contacta a @${ADMIN_USERNAME} para activarla.`, {
-      parse_mode: 'HTML',
-    });
-  }
+    if (!user.isActive) {
+      const contact = role === 'SELLER' ? `Contact @${ADMIN_USERNAME} to activate it.` : `Contacta a @${ADMIN_USERNAME} para activarla.`;
+      return renderUI(ctx, copy.deactivated + contact, { parse_mode: 'HTML' });
+    }
 
-  if (user.role !== 'BUYER' && user.role !== 'ADMIN') {
-    return renderUI(ctx, '🚫 <b>Acceso denegado.</b>\n\nTu cuenta no está autorizada para usar este bot.', {
-      parse_mode: 'HTML',
-    });
-  }
+    if (!copy.allowedRoles.includes(user.role)) {
+      return renderUI(ctx, copy.denied, { parse_mode: 'HTML' });
+    }
 
-  ctx.user = user as any;
-  await next();
-};
+    ctx.user = user as any;
+    await next();
+  };
+}
+
+export const authenticateSeller = authenticate('SELLER');
+export const authenticateBuyer = authenticate('BUYER');

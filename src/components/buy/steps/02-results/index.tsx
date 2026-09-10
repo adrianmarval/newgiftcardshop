@@ -16,12 +16,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useBuyFlow } from '@/components/buy/use-buy-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
-import { getBrandById } from '@/actions/catalog/get-brand-by-id';
-import { createOrder } from '@/actions/buyer/orders/create-order';
-import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
-import { getOrderCards } from '@/actions/buyer/giftcards/get-order-cards';
+import { getBrandById } from '@/actions/catalog';
+import { createOrder, getUserBuyRate } from '@/actions/buyer/orders';
+import { getOrderCards } from '@/actions/buyer/giftcards';
 import { useAction } from 'next-safe-action/hooks';
 import Image from 'next/image';
 import type { Brand } from '@/types';

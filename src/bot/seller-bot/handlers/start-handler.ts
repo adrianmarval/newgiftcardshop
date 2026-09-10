@@ -3,7 +3,7 @@ import { InlineKeyboard } from 'grammy';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { startRegistration } from '@/bot/shared/registration.js';
 import { hasLegacyEmail } from '@/bot/shared/web-claim.js';
-import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
+import { renderUI, deleteUserInput, escapeHTML, resolveFlowThreadId } from '@/bot/shared/ui.js';
 
 export async function startSeller(ctx: SellerContext) {
   const telegramId = ctx.from?.id.toString();
@@ -32,11 +32,12 @@ export async function startSeller(ctx: SellerContext) {
     }
   };
 
-  // ¿Ya tiene cuenta vinculada?
-  const telegramUser = await prisma.telegramUser.findUnique({
-    where: { telegramId },
-    include: { user: { select: { name: true, isActive: true, emailVerified: true, role: true, email: true } } },
-  });
+  try {
+    // ¿Ya tiene cuenta vinculada?
+    const telegramUser = await prisma.telegramUser.findUnique({
+      where: { telegramId },
+      include: { user: { select: { name: true, isActive: true, emailVerified: true, role: true, email: true } } },
+    });
 
   const user = telegramUser?.user;
 
@@ -97,8 +98,18 @@ export async function startSeller(ctx: SellerContext) {
     return deleteUserInput(ctx);
   }
 
-  // Sin cuenta → iniciar wizard de registro (con deep link si existe)
-  await startRegistration(ctx, 'SELLER', startParam);
-  await cleanupOldMessage();
-  await deleteUserInput(ctx);
+    // Sin cuenta → iniciar wizard de registro (con deep link si existe)
+    await startRegistration(ctx, 'SELLER', startParam);
+    await cleanupOldMessage();
+    await deleteUserInput(ctx);
+  } catch (_err) {
+    const threadId = await resolveFlowThreadId(ctx).catch(() => undefined);
+    const errorMsg = '❌ An error occurred while starting the bot. Please try again later.';
+    // Si el thread está stale (topic borrado/cerrado), reintentar como mensaje plano
+    await ctx
+      .reply(errorMsg, {
+        ...(threadId != null ? { message_thread_id: threadId } : {}),
+      })
+      .catch(() => ctx.reply(errorMsg).catch(() => {}));
+  }
 }

@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { adminActionClient, ActionError } from '@/lib/safe-action';
 import { decryptBuffer } from '@/lib/encryption';
+import { downloadTelegramFileAsBase64 } from '@/lib/services/telegram/telegram-file';
 import { getBatchImagesInputSchema, getBatchImagesOutputSchema } from './schemas';
 
 export const getBatchImages = adminActionClient
@@ -30,30 +31,9 @@ export const getBatchImages = adminActionClient
           const mimeType = img.mimeType || 'image/jpeg';
 
           if (img.telegramFileId) {
-            try {
-              const fileRes = await fetch(
-                `https://api.telegram.org/bot${botToken}/getFile?file_id=${img.telegramFileId}`,
-              );
-              const fileData = await fileRes.json();
-
-              if (!fileData.ok) {
-                console.error(
-                  `[AdminBatchImages] Error fetching file info from Telegram for ID ${img.telegramFileId}`,
-                );
-                return null;
-              }
-
-              const filePath = fileData.result.file_path;
-              const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
-
-              const downloadRes = await fetch(downloadUrl);
-              const arrayBuffer = await downloadRes.arrayBuffer();
-              const buffer = Buffer.from(arrayBuffer);
-              base64Data = buffer.toString('base64');
-            } catch (err) {
-              console.error(`[AdminBatchImages] Error downloading telegram file:`, err);
-              return null;
-            }
+            const downloaded = await downloadTelegramFileAsBase64(botToken, img.telegramFileId);
+            if (!downloaded) return null;
+            base64Data = downloaded.base64;
           } else if (img.data) {
             try {
               const decrypted = decryptBuffer(Buffer.from(img.data));

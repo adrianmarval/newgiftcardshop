@@ -1,6 +1,6 @@
 import { BuyGiftcardManager } from '@/components/buy/buy-flow-manager';
-import { getActiveBrandCountries } from '@/actions/catalog/get-active-brand-countries';
-import { getOrderById } from '@/actions/buyer/orders/get-order-by-id';
+import { getActiveBrandCountries } from '@/actions/catalog';
+import { getOrderById } from '@/actions/buyer/orders';
 import { getLiveAvailability } from '@/actions/buyer/stats';
 import type { BuyerOrder } from '@/types';
 

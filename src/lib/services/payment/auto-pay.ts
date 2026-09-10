@@ -21,9 +21,9 @@ import { logger } from '@/lib/logger';
 import { PaymentCategory, PaymentDirection } from '@/generated/prisma/client';
 import type { GiftcardStatus } from '@/generated/prisma/enums';
 import type { Decimal } from '@prisma/client/runtime/client';
-import { canCancelBatch } from '@/lib/services/giftcard/batch-cancel.service';
+import { canCancelBatch } from '@/lib/services/giftcard/batch-cancel';
 import { getAutoPaySellers } from '@/lib/settings/settings.service';
-import { executeSellerPayout } from './seller-payout.service';
+import { executeSellerPayout } from './seller-payout';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

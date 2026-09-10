@@ -1,8 +1,8 @@
 'use server';
 
 import { adminActionClient } from '@/lib/safe-action';
-import { syncPendingSellerPayments } from '@/lib/services/payment/seller-payout.service';
-import { syncPendingAdminWithdrawals } from '@/lib/services/payment/admin-withdrawal.service';
+import { syncPendingSellerPayments } from '@/lib/services/payment/seller-payout';
+import { syncPendingAdminWithdrawals } from '@/lib/services/payment/admin-withdrawal';
 import { syncWithdrawalsOutputSchema } from './schemas';
 
 export const syncPendingWithdrawals = adminActionClient

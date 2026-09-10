@@ -1,7 +1,7 @@
 import { NotificationsPageClient } from '@/components/notifications/notifications-page-client';
 import { Metadata } from 'next';
 import { getSession } from '@/lib/auth/authorization';
-import { getNotificationPageData } from '@/lib/services/notification/page-queries';
+import { getNotificationPageData } from '@/lib/notifications/queries/page-queries';
 
 export const metadata: Metadata = {
   title: 'Consola de Notificaciones | Panel Administrador',

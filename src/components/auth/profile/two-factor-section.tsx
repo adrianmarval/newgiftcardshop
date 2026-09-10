@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ShieldCheck, RefreshCw } from 'lucide-react';
 import { authClient } from '@/lib/auth/auth-client';
-import { useLocale } from '@/hooks/use-locale';
+import { useLocale } from '@/components/auth/profile/use-locale';
 import { Enable2FAFlow, Verify2FAFlow } from './enable-2fa-flow';
 import { Disable2FAFlow } from './disable-2fa-flow';
 import { BackupCodesDisplay } from './backup-codes-display';

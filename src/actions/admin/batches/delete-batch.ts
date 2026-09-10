@@ -32,7 +32,7 @@ export const deleteBatch = adminActionClient
     await prisma.giftcardBatch.delete({ where: { id: batchId } });
 
     if (batch.userId) {
-      const { notifySellerBatchDeleted } = await import('@/lib/notifications/notification.service');
+      const { notifySellerBatchDeleted } = await import('@/lib/notifications/notify');
       notifySellerBatchDeleted(batch.userId, batchId).catch((err) =>
         logger.error('Error notificando seller post-delete', {
           flow: 'batch',

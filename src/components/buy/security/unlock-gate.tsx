@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { showAlert } from '@/lib/ui';
+import { apiQuery } from '@/lib/utils';
 import {
-  getSecurityStatusAction,
   unlockWithPin,
   unlockWithPasskey,
   setSecurityPinAction,
@@ -56,19 +56,23 @@ export function UnlockGate({
   const webAuthnSupported = useSyncExternalStore(subscribeNoop, isWebAuthnSupported, () => false);
 
   useEffect(() => {
-    getSecurityStatusAction().then((result) => {
-      const data = result?.data;
-      if (data?.success) {
+    // GET plano via route handler — nunca una server action en mount (race nav-abort)
+    apiQuery<{
+      success: true;
+      hasPin: boolean;
+      hasPasskey: boolean;
+      pinLocked: boolean;
+      isUnlocked: boolean;
+    }>('security-status')
+      .then((data) => {
         if (data.isUnlocked) {
           onUnlocked();
           return;
         }
         setStatus({ hasPin: data.hasPin, hasPasskey: data.hasPasskey, pinLocked: data.pinLocked });
         setMode(data.hasPin || data.hasPasskey ? 'unlock' : 'setup');
-      } else {
-        setMode('setup');
-      }
-    });
+      })
+      .catch(() => setMode('setup'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

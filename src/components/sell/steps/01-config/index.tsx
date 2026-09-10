@@ -6,7 +6,7 @@ import { Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useSellFlow } from '@/hooks/use-sell-flow';
+import { useSellFlow } from '@/components/sell/use-sell-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { cn } from '@/lib/ui';
 import type { BrandCountry } from '@/types';

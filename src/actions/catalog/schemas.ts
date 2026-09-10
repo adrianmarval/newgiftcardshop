@@ -44,39 +44,10 @@ export const getBrandByIdOutputSchema = z.object({
     .nullable(),
 });
 
-export const getBrandsByCountryInputSchema = z.object({ countryId: z.string() });
 
-export const getBrandsByCountryOutputSchema = z.union([
-  z.object({ success: z.literal(true), brandCountries: z.array(brandCountryBaseSchema) }),
-  z.object({ error: z.string() }),
-]);
 
 export const getActiveBrandCountriesOutputSchema = z.object({
   success: z.literal(true),
   brandCountries: z.array(brandCountryWithStockSchema),
 });
 
-export const getActiveCountriesOutputSchema = z.object({
-  success: z.literal(true),
-  countries: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      code: z.string(),
-      currency: z.string().nullable(),
-    }),
-  ),
-});
-
-export const getActiveBrandsOutputSchema = z.object({
-  success: z.literal(true),
-  brands: z.array(
-    z.object({
-      id: z.string(),
-      slug: z.string(),
-      name: z.string(),
-      icon: z.string(),
-      image: z.string().nullable(),
-    }),
-  ),
-});

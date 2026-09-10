@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { BuyFlowCard, useBuyFlow } from '@/hooks/use-buy-flow';
+import { BuyFlowCard, useBuyFlow } from '@/components/buy/use-buy-flow';
 import { SearchStep, RedeemStep, ResultsStep, ConfirmUsageStep, PaymentStep } from '@/components/buy/steps';
 import type { BrandCountry, BuyerOrder } from '@/types';
 import { GiftcardStatus } from '@/types';

@@ -89,7 +89,7 @@ export async function checkAndNotifySettledBatch(batchId: number): Promise<void>
     const paidOut = payout.amount;
     const profit = collected.minus(paidOut);
 
-    const { notifyAdminBatchProfitRealized } = await import('@/lib/notifications/notification.service');
+    const { notifyAdminBatchProfitRealized } = await import('@/lib/notifications/notify');
     await notifyAdminBatchProfitRealized(
       batchId,
       collected.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber(),

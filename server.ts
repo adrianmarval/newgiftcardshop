@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { createServer } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import next from 'next';
 import { webhookCallback } from 'grammy';
 
@@ -14,319 +15,6 @@ async function getServerLogger() {
     serverLogger = logger;
   }
   return serverLogger;
-}
-
-// ── Giftcard Escalation Service ─────────────────────────────────────────────────
-
-async function initEscalationService() {
-  try {
-    const { getConfig, processEscalationTiers } = await import('./src/lib/services/giftcard/escalation');
-    const log = await getServerLogger();
-
-    // Tick FIJO de 1 minuto — el mínimo que permite la validación del setting
-    // escalation_duration_minutes (min: 1). La config se re-lee en CADA tick:
-    // un setInterval congela su intervalo al crearse, así que derivarlo del
-    // setting dejaba el scheduler corriendo con la duración del boot aunque el
-    // admin la cambiara desde el panel (bug verificado: setting a 1min, ticks
-    // cada 5min hasta reiniciar el proceso).
-    const TICK_MS = 60 * 1000;
-
-    const initialConfig = await getConfig();
-    log.info(`[Escalation] Iniciado - tick: 1min, duración por tier: ${initialConfig.durationMinutes}min, habilitado: ${initialConfig.enabled}`);
-
-    let escalationRunning = false;
-
-    setInterval(async () => {
-      if (escalationRunning) {
-        log.info('[Escalation] Skipping — previous run still active');
-        return;
-      }
-      escalationRunning = true;
-      try {
-        const config = await getConfig();
-        if (!config.enabled) {
-          return;
-        }
-
-        const result = await processEscalationTiers();
-        if (result.processed > 0) {
-          log.action('batch', 'escalation-cron', `${result.processed} tarjetas procesadas en escalación`, {
-            metadata: { processed: result.processed },
-          });
-        }
-
-        // Auto-purge logs mayores a 30 días (cada ciclo de escalación)
-        try {
-          const { default: prisma } = await import('./src/lib/prisma');
-          const cutoff = new Date();
-          cutoff.setDate(cutoff.getDate() - 30);
-          const deleted = await prisma.appLog.deleteMany({ where: { timestamp: { lt: cutoff } } });
-          if (deleted.count > 0) {
-            log.info(`[AutoPurge] ${deleted.count} logs antiguos eliminados`);
-          }
-        } catch {
-          // Auto-purge failure is non-critical
-        }
-      } catch (err) {
-        log.error('[Escalation] Error en ciclo', {
-          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-        });
-      } finally {
-        escalationRunning = false;
-      }
-    }, TICK_MS);
-  } catch (err) {
-    const log = await getServerLogger();
-    log.error('[Escalation] Error al iniciar', {
-      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-    });
-  }
-}
-// ── Batch Auto-Cancel (safety net) ───────────────────────────────────────────
-
-async function initBatchAutoCancelService() {
-  try {
-    const { sweepCancellableBatches } = await import('./src/lib/services/giftcard/batch-cancel.service');
-    const log = await getServerLogger();
-
-    const INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
-    log.info('[BatchAutoCancel] Iniciado - intervalo: 15min');
-
-    let sweepRunning = false;
-
-    setInterval(async () => {
-      if (sweepRunning) {
-        log.info('[BatchAutoCancel] Skipping — previous sweep still active');
-        return;
-      }
-      sweepRunning = true;
-      try {
-        const cancelled = await sweepCancellableBatches();
-
-        if (cancelled.length > 0) {
-          log.action('batch', 'auto-cancel-cron', `${cancelled.length} lote(s) auto-cancelado(s)`, {
-            metadata: { cancelled: cancelled.map((c) => c.batchId) },
-          });
-
-          const { notifySellerBatchCancelled } = await import('./src/lib/notifications/notification.service');
-          const { publishToUsers, publishToRole } = await import('./src/lib/realtime/bus');
-          publishToUsers(cancelled.map((c) => c.sellerId).filter((id): id is string => Boolean(id)), ['batches', 'stats']);
-          publishToRole('ADMIN', ['batches']);
-          for (const { batchId, sellerId } of cancelled) {
-            if (sellerId) {
-              notifySellerBatchCancelled(sellerId, batchId).catch((err) =>
-                log.error('Error notificando seller post-sweep-cancel', {
-                  flow: 'batch',
-                  action: 'auto-cancel-cron',
-                  metadata: { batchId, sellerId },
-                  error: { name: err.name, message: err.message },
-                }),
-              );
-            }
-          }
-        }
-      } catch (err) {
-        log.error('[BatchAutoCancel] Error en sweep', {
-          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-        });
-      } finally {
-        sweepRunning = false;
-      }
-    }, INTERVAL_MS);
-  } catch (err) {
-    const log = await getServerLogger();
-    log.error('[BatchAutoCancel] Error al iniciar', {
-      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-    });
-  }
-}
-
-// ── Seller Auto-Pay + Payment Sync (safety net) ──────────────────────────────
-
-async function initAutoPayService() {
-  try {
-    const { sweepPayableBatches } = await import('./src/lib/services/payment/auto-pay.service');
-    const { syncPendingSellerPayments } = await import('./src/lib/services/payment/seller-payout.service');
-    const { syncPendingAdminWithdrawals } = await import('./src/lib/services/payment/admin-withdrawal.service');
-    const { getAutoPaySellers } = await import('./src/lib/settings/settings.service');
-    const log = await getServerLogger();
-
-    const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-    log.info('[AutoPay] Iniciado - intervalo: 5min');
-
-    let cycleRunning = false;
-
-    setInterval(async () => {
-      if (cycleRunning) {
-        log.info('[AutoPay] Skipping — previous cycle still active');
-        return;
-      }
-      cycleRunning = true;
-      try {
-        // 1. Auto-pay sweep (reads the setting each cycle — toggle without restart)
-        if (await getAutoPaySellers()) {
-          const sweep = await sweepPayableBatches();
-
-          if (sweep.processed > 0) {
-            log.action('payment', 'auto-pay-cron', `Auto-pay sweep: ${sweep.paid} pagado(s), ${sweep.failed} fallido(s) de ${sweep.processed} candidato(s)`, {
-              metadata: { ...sweep },
-            });
-          }
-        }
-
-        // 2. Sync pending seller payouts with Binance (always — resolves manual payouts too)
-        const sync = await syncPendingSellerPayments();
-
-        if (sync.resolved > 0 || sync.failed > 0) {
-          log.action('payment', 'sync-payouts-cron', `Sync payouts: ${sync.resolved} completado(s), ${sync.failed} fallido(s), ${sync.stillPending} pendiente(s)`, {
-            metadata: { ...sync },
-          });
-        }
-
-        // 3. Sync pending admin withdrawals with Binance (resolves network-error PENDINGs)
-        const withdrawalSync = await syncPendingAdminWithdrawals();
-
-        if (withdrawalSync.resolved > 0 || withdrawalSync.failed > 0) {
-          log.action(
-            'payment',
-            'sync-withdrawals-cron',
-            `Sync retiros admin: ${withdrawalSync.resolved} completado(s), ${withdrawalSync.failed} fallido(s), ${withdrawalSync.stillPending} pendiente(s)`,
-            {
-              metadata: { ...withdrawalSync },
-            },
-          );
-        }
-      } catch (err) {
-        log.error('[AutoPay] Error en ciclo', {
-          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-        });
-      } finally {
-        cycleRunning = false;
-      }
-    }, INTERVAL_MS);
-  } catch (err) {
-    const log = await getServerLogger();
-    log.error('[AutoPay] Error al iniciar', {
-      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-    });
-  }
-}
-
-// ── Stock Reminder Sweep ──────────────────────────────────────────────────────
-
-async function initStockReminderService() {
-  try {
-    const { sweepStockReminders } = await import('./src/lib/notifications/stock-reminder.service');
-    const log = await getServerLogger();
-
-    const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes (la due-ness por marca se evalúa dentro)
-    log.info('[StockReminder] Iniciado - sweep cada 5min (recordatorios de stock varado)');
-
-    let sweepRunning = false;
-
-    setInterval(async () => {
-      if (sweepRunning) {
-        log.info('[StockReminder] Skipping — previous sweep still active');
-        return;
-      }
-      sweepRunning = true;
-      try {
-        const reminders = await sweepStockReminders();
-        if (reminders.sent > 0) {
-          log.info(`[StockReminder] Sweep: ${reminders.sent} recordatorio(s) enviado(s), ${reminders.skipped} descartado(s)`);
-        }
-      } catch (err) {
-        log.error('[StockReminder] Error en sweep', {
-          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-        });
-      } finally {
-        sweepRunning = false;
-      }
-    }, INTERVAL_MS);
-  } catch (err) {
-    const log = await getServerLogger();
-    log.error('[StockReminder] Error al iniciar', {
-      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-    });
-  }
-}
-
-// ── Payment Reminder Sweep ────────────────────────────────────────────────────
-
-async function initPaymentReminderService() {
-  try {
-    const { sweepPaymentReminders } = await import('./src/lib/notifications/payment-reminder.service');
-    const log = await getServerLogger();
-
-    const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes (la cadencia por orden se evalúa dentro con el setting)
-    log.info('[PaymentReminder] Iniciado - sweep cada 5min (recordatorios de pago pendiente)');
-
-    let sweepRunning = false;
-
-    setInterval(async () => {
-      if (sweepRunning) {
-        log.info('[PaymentReminder] Skipping — previous sweep still active');
-        return;
-      }
-      sweepRunning = true;
-      try {
-        const reminders = await sweepPaymentReminders();
-        if (reminders.sent > 0) {
-          log.info(`[PaymentReminder] Sweep: ${reminders.sent} recordatorio(s) enviado(s), ${reminders.skipped} descartado(s)`);
-        }
-      } catch (err) {
-        log.error('[PaymentReminder] Error en sweep', {
-          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-        });
-      } finally {
-        sweepRunning = false;
-      }
-    }, INTERVAL_MS);
-  } catch (err) {
-    const log = await getServerLogger();
-    log.error('[PaymentReminder] Error al iniciar', {
-      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-    });
-  }
-}
-
-// ── Pending Order Alert Sweep ─────────────────────────────────────────────────
-
-async function initPendingOrderAlertService() {
-  try {
-    const { sweepPendingOrderAlerts } = await import('./src/lib/notifications/pending-order-alert.service');
-    const log = await getServerLogger();
-
-    const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes (el umbral por orden se evalúa dentro con el setting)
-    log.info('[PendingOrderAlert] Iniciado - sweep cada 5min (alertas al admin por órdenes sin confirmar)');
-
-    let sweepRunning = false;
-
-    setInterval(async () => {
-      if (sweepRunning) {
-        log.info('[PendingOrderAlert] Skipping — previous sweep still active');
-        return;
-      }
-      sweepRunning = true;
-      try {
-        const alerts = await sweepPendingOrderAlerts();
-        if (alerts.sent > 0) {
-          log.info(`[PendingOrderAlert] Sweep: ${alerts.sent} alerta(s) enviada(s), ${alerts.skipped} descartada(s)`);
-        }
-      } catch (err) {
-        log.error('[PendingOrderAlert] Error en sweep', {
-          error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-        });
-      } finally {
-        sweepRunning = false;
-      }
-    }, INTERVAL_MS);
-  } catch (err) {
-    const log = await getServerLogger();
-    log.error('[PendingOrderAlert] Error al iniciar', {
-      error: { name: (err as Error).name ?? 'Error', message: (err as Error).message ?? 'Unknown' },
-    });
-  }
 }
 
 const hostname = 'localhost';
@@ -366,6 +54,23 @@ try {
   console.warn('[BotRegistry] No se pudo registrar bots (Notificaciones por Telegram deshabilitadas):', err.message);
 }
 
+// ── Webhook secret verification (compartido por ambos bots) ───────────────────
+// Devuelve true si el request está autorizado; si no, ya respondió (500/401).
+function verifyWebhookSecret(req: IncomingMessage, res: ServerResponse): boolean {
+  const secret = process.env.WEBHOOK_SECRET_TOKEN;
+  if (!secret) {
+    res.statusCode = 500;
+    res.end('Webhook secret not configured');
+    return false;
+  }
+  if (req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+    res.statusCode = 401;
+    res.end('Unauthorized');
+    return false;
+  }
+  return true;
+}
+
 // ── HTTP Server ────────────────────────────────────────────────────────────────
 const httpServer = createServer(async (req, res) => {
   try {
@@ -376,27 +81,11 @@ const httpServer = createServer(async (req, res) => {
 
     // Webhook routing — solo en producción
     if (isProd && sellerEntry && pathname === sellerEntry.webhookPath) {
-      const secret = process.env.WEBHOOK_SECRET_TOKEN;
-      if (!secret) {
-        res.statusCode = 500;
-        return res.end('Webhook secret not configured');
-      }
-      if (req.headers['x-telegram-bot-api-secret-token'] !== secret) {
-        res.statusCode = 401;
-        return res.end('Unauthorized');
-      }
+      if (!verifyWebhookSecret(req, res)) return;
       return webhookCallback(sellerEntry.bot, 'http')(req, res);
     }
     if (isProd && buyerEntry && pathname === buyerEntry.webhookPath) {
-      const secret = process.env.WEBHOOK_SECRET_TOKEN;
-      if (!secret) {
-        res.statusCode = 500;
-        return res.end('Webhook secret not configured');
-      }
-      if (req.headers['x-telegram-bot-api-secret-token'] !== secret) {
-        res.statusCode = 401;
-        return res.end('Unauthorized');
-      }
+      if (!verifyWebhookSecret(req, res)) return;
       return webhookCallback(buyerEntry.bot, 'http')(req, res);
     }
 
@@ -419,23 +108,10 @@ const handleUpgrade = app.getUpgradeHandler();
 const log = await getServerLogger();
 log.info('Next.js preparado');
 
-// ── Giftcard Escalation ───────────────────────────────────────────────────────
-await initEscalationService();
-
-// ── Batch Auto-Cancel ─────────────────────────────────────────────────────────
-await initBatchAutoCancelService();
-
-// ── Seller Auto-Pay + Payment Sync ────────────────────────────────────────────
-await initAutoPayService();
-
-// ── Stock Reminder Sweep ──────────────────────────────────────────────────────
-await initStockReminderService();
-
-// ── Payment Reminder Sweep ────────────────────────────────────────────────────
-await initPaymentReminderService();
-
-// ── Pending Order Alert Sweep ─────────────────────────────────────────────────
-await initPendingOrderAlertService();
+// ── Cron jobs (escalación, auto-cancel, auto-pay, recordatorios, log-purge) ────
+// Import dinámico POST-prepare: jobs.ts carga el grafo de servicios lazy.
+const { startAllJobs } = await import('./src/lib/scheduler/jobs.js');
+await startAllJobs();
 
 // Fail-fast ante puerto ocupado: una segunda instancia que no puede bindear
 // pero sigue viva es un ZOMBIE peligroso — sus crons y bots (long polling)

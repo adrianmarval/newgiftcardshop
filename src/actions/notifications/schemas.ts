@@ -54,7 +54,6 @@ export const updateNotificationPreferencesOutputSchema = z.object({
   }),
 });
 
-export const getUnreadCountOutputSchema = z.object({ success: z.literal(true), count: z.number() });
 
 export const savePushSubscriptionInputSchema = z.object({
   endpoint: z.url(),

@@ -42,3 +42,32 @@ export function validateWalletAddress(address: string, regex: string): boolean {
 export function invalidateCache(): void {
   cache = null;
 }
+
+/**
+ * Catálogo COMPLETO de coins con sus redes (incluye inactivos) para el panel
+ * admin. Sin cache: el admin edita el catálogo y necesita ver el estado real.
+ * NO invalida el cache de getCoinCatalog — eso es responsabilidad de las
+ * mutations (create/update/delete/toggle/add/remove).
+ */
+export async function listAllCoinsWithNetworks() {
+  return prisma.coin.findMany({
+    orderBy: { symbol: 'asc' },
+    include: {
+      networks: {
+        include: { network: true },
+      },
+    },
+  });
+}
+
+/** Todas las redes con sus coins vinculados (incluye inactivos) — vista admin. */
+export async function listAllNetworksWithCoins() {
+  return prisma.network.findMany({
+    orderBy: { name: 'asc' },
+    include: {
+      coins: {
+        include: { coin: true },
+      },
+    },
+  });
+}

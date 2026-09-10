@@ -13,7 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import prisma from '@/lib/prisma';
-import binance from '@/lib/services/payment/binance.service';
+import binance from '@/lib/services/payment/binance';
 import { logger } from '@/lib/logger';
 
 // ── Types ────────────────────────────────────────────────────────────────────

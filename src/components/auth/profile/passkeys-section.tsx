@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { KeyRound, Plus, Trash2 } from 'lucide-react';
 import { authClient } from '@/lib/auth/auth-client';
 import { showAlert } from '@/lib/ui';
-import { useLocale } from '@/hooks/use-locale';
+import { useLocale } from '@/components/auth/profile/use-locale';
 import { getDeviceName, isPasskeyCancellation } from '@/components/auth/passkey/passkey-utils';
 
 /**

@@ -9,7 +9,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Send, MessageCircle, Package, Check, Bell, BellOff } from 'lucide-react';
 import Image from 'next/image';
 import { updateNotificationPreferences, sendTestPush } from '@/actions/notifications';
-import { generateTelegramLink } from '@/actions/auth/generate-telegram-link';
+import { generateTelegramLink } from '@/actions/auth';
 import { useAction } from 'next-safe-action/hooks';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
 import type { SubscribedBrandCountry } from '@/types';

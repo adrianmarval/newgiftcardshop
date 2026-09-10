@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { resetPassword } from '@/actions/auth/reset-password';
+import { resetPassword } from '@/actions/auth';
 import { useAction } from 'next-safe-action/hooks';
 import { resetPasswordInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';

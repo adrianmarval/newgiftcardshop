@@ -3,7 +3,7 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { resend, EMAIL_FROM } from '@/lib/resend';
 import { logger } from '@/lib/logger';
-import { PinResetOtpTemplate } from '@/components/emails';
+import { PinResetOtpTemplate } from '@/emails';
 import { SECURITY_UNLOCK_MINUTES, PIN_MAX_ATTEMPTS, PIN_RESET_OTP_MINUTES, PIN_RESET_COOLDOWN_SECONDS } from '@/lib/constants';
 
 /**

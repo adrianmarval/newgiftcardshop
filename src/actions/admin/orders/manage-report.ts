@@ -1,9 +1,8 @@
 'use server';
 
-import { Prisma } from '@/generated/prisma/client';
 import prisma from '@/lib/prisma';
 import { ActionError, adminActionClient } from '@/lib/safe-action';
-import { reportGiftcardIssue, deleteGiftcardIssue } from '@/lib/services/order';
+import { reportGiftcardIssue, deleteGiftcardIssue, updateGiftcardIssueAmount } from '@/lib/services/order';
 import { manageReportInputSchema, manageReportOutputSchema } from './schemas';
 
 export const manageReport = adminActionClient
@@ -45,16 +44,7 @@ export const manageReport = adminActionClient
     }
 
     if (action === 'UPDATE') {
-      await prisma.$transaction([
-        prisma.giftcardIssue.updateMany({
-          where: { giftcardId, orderId },
-          data: { reportedAmount: new Prisma.Decimal(reportedAmount!) },
-        }),
-        prisma.giftcard.update({
-          where: { id: giftcardId },
-          data: { reportedAmount: new Prisma.Decimal(reportedAmount!) },
-        }),
-      ]);
+      await updateGiftcardIssueAmount(giftcardId, orderId, ctx.order.userId, reportedAmount!);
       return { success: true as const };
     }
 

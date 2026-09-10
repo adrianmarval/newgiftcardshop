@@ -47,3 +47,52 @@ export async function getSellerStats(userId: string) {
     problemCards,
   };
 }
+
+/**
+ * Stats para el seller-bot (comando /stats). Mismas reglas que getSellerStats
+ * (status-aware face value × sellRate por batch, espejo de executeSellerPayout)
+ * pero con agregados SQL para counts/face values — NUNCA cargar todas las
+ * giftcards del seller en memoria (la versión vieja del handler hacía un
+ * findMany sin take y no escalaba).
+ */
+export async function getSellerBotStats(userId: string) {
+  const cardSelect = { status: true, amount: true, reportedAmount: true, inStock: true } as const;
+
+  const [batchCount, paidBatchCount, totalCards, inStockCards, faceAgg, faceSoldAgg, unpaidBatches, paidBatches] =
+    await Promise.all([
+      prisma.giftcardBatch.count({ where: { userId } }),
+      prisma.giftcardBatch.count({ where: { userId, isPaid: true } }),
+      prisma.giftcard.count({ where: { ownerId: userId } }),
+      prisma.giftcard.count({ where: { ownerId: userId, inStock: true } }),
+      prisma.giftcard.aggregate({ where: { ownerId: userId }, _sum: { amount: true } }),
+      prisma.giftcard.aggregate({ where: { ownerId: userId, inStock: false }, _sum: { amount: true } }),
+      prisma.giftcardBatch.findMany({
+        where: { userId, isPaid: false, cancelledAt: null },
+        select: { sellRate: true, giftcards: { select: cardSelect } },
+      }),
+      prisma.giftcardBatch.findMany({
+        where: { userId, isPaid: true },
+        select: { sellRate: true, giftcards: { select: cardSelect } },
+      }),
+    ]);
+
+  // Solo cuentan las cards vendidas (!inStock): el payout real se ejecuta con
+  // el batch fully-confirmed, pero para display el seller entiende "vendido".
+  const soldOnly = (batches: typeof paidBatches) =>
+    batches.reduce((sum, b) => {
+      const sold = b.giftcards.filter((c) => !c.inStock);
+      return sum.plus(computeFaceValueTotal(sold).mul(b.sellRate));
+    }, new Prisma.Decimal(0));
+
+  return {
+    batchCount,
+    paidBatchCount,
+    totalCards,
+    inStockCards,
+    soldCards: totalCards - inStockCards,
+    faceValueTotal: Number(faceAgg._sum.amount ?? 0),
+    faceValueSold: Number(faceSoldAgg._sum.amount ?? 0),
+    earnedPaid: Number(soldOnly(paidBatches)),
+    earnedPending: Number(soldOnly(unpaidBatches)),
+  };
+}

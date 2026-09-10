@@ -1,7 +1,8 @@
 'use client';
 
 import { MouseEvent } from 'react';
-import { RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderHasReports, getOrderStatusLabel, CopyableId, BrandIcon, OrderTopRight, UserBadge } from '@/components/common';
+import {RegistryCard, useCancelOrderAction, useCardProgress, useCardCurrency, getOrderProgressConfig, getOrderActiveBg, getOrderHasReports, getOrderStatusLabel, CopyableId, BrandIcon, OrderTopRight} from '@/components/common';
+import { UserBadge } from '@/components/admin/user-badge';
 import { formatDateTime, formatOrderShareText } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';

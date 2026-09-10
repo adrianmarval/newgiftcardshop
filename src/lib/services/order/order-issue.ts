@@ -200,3 +200,59 @@ export async function deleteGiftcardIssue(giftcardId: string, orderId: string, u
     }
   });
 }
+
+/**
+ * Updates the reportedAmount of an existing issue (admin correction) — syncs
+ * BOTH the issue row and the card (reportedAmount feeds adjustedTotal, payout
+ * y profit). Misma guarda anti-race que reportGiftcardIssue: re-valida el
+ * status de la orden DENTRO de la tx (P2025 si otro canal la transicionó).
+ */
+export async function updateGiftcardIssueAmount(
+  giftcardId: string,
+  orderId: string,
+  userId: string,
+  reportedAmount: number,
+) {
+  const reported = new Prisma.Decimal(reportedAmount);
+  if (reported.lte(0)) {
+    throw new Error('El monto reportado debe ser mayor a 0');
+  }
+
+  const card = await prisma.giftcard.findUnique({
+    where: { id: giftcardId },
+    select: { orderId: true },
+  });
+  if (!card) throw new Error('Giftcard not found');
+  if (card.orderId !== orderId) throw new Error('La tarjeta no pertenece a esta orden');
+
+  return prisma.$transaction(async (tx) => {
+    // Guard atómico DENTRO de la tx (patrón anti-race cross-canal)
+    try {
+      await tx.order.update({
+        where: { id: orderId, status: 'PENDING' },
+        data: { updatedAt: new Date() },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        logger.warn('updateGiftcardIssueAmount: orden dejó de estar pendiente durante la tx (race cross-canal)', {
+          flow: 'order',
+          action: 'update-issue-amount',
+          userId,
+          metadata: { orderId },
+        });
+        throw new Error('No se pueden modificar reportes de una orden que ya fue confirmada');
+      }
+      throw err;
+    }
+
+    await tx.giftcardIssue.updateMany({
+      where: { giftcardId, orderId },
+      data: { reportedAmount: reported },
+    });
+
+    await tx.giftcard.update({
+      where: { id: giftcardId },
+      data: { reportedAmount: reported },
+    });
+  });
+}

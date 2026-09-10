@@ -3,8 +3,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { GiftcardStatus, GiftcardIssueType, OrderStatus } from '@/generated/prisma/enums';
-import type { Giftcard as PrismaGiftcard } from '@/generated/prisma/client';
-import type { Decimal } from '@prisma/client/runtime/client';
 import type { AdminBuyerSummary, AdminSellerSummary } from './user';
 
 export { GiftcardStatus };
@@ -59,53 +57,6 @@ export interface AdminGiftcardIssue {
   isSearchMatch?: boolean;
 }
 
-// ── Claim Code Parsing ────────────────────────────────────────────────────────
-
-export interface ParsedGiftcard {
-  amount?: string;
-  claimCode: string;
-  pinCode?: string;
-  line?: number;
-}
-
-export interface ParseClaimCodesResult {
-  parsed: ParsedGiftcard[];
-  errors: string[];
-  duplicateCount: number;
-  duplicates: string[];
-}
-
-// ── Browse / Selection Types ──────────────────────────────────────────────────
-
-export interface GiftcardSelectionResult {
-  selectedCards: PrismaGiftcard[];
-  total: Decimal;
-  isExactMatch: boolean;
-  isWithinToleranceRange: boolean;
-}
-
-export interface BatchInfo {
-  createdAt: Date;
-  cards: PrismaGiftcard[];
-  totalValue: Decimal;
-}
-
-export interface PreprocessedBatchData {
-  batches: BatchInfo[];
-  allCardsByAge: PrismaGiftcard[];
-  totalCards: number;
-}
-
-export interface GiftcardSelectionWithTierInfo extends GiftcardSelectionResult {
-  tierInfo: {
-    accessibleCards: PrismaGiftcard[];
-    inaccessibleCards: PrismaGiftcard[];
-    accessibleAmount: Decimal;
-    inaccessibleAmount: Decimal;
-    buyerBuyRate: number;
-  };
-}
-
 // ── Serialized Giftcard (list views with seller info) ────────────────────────
 
 export interface GiftcardForList {
@@ -119,7 +70,7 @@ export interface GiftcardForList {
   orderId: string | null;
   batchId: number | null;
   brand: { name: string; icon: string; image: string | null };
-  country: { name: string; code: string; currency: string | null };
+  country: { name: string; code: string; currency: string | null } | null;
   isSearchMatch: boolean;
   seller: import('./user').AdminSellerSummary | null;
 }

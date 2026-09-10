@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useBuyFlow } from '@/hooks/use-buy-flow';
+import { useBuyFlow } from '@/components/buy/use-buy-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
-import { getUserBuyRate } from '@/actions/buyer/orders/get-user-buy-rate';
-import { getOrderCards } from '@/actions/buyer/giftcards/get-order-cards';
-import { reportIssue as reportIssueAction } from '@/actions/buyer/giftcards/issues/report-issue';
-import { undoIssue as undoIssueAction } from '@/actions/buyer/giftcards/issues/undo-issue';
+import { getUserBuyRate } from '@/actions/buyer/orders';
+import { apiQuery } from '@/lib/utils';
+import type { BuyFlowCard } from '@/types';
+import { reportIssue as reportIssueAction, undoIssue as undoIssueAction } from '@/actions/buyer/giftcards/issues';
 import { GiftcardIssueType, GiftcardStatus } from '@/generated/prisma/enums';
 import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
@@ -93,14 +93,19 @@ export const RedeemStep = () => {
       return;
     }
     let ignore = false;
-    getOrderCards({ orderId }).then((result) => {
-      if (ignore) return;
-      if (result?.data?.success && result.data.giftcards) {
-        setCodesLocked(result.data.requiresUnlock === true);
-        setFoundGiftcards(result.data.giftcards);
-      }
-      setCodesChecked(true);
-    });
+    // GET plano via route handler — nunca una server action en mount (race nav-abort)
+    apiQuery<{ success: true; requiresUnlock: boolean; giftcards: BuyFlowCard[] }>('order-cards', { orderId })
+      .then((data) => {
+        if (ignore) return;
+        if (data.giftcards) {
+          setCodesLocked(data.requiresUnlock === true);
+          setFoundGiftcards(data.giftcards);
+        }
+        setCodesChecked(true);
+      })
+      .catch(() => {
+        if (!ignore) setCodesChecked(true);
+      });
     return () => {
       ignore = true;
     };

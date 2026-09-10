@@ -1,23 +1,13 @@
 'use server';
 
-import prisma from '@/lib/prisma';
 import { adminActionClient } from '@/lib/safe-action';
 import { listNetworksOutputSchema } from './schemas';
-import { invalidateCache } from '@/lib/services/coin';
+import { listAllNetworksWithCoins } from '@/lib/services/coin';
 
 export const listNetworks = adminActionClient
   .outputSchema(listNetworksOutputSchema)
   .action(async () => {
-    const networks = await prisma.network.findMany({
-      orderBy: { name: 'asc' },
-      include: {
-        coins: {
-          include: { coin: true },
-        },
-      },
-    });
-
-    invalidateCache();
+    const networks = await listAllNetworksWithCoins();
 
     return {
       success: true as const,

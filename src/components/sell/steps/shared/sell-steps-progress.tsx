@@ -1,4 +1,4 @@
-import { useSellFlow } from '@/hooks/use-sell-flow';
+import { useSellFlow } from '@/components/sell/use-sell-flow';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 export const STEP_LABELS = ['Config', 'Load', 'Review'];

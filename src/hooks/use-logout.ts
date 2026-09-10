@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { showAlert } from '@/lib/ui';
 import { useAction } from 'next-safe-action/hooks';
-import { logout } from '@/actions/auth/logout';
+import { logout } from '@/actions/auth';
 import type { AppSection } from '@/types';
 
 export const useLogout = (portal: AppSection) => {

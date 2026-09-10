@@ -1,13 +1,12 @@
 'use server';
 
-import prisma from '@/lib/prisma';
 import { sellerActionClient } from '@/lib/safe-action';
 import { deletePaymentMethodOutputSchema } from './schemas';
+import { deleteWallet } from '@/lib/services/payment/wallet';
 
 export const deletePaymentMethod = sellerActionClient
   .outputSchema(deletePaymentMethodOutputSchema)
   .action(async ({ ctx }) => {
-    const userId = ctx.auth.user.id;
-    await prisma.paymentMethod.deleteMany({ where: { userId } });
+    await deleteWallet(ctx.auth.user.id);
     return { success: true as const };
   });

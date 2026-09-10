@@ -6,7 +6,7 @@ import type { Role } from '@/generated/prisma/enums';
 import { serializeDates } from '@/lib/utils';
 
 // Services (lógica compartida con las server actions — misma fuente de verdad)
-import { listOrdersService } from '@/lib/services/order/order-list.service';
+import { listOrdersService } from '@/lib/services/order/order-list';
 import { listBatchesService, listAdminIssues } from '@/lib/services/giftcard';
 import { listAdminPayments, getCachedUsdtBalances } from '@/lib/services/payment';
 import { listAppLogs } from '@/lib/services/logs';
@@ -23,10 +23,15 @@ import {
   getRecentOrders,
   getRecentBatches,
 } from '@/lib/services/stats';
-import { listUserNotifications, countUnreadNotifications } from '@/lib/services/notification';
+import { listUserNotifications, countUnreadNotifications } from '@/lib/notifications/queries/list-queries';
 import { getToursSeenForUser } from '@/lib/services/tours';
-import { isSecurityUnlocked } from '@/lib/services/security';
-import { getPlatformBalance } from '@/lib/settings/settings.service';
+import { isSecurityUnlocked, getSecurityStatus } from '@/lib/services/security';
+import { getOrderCardsForBuyer } from '@/lib/services/order/order-cards';
+import { listActiveSessions } from '@/lib/services/user/user-sessions';
+import { getSearchPreferences } from '@/lib/services/user/search-preferences';
+import { getWallet } from '@/lib/services/payment/wallet';
+import { getCoinCatalog } from '@/lib/services/coin';
+import { getPlatformBalance, getBinancePayId } from '@/lib/settings/settings.service';
 import { getDecryptedTelegramPhotoUrl } from '@/lib/telegram';
 
 // Schemas zod compartidos con las actions (misma validación de input)
@@ -40,6 +45,7 @@ import { listBatchesInputSchema as sellerBatchesSchema } from '@/actions/seller/
 import { listOrdersInputSchema as buyerOrdersSchema } from '@/actions/buyer/orders/schemas';
 import { listNotificationsInputSchema as notificationsSchema } from '@/actions/notifications/schemas';
 import { getVolumeStatsInputSchema as adminVolumeStatsSchema } from '@/actions/admin/stats/schemas';
+import { getOrderCardsInputSchema as orderCardsSchema } from '@/actions/buyer/giftcards/schemas';
 
 export const dynamic = 'force-dynamic';
 
@@ -177,6 +183,88 @@ const QUERY_REGISTRY: Record<string, QueryDef> = {
       if (!dataUrl) return { success: false as const, error: 'Failed to get profile photo' };
       return { success: true as const, dataUrl };
     },
+  },
+
+  // ── Mount-reads (antes server actions en useEffect — la race nav-abort) ──
+  'order-cards': {
+    roles: BUYER,
+    schema: orderCardsSchema,
+    run: async (i, userId) => ({ success: true as const, ...(await getOrderCardsForBuyer(i.orderId, userId)) }),
+  },
+  'security-status': {
+    roles: BUYER,
+    run: async (_i, userId) => {
+      const status = await getSecurityStatus(userId);
+      return {
+        success: true as const,
+        hasPin: status.hasPin,
+        hasPasskey: status.hasPasskey,
+        pinLocked: status.pinLocked,
+        isUnlocked: status.isUnlocked,
+        unlockedUntil: status.unlockedUntil ? status.unlockedUntil.toISOString() : null,
+      };
+    },
+  },
+  'active-sessions': {
+    roles: null,
+    run: async (_i, userId) => ({ success: true as const, sessions: await listActiveSessions(userId) }),
+  },
+  'payment-method': {
+    roles: SELLER,
+    run: async (_i, userId) => {
+      const pm = await getWallet(userId);
+      return {
+        success: true as const,
+        paymentMethod: pm
+          ? {
+              id: pm.id,
+              coinId: pm.coinId,
+              networkId: pm.networkId,
+              address: pm.address,
+              isBinanceWallet: pm.isBinanceWallet,
+              updatedAt: pm.updatedAt,
+              coin: { id: pm.coin.id, name: pm.coin.name, symbol: pm.coin.symbol, decimals: pm.coin.decimals },
+              network: { id: pm.network.id, name: pm.network.name, description: pm.network.description, regex: pm.network.regex },
+            }
+          : null,
+      };
+    },
+  },
+  'seller-coins': {
+    roles: SELLER,
+    run: async () => {
+      const coins = await getCoinCatalog();
+      return {
+        success: true as const,
+        coins: coins.map((c) => ({
+          id: c.id,
+          name: c.name,
+          symbol: c.symbol,
+          decimals: c.decimals,
+          isActive: c.isActive,
+          networks: c.networks.map((cn) => ({
+            id: cn.id,
+            coinId: cn.coinId,
+            networkId: cn.networkId,
+            network: {
+              id: cn.network.id,
+              name: cn.network.name,
+              description: cn.network.description,
+              regex: cn.network.regex,
+              isActive: cn.network.isActive,
+            },
+          })),
+        })),
+      };
+    },
+  },
+  'search-preferences': {
+    roles: BUYER,
+    run: async (_i, userId) => ({ success: true as const, ...(await getSearchPreferences(userId)) }),
+  },
+  'binance-pay-id': {
+    roles: null,
+    run: async () => ({ success: true as const, binancePayId: await getBinancePayId() }),
   },
 };
 

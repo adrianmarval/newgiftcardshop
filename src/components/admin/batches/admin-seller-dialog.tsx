@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { UserBadge } from '@/components/common';
+import { UserBadge } from '@/components/admin/user-badge';
 import { formatDateTime } from '@/lib/utils';
 import type { AdminSellerSummary } from '@/types';
 

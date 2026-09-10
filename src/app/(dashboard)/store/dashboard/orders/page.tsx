@@ -1,4 +1,4 @@
-import { listOrders } from '@/actions/buyer/orders/list-orders';
+import { listOrders } from '@/actions/buyer/orders';
 import { BuyerOrdersView } from '@/components/buy/giftcard-orders';
 import { orderSearchParamsCache, buildBuyerOrdersInput } from '@/lib/search-params';
 import type { Metadata } from 'next';

@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { ActionError, buyerActionClient } from '@/lib/safe-action';
-import { grantSecurityUnlock } from '@/lib/services';
+import { grantSecurityUnlock } from '@/lib/services/security';
 import { unlockOutputSchema } from './schemas';
 
 /**

@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import binance from './binance.service';
+import binance from './binance';
 
 // Cache 15s: evita 2 llamadas HTTP firmadas a Binance (Spot + Funding) en cada
 // carga del dashboard. El balance no necesita frescura al segundo.

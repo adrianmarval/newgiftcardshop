@@ -6,7 +6,7 @@ import { passkey } from '@better-auth/passkey';
 import prisma from '@/lib/prisma';
 import { resend, EMAIL_FROM } from '@/lib/resend';
 import { render } from '@react-email/components';
-import { VerifyEmailTemplate, ResetPasswordTemplate } from '@/components/emails/';
+import { VerifyEmailTemplate, ResetPasswordTemplate } from '@/emails';
 
 // ── Auth client helpers ─────────────────────────────────────────────────────────
 export const authApi = {

@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { listPayments } from '@/actions/admin/payments/list-payments';
+import { listPayments } from '@/actions/admin/payments';
 import { AdminPaymentsView } from '@/components/admin/payments/admin-payments-view';
 import { adminPaymentsSearchParamsCache, buildAdminPaymentsInput } from '@/lib/search-params';
 

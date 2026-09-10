@@ -1,8 +1,8 @@
 'use server';
 
 import { ActionError, adminActionClient } from '@/lib/safe-action';
-import binance from '@/lib/services/payment/binance.service';
-import { executeAdminWithdrawal, WithdrawalError } from '@/lib/services/payment/admin-withdrawal.service';
+import binance from '@/lib/services/payment/binance';
+import { executeAdminWithdrawal, WithdrawalError } from '@/lib/services/payment/admin-withdrawal';
 import { Decimal } from '@prisma/client/runtime/client';
 import { formatCurrency } from '@/lib/utils';
 import { withdrawBalanceInputSchema, withdrawBalanceOutputSchema } from './schemas';

@@ -73,6 +73,10 @@ export interface SellerSessionData {
     pendingImages?: string[];
     currentMediaGroupId?: string;
     statusMessageId?: number;
+    // Wallet wizard (configuración de método de pago)
+    walletCoinId?: string;
+    walletNetworkId?: string;
+    walletAddress?: string;
   };
   uiMessageId?: number;
   lastChatId?: number;

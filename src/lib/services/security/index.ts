@@ -12,5 +12,5 @@ export {
   requestPinReset,
   verifyPinResetOtp,
   confirmPinReset,
-} from './security-pin.service';
-export type { SecurityPinErrorCode, SecurityStatus } from './security-pin.service';
+} from './security-pin';
+export type { SecurityPinErrorCode, SecurityStatus } from './security-pin';

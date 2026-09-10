@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
-import { forgotPassword } from '@/actions/auth/forgot-password';
+import { forgotPassword } from '@/actions/auth';
 import { useAction } from 'next-safe-action/hooks';
 import { forgotPasswordInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';

@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useLongPress } from '@/hooks/use-long-press';
+import { useLongPress } from '@/components/admin/use-long-press';
 import { apiQuery } from '@/lib/utils';
 import { cn } from '@/lib/ui';
 

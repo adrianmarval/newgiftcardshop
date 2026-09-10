@@ -2,16 +2,13 @@ import { InlineKeyboard } from 'grammy';
 import type { SellerContext } from '@/bot/shared/types.js';
 import { renderUI, deleteUserInput, escapeHTML } from '@/bot/shared/ui.js';
 import { getCoinCatalog, validateWalletAddress } from '@/lib/services/coin';
-import prisma from '@/lib/prisma';
+import { getWallet, upsertWallet, deleteWallet, WalletError } from '@/lib/services/payment/wallet';
+import { WALLET_MIN_PAYOUT_EXTERNAL } from '@/lib/constants';
 
 export async function handleWallet(ctx: SellerContext) {
   await deleteUserInput(ctx);
 
-  const userId = ctx.user.id;
-  const pm = await prisma.paymentMethod.findUnique({
-    where: { userId },
-    include: { coin: true, network: true },
-  });
+  const pm = await getWallet(ctx.user.id);
 
   let text: string;
   if (pm) {
@@ -21,7 +18,7 @@ export async function handleWallet(ctx: SellerContext) {
       `• Network: <b>${escapeHTML(pm.network.name)}</b>\n` +
       `• Address: <code>${escapeHTML(pm.address)}</code>\n` +
       `• Type: <b>${pm.isBinanceWallet ? 'Binance' : 'External'}</b>\n\n` +
-      `<i>${pm.isBinanceWallet ? '✅ No minimum payout.' : '⚠️ Min $10 per batch.'}</i>`;
+      `<i>${pm.isBinanceWallet ? '✅ No minimum payout.' : `⚠️ Min $${WALLET_MIN_PAYOUT_EXTERNAL} per batch.`}</i>`;
   } else {
     text =
       `💰 <b>USDT Wallet</b>\n\n` +
@@ -73,7 +70,7 @@ export async function handleWalletCoinSelected(ctx: SellerContext, coinId: strin
   }
 
   ctx.session.wizard.step = 'awaitingNetworkSelection';
-  ctx.session.wizard.regName = coinId;
+  ctx.session.wizard.walletCoinId = coinId;
 
   if (coin.networks.length === 0) {
     await renderUI(ctx, `❌ No networks available for ${coin.symbol}.`, { parse_mode: 'HTML' });
@@ -95,14 +92,14 @@ export async function handleWalletCoinSelected(ctx: SellerContext, coinId: strin
 export async function handleWalletNetworkSelected(ctx: SellerContext, networkId: string) {
   await deleteUserInput(ctx);
 
-  const coinId = ctx.session.wizard.regName;
+  const coinId = ctx.session.wizard.walletCoinId;
   if (!coinId) {
     await renderUI(ctx, '❌ Session error. Please start over.', { parse_mode: 'HTML' });
     return;
   }
 
   ctx.session.wizard.step = 'awaitingAddress';
-  ctx.session.wizard.regEmail = networkId;
+  ctx.session.wizard.walletNetworkId = networkId;
 
   const coins = await getCoinCatalog();
   const coin = coins.find((c) => c.id === coinId);
@@ -121,8 +118,8 @@ export async function handleWalletNetworkSelected(ctx: SellerContext, networkId:
 export async function handleWalletAddressInput(ctx: SellerContext, address: string) {
   await deleteUserInput(ctx);
 
-  const coinId = ctx.session.wizard.regName;
-  const networkId = ctx.session.wizard.regEmail;
+  const coinId = ctx.session.wizard.walletCoinId;
+  const networkId = ctx.session.wizard.walletNetworkId;
 
   if (!coinId || !networkId) {
     await renderUI(ctx, '❌ Session error. Please start over.', { parse_mode: 'HTML' });
@@ -150,7 +147,7 @@ export async function handleWalletAddressInput(ctx: SellerContext, address: stri
     return;
   }
 
-  (ctx.session.wizard as Record<string, unknown>).regPassword = address;
+  ctx.session.wizard.walletAddress = address;
   ctx.session.wizard.step = 'awaitingWalletType';
 
   const kb = new InlineKeyboard()
@@ -169,9 +166,9 @@ export async function handleWalletAddressInput(ctx: SellerContext, address: stri
 export async function handleWalletType(ctx: SellerContext, isBinance: boolean) {
   await deleteUserInput(ctx);
 
-  const coinId = ctx.session.wizard.regName;
-  const networkId = ctx.session.wizard.regEmail;
-  const address = (ctx.session.wizard as Record<string, unknown>).regPassword as string | undefined;
+  const coinId = ctx.session.wizard.walletCoinId;
+  const networkId = ctx.session.wizard.walletNetworkId;
+  const address = ctx.session.wizard.walletAddress;
 
   if (!coinId || !networkId || !address) {
     await renderUI(ctx, '❌ Session error. Please start over.', { parse_mode: 'HTML' });
@@ -179,13 +176,7 @@ export async function handleWalletType(ctx: SellerContext, isBinance: boolean) {
   }
 
   try {
-    const userId = ctx.user.id;
-    const pm = await prisma.paymentMethod.upsert({
-      where: { userId },
-      create: { userId, coinId, networkId, address, isBinanceWallet: isBinance },
-      update: { coinId, networkId, address, isBinanceWallet: isBinance },
-      include: { coin: true, network: true },
-    });
+    const pm = await upsertWallet({ userId: ctx.user.id, coinId, networkId, address, isBinanceWallet: isBinance });
 
     ctx.session.wizard = { step: 'idle' };
 
@@ -201,7 +192,7 @@ export async function handleWalletType(ctx: SellerContext, isBinance: boolean) {
     );
   } catch (error) {
     ctx.session.wizard = { step: 'idle' };
-    const msg = error instanceof Error ? error.message : 'Unknown error';
+    const msg = error instanceof WalletError ? error.message : 'Unknown error';
     await renderUI(ctx, `❌ Error: ${escapeHTML(msg)}`, {
       parse_mode: 'HTML',
       reply_markup: new InlineKeyboard().text('🔄 Try Again', 'wallet_configure').row().text('🏠 Back', 'start'),
@@ -213,7 +204,7 @@ export async function handleWalletDelete(ctx: SellerContext) {
   await deleteUserInput(ctx);
 
   try {
-    await prisma.paymentMethod.deleteMany({ where: { userId: ctx.user.id } });
+    await deleteWallet(ctx.user.id);
     const kb = new InlineKeyboard().text('🏠 Back', 'start');
     await renderUI(ctx, '✅ <b>Wallet removed.</b>', {
       parse_mode: 'HTML',

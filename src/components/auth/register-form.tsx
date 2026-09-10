@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { InlineAlert } from '@/components/ui/inline-alert';
-import { register } from '@/actions/auth/register';
+import { register } from '@/actions/auth';
 import { useAction } from 'next-safe-action/hooks';
 import { registerInputSchema } from '@/actions/auth/schemas';
 import type { AppSection } from '@/types';

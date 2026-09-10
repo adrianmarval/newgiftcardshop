@@ -25,7 +25,7 @@
 //
 // Envío via notificationDispatcher (persiste in-app + respeta telegramEnabled/
 // pushEnabled). El filtro de suscripciones se aplica AQUÍ (el dispatcher no lo
-// aplica — lo hace notification.service antes de dispatchear).
+// aplica — lo hace el dispatcher antes de dispatchear).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Decimal } from '@prisma/client/runtime/client';

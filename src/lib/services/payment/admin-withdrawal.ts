@@ -19,13 +19,13 @@
 
 import { Decimal } from '@prisma/client/runtime/client';
 import prisma from '@/lib/prisma';
-import binance from '@/lib/services/payment/binance.service';
+import binance from '@/lib/services/payment/binance';
 import { logger } from '@/lib/logger';
 import { publishToRole } from '@/lib/realtime/bus';
 import { formatCurrency } from '@/lib/utils';
 import { PaymentDirection, PaymentCategory, PaymentStatus, PaymentReferenceType } from '@/generated/prisma/client';
 import type { Asset, Network } from '@/types';
-import type { SyncResult } from './seller-payout.service';
+import type { SyncResult } from './seller-payout';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

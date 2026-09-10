@@ -2,7 +2,8 @@
 
 import { CardFooter } from '@/components/ui/card';
 import { showAlert } from '@/lib/ui';
-import { GiftcardItem, UserBadge } from '@/components/common';
+import {GiftcardItem} from '@/components/common';
+import { UserBadge } from '@/components/admin/user-badge';
 import { deleteCard } from '@/actions/admin/batches';
 import { formatCurrency } from '@/lib/utils';
 import { AdminBatchGallery } from './admin-batch-gallery';
