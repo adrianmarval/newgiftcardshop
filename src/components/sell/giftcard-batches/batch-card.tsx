@@ -47,6 +47,8 @@ export function BatchCard({ batch, isExpanded, isHighlighted, onToggle }: BatchC
           estimatedPayout={batch.estimatedPayout}
           faceValueCurrency={currency}
           payoutCurrency="USD"
+          rate={batch.sellRate}
+          rateLabel="Rate"
         />
       }
       date={formatDateTime(batch.createdAt, 'en-US')}

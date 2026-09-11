@@ -59,6 +59,8 @@ export const AdminOrderCard = ({
           effectiveTotal={order.effectiveTotal}
           faceValueCurrency={currency}
           paymentCurrency="USD"
+          rate={order.buyRate}
+          rateLabel="Tasa"
         />
       }
       date={formatDateTime(order.createdAt, 'es-AR')}

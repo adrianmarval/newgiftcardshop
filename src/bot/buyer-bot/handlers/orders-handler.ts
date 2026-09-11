@@ -19,6 +19,7 @@ import {
 import { orderNeedsSecurityGate, isSecurityUnlocked } from '@/lib/services/security';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { listBuyerOrdersPage } from '@/lib/services/order/order-list';
+import { getBinancePayId } from '@/lib/settings/settings.service';
 
 import { Prisma } from '@/generated/prisma/client';
 import { strike } from '@/bot/shared/formatters';
@@ -27,6 +28,20 @@ import { createLogger } from '@/lib/logger';
 const buyerLogger = createLogger('buyer-bot');
 
 const PAGE_SIZE = 5;
+
+/**
+ * Bloque de instrucciones de pago (Binance Pay) para los mensajes del flujo
+ * de pago del buyer. El Pay ID sale de PlatformSettings (misma fuente que el
+ * payment step web — una sola verdad). <code> en Telegram es tap-to-copy.
+ * Si el ID no está configurado, se deriva al soporte (botón 📞 del teclado).
+ */
+async function buildPaymentInstructions(amount: Prisma.Decimal): Promise<string> {
+  const payId = await getBinancePayId();
+  const payIdLine = payId
+    ? `• <b>Binance Pay ID:</b> <code>${escapeHTML(payId)}</code> <i>(toca para copiar)</i>`
+    : `• <b>Binance Pay ID:</b> solicítalo a soporte (botón <b>📞 Contactar a Soporte</b>).`;
+  return `<b>💳 Instrucciones de pago</b>\n• <b>Monto exacto:</b> ${fmt$(amount, 'USD')} USDT\n${payIdLine}`;
+}
 
 export async function handleOrders(ctx: BuyerContext) {
   await deleteUserInput(ctx);
@@ -191,7 +206,7 @@ export async function renderOrderDetail(ctx: BuyerContext, orderId: string, from
 3. Al terminar, presiona <b>"✅ Confirmar uso exitoso"</b> para continuar.`;
     }
   } else if (order.status === 'AWAITING_PAYMENT') {
-    instructions = `\n\n<b>💳 Pago Pendiente</b>\nPresiona el botón de abajo para informar el ID de transacción de tu pago.`;
+    instructions = `\n\n${await buildPaymentInstructions(totalToPay)}\n\nPresiona <b>"💳 Informar pago"</b> para enviar el ID de transacción de tu pago.`;
   }
 
   const msg = `<b>Orden #<code>${order.id}</code></b>\n\n${invalidBlock}${validBlock}${summary}${instructions}`;
@@ -329,8 +344,8 @@ export async function handleConfirmUsageFinal(ctx: BuyerContext) {
 
     await renderUI(
       ctx,
-      `✅ <b>Uso confirmado.</b>\n\nTotal a pagar: <b>${fmt$(adjustedTotal, 'USD')}</b>\n\n` +
-        `Envía el pago en USDT a la dirección del administrador y confirma con el botón.`,
+      `✅ <b>Uso confirmado.</b>\n\n${await buildPaymentInstructions(adjustedTotal)}\n\n` +
+        `Cuando hayas enviado el pago, presiona <b>"💳 Enviar pago ahora"</b> y envía el ID de transacción.`,
       { parse_mode: 'HTML', reply_markup: kb, callbackText: 'Uso confirmado' },
     );
   } catch (err: any) {
@@ -346,13 +361,32 @@ export async function handleMakePayment(ctx: BuyerContext) {
   const orderId = ctx.callbackQuery?.data?.replace('make_payment_', '');
   if (!orderId) return ctx.answerCallbackQuery();
 
+  // Traer la orden para mostrar el monto EXACTO en las instrucciones y validar
+  // que sigue esperando pago (pudo completarse/cancelarse desde la web).
+  let order;
+  try {
+    order = await findOrderForUser(orderId, ctx.user.id);
+  } catch {
+    return ctx.answerCallbackQuery('Orden no encontrada');
+  }
+
+  if (order.status !== 'AWAITING_PAYMENT') return ctx.answerCallbackQuery('Esta orden no está esperando pago');
+
   ctx.session.wizard.step = 'awaitingPaymentId';
   ctx.session.wizard.orderId = orderId;
 
-  await renderUI(ctx, '💳 <b>Envía el ID de transacción de Binance:</b>\n\n' + '<i>Ejemplo: 5A3F2E1D4C6B...</i>', {
-    parse_mode: 'HTML',
-    reply_markup: new InlineKeyboard().text('⬅️ Volver', `order_detail_${orderId}`),
-  });
+  const totalToPay = order.adjustedTotal ?? order.total;
+
+  await renderUI(
+    ctx,
+    `${await buildPaymentInstructions(totalToPay)}\n\n` +
+      `<b>📨 Cuando el pago esté enviado, escribe aquí el Order ID de transacción:</b>\n\n` +
+      '<i>Ejemplo: 453760520422340947...</i>',
+    {
+      parse_mode: 'HTML',
+      reply_markup: new InlineKeyboard().text('⬅️ Volver', `order_detail_${orderId}`),
+    },
+  );
 }
 
 export async function handlePaymentText(ctx: BuyerContext) {

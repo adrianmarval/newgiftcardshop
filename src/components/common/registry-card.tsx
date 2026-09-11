@@ -279,11 +279,15 @@ export function OrderTopRight({
   effectiveTotal,
   faceValueCurrency,
   paymentCurrency,
+  rate,
+  rateLabel = 'Tasa',
 }: {
   faceValueTotal: number;
   effectiveTotal: number;
   faceValueCurrency: string;
   paymentCurrency: string;
+  rate?: number;
+  rateLabel?: string;
 }) {
   return (
     <>
@@ -293,6 +297,11 @@ export function OrderTopRight({
       <span className="text-muted-foreground text-xs md:text-sm">
         Precio: {formatCurrency(effectiveTotal, { currency: paymentCurrency })}
       </span>
+      {rate !== undefined && (
+        <span className="text-muted-foreground text-xs md:text-sm">
+          {rateLabel}: {(rate * 100).toFixed(1)}%
+        </span>
+      )}
     </>
   );
 }
@@ -302,11 +311,15 @@ export function BatchTopRight({
   estimatedPayout,
   faceValueCurrency,
   payoutCurrency,
+  rate,
+  rateLabel = 'Rate',
 }: {
   faceValueTotal: number;
   estimatedPayout: number;
   faceValueCurrency: string;
   payoutCurrency: string;
+  rate?: number;
+  rateLabel?: string;
 }) {
   return (
     <>
@@ -316,6 +329,11 @@ export function BatchTopRight({
       <span className="text-muted-foreground text-xs md:text-sm">
         Payout: {formatCurrency(estimatedPayout, { currency: payoutCurrency })}
       </span>
+      {rate !== undefined && (
+        <span className="text-muted-foreground text-xs md:text-sm">
+          {rateLabel}: {(rate * 100).toFixed(1)}%
+        </span>
+      )}
     </>
   );
 }

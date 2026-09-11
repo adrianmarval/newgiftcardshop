@@ -67,6 +67,8 @@ export function AdminBatchCard({
           estimatedPayout={batch.estimatedPayout}
           faceValueCurrency={currency}
           payoutCurrency="USD"
+          rate={batch.sellRate}
+          rateLabel="Tasa"
         />
       }
       date={
