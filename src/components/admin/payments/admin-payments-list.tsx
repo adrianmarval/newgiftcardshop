@@ -1,6 +1,7 @@
 'use client';
 
-import { History } from 'lucide-react';
+import { History, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Payment } from '@/types/domain';
@@ -88,16 +89,23 @@ export const AdminPaymentsList = ({ payments, totalPages: _totalPages }: AdminPa
                       {payment.referenceType && payment.referenceId ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span
-                              className="bg-muted hover:bg-muted-foreground/10 cursor-pointer rounded px-1.5 py-0.5 text-xs transition-colors"
-                              onClick={() => handleCopy(payment.referenceId!, 'ID')}
+                            <Link
+                              href={
+                                payment.referenceType === 'ORDER'
+                                  ? `/admin/dashboard/orders?search=${payment.referenceId}`
+                                  : `/admin/dashboard/batches?search=${payment.referenceId}`
+                              }
+                              className="bg-muted hover:bg-muted-foreground/10 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs transition-colors"
                             >
                               {payment.referenceType}:{payment.referenceId.slice(-6)}
-                            </span>
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </Link>
                           </TooltipTrigger>
                           <TooltipContent>
                             <div className="flex flex-col gap-1 p-1">
-                              <span className="text-muted-foreground text-[10px]">Click para copiar ID completo</span>
+                              <span className="text-muted-foreground text-[10px]">
+                                Click para ver {payment.referenceType === 'ORDER' ? 'la orden' : 'el lote'}
+                              </span>
                               <span className="font-mono text-xs">{payment.referenceId}</span>
                             </div>
                           </TooltipContent>

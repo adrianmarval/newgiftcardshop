@@ -11,6 +11,7 @@ import { formatCurrency, copyToClipboard } from '@/lib/utils';
 import { showAlert } from '@/lib/ui';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { Giftcard } from '@/types';
 
 interface GiftcardItemProps {
@@ -21,6 +22,8 @@ interface GiftcardItemProps {
   onDelete?: (cardId: string) => void;
   showCopyButton?: boolean;
   hasIssues?: boolean;
+  /** Si se provee, el badge de issues navega a esta ruta (ej. lista de issues filtrada). */
+  issuesHref?: string;
 }
 
 const statusColors: Record<string, string> = {
@@ -40,6 +43,7 @@ export function GiftcardItem({
   onDelete,
   showCopyButton = true,
   hasIssues: hasIssuesProp = false,
+  issuesHref,
 }: GiftcardItemProps) {
   const canDelete = !card.orderId && onDelete;
   const canViewDetails = onViewDetails;
@@ -110,12 +114,23 @@ export function GiftcardItem({
                     <DropdownMenuContent align="end">{dropdownActions}</DropdownMenuContent>
                   </DropdownMenu>
                 ) : showIssues ? (
-                  <div
-                    className="bg-destructive/90 flex h-7 w-7 items-center justify-center rounded-full shadow-sm backdrop-blur-sm"
-                    title="Con problemas"
-                  >
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                  </div>
+                  issuesHref ? (
+                    <Link
+                      href={issuesHref}
+                      onClick={(e) => e.stopPropagation()}
+                      className="bg-destructive/90 flex h-7 w-7 items-center justify-center rounded-full shadow-sm backdrop-blur-sm transition-transform hover:scale-110"
+                      title="Ver reportes"
+                    >
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                    </Link>
+                  ) : (
+                    <div
+                      className="bg-destructive/90 flex h-7 w-7 items-center justify-center rounded-full shadow-sm backdrop-blur-sm"
+                      title="Con problemas"
+                    >
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                    </div>
+                  )
                 ) : null}
                 {canDelete && (
                   <Button

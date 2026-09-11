@@ -61,6 +61,7 @@ export function AdminBatchDetails({ batch, onDeleted, onViewBuyer }: AdminBatchD
             key={card.id}
             card={card}
             hasIssues={Boolean(card.issues && card.issues.length > 0)}
+            issuesHref={`/admin/dashboard/issues?search=${encodeURIComponent(card.claimCode)}`}
             onDelete={card.orderId ? undefined : handleDeleteCard}
             contextualInfo={
               card.buyer ? (
