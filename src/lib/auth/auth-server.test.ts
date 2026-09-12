@@ -25,3 +25,21 @@ describe('auth config — campos privilegiados NO aceptan input del cliente', ()
     expect(auth.options.databaseHooks?.user?.create?.after).toBeTypeOf('function');
   });
 });
+
+describe('auth config — rate limiting (defensa en profundidad post-incidente)', () => {
+  it('rate limiting habilitado siempre (no solo en producción)', () => {
+    expect(auth.options.rateLimit?.enabled).toBe(true);
+  });
+
+  it('sign-up limitado a 5/hora por IP (frena creación scripteada de cuentas)', () => {
+    expect(auth.options.rateLimit?.customRules?.['/sign-up/email']).toEqual({ window: 3600, max: 5 });
+  });
+
+  it('sign-in limitado a 10/min por IP (frena credential stuffing)', () => {
+    expect(auth.options.rateLimit?.customRules?.['/sign-in/email']).toEqual({ window: 60, max: 10 });
+  });
+
+  it('detección de IP prioriza cf-connecting-ip (Cloudflare tunnel en prod)', () => {
+    expect(auth.options.advanced?.ipAddress?.ipAddressHeaders).toEqual(['cf-connecting-ip', 'x-forwarded-for']);
+  });
+});

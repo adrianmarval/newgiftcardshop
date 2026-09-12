@@ -98,8 +98,34 @@ export const auth = betterAuth({
     },
   },
 
+  // Rate limiting (defensa en profundidad, incidente sept 2026): los defaults
+  // built-in de better-auth (3/10s en sign-in/sign-up/change-*) NO frenan la
+  // creación scripteada de cuentas (3/10s = ~1000 cuentas/hora). Las
+  // customRules los sobrescriben por path:
+  // - sign-up: 5/hora por IP — sign-ups legítimos son eventos raros.
+  // - sign-in: 10/min por IP — frena credential stuffing sin afectar uso real.
+  // El plugin two-factor trae su propia regla (/two-factor/* → 3/10s).
+  // Storage "memory" (default): se resetea al reiniciar — OK, instancia única
+  // (mismo invariante que los crons/bus, ver AGENTS.md). Si se escala
+  // horizontal → migrar a storage "database" (requiere modelo rateLimit +
+  // migración).
+  rateLimit: {
+    enabled: true,
+    customRules: {
+      '/sign-up/email': { window: 3600, max: 5 },
+      '/sign-in/email': { window: 60, max: 10 },
+    },
+  },
+
   // ── Configuración para permitir Iframe / Cross-Domain ──────────────────────────
   advanced: {
+    // Detección de IP para rate limiting: en prod el tráfico llega vía
+    // cloudflared/Cloudflare, que setea cf-connecting-ip con el IP real del
+    // cliente (no spoofeable a través del tunnel — CF lo sobrescribe).
+    // x-forwarded-for como fallback (el default de better-auth).
+    ipAddress: {
+      ipAddressHeaders: ['cf-connecting-ip', 'x-forwarded-for'],
+    },
     crossSubdomainCookies: {
       enabled: true,
     },
