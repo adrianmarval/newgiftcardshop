@@ -18,7 +18,8 @@ export async function getSession(): Promise<Session> {
 
 export async function authorizeActiveUser(): Promise<Session> {
   const session = await getSession();
-  if (!session.user.isActive && session.user.role !== 'ADMIN') {
+  // isActive aplica a TODOS los roles, ADMIN incluido (ver safe-action.ts).
+  if (!session.user.isActive) {
     redirect('/pending-activation');
   }
   return session;
@@ -47,7 +48,8 @@ export async function redirectIfAuthenticated(): Promise<void> {
 
   const user = session.user as Session['user'];
   const role = user.role as Role;
-  if (!user.isActive && role !== 'ADMIN') {
+  // isActive aplica a TODOS los roles, ADMIN incluido (ver safe-action.ts).
+  if (!user.isActive) {
     redirect('/pending-activation');
   }
   redirect(ROLE_DASHBOARD[role] ?? '/');

@@ -365,6 +365,42 @@ export async function notifyAdminPayoutFailed(batchId: number, amount: number, r
   await notificationDispatcher.dispatch(admin.id, message);
 }
 
+/**
+ * TRIPWIRE de seguridad (incidente sept 2026): se creó un user con rol ADMIN.
+ * Se llama desde el databaseHook user.create.after de better-auth, así cubre
+ * TODOS los caminos de creación (sign-up, bots, scripts). Notifica al admin
+ * EXISTENTE (nunca al recién creado). Si no hay otro admin (seed inicial),
+ * no-op.
+ */
+export async function notifyAdminNewAdminDetected(newUser: { id: string; email: string; name: string }): Promise<void> {
+  const { logger } = await import('@/lib/logger');
+
+  logger.warn('SECURITY: nuevo usuario con rol ADMIN detectado', {
+    flow: 'security',
+    action: 'admin-user-created',
+    metadata: { newUserId: newUser.id, email: newUser.email, name: newUser.name },
+  });
+
+  const admin = await prisma.user.findFirst({
+    where: { role: 'ADMIN', id: { not: newUser.id } },
+    select: { id: true },
+  });
+
+  if (!admin) {
+    return;
+  }
+
+  const message: NotificationMessage = {
+    type: 'SECURITY_ALERT',
+    title: '🚨 Alerta de seguridad — cuenta ADMIN creada',
+    description: `Se creó una cuenta con rol ADMIN: ${newUser.email} (${newUser.name}). Si no fuiste tú, elimínala de inmediato y revisa los logs.`,
+    actionUrl: '/admin/dashboard/users?role=ADMIN',
+    metadata: { newUserId: newUser.id, email: newUser.email },
+  };
+
+  await notificationDispatcher.dispatch(admin.id, message);
+}
+
 export async function notifySellerWalletRequired(sellerId: string, batchId: number): Promise<void> {
   const message: NotificationMessage = {
     type: 'BATCH_STATUS',

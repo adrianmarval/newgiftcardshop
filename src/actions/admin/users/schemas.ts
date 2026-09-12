@@ -45,7 +45,10 @@ export type GetUsersOutput = z.infer<typeof listUsersOutputSchema>;
 
 export const updateUserInputSchema = z.object({
   userId: z.string(),
-  role: z.enum(['ADMIN', 'SELLER', 'BUYER']).optional(),
+  // ADMIN excluido a propósito: solo puede existir UNA cuenta admin y nadie
+  // (ni siquiera el admin desde la UI) promueve a otro usuario por aquí
+  // (incidente sept 2026). BUYER↔SELLER se mantiene para gestión legítima.
+  role: z.enum(['SELLER', 'BUYER']).optional(),
   isActive: z.boolean().optional(),
   creditLimit: z.number().optional(),
   minAmountPreference: z.number().nullable().optional(),

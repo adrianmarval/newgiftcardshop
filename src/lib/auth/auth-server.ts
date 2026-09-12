@@ -10,8 +10,10 @@ import { VerifyEmailTemplate, ResetPasswordTemplate } from '@/emails';
 
 // ── Auth client helpers ─────────────────────────────────────────────────────────
 export const authApi = {
+  // El body NO acepta role/isActive: esos campos son input:false y se asignan
+  // server-side tras la creación (register action / bot registration).
   async signUpEmail(params: {
-    body: { name: string; email: string; password: string; role: string; isActive?: boolean; callbackURL?: string };
+    body: { name: string; email: string; password: string; callbackURL?: string };
     headers?: Headers;
   }) {
     return auth.api.signUpEmail(params);
@@ -54,16 +56,44 @@ export const auth = betterAuth({
     },
   },
   user: {
+    // SEGURIDAD (incidente sept 2026 — probing automatizado creó cuentas ADMIN
+    // activas): `input: false` es OBLIGATORIO en campos privilegiados. Con
+    // `input: true` (el default), el endpoint PÚBLICO /api/auth/sign-up/email
+    // acepta role/isActive en el body y cualquiera puede auto-crearse un ADMIN
+    // activo bypaseando la server action register. La doc de Better Auth lo
+    // advierte explícitamente. El rol se asigna server-side post-creación
+    // (register action / bot registration), NUNCA desde el cliente.
     additionalFields: {
       role: {
         type: 'string',
         defaultValue: 'BUYER',
-        input: true,
+        input: false,
       },
       isActive: {
         type: 'boolean',
         defaultValue: false,
-        input: true,
+        input: false,
+      },
+    },
+  },
+
+  // Tripwire anti-escalación de privilegios: si CUALQUIER camino (sign-up,
+  // script, bug futuro) crea un user con rol ADMIN, notifica al admin existente
+  // (in-app + Telegram + push). Fire-and-forget: NUNCA bloquea ni rompe la
+  // creación del usuario. Import dinámico para no acoplar auth-server al
+  // grafo de notificaciones (bots/channels) en el module graph de cada chunk.
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            if ((user as { role?: string }).role !== 'ADMIN') return;
+            const { notifyAdminNewAdminDetected } = await import('@/lib/notifications');
+            await notifyAdminNewAdminDetected({ id: user.id, email: user.email, name: user.name });
+          } catch (error) {
+            console.error('[SecurityTripwire] Error notificando nuevo user ADMIN:', error);
+          }
+        },
       },
     },
   },

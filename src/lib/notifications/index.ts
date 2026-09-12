@@ -6,7 +6,7 @@ export { NotificationDispatcher, notificationDispatcher } from './dispatcher';
 export { sweepStockReminders } from './stock-reminder';
 export { sweepPaymentReminders } from './payment-reminder';
 export { sweepPendingOrderAlerts } from './pending-order-alert';
-export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid, notifySellerBatchPayoutSent, notifySellerBatchCancelled, notifySellerBatchDeleted, notifyAdminBatchProfitRealized, notifyAdminPayoutFailed, notifySellerWalletRequired } from './notify';
+export { notifyBuyersStockAvailable, notifyBuyersTierDrop, notifySellerBatchPaid, notifySellerBatchPayoutSent, notifySellerBatchCancelled, notifySellerBatchDeleted, notifyAdminBatchProfitRealized, notifyAdminPayoutFailed, notifySellerWalletRequired, notifyAdminNewAdminDetected } from './notify';
 export { getSubscribedBrandCountries } from './get-subscribed-brand-countries';
 export { listUserNotifications, countUnreadNotifications } from './queries/list-queries';
 export { getNotificationPageData } from './queries/page-queries';

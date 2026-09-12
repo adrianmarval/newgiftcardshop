@@ -13,12 +13,12 @@ import { InlineAlert } from '@/components/ui/inline-alert';
 import { register } from '@/actions/auth';
 import { useAction } from 'next-safe-action/hooks';
 import { registerInputSchema } from '@/actions/auth/schemas';
-import type { AppSection } from '@/types';
 import type { z } from 'zod';
 import { PasswordCheckItem } from './ui/password-check-item';
 
 export interface RegisterFormProps {
-  portal: AppSection;
+  /** Solo portales con registro self-service (admin NO — ver registerInputSchema). */
+  portal: 'sell' | 'buy';
   redirectTo: string;
   loginUrl: string;
 }

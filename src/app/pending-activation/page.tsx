@@ -15,7 +15,9 @@ export const metadata: Metadata = {
 export default async function PendingActivationPage() {
   const session = await getSession();
 
-  if (session.user.isActive || session.user.role === 'ADMIN') {
+  // isActive aplica a TODOS los roles, ADMIN incluido (ver safe-action.ts):
+  // un admin inactivo se queda en esta página como cualquier otro usuario.
+  if (session.user.isActive) {
     const dashboard =
       session.user.role === 'ADMIN' ? '/admin/dashboard' : session.user.role === 'SELLER' ? '/sell/dashboard' : '/store/dashboard';
     redirect(dashboard);

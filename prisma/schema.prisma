@@ -793,6 +793,7 @@ enum NotificationType {
   BATCH_STATUS
   BATCH_UNDER_REVIEW
   RATE_UPDATE
+  SECURITY_ALERT
 }
 
 // --------------------------------------

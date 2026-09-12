@@ -288,13 +288,15 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
   }
 
   try {
+    // El rol NUNCA viaja en el body del sign-up: role/isActive son
+    // additionalFields con input:false (ver auth-server.ts — incidente sept
+    // 2026). Se crea con el default (BUYER, inactivo) y el rol + la marca de
+    // email verificado se asignan server-side en el update de abajo.
     const result = await authApi.signUpEmail({
       body: {
         name,
         email,
         password,
-        role,
-        isActive: false,
         callbackURL: role === 'SELLER' ? '/sell/dashboard' : '/store/dashboard',
       },
     });
@@ -306,7 +308,7 @@ export async function handleRegPassword(ctx: RegContext, role: BotRole): Promise
 
     await prisma.user.update({
       where: { id: result.user.id },
-      data: { emailVerified: true },
+      data: { emailVerified: true, role },
     });
 
     await prisma.telegramUser.create({

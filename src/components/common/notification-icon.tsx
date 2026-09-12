@@ -1,8 +1,10 @@
-import { Bell, Check, TrendingUp } from 'lucide-react';
+import { Bell, Check, ShieldAlert, TrendingUp } from 'lucide-react';
 import type { NotificationType } from '@/generated/prisma/enums';
 
 export function NotificationIcon({ type, size = 'h-4 w-4' }: { type: NotificationType; size?: string }) {
   switch (type) {
+    case 'SECURITY_ALERT':
+      return <ShieldAlert className={`${size} text-red-500`} />;
     case 'STOCK_AVAILABLE':
     case 'TIER_DROP_ACCESS':
     case 'ORDER_COMPLETED':

@@ -24,7 +24,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function DynamicRegisterPage({ params }: PageProps) {
   const { portal } = await params;
-  if (!isAppSection(portal)) notFound();
+  // Admin NO tiene registro self-service (hasRegister: false). El check
+  // explícito también estrecha el tipo a 'sell' | 'buy' para RegisterForm.
+  if (!isAppSection(portal) || portal === 'admin') notFound();
   await redirectIfAuthenticated();
   const config = PORTAL_AUTH_CONFIG[portal];
   if (!config.register) notFound();

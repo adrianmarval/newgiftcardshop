@@ -45,7 +45,10 @@ export const registerInputSchema = z
     email: z.email('Invalid email address'),
     password: passwordSchema,
     confirmPassword: z.string().trim(),
-    portal: z.enum(['sell', 'buy', 'admin']),
+    // NUNCA incluir 'admin': el portal admin no tiene registro self-service
+    // (hasRegister: false). Si la action lo aceptara, cualquiera podría crear
+    // una cuenta con rol ADMIN vía la action (incidente sept 2026).
+    portal: z.enum(['sell', 'buy']),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',

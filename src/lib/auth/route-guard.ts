@@ -35,7 +35,8 @@ async function getApiSession(): Promise<Session> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) throw new ApiAuthError(401, 'No autenticado');
   const user = session.user as Session['user'];
-  if (!user.isActive && user.role !== 'ADMIN') throw new ApiAuthError(401, 'Cuenta inactiva');
+  // isActive aplica a TODOS los roles, ADMIN incluido (ver safe-action.ts).
+  if (!user.isActive) throw new ApiAuthError(401, 'Cuenta inactiva');
   return session as Session;
 }
 

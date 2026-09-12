@@ -61,7 +61,11 @@ export const authActionClient = actionClient.use(
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
       const user = authData.user as Session['user'];
-      if (!user.isActive && user.role !== 'ADMIN') unauthorized();
+      // isActive aplica a TODOS los roles, ADMIN incluido (antes se exceptuaba:
+      // una cuenta ADMIN rogue quedaba operativa aunque estuviera inactiva —
+      // incidente sept 2026). La cuenta admin real siempre debe tener
+      // isActive=true (updateUser prohíbe desactivarla).
+      if (!user.isActive) unauthorized();
       return next({ ctx: { auth: authData } });
     },
   }),
@@ -97,7 +101,11 @@ export const sellerActionClient = actionClient.use(
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
       const user = authData.user as Session['user'];
-      if (!user.isActive && user.role !== 'ADMIN') unauthorized();
+      // isActive aplica a TODOS los roles, ADMIN incluido (antes se exceptuaba:
+      // una cuenta ADMIN rogue quedaba operativa aunque estuviera inactiva —
+      // incidente sept 2026). La cuenta admin real siempre debe tener
+      // isActive=true (updateUser prohíbe desactivarla).
+      if (!user.isActive) unauthorized();
       const role = user.role as Role;
       if (role !== 'SELLER' && role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
@@ -130,7 +138,11 @@ export const buyerActionClient = actionClient.use(
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
       const user = authData.user as Session['user'];
-      if (!user.isActive && user.role !== 'ADMIN') unauthorized();
+      // isActive aplica a TODOS los roles, ADMIN incluido (antes se exceptuaba:
+      // una cuenta ADMIN rogue quedaba operativa aunque estuviera inactiva —
+      // incidente sept 2026). La cuenta admin real siempre debe tener
+      // isActive=true (updateUser prohíbe desactivarla).
+      if (!user.isActive) unauthorized();
       const role = user.role as Role;
       if (role !== 'BUYER' && role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
@@ -153,7 +165,11 @@ export const adminActionClient = actionClient.use(
     authorize: ({ authData, next }) => {
       if (!authData) unauthorized();
       const user = authData.user as Session['user'];
-      if (!user.isActive && user.role !== 'ADMIN') unauthorized();
+      // isActive aplica a TODOS los roles, ADMIN incluido (antes se exceptuaba:
+      // una cuenta ADMIN rogue quedaba operativa aunque estuviera inactiva —
+      // incidente sept 2026). La cuenta admin real siempre debe tener
+      // isActive=true (updateUser prohíbe desactivarla).
+      if (!user.isActive) unauthorized();
       const role = user.role as Role;
       if (role !== 'ADMIN') unauthorized();
       return next({ ctx: { auth: authData } });
