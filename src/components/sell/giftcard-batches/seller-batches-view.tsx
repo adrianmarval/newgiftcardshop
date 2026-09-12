@@ -40,7 +40,11 @@ export function SellerBatchesView({ batches, pagination, initialInput }: SellerB
     input,
     fetcher: fetchSellerBatches,
     initialInput,
-    initialData: { success: true as const, items: batches, pagination: pagination ?? { currentPage: 1, totalPages: 1, totalCount: batches.length } },
+    initialData: {
+      success: true as const,
+      items: batches,
+      pagination: pagination ?? { currentPage: 1, totalPages: 1, totalCount: batches.length },
+    },
   });
 
   // Tab badges (total actionable load; invalidated via SSE with 'batches')
@@ -56,40 +60,38 @@ export function SellerBatchesView({ batches, pagination, initialInput }: SellerB
           defaults={FILTERS_DEFAULTS}
           labels={{ filters: 'Filters', clear: 'Clear' }}
           config={{
-          search: { placeholder: 'Search by claim code or batch id...', paramKey: 'search' },
-          tabs: {
-            paramKey: 'status',
-            options: [
-              { value: 'ALL', label: 'All' },
-              { value: 'PROCESSING', label: 'Processing' },
-              { value: 'CONFIRMED', label: 'Awaiting payout' },
-              { value: 'REPORTED', label: 'Reported' },
-            ],
-            counts: tabCounts
-              ? { PROCESSING: tabCounts.processing, CONFIRMED: tabCounts.confirmed }
-              : undefined,
-          },
-          status: {
-            label: 'Status',
-            paramKey: 'status',
-            options: [
-              { value: 'ALL', label: 'All' },
-              { value: 'PROCESSING', label: 'Processing' },
-              { value: 'CONFIRMED', label: 'Awaiting payout' },
-              { value: 'PAID', label: 'Paid' },
-              { value: 'REPORTED', label: 'Reported' },
-              { value: 'CANCELLED', label: 'Cancelled' },
-            ],
-          },
-          sort: {
-            label: 'Sort',
-            paramKey: 'sort',
-            options: [
-              { value: 'newest', label: 'Newest first' },
-              { value: 'oldest', label: 'Oldest first' },
-            ],
-          },
-        }}
+            search: { placeholder: 'Search by claim code or batch id...', paramKey: 'search' },
+            tabs: {
+              paramKey: 'status',
+              options: [
+                { value: 'ALL', label: 'All' },
+                { value: 'PROCESSING', label: 'Processing' },
+                { value: 'CONFIRMED', label: 'Awaiting payout' },
+                // { value: 'REPORTED', label: 'Reported' },
+              ],
+              counts: tabCounts ? { PROCESSING: tabCounts.processing, CONFIRMED: tabCounts.confirmed } : undefined,
+            },
+            status: {
+              label: 'Status',
+              paramKey: 'status',
+              options: [
+                { value: 'ALL', label: 'All' },
+                { value: 'PROCESSING', label: 'Processing' },
+                { value: 'CONFIRMED', label: 'Awaiting payout' },
+                { value: 'PAID', label: 'Paid' },
+                { value: 'REPORTED', label: 'Reported' },
+                { value: 'CANCELLED', label: 'Cancelled' },
+              ],
+            },
+            sort: {
+              label: 'Sort',
+              paramKey: 'sort',
+              options: [
+                { value: 'newest', label: 'Newest first' },
+                { value: 'oldest', label: 'Oldest first' },
+              ],
+            },
+          }}
         />
       </div>
       <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
