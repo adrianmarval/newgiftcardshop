@@ -2,18 +2,17 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clipboard, ClipboardCheck, X } from 'lucide-react';
+import { Clipboard, ClipboardCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useBuyFlow } from '@/components/buy/use-buy-flow';
 import { useStepHotkeys } from '@/hooks/use-step-hotkeys';
 import { getUserBuyRate } from '@/actions/buyer/orders';
 import { apiQuery } from '@/lib/utils';
 import type { BuyFlowCard } from '@/types';
-import { reportIssue as reportIssueAction, undoIssue as undoIssueAction } from '@/actions/buyer/giftcards/issues';
+import { undoIssue as undoIssueAction } from '@/actions/buyer/giftcards/issues';
 import { GiftcardIssueType, GiftcardStatus } from '@/generated/prisma/enums';
 import { showAlert } from '@/lib/ui';
 import { Spinner } from '@/components/ui/spinner';
@@ -23,6 +22,7 @@ import { copyToClipboard } from '@/lib/utils/clipboard';
 import { BuyStepsProgress } from '../shared/buy-steps-progress';
 import { StepFooter } from '@/components/common';
 import { UnlockGate } from '@/components/buy/security/unlock-gate';
+import { IssueProofDialog } from '@/components/buy/issue-proof-dialog';
 
 export const RedeemStep = () => {
   const {
@@ -41,18 +41,17 @@ export const RedeemStep = () => {
   const isPending = orderStatus === 'PENDING' || !orderStatus;
 
   const [redeemState, setRedeemState] = useState<{
-    activeReportId: string | null;
-    correctedAmount: string;
     buyRate: number;
     loadingIds: Set<string>;
     copiedIds: Set<string>;
   }>({
-    activeReportId: null,
-    correctedAmount: '',
     buyRate: 0,
     loadingIds: new Set<string>(),
     copiedIds: new Set<string>(),
   });
+
+  // Card + tipo de problema que se está reportando (el dialog pide monto/evidencia)
+  const [reportTarget, setReportTarget] = useState<{ id: string; type: GiftcardIssueType } | null>(null);
 
   // Security gate: true mientras el servidor retiene los códigos (PIN/passkey pendiente)
   const [codesLocked, setCodesLocked] = useState(false);
@@ -123,76 +122,30 @@ export const RedeemStep = () => {
     });
   };
 
-  const handleReport = async (id: string, status: GiftcardIssueType) => {
-    if (status === 'WRONG_AMOUNT') {
-      setRedeemState((prev) => ({ ...prev, activeReportId: id }));
-      return;
-    }
-    // Optimistic local update
-    reportIssue(id, status);
-    if (!orderId) return;
-    setLoading(id, true);
-    const result = await reportIssueAction({
-      giftcardId: id,
-      orderId,
-      issueType: status,
-    });
-    if (!result.data) {
-      const errorMsg = result.serverError || result.validationErrors?._errors?.join('') || 'Error al reportar el problema';
-      reportIssue(id, 'UNUSED');
-      // If the error indicates the order is no longer pending, refresh status
-      if (errorMsg.includes('confirmada') || errorMsg.includes('estado')) {
-        setOrderStatus('AWAITING_PAYMENT');
-        setStep(5);
-        return;
-      }
-      showAlert.error('Error', errorMsg);
-    } else {
-      showAlert.toast.success('Problema reportado con éxito');
-    }
-    setLoading(id, false);
+  // El reporte se completa en el IssueProofDialog (monto si WRONG_AMOUNT +
+  // evidencia opcional). Acá solo se abre el dialog; el store se actualiza en
+  // onSuccess tras el OK del servidor (el upload de la captura tiene latencia,
+  // un optimistic update quedaría inconsistente si el upload falla).
+  const handleReport = (id: string, type: GiftcardIssueType) => {
+    setReportTarget({ id, type });
   };
 
-  const submitCorrectedAmount = async (id: string) => {
-    const val = parseFloat(redeemState.correctedAmount);
-    if (isNaN(val)) {
-      setRedeemState((prev) => ({
-        ...prev,
-        activeReportId: null,
-        correctedAmount: '',
-      }));
-      return;
-    }
+  const handleReportSuccess = (reportedAmount?: number) => {
+    if (!reportTarget) return;
+    // Los 4 issueTypes mapean 1:1 al GiftcardStatus homónimo
+    reportIssue(reportTarget.id, reportTarget.type as GiftcardStatus, reportedAmount);
+  };
 
-    // Optimistic local update
-    reportIssue(id, 'WRONG_AMOUNT', val);
-    setRedeemState((prev) => ({
-      ...prev,
-      activeReportId: null,
-      correctedAmount: '',
-    }));
-
-    if (!orderId) return;
-    setLoading(id, true);
-    const result = await reportIssueAction({
-      giftcardId: id,
-      orderId,
-      issueType: 'WRONG_AMOUNT',
-      reportedAmount: val,
-    });
-    if (!result.data) {
-      const errorMsg = result.serverError || result.validationErrors?._errors?.join('') || 'Error al reportar el problema';
-      reportIssue(id, 'UNUSED');
-      if (errorMsg.includes('confirmada') || errorMsg.includes('estado')) {
-        setOrderStatus('AWAITING_PAYMENT');
-        setStep(5);
-        return;
-      }
-      showAlert.error('Error', errorMsg);
-    } else {
-      showAlert.toast.success('Problema reportado con éxito');
+  // Si la orden dejó de estar PENDING (confirmada por otro canal), saltar al
+  // paso de pago en vez de mostrar el error genérico dentro del dialog.
+  const handleReportActionError = (errorMsg: string): boolean => {
+    if (errorMsg.includes('confirmada') || errorMsg.includes('estado')) {
+      setReportTarget(null);
+      setOrderStatus('AWAITING_PAYMENT');
+      setStep(5);
+      return true;
     }
-    setLoading(id, false);
+    return false;
   };
 
   const handleUndoReport = async (giftcardId: string, status: GiftcardStatus) => {
@@ -438,52 +391,6 @@ export const RedeemStep = () => {
                           )}
                         </div>
                       </div>
-
-                      {/* Inline form for WRONG_AMOUNT */}
-                      {redeemState.activeReportId === card.id && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          className="border-border mt-2 flex items-center gap-1 overflow-hidden border-t pt-2"
-                        >
-                          <div className="relative max-w-32 flex-1">
-                            <span className="text-muted-foreground/50 absolute top-1.5 left-2 text-xs">$</span>
-                            <Input
-                              type="number"
-                              placeholder="Monto corr."
-                              value={redeemState.correctedAmount}
-                              onChange={(e) =>
-                                setRedeemState((prev) => ({
-                                  ...prev,
-                                  correctedAmount: e.target.value,
-                                }))
-                              }
-                              className="border-border bg-muted/50 h-7 pl-5 text-xs md:h-8"
-                            />
-                          </div>
-                          <Button
-                            size="sm"
-                            className="bg-primary text-primary-foreground h-7 text-xs md:h-8 md:text-sm"
-                            onClick={() => submitCorrectedAmount(card.id)}
-                          >
-                            Actualizar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 md:h-8"
-                            onClick={() =>
-                              setRedeemState((prev) => ({
-                                ...prev,
-                                activeReportId: null,
-                                correctedAmount: '',
-                              }))
-                            }
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </motion.div>
-                      )}
                     </motion.div>
                   );
                 })}
@@ -492,6 +399,21 @@ export const RedeemStep = () => {
           </CardContent>
         </Card>
       </div>
+
+      {reportTarget && orderId && (
+        <IssueProofDialog
+          mode="create"
+          open
+          onOpenChange={(open) => {
+            if (!open) setReportTarget(null);
+          }}
+          giftcardId={reportTarget.id}
+          orderId={orderId}
+          issueType={reportTarget.type}
+          onSuccess={handleReportSuccess}
+          onActionError={handleReportActionError}
+        />
+      )}
 
       <StepFooter ctaLabel="Confirmar uso/reportes" ctaDisabled={!codesChecked || codesLocked} onContinue={handleAdvanceToConfirm} />
     </div>

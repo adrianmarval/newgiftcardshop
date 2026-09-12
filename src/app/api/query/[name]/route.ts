@@ -33,6 +33,7 @@ import { getWallet } from '@/lib/services/payment/wallet';
 import { getCoinCatalog } from '@/lib/services/coin';
 import { getPlatformBalance, getBinancePayId } from '@/lib/settings/settings.service';
 import { getDecryptedTelegramPhotoUrl } from '@/lib/telegram';
+import { getActiveProvider } from '@/lib/ai-provider-config';
 
 // Schemas zod compartidos con las actions (misma validación de input)
 import { listOrdersInputSchema as adminOrdersSchema } from '@/actions/admin/orders/schemas';
@@ -273,6 +274,12 @@ const QUERY_REGISTRY: Record<string, QueryDef> = {
   'binance-pay-id': {
     roles: null,
     run: async () => ({ success: true as const, binancePayId: await getBinancePayId() }),
+  },
+  // Sell wizard: si no hay provider de visión configurado, el pipeline saltea el
+  // OCR y las capturas se adjuntan al batch sin vincular (el admin las ve en el lote).
+  'ocr-availability': {
+    roles: SELLER,
+    run: async () => ({ success: true as const, ocrEnabled: (await getActiveProvider()) !== null }),
   },
 };
 

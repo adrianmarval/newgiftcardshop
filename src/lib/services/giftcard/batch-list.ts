@@ -160,6 +160,7 @@ function serializeBatchGiftcard(
   >,
   includeAdminFields: boolean,
   buyerOrderCounts?: Map<string, number>,
+  provenanceCardIds?: ReadonlySet<string>,
 ) {
   const { claimCode, pinCode } = decryptGiftcardCodes(card);
 
@@ -180,6 +181,9 @@ function serializeBatchGiftcard(
     isConfirmed: card.isConfirmed,
     reportedAmount: card.reportedAmount !== null ? Number(card.reportedAmount) : null,
     orderId: card.orderId,
+    // Dos links coexisten: el FK (admin linkImageToCard) y el campo plano
+    // ProvenanceImage.giftcardId (publish web / attach tardío del seller).
+    hasProvenanceImage: card.provenanceImageId !== null || (provenanceCardIds?.has(card.id) ?? false),
     brand: {
       name: card.brandCountry.brand.name,
       icon: card.brandCountry.brand.icon,
@@ -334,6 +338,20 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
     }
   }
 
+  // Cards con imagen de procedencia vía el link plano ProvenanceImage.giftcardId
+  // (publish web no setea el FK giftcard.provenanceImageId — una query extra por
+  // página, sin tocar el include principal).
+  const provenanceCardIds = new Set<string>();
+  if (batches.length > 0) {
+    const linkedImages = await prisma.provenanceImage.findMany({
+      where: { batchId: { in: batches.map((b) => b.id.toString()) }, giftcardId: { not: null } },
+      select: { giftcardId: true },
+    });
+    for (const img of linkedImages) {
+      if (img.giftcardId) provenanceCardIds.add(img.giftcardId);
+    }
+  }
+
   const items = batches.map((batch) => {
     const confirmedCount = batch.giftcards.filter((g) => g.isConfirmed).length;
     const paidCount = batch.giftcards.filter((g) => g.status === 'USED').length;
@@ -344,7 +362,7 @@ export async function listBatchesService(input: ListBatchesServiceInput): Promis
     const cardsCount = batch.giftcards.length;
 
     const giftcards = batch.giftcards.map((card) =>
-      serializeBatchGiftcard(card, input.search, buyerUsersMap, input.scope === 'admin', buyerOrderCountMap),
+      serializeBatchGiftcard(card, input.search, buyerUsersMap, input.scope === 'admin', buyerOrderCountMap, provenanceCardIds),
     );
 
     const payments = batch.payments.map((p) => ({

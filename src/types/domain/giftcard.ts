@@ -24,6 +24,10 @@ export interface Giftcard {
   brand: { name: string; icon: string; image: string | null };
   country: { name: string; code: string; currency: string | null } | null;
   isSearchMatch?: boolean;
+  /** Issue activo de la card (si fue reportada) — alimenta el attach tardío de evidencia desde el historial. */
+  issue?: { id: string; hasProof: boolean } | null;
+  /** Tiene imagen de procedencia (FK o link plano ProvenanceImage.giftcardId) — alimenta el attach tardío del seller. */
+  hasProvenanceImage?: boolean;
 }
 
 // ── GiftcardIssue ─────────────────────────────────────────────────────────────
@@ -72,5 +76,7 @@ export interface GiftcardForList {
   brand: { name: string; icon: string; image: string | null };
   country: { name: string; code: string; currency: string | null } | null;
   isSearchMatch: boolean;
+  /** Issue activo de la card (si fue reportada) — alimenta el attach tardío de evidencia desde el historial. */
+  issue?: { id: string; hasProof: boolean } | null;
   seller: import('./user').AdminSellerSummary | null;
 }

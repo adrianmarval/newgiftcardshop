@@ -11,6 +11,8 @@ export const reportIssueInputSchema = z.object({
   issueType: z.enum(GiftcardIssueType),
   reportedAmount: z.number().positive().optional(),
   proofImageUrl: z.string().optional(),
+  /** Screenshot opcional de evidencia (recomendada — el proveedor suele pedirla). */
+  proofFile: z.instanceof(File).optional(),
 });
 
 export const reportIssueOutputSchema = z.object({
@@ -34,3 +36,17 @@ export const undoIssueInputSchema = z.object({
 });
 
 export const undoIssueOutputSchema = z.object({ success: z.literal(true) });
+
+export const attachIssueProofInputSchema = z.object({
+  issueId: z.string(),
+  file: z.instanceof(File),
+});
+
+export const attachIssueProofOutputSchema = z.object({ success: z.literal(true) });
+
+export const getIssueProofInputSchema = z.object({ issueId: z.string() });
+
+export const getIssueProofOutputSchema = z.object({
+  success: z.literal(true),
+  proof: z.object({ mimeType: z.string(), base64: z.string() }).nullable(),
+});

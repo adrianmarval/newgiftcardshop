@@ -20,6 +20,7 @@ export const sellerBatchGiftcardSchema = z.object({
   brand: brandSchema,
   country: countrySchema.nullable(),
   isSearchMatch: z.boolean().optional(),
+  hasProvenanceImage: z.boolean().optional(),
 });
 
 export const publishBatchInputSchema = z.object({
@@ -99,4 +100,27 @@ export const checkCodesInputSchema = z.object({
 export const checkCodesOutputSchema = z.object({
   success: z.literal(true),
   existingCodes: z.array(z.string()),
+});
+
+// Attach tardío de imagen de procedencia desde el historial de lotes.
+// El File viaja via FormData (patrón uploadImage); bodySizeLimit 4mb → la UI
+// valida ≤3.5MB antes de enviar.
+export const attachProvenanceImageInputSchema = z.object({
+  giftcardId: z.string().min(1),
+  file: z.instanceof(File),
+});
+
+export const attachProvenanceImageOutputSchema = z.object({
+  success: z.literal(true),
+});
+
+// Lectura de la imagen de procedencia actual de una card (para mostrarla en
+// el dialog antes de reemplazarla).
+export const getProvenanceImageInputSchema = z.object({
+  giftcardId: z.string().min(1),
+});
+
+export const getProvenanceImageOutputSchema = z.object({
+  success: z.literal(true),
+  image: z.object({ mimeType: z.string(), base64: z.string() }).nullable(),
 });

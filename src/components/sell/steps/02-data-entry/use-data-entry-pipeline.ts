@@ -17,9 +17,13 @@ interface UseDataEntryPipelineProps {
   localImages: LocalImage[];
   setLocalImages: React.Dispatch<React.SetStateAction<LocalImage[]>>;
   setStep: (step: number) => void;
+  /** false = no hay provider de visión configurado: las capturas se suben SIN OCR
+   * y quedan como provenance del lote (unlinked) para review del admin.
+   * undefined (query aún cargando) se trata como true — comportamiento histórico. */
+  ocrEnabled?: boolean;
 }
 
-export function useDataEntryPipeline({ pasteContent, localImages, setLocalImages, setStep }: UseDataEntryPipelineProps) {
+export function useDataEntryPipeline({ pasteContent, localImages, setLocalImages, setStep, ocrEnabled = true }: UseDataEntryPipelineProps) {
   const { addImage, clearImages, setGiftcards, handleBulkImport, ingestOCRDraft, selectedBrandCountry, brandCountryLimits } = useSellFlow();
 
   const brandId = selectedBrandCountry?.split('|')[0] ?? '';
@@ -172,6 +176,31 @@ export function useDataEntryPipeline({ pasteContent, localImages, setLocalImages
           }
 
           const storeImages = useSellFlow.getState().images;
+          if (storeImages.length > 0 && !ocrEnabled) {
+            // Sin IA configurada NO se corre OCR (ni se intenta): las capturas
+            // quedan como imágenes del lote sin vincular — el admin las ve en
+            // la galería del batch y las vincula manualmente si hace falta.
+            useSellFlow.getState().setUnmatchedImages(storeImages.map((img) => ({ imageId: img.id })));
+
+            const textCodes = useSellFlow.getState().giftcards.map((g) => g.claimCode);
+            if (textCodes.length === 0) {
+              // Sin OCR las capturas no pueden convertirse en cards — un batch
+              // vacío con solo imágenes no sirve. El seller pega los códigos.
+              showAlert.toast.info('AI extraction is off — paste the codes manually and the screenshots will be attached to the batch');
+              setStage('idle');
+              return;
+            }
+
+            // showAlert.toast.info('AI extraction is off — screenshots will be attached to the batch for admin review');
+            pendingDbCheckRef.current = () => {
+              setStage('done');
+              setTimeout(() => setStep(3), 600);
+            };
+            pendingCodeToLineMapRef.current = new Map();
+            runCheckExistingCodes({ codes: textCodes, brandId, countryId });
+            return;
+          }
+
           if (storeImages.length > 0) {
             setStage('extracting');
             runExtraction({
@@ -202,7 +231,7 @@ export function useDataEntryPipeline({ pasteContent, localImages, setLocalImages
         }
       }
     },
-    [addImage, setStep, setLocalImages, setStage, runExtraction],
+    [addImage, setStep, setLocalImages, setStage, runExtraction, runCheckExistingCodes, ocrEnabled, brandId, countryId],
   );
 
   const handleProcessCards = useCallback(async () => {

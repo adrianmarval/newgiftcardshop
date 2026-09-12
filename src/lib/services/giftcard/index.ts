@@ -5,3 +5,4 @@ export { extractGiftCardData } from './vision';
 export { listBatchesService, listSellerBatchesPage, getBatchTabCounts } from './batch-list';
 export { canCancelBatch, cancelBatch, autoCancelEligibleBatchesForOrder, sweepCancellableBatches } from './batch-cancel';
 export { listAdminIssues, type ListAdminIssuesInput } from './issue-list';
+export { attachProvenanceImage, getProvenanceImageData } from './provenance';

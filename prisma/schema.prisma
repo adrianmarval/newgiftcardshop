@@ -383,7 +383,10 @@ model GiftcardIssue {
   reportedAmount Decimal? @db.Decimal(10, 2)
 
   // Prueba opcional (screenshot del balance/error)
+  // Bot: Telegram file_id. Web: proofData cifrado AES-256-GCM (mismo patrón que ProvenanceImage)
   proofImageUrl String?
+  proofData     Bytes?
+  proofMimeType String? // también sirve de flag barato de "tiene prueba web" en listas
 
   // Relaciones
   giftcardId String

@@ -135,7 +135,7 @@ export async function listAdminIssues(input: ListAdminIssuesInput) {
       id: issue.id,
       issueType: issue.issueType,
       reportedAmount: issue.reportedAmount !== null ? Number(issue.reportedAmount) : null,
-      hasProof: !!issue.proofImageUrl,
+      hasProof: !!(issue.proofImageUrl || issue.proofMimeType),
       createdAt: issue.createdAt.toISOString(),
       giftcard: {
         id: card.id,

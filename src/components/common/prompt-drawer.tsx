@@ -11,6 +11,7 @@ export interface PromptDrawerAction {
   label: string;
   onClick: () => void;
   loading?: boolean;
+  disabled?: boolean;
   /** Estilo destructivo para acciones irreversibles */
   danger?: boolean;
 }
@@ -22,6 +23,8 @@ export interface PromptDrawerProps {
   iconClassName?: string;
   title: string;
   description?: ReactNode;
+  /** Contenido arbitrario entre la descripción y las acciones (forms, inputs, previews). */
+  children?: ReactNode;
   primaryAction: PromptDrawerAction;
   secondaryAction?: PromptDrawerAction;
   tertiaryAction?: PromptDrawerAction;
@@ -39,6 +42,7 @@ export function PromptDrawer({
   iconClassName,
   title,
   description,
+  children,
   primaryAction,
   secondaryAction,
   tertiaryAction,
@@ -55,7 +59,7 @@ export function PromptDrawer({
     <>
       <Button
         onClick={primaryAction.onClick}
-        disabled={primaryAction.loading}
+        disabled={primaryAction.loading || primaryAction.disabled}
         variant={primaryAction.danger ? 'destructive' : 'default'}
         className="w-full"
       >
@@ -86,6 +90,7 @@ export function PromptDrawer({
             <DrawerTitle>{title}</DrawerTitle>
             {description && <DrawerDescription className="max-w-sm">{description}</DrawerDescription>}
           </DrawerHeader>
+          {children && <div className="px-4 pb-2 text-left">{children}</div>}
           <DrawerFooter>{actions}</DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -100,6 +105,7 @@ export function PromptDrawer({
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
+        {children && <div className="text-left">{children}</div>}
         <div className="flex flex-col gap-2">{actions}</div>
       </DialogContent>
     </Dialog>

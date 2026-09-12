@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, Sparkles, Loader2, Code, ChevronDown, ChevronUp } from 'lucide-react';
+import { Paperclip, Sparkles, Loader2, Code, ChevronDown, ChevronUp, ImageOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +15,7 @@ import { useDataEntryPipeline } from '@/components/sell/steps/02-data-entry/use-
 import { FileDropZone } from './file-drop-zone';
 import { ProcessingProgress } from './processing-progress';
 import { cn } from '@/lib/ui';
+import { apiQuery } from '@/lib/utils';
 import type { LocalImage } from '@/types';
 import { SellStepsProgress } from '../shared/sell-steps-progress';
 
@@ -27,6 +29,14 @@ export function DataEntryStep() {
   const [showFormatHelp, setShowFormatHelp] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
   const [attempted, setAttempted] = useState(false);
+
+  // Si no hay provider de visión configurado, las capturas se suben SIN OCR —
+  // quedan como provenance del lote (unlinked) para review del admin.
+  const { data: ocrAvailability } = useQuery({
+    queryKey: ['ocr-availability'],
+    queryFn: () => apiQuery<{ success: true; ocrEnabled: boolean }>('ocr-availability'),
+  });
+  const ocrEnabled = ocrAvailability?.ocrEnabled ?? true;
 
   const {
     stage,
@@ -46,6 +56,7 @@ export function DataEntryStep() {
     localImages,
     setLocalImages,
     setStep,
+    ocrEnabled,
   });
 
   const hasExistingCards = giftcards.length > 0;
@@ -122,6 +133,12 @@ export function DataEntryStep() {
           </div>
           <CardDescription className="text-muted-foreground mt-1 flex flex-col gap-1 text-xs md:text-sm">
             Paste codes and attach screenshots (optional)
+            {!ocrEnabled && (
+              <span className="flex items-center gap-1 text-[11px] text-amber-500 md:text-xs">
+                <ImageOff className="h-3 w-3" />
+                AI extraction is off — screenshots are attached to the batch without OCR
+              </span>
+            )}
             <Button
               type="button"
               variant="link"

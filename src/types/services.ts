@@ -39,6 +39,9 @@ export interface ReportIssueParams {
   issueType: string;
   reportedAmount?: number;
   proofImageUrl?: string;
+  /** Web upload: screenshot comprimido y cifrado AES-256-GCM (el bot usa proofImageUrl con file_id). */
+  proofData?: Uint8Array<ArrayBuffer>;
+  proofMimeType?: string;
 }
 
 // ── Order List Service ──────────────────────────────────────────────────────

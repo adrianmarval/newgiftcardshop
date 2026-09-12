@@ -2,6 +2,8 @@ import { Prisma } from '@/generated/prisma/client';
 import { GiftcardIssueType, GiftcardStatus } from '@/generated/prisma/enums';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { decryptBuffer } from '@/lib/encryption';
+import { downloadTelegramFileAsBase64 } from '@/lib/services/telegram/telegram-file';
 import type { ReportIssueParams } from '@/types';
 
 /**
@@ -10,7 +12,7 @@ import type { ReportIssueParams } from '@/types';
  * Only allowed on PENDING orders — confirmed/completed orders cannot be modified.
  */
 export async function reportGiftcardIssue(params: ReportIssueParams) {
-  const { giftcardId, orderId, userId, issueType, reportedAmount, proofImageUrl } = params;
+  const { giftcardId, orderId, userId, issueType, reportedAmount, proofImageUrl, proofData, proofMimeType } = params;
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -114,6 +116,8 @@ export async function reportGiftcardIssue(params: ReportIssueParams) {
         issueType: issueType as GiftcardIssueType,
         reportedAmount: reportedAmount != null ? new Prisma.Decimal(reportedAmount) : undefined,
         proofImageUrl,
+        proofData,
+        proofMimeType,
         giftcardId,
         orderId,
         reportedById: userId,
@@ -131,6 +135,81 @@ export async function reportGiftcardIssue(params: ReportIssueParams) {
 
     return issue;
   });
+}
+
+/**
+ * Attaches (or replaces) the proof screenshot of an EXISTING issue.
+ * Intentionally NOT restricted to PENDING orders: the provider usually asks
+ * for evidence AFTER the order was confirmed/paid, so late attach from the
+ * buyer's order history must work in any order status.
+ */
+export async function attachIssueProof(params: { issueId: string; userId: string; proofData: Uint8Array<ArrayBuffer>; proofMimeType: string }) {
+  const { issueId, userId, proofData, proofMimeType } = params;
+
+  const issue = await prisma.giftcardIssue.findUnique({
+    where: { id: issueId },
+    select: { id: true, reportedById: true },
+  });
+
+  if (!issue) {
+    logger.warn('attachIssueProof: issue no encontrado', {
+      flow: 'order',
+      action: 'attach-issue-proof',
+      userId,
+      metadata: { issueId },
+    });
+    throw new Error('Reporte no encontrado');
+  }
+  if (issue.reportedById !== userId) {
+    logger.warn('attachIssueProof: el reporte no pertenece al usuario', {
+      flow: 'order',
+      action: 'attach-issue-proof',
+      userId,
+      metadata: { issueId },
+    });
+    throw new Error('No autorizado');
+  }
+
+  await prisma.giftcardIssue.update({
+    where: { id: issueId },
+    data: { proofData, proofMimeType },
+  });
+}
+
+/**
+ * Resolves an issue's proof screenshot. Dual source:
+ * - Web uploads: `proofData` (AES-256-GCM encrypted bytes) → decryptBuffer.
+ * - Bot uploads: `proofImageUrl` is a Telegram file_id, resolved through the
+ *   Bot API with BUYER_BOT_TOKEN.
+ * Returns null when there is no proof or it cannot be resolved. NO ownership
+ * check here — the caller (admin/buyer action) enforces authorization.
+ */
+export async function getIssueProofData(issueId: string): Promise<{ mimeType: string; base64: string } | null> {
+  const issue = await prisma.giftcardIssue.findUnique({
+    where: { id: issueId },
+    select: { proofImageUrl: true, proofData: true, proofMimeType: true },
+  });
+
+  if (!issue?.proofData && !issue?.proofImageUrl) return null;
+
+  // Web proof wins when both exist (a late web attach replaces a bot proof)
+  if (issue.proofData) {
+    try {
+      const decrypted = decryptBuffer(Buffer.from(issue.proofData));
+      return { mimeType: issue.proofMimeType || 'image/jpeg', base64: decrypted.toString('base64') };
+    } catch {
+      return null;
+    }
+  }
+
+  const botToken = process.env.BUYER_BOT_TOKEN;
+  if (!botToken) return null;
+
+  const downloaded = await downloadTelegramFileAsBase64(botToken, issue.proofImageUrl!);
+  if (!downloaded) return null;
+
+  const mimeType = downloaded.filePath.endsWith('.png') ? 'image/png' : 'image/jpeg';
+  return { mimeType, base64: downloaded.base64 };
 }
 
 /**

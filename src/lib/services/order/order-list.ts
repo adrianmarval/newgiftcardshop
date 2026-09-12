@@ -89,6 +89,7 @@ function serializeGiftcard(
   card: Prisma.GiftcardGetPayload<{
     include: {
       brandCountry: { include: { brand: true; country: true } };
+      issues: { select: { id: true; proofImageUrl: true; proofMimeType: true } };
       batch: {
         include: {
           user: {
@@ -144,6 +145,9 @@ function serializeGiftcard(
         }
       : null,
     isSearchMatch,
+    issue: card.issues[0]
+      ? { id: card.issues[0].id, hasProof: !!(card.issues[0].proofImageUrl || card.issues[0].proofMimeType) }
+      : null,
     seller: card.batch?.user
       ? {
           id: card.batch.user.id,
@@ -197,6 +201,7 @@ export async function listOrdersService(input: ListOrdersServiceInput): Promise<
       giftcards: {
         include: {
           brandCountry: { include: { brand: true, country: true } },
+          issues: { select: { id: true, proofImageUrl: true, proofMimeType: true } },
           batch: {
             include: {
               user: {

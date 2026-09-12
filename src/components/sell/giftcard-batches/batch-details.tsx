@@ -1,7 +1,13 @@
+'use client';
+
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { formatCurrency } from '@/lib/utils';
 import { GiftcardItem } from '@/components/common';
-import { CheckCircle2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, ExternalLink, ImagePlus, Images } from 'lucide-react';
+import { ProvenanceImageDialog } from './provenance-image-dialog';
 import type { SellerBatch } from '@/types';
+import { Button } from '@/components/ui/button';
 
 /**
  * Props for the BatchDetails component.
@@ -12,6 +18,9 @@ export interface BatchDetailsProps {
 }
 
 export function BatchDetails({ batch }: BatchDetailsProps) {
+  const queryClient = useQueryClient();
+  const [proofTarget, setProofTarget] = useState<{ id: string; hasImage: boolean } | null>(null);
+
   const completedPayments = batch.payments.filter((p) => p.status === 'COMPLETED');
   const successfulPayment = completedPayments.length > 0 ? completedPayments[completedPayments.length - 1] : null;
 
@@ -28,7 +37,31 @@ export function BatchDetails({ batch }: BatchDetailsProps) {
 
       <div className="grid grid-cols-2 gap-1 sm:grid-cols-2 md:gap-1 xl:grid-cols-3">
         {batch.giftcards.map((card) => (
-          <GiftcardItem key={card.id} card={card} showCopyButton={false} />
+          <GiftcardItem
+            key={card.id}
+            card={card}
+            showCopyButton={false}
+            contextualInfo={
+              <Button
+                variant={"secondary"}
+                size={"sm"}
+                onClick={() => setProofTarget({ id: card.id, hasImage: card.hasProvenanceImage ?? false })}
+                className="text-muted-foreground hover:text-foreground border-border/60 flex w-full items-center justify-center gap-1 border-t py-1.5 text-[10px] font-medium transition-colors"
+              >
+                {card.hasProvenanceImage ? (
+                  <>
+                    <Images className="h-3 w-3 text-emerald-500" />
+                    Open Image
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="h-3 w-3" />
+                    Add image
+                  </>
+                )}
+              </Button>
+            }
+          />
         ))}
       </div>
 
@@ -63,6 +96,16 @@ export function BatchDetails({ batch }: BatchDetailsProps) {
           )}
         </div>
       )}
+
+      <ProvenanceImageDialog
+        open={proofTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setProofTarget(null);
+        }}
+        giftcardId={proofTarget?.id ?? null}
+        hasExistingImage={proofTarget?.hasImage ?? false}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['seller-batches'] })}
+      />
     </div>
   );
 }
