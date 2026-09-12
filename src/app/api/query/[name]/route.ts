@@ -6,8 +6,8 @@ import type { Role } from '@/generated/prisma/enums';
 import { serializeDates } from '@/lib/utils';
 
 // Services (lógica compartida con las server actions — misma fuente de verdad)
-import { listOrdersService } from '@/lib/services/order/order-list';
-import { listBatchesService, listAdminIssues } from '@/lib/services/giftcard';
+import { listOrdersService, getOrderTabCounts } from '@/lib/services/order/order-list';
+import { listBatchesService, listAdminIssues, getBatchTabCounts } from '@/lib/services/giftcard';
 import { listAdminPayments, getCachedUsdtBalances } from '@/lib/services/payment';
 import { listAppLogs } from '@/lib/services/logs';
 import { listAdminUsers, searchAdminUsers } from '@/lib/services/user';
@@ -133,6 +133,14 @@ const QUERY_REGISTRY: Record<string, QueryDef> = {
       return listResult(listOrdersService({ scope: 'buyer', userId, codesUnlocked, ...i }));
     },
   },
+
+  // ── Tab counts (badges numéricos de los quick-tabs de las listas) ───────
+  // Sin input: cuentan la carga accionable total del scope, no los resultados
+  // del filtro actual. Se invalidan via SSE junto a su lista (query-keys.ts).
+  'admin-order-tab-counts': { roles: ADMIN, run: () => getOrderTabCounts('admin') },
+  'admin-batch-tab-counts': { roles: ADMIN, run: () => getBatchTabCounts('admin') },
+  'buyer-order-tab-counts': { roles: BUYER, run: (_i, userId) => getOrderTabCounts('buyer', userId) },
+  'seller-batch-tab-counts': { roles: SELLER, run: (_i, userId) => getBatchTabCounts('seller', userId) },
 
   // ── Notificaciones ───────────────────────────────────────────────────────
   'unread-counts': {

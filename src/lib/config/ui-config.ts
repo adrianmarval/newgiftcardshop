@@ -11,12 +11,12 @@ import { ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle2, HelpCircle, Im
 
 export const orderStatusConfig: Record<OrderStatus, { label: string; color: string; activeBg: string }> = {
   PENDING: {
-    label: 'PENDIENTE',
+    label: 'POR CONFIRMAR',
     color: 'bg-amber-500/20 text-amber-500 border-amber-500/30',
     activeBg: 'bg-amber-500/10 dark:bg-amber-500/15',
   },
   AWAITING_PAYMENT: {
-    label: 'ESPERANDO',
+    label: 'ESPERANDO PAGO',
     color: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
     activeBg: 'bg-blue-500/10 dark:bg-blue-500/15',
   },

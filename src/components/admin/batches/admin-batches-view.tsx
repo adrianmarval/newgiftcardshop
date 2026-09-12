@@ -2,14 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import { useQueryStates } from 'nuqs';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { AdminBatchesList } from './admin-batches-list';
 import { AdminPayDialog } from './admin-pay-dialog';
 import { AdminSellerDialog } from './admin-seller-dialog';
 import { AdminBuyerDialog } from '@/components/admin/orders/admin-buyer-dialog';
-import type { AdminBatch, AdminBuyerSummary, AdminSellerSummary, PaginationMeta } from '@/types';
+import type { AdminBatch, AdminBuyerSummary, AdminSellerSummary, BatchTabCounts, PaginationMeta } from '@/types';
 import { IconCurrencyDollar } from '@tabler/icons-react';
 import { formatCurrency } from '@/lib/utils';
 import { FiltersBar } from '@/components/common';
@@ -54,12 +54,20 @@ export function AdminBatchesView({ batches, pagination, initialInput }: AdminBat
   const items = data.items;
   const paginationMeta = data.pagination;
 
+  // Badges de los tabs (carga accionable global; se invalida via SSE con 'batches')
+  const { data: tabCounts } = useQuery({
+    queryKey: ['admin-batch-tab-counts'],
+    queryFn: () => apiQuery<BatchTabCounts>('admin-batch-tab-counts'),
+  });
+
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [sellerDialog, setSellerDialog] = useState<{ seller: AdminSellerSummary | null }>({ seller: null });
   const [buyerDialog, setBuyerDialog] = useState<{ buyer: AdminBuyerSummary | null }>({ buyer: null });
 
-  const selectedBatches = items.filter((b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount && b.estimatedPayout > 0);
+  const selectedBatches = items.filter(
+    (b) => selectedIds.has(b.id) && !b.isPaid && b.confirmedCount === b.cardsCount && b.estimatedPayout > 0,
+  );
   const showFloatingBar = useMemo(() => selectedBatches.length > 0, [selectedBatches.length]);
 
   const handleSelect = (id: number, selected: boolean) => {
@@ -104,16 +112,27 @@ export function AdminBatchesView({ batches, pagination, initialInput }: AdminBat
               emptyLabel: 'No se encontraron vendedores.',
             },
           ],
+          tabs: {
+            paramKey: 'status',
+            options: [
+              { value: 'ALL', label: 'Todos' },
+              { value: 'CONFIRMED', label: 'Por pagar' },
+              { value: 'PROCESSING', label: 'En proceso' },
+            ],
+            counts: tabCounts
+              ? { CONFIRMED: tabCounts.confirmed, PROCESSING: tabCounts.processing }
+              : undefined,
+          },
           status: {
             label: 'Estado',
             paramKey: 'status',
             options: [
               { value: 'ALL', label: 'Todos' },
+              { value: 'CONFIRMED', label: 'Por pagar' },
               { value: 'PROCESSING', label: 'En proceso' },
-              { value: 'CONFIRMED', label: 'Confirmado' },
-              { value: 'PAID', label: 'Pagado' },
-              { value: 'CANCELLED', label: 'Cancelado' },
               { value: 'WITH_ISSUES', label: 'Con problemas' },
+              { value: 'PAID', label: 'Pagados' },
+              { value: 'CANCELLED', label: 'Cancelados' },
             ],
           },
           sort: {
@@ -122,8 +141,6 @@ export function AdminBatchesView({ batches, pagination, initialInput }: AdminBat
             options: [
               { value: 'newest', label: 'Más recientes' },
               { value: 'oldest', label: 'Más antiguos' },
-              { value: 'amount_high', label: 'Monto: Mayor a menor' },
-              { value: 'amount_low', label: 'Monto: Menor a mayor' },
             ],
           },
         }}

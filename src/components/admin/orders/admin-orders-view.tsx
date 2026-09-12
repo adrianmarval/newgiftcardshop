@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQueryStates } from 'nuqs';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { AdminOrdersList } from './admin-orders-list';
 import { AdminReportDialog } from './admin-report-dialog';
 import { AdminBuyerDialog } from './admin-buyer-dialog';
@@ -12,7 +12,7 @@ import { FiltersBar } from '@/components/common';
 import { adminOrdersSearchParamsParsers, buildAdminOrdersInput } from '@/lib/search-params';
 import { apiQuery } from '@/lib/utils';
 import { useListQuery } from '@/hooks/use-list-query';
-import type { Giftcard, AdminOrder, PaginationMeta, AdminBuyerSummary, AdminSellerSummary } from '@/types';
+import type { Giftcard, AdminOrder, OrderTabCounts, PaginationMeta, AdminBuyerSummary, AdminSellerSummary } from '@/types';
 
 type AdminOrdersInput = ReturnType<typeof buildAdminOrdersInput>;
 type AdminOrdersData = { success: true; items: AdminOrder[]; pagination: PaginationMeta };
@@ -51,6 +51,12 @@ export const AdminOrdersView = ({ orders, pagination, initialInput }: AdminOrder
 
   const items = data.items;
   const paginationMeta = data.pagination;
+
+  // Badges de los tabs (carga accionable global; se invalida via SSE con 'orders')
+  const { data: tabCounts } = useQuery({
+    queryKey: ['admin-order-tab-counts'],
+    queryFn: () => apiQuery<OrderTabCounts>('admin-order-tab-counts'),
+  });
 
   const [reportDialog, setReportDialog] = useState<{
     card: Giftcard | null;
@@ -106,15 +112,26 @@ export const AdminOrdersView = ({ orders, pagination, initialInput }: AdminOrder
               emptyLabel: 'No se encontraron compradores.',
             },
           ],
+          tabs: {
+            paramKey: 'status',
+            options: [
+              { value: 'ALL', label: 'Todas' },
+              { value: 'PENDING', label: 'Sin Confirmar' },
+              { value: 'AWAITING_PAYMENT', label: 'Esperando Pago' },
+            ],
+            counts: tabCounts
+              ? { PENDING: tabCounts.pending, AWAITING_PAYMENT: tabCounts.awaitingPayment }
+              : undefined,
+          },
           status: {
             label: 'Estado',
             paramKey: 'status',
             options: [
-              { value: 'ALL', label: 'Todos' },
-              { value: 'PENDING', label: 'Pendiente' },
-              { value: 'AWAITING_PAYMENT', label: 'Esperando' },
-              { value: 'COMPLETED', label: 'Completada' },
-              { value: 'CANCELLED', label: 'Cancelada' },
+              { value: 'ALL', label: 'Todas' },
+              { value: 'PENDING', label: 'Sin Confirmar' },
+              { value: 'AWAITING_PAYMENT', label: 'Esperando Pago' },
+              { value: 'COMPLETED', label: 'Completadas' },
+              { value: 'CANCELLED', label: 'Canceladas' },
             ],
           },
           dateRange: { fromParamKey: 'dateFrom', toParamKey: 'dateTo' },

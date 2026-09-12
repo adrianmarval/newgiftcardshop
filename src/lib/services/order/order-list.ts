@@ -9,7 +9,7 @@ import { hashCode } from '@/lib/encryption';
 import { computeOrderGiftcardTotals } from '@/lib/services/pricing';
 import { decryptGiftcardCodes } from '@/lib/encryption';
 import { orderNeedsSecurityGate } from '@/lib/services/security';
-import type { AdminOrder, BuyerOrder, GiftcardForList, ListOrdersServiceInput } from '@/types';
+import type { AdminOrder, BuyerOrder, GiftcardForList, ListOrdersServiceInput, OrderTabCounts } from '@/types';
 import { logger } from '@/lib/logger';
 
 /** Sentinel shown in place of a claim code when the security gate masks it. Never decryptable. */
@@ -63,6 +63,24 @@ function buildOrderWhere(input: ListOrdersServiceInput): Prisma.OrderWhereInput 
   }
 
   return where;
+}
+
+// ── Tab counts (badges de los quick-tabs) ────────────────────────────────────
+
+/**
+ * Conteos de los tabs accionables (Sin confirmar / Esperando pago) para los
+ * badges del segmented control. Reusa buildOrderWhere → el número del badge
+ * SIEMPRE matchea lo que el tab filtra (misma fuente de verdad que la lista).
+ * Sin search/fechas: el badge es "cuánto trabajo hay pendiente", no "cuántos
+ * resultados tiene el filtro actual".
+ */
+export async function getOrderTabCounts(scope: 'admin' | 'buyer', userId?: string): Promise<OrderTabCounts> {
+  const base: ListOrdersServiceInput = { scope, userId };
+  const [pending, awaitingPayment] = await Promise.all([
+    prisma.order.count({ where: buildOrderWhere({ ...base, status: 'PENDING' }) }),
+    prisma.order.count({ where: buildOrderWhere({ ...base, status: 'AWAITING_PAYMENT' }) }),
+  ]);
+  return { pending, awaitingPayment };
 }
 
 // ── Giftcard serializer (shared) ─────────────────────────────────────────────

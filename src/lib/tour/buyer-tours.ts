@@ -53,7 +53,7 @@ export const BUY_ORDERS_STEPS: DriveStep[] = [
     element: '[data-tour="orders-filters"]',
     popover: {
       title: 'Encuentra cualquier orden',
-      description: 'Busca por número de orden o código, filtra por estado o cambia el orden por fecha.',
+      description: 'Busca por número de orden o código, cambia de estado con un toque en las pestañas de abajo o cambia el orden por fecha.',
       side: 'bottom',
     },
   },

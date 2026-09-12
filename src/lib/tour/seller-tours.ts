@@ -50,7 +50,7 @@ export const SELL_BATCHES_STEPS: DriveStep[] = [
     element: '[data-tour="batches-filters"]',
     popover: {
       title: 'Find any batch fast',
-      description: 'Search by claim code or batch number, filter by status, or sort by date.',
+      description: 'Search by claim code or batch number, switch status with one tap on the tabs below, or sort by date.',
       side: 'bottom',
     },
   },

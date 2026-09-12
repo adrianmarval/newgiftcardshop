@@ -9,7 +9,7 @@ import prisma from '@/lib/prisma';
 import { hashCode } from '@/lib/encryption';
 import { computeFaceValueTotal } from '@/lib/services/pricing';
 import { decryptGiftcardCodes } from '@/lib/encryption';
-import type { ListBatchesServiceInput } from '@/types';
+import type { BatchTabCounts, ListBatchesServiceInput } from '@/types';
 import { logger } from '@/lib/logger';
 
 // ── Where builder (shared) ───────────────────────────────────────────────────
@@ -66,6 +66,10 @@ function buildBatchWhere(input: ListBatchesServiceInput): Prisma.GiftcardBatchWh
         break;
       case 'REPORTED':
       case 'WITH_ISSUES':
+        // Accionable: solo lotes VIVOS con issues (un lote pagado/cancelado con
+        // un issue viejo ya se resolvió contablemente y solo ensucia la vista).
+        where.isPaid = false;
+        where.cancelledAt = null;
         where.giftcards = { some: { issues: { some: {} } } };
         break;
     }
@@ -111,6 +115,25 @@ function buildBatchWhere(input: ListBatchesServiceInput): Prisma.GiftcardBatchWh
   }
 
   return where;
+}
+
+// ── Tab counts (badges de los quick-tabs) ────────────────────────────────────
+
+/**
+ * Conteos de los tabs accionables (En proceso / Por pagar) para los badges del
+ * segmented control. Reusa buildBatchWhere → el número del badge SIEMPRE
+ * matchea lo que el tab filtra, incluida la asimetría de scopes (seller
+ * excluye lotes con issues de CONFIRMED, admin no). Sin search/fechas: el
+ * badge es "cuánto trabajo hay pendiente", no "cuántos resultados tiene el
+ * filtro actual".
+ */
+export async function getBatchTabCounts(scope: 'admin' | 'seller', userId?: string): Promise<BatchTabCounts> {
+  const base: ListBatchesServiceInput = { scope, userId };
+  const [processing, confirmed] = await Promise.all([
+    prisma.giftcardBatch.count({ where: buildBatchWhere({ ...base, status: 'PROCESSING' }) }),
+    prisma.giftcardBatch.count({ where: buildBatchWhere({ ...base, status: 'CONFIRMED' }) }),
+  ]);
+  return { processing, confirmed };
 }
 
 // ── Helper: build serialized giftcard with admin or seller shape ─────────────

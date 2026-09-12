@@ -197,13 +197,13 @@ export function getBatchStatusLabel(batch: AdminBatch | SellerBatch, lang: 'en' 
 
   if (isCancelled) return { text: lang === 'en' ? 'Cancelled' : 'Cancelado', colorClass: 'text-destructive' };
   if (isPaid) return { text: lang === 'en' ? 'Paid' : 'Pagado', colorClass: 'text-emerald-500' };
-  if (allConfirmed) return { text: lang === 'en' ? 'Confirmed' : 'Confirmado', colorClass: 'text-blue-500' };
+  if (allConfirmed) return { text: lang === 'en' ? 'Awaiting payout' : 'Por pagar', colorClass: 'text-blue-500' };
   return { text: lang === 'en' ? 'Processing' : 'En proceso', colorClass: 'text-amber-500' };
 }
 
 export function getOrderStatusLabel(status: OrderStatus, lang: 'en' | 'es' = 'es'): { text: string; colorClass: string } {
   const labels: Record<OrderStatus, string> = {
-    PENDING: lang === 'en' ? 'Pending' : 'Pendiente',
+    PENDING: lang === 'en' ? 'Pending' : 'Por confirmar',
     AWAITING_PAYMENT: lang === 'en' ? 'Awaiting Payment' : 'Esperando pago',
     COMPLETED: lang === 'en' ? 'Completed' : 'Completada',
     CANCELLED: lang === 'en' ? 'Cancelled' : 'Cancelada',

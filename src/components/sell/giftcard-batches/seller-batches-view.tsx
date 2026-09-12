@@ -1,7 +1,8 @@
 'use client';
 
 import { useQueryStates } from 'nuqs';
-import type { PaginationMeta, SellerBatch } from '@/types';
+import { useQuery } from '@tanstack/react-query';
+import type { BatchTabCounts, PaginationMeta, SellerBatch } from '@/types';
 import { BatchesList } from './batches-list';
 import { UrlPagination } from '@/components/ui/url-pagination';
 import { FiltersBar } from '@/components/common';
@@ -41,6 +42,12 @@ export function SellerBatchesView({ batches, pagination, initialInput }: SellerB
     initialInput,
     initialData: { success: true as const, items: batches, pagination: pagination ?? { currentPage: 1, totalPages: 1, totalCount: batches.length } },
   });
+
+  // Tab badges (total actionable load; invalidated via SSE with 'batches')
+  const { data: tabCounts } = useQuery({
+    queryKey: ['seller-batch-tab-counts'],
+    queryFn: () => apiQuery<BatchTabCounts>('seller-batch-tab-counts'),
+  });
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <div data-tour="batches-filters">
@@ -50,16 +57,28 @@ export function SellerBatchesView({ batches, pagination, initialInput }: SellerB
           labels={{ filters: 'Filters', clear: 'Clear' }}
           config={{
           search: { placeholder: 'Search by claim code or batch id...', paramKey: 'search' },
+          tabs: {
+            paramKey: 'status',
+            options: [
+              { value: 'ALL', label: 'All' },
+              { value: 'PROCESSING', label: 'Processing' },
+              { value: 'CONFIRMED', label: 'Awaiting payout' },
+              { value: 'REPORTED', label: 'Reported' },
+            ],
+            counts: tabCounts
+              ? { PROCESSING: tabCounts.processing, CONFIRMED: tabCounts.confirmed }
+              : undefined,
+          },
           status: {
             label: 'Status',
             paramKey: 'status',
             options: [
               { value: 'ALL', label: 'All' },
               { value: 'PROCESSING', label: 'Processing' },
-              { value: 'CONFIRMED', label: 'Confirmed' },
+              { value: 'CONFIRMED', label: 'Awaiting payout' },
               { value: 'PAID', label: 'Paid' },
-              { value: 'CANCELLED', label: 'Cancelled' },
               { value: 'REPORTED', label: 'Reported' },
+              { value: 'CANCELLED', label: 'Cancelled' },
             ],
           },
           sort: {

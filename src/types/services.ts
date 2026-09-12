@@ -79,6 +79,20 @@ export interface ListBatchesServiceInput {
   sort?: 'newest' | 'oldest' | 'amount_high' | 'amount_low';
 }
 
+// ── Tab counts (badges numéricos de los quick-tabs de las listas) ───────────
+
+/** Conteos de los tabs accionables de órdenes (PENDING / AWAITING_PAYMENT). */
+export interface OrderTabCounts {
+  pending: number;
+  awaitingPayment: number;
+}
+
+/** Conteos de los tabs accionables de lotes (PROCESSING / CONFIRMED). */
+export interface BatchTabCounts {
+  processing: number;
+  confirmed: number;
+}
+
 // ── Credit Check ────────────────────────────────────────────────────────────
 
 export interface CreditCheckResult {
